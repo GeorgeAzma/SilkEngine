@@ -105,10 +105,12 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\068d04ecc4d1e8a04a44e39b00e4aefb\a.frag.spv.rule">
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../res/shaders/build/a.frag.spv</Message>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\5d861bbf00044095c0287d21626039c4\test.frag.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating res/shaders/build/test.frag.spv</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/a.frag -o E:/Codes/C++/VulkanEngine/res/shaders/build/a.frag.spv
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/res/shaders/build
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/test.frag -o E:/Codes/C++/VulkanEngine/build/res/shaders/build/test.frag.spv
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -116,12 +118,14 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\Codes\C++\VulkanEngine\res\shaders\a.frag;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\Codes\C++\VulkanEngine\res\shaders\build\a.frag.spv</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\Codes\C++\VulkanEngine\res\shaders\test.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.frag.spv</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../res/shaders/build/a.frag.spv</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating res/shaders/build/test.frag.spv</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/a.frag -o E:/Codes/C++/VulkanEngine/res/shaders/build/a.frag.spv
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/res/shaders/build
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/test.frag -o E:/Codes/C++/VulkanEngine/build/res/shaders/build/test.frag.spv
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -129,12 +133,14 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Codes\C++\VulkanEngine\res\shaders\a.frag;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Codes\C++\VulkanEngine\res\shaders\build\a.frag.spv</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Codes\C++\VulkanEngine\res\shaders\test.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.frag.spv</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../res/shaders/build/a.frag.spv</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating res/shaders/build/test.frag.spv</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
-E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/a.frag -o E:/Codes/C++/VulkanEngine/res/shaders/build/a.frag.spv
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/res/shaders/build
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/test.frag -o E:/Codes/C++/VulkanEngine/build/res/shaders/build/test.frag.spv
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -142,12 +148,14 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:\Codes\C++\VulkanEngine\res\shaders\a.frag;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:\Codes\C++\VulkanEngine\res\shaders\build\a.frag.spv</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:\Codes\C++\VulkanEngine\res\shaders\test.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.frag.spv</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../res/shaders/build/a.frag.spv</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating res/shaders/build/test.frag.spv</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
-E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/a.frag -o E:/Codes/C++/VulkanEngine/res/shaders/build/a.frag.spv
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/res/shaders/build
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/test.frag -o E:/Codes/C++/VulkanEngine/build/res/shaders/build/test.frag.spv
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -155,16 +163,18 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:\Codes\C++\VulkanEngine\res\shaders\a.frag;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:\Codes\C++\VulkanEngine\res\shaders\build\a.frag.spv</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:\Codes\C++\VulkanEngine\res\shaders\test.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.frag.spv</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\068d04ecc4d1e8a04a44e39b00e4aefb\a.vert.spv.rule">
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../res/shaders/build/a.vert.spv</Message>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\5d861bbf00044095c0287d21626039c4\test.vert.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating res/shaders/build/test.vert.spv</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/a.vert -o E:/Codes/C++/VulkanEngine/res/shaders/build/a.vert.spv
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/res/shaders/build
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/test.vert -o E:/Codes/C++/VulkanEngine/build/res/shaders/build/test.vert.spv
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -172,12 +182,14 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\Codes\C++\VulkanEngine\res\shaders\a.vert;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\Codes\C++\VulkanEngine\res\shaders\build\a.vert.spv</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\Codes\C++\VulkanEngine\res\shaders\test.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.vert.spv</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../res/shaders/build/a.vert.spv</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating res/shaders/build/test.vert.spv</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/a.vert -o E:/Codes/C++/VulkanEngine/res/shaders/build/a.vert.spv
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/res/shaders/build
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/test.vert -o E:/Codes/C++/VulkanEngine/build/res/shaders/build/test.vert.spv
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -185,12 +197,14 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Codes\C++\VulkanEngine\res\shaders\a.vert;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Codes\C++\VulkanEngine\res\shaders\build\a.vert.spv</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Codes\C++\VulkanEngine\res\shaders\test.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.vert.spv</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../res/shaders/build/a.vert.spv</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating res/shaders/build/test.vert.spv</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
-E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/a.vert -o E:/Codes/C++/VulkanEngine/res/shaders/build/a.vert.spv
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/res/shaders/build
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/test.vert -o E:/Codes/C++/VulkanEngine/build/res/shaders/build/test.vert.spv
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -198,12 +212,14 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:\Codes\C++\VulkanEngine\res\shaders\a.vert;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:\Codes\C++\VulkanEngine\res\shaders\build\a.vert.spv</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:\Codes\C++\VulkanEngine\res\shaders\test.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.vert.spv</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../res/shaders/build/a.vert.spv</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating res/shaders/build/test.vert.spv</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
-E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/a.vert -o E:/Codes/C++/VulkanEngine/res/shaders/build/a.vert.spv
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/res/shaders/build
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/test.vert -o E:/Codes/C++/VulkanEngine/build/res/shaders/build/test.vert.spv
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -211,8 +227,8 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:\Codes\C++\VulkanEngine\res\shaders\a.vert;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:\Codes\C++\VulkanEngine\res\shaders\build\a.vert.spv</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:\Codes\C++\VulkanEngine\res\shaders\test.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.vert.spv</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
     </CustomBuild>
   </ItemGroup>
@@ -226,7 +242,7 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\Codes\C++\VulkanEngine\res\shaders\build\a.frag.spv;E:\Codes\C++\VulkanEngine\res\shaders\build\a.vert.spv;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.frag.spv;E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.vert.spv;%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\Shaders</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
       <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</VerifyInputsAndOutputsExist>
@@ -238,7 +254,7 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Codes\C++\VulkanEngine\res\shaders\build\a.frag.spv;E:\Codes\C++\VulkanEngine\res\shaders\build\a.vert.spv;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.frag.spv;E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.vert.spv;%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\Shaders</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
       <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</VerifyInputsAndOutputsExist>
@@ -250,7 +266,7 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:\Codes\C++\VulkanEngine\res\shaders\build\a.frag.spv;E:\Codes\C++\VulkanEngine\res\shaders\build\a.vert.spv;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.frag.spv;E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.vert.spv;%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\Shaders</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
       <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</VerifyInputsAndOutputsExist>
@@ -262,7 +278,7 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:\Codes\C++\VulkanEngine\res\shaders\build\a.frag.spv;E:\Codes\C++\VulkanEngine\res\shaders\build\a.vert.spv;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.frag.spv;E:\Codes\C++\VulkanEngine\build\res\shaders\build\test.vert.spv;%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\Shaders</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
       <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</VerifyInputsAndOutputsExist>

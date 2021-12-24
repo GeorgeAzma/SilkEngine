@@ -176,12 +176,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
-    <ProjectReference Include="E:\Codes\C++\VulkanEngine\build\Shaders.vcxproj">
-      <Project>{B8303347-B034-3045-9190-31E7CCFB7F26}</Project>
-      <Name>Shaders</Name>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </ProjectReference>
     <ProjectReference Include="E:\Codes\C++\VulkanEngine\build\VulkanEngine.vcxproj">
       <Project>{B73C918C-FC4F-3762-8231-303141B822DA}</Project>
       <Name>VulkanEngine</Name>

@@ -383,7 +383,7 @@ private:
     void createTextureImage()
     {
         int w, h, ch;
-        stbi_uc *pixels = stbi_load("res/images/Test.png", &w, &h, &ch, STBI_rgb_alpha);
+        stbi_uc *pixels = stbi_load("./res/images/Test.png", &w, &h, &ch, STBI_rgb_alpha);
         VkDeviceSize imageSize = w * h * 4;
 
         if (!pixels)

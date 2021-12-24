@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\068d04ecc4d1e8a04a44e39b00e4aefb\a.frag.spv.rule">
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\5d861bbf00044095c0287d21626039c4\test.frag.spv.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
-    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\068d04ecc4d1e8a04a44e39b00e4aefb\a.vert.spv.rule">
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\5d861bbf00044095c0287d21626039c4\test.vert.spv.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
     <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\e2126fdc38c09acd2f566cfcad1295ac\Shaders.rule">

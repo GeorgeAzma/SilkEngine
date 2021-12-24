@@ -1,6 +1,8 @@
-^E:\CODES\C++\VULKANENGINE\BUILD\CMAKEFILES\068D04ECC4D1E8A04A44E39B00E4AEFB\A.FRAG.SPV.RULE
+^E:\CODES\C++\VULKANENGINE\BUILD\CMAKEFILES\5D861BBF00044095C0287D21626039C4\TEST.FRAG.SPV.RULE
 setlocal
-E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/a.frag -o E:/Codes/C++/VulkanEngine/res/shaders/build/a.frag.spv
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/res/shaders/build
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/test.frag -o E:/Codes/C++/VulkanEngine/build/res/shaders/build/test.frag.spv
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
@@ -8,9 +10,11 @@ endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
-^E:\CODES\C++\VULKANENGINE\BUILD\CMAKEFILES\068D04ECC4D1E8A04A44E39B00E4AEFB\A.VERT.SPV.RULE
+^E:\CODES\C++\VULKANENGINE\BUILD\CMAKEFILES\5D861BBF00044095C0287D21626039C4\TEST.VERT.SPV.RULE
 setlocal
-E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/a.vert -o E:/Codes/C++/VulkanEngine/res/shaders/build/a.vert.spv
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/res/shaders/build
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\Includes\Vulkan\Bin\glslangValidator.exe -V E:/Codes/C++/VulkanEngine/res/shaders/test.vert -o E:/Codes/C++/VulkanEngine/build/res/shaders/build/test.vert.spv
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone

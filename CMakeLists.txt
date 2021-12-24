@@ -209,14 +209,6 @@ endforeach()
 target_link_libraries(VulkanEngine ${EXTRA_LIBS})
 target_link_directories(VulkanEngine PUBLIC ${EXTRA_LIB_DIRS})
 
-#Copy res folder where exe file is
-add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
-		COMMAND ${CMAKE_COMMAND} -E remove_directory $<TARGET_FILE_DIR:VulkanEngine>/res
-		)
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/res  $<TARGET_FILE_DIR:VulkanEngine>/res
-		)
-
 #Building shaders
 find_program(GLSL_VALIDATOR glslangValidator HINTS 
   ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} 
@@ -235,9 +227,10 @@ file(GLOB_RECURSE GLSL_SOURCE_FILES
  
 foreach(GLSL ${GLSL_SOURCE_FILES})
     get_filename_component(FILE_NAME ${GLSL} NAME)
-    set(SPIRV "${PROJECT_SOURCE_DIR}/res/shaders/build/${FILE_NAME}.spv")
+    set(SPIRV "${PROJECT_BINARY_DIR}/res/shaders/build/${FILE_NAME}.spv")
     add_custom_command(
         OUTPUT ${SPIRV}
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/res/shaders/build"
         COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
         DEPENDS ${GLSL})
     list(APPEND SPIRV_BINARY_FILES ${SPIRV})
@@ -245,6 +238,19 @@ endforeach(GLSL)
  
 add_custom_target(
     Shaders
-    ALL
     DEPENDS ${SPIRV_BINARY_FILES}
 )
+
+add_dependencies(VulkanEngine Shaders)
+
+#Copy res folder where exe file is
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/res  $<TARGET_FILE_DIR:VulkanEngine>/res
+		)
+
+add_custom_command(TARGET VulkanEngine POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:VulkanEngine>/res/shaders/build"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${PROJECT_BINARY_DIR}/res"
+        "$<TARGET_FILE_DIR:VulkanEngine>/res"
+        )

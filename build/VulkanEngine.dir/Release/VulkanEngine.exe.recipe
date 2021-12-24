@@ -8,6 +8,9 @@
       <FullPath>E:\Codes\C++\VulkanEngine\build\x64\Release\FREETYPE</FullPath>
     </ProjectOutput>
     <ProjectOutput>
+      <FullPath>E:\Codes\C++\VulkanEngine\build\x64\Release\Shaders</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
       <FullPath>E:\Codes\C++\VulkanEngine\build\Release\VulkanEngine.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>

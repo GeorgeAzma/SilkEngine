@@ -113,22 +113,21 @@
       <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
-    <PreBuildEvent>
-      <Message></Message>
+    <PostBuildEvent>
+      <Message>	</Message>
       <Command>setlocal
-E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E remove_directory E:/Codes/C++/VulkanEngine/build/Debug/res
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E copy_directory E:/Codes/C++/VulkanEngine/res E:/Codes/C++/VulkanEngine/build/Debug/res
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 :cmErrorLevel
 exit /b %1
 :cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-    </PreBuildEvent>
-    <PostBuildEvent>
-      <Message></Message>
-      <Command>setlocal
-E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E copy_directory E:/Codes/C++/VulkanEngine/res E:/Codes/C++/VulkanEngine/build/Debug/res
+if %errorlevel% neq 0 goto :VCEnd
+setlocal
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/Debug/res/shaders/build
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E copy_directory E:/Codes/C++/VulkanEngine/build/res E:/Codes/C++/VulkanEngine/build/Debug/res
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -178,22 +177,21 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
-    <PreBuildEvent>
-      <Message></Message>
+    <PostBuildEvent>
+      <Message>	</Message>
       <Command>setlocal
-E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E remove_directory E:/Codes/C++/VulkanEngine/build/Release/res
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E copy_directory E:/Codes/C++/VulkanEngine/res E:/Codes/C++/VulkanEngine/build/Release/res
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 :cmErrorLevel
 exit /b %1
 :cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-    </PreBuildEvent>
-    <PostBuildEvent>
-      <Message></Message>
-      <Command>setlocal
-E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E copy_directory E:/Codes/C++/VulkanEngine/res E:/Codes/C++/VulkanEngine/build/Release/res
+if %errorlevel% neq 0 goto :VCEnd
+setlocal
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/Release/res/shaders/build
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E copy_directory E:/Codes/C++/VulkanEngine/build/res E:/Codes/C++/VulkanEngine/build/Release/res
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -245,22 +243,21 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
-    <PreBuildEvent>
-      <Message></Message>
+    <PostBuildEvent>
+      <Message>	</Message>
       <Command>setlocal
-E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E remove_directory E:/Codes/C++/VulkanEngine/build/MinSizeRel/res
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E copy_directory E:/Codes/C++/VulkanEngine/res E:/Codes/C++/VulkanEngine/build/MinSizeRel/res
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 :cmErrorLevel
 exit /b %1
 :cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-    </PreBuildEvent>
-    <PostBuildEvent>
-      <Message></Message>
-      <Command>setlocal
-E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E copy_directory E:/Codes/C++/VulkanEngine/res E:/Codes/C++/VulkanEngine/build/MinSizeRel/res
+if %errorlevel% neq 0 goto :VCEnd
+setlocal
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/MinSizeRel/res/shaders/build
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E copy_directory E:/Codes/C++/VulkanEngine/build/res E:/Codes/C++/VulkanEngine/build/MinSizeRel/res
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -311,22 +308,21 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
-    <PreBuildEvent>
-      <Message></Message>
+    <PostBuildEvent>
+      <Message>	</Message>
       <Command>setlocal
-E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E remove_directory E:/Codes/C++/VulkanEngine/build/RelWithDebInfo/res
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E copy_directory E:/Codes/C++/VulkanEngine/res E:/Codes/C++/VulkanEngine/build/RelWithDebInfo/res
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 :cmErrorLevel
 exit /b %1
 :cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-    </PreBuildEvent>
-    <PostBuildEvent>
-      <Message></Message>
-      <Command>setlocal
-E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E copy_directory E:/Codes/C++/VulkanEngine/res E:/Codes/C++/VulkanEngine/build/RelWithDebInfo/res
+if %errorlevel% neq 0 goto :VCEnd
+setlocal
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/RelWithDebInfo/res/shaders/build
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E copy_directory E:/Codes/C++/VulkanEngine/build/res E:/Codes/C++/VulkanEngine/build/RelWithDebInfo/res
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -408,6 +404,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="E:\Codes\C++\VulkanEngine\main.cpp" />
+    <ClCompile Include="E:\Codes\C++\VulkanEngine\src\pch.cpp" />
     <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\imgui.cpp" />
     <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\imgui_demo.cpp" />
     <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\imgui_draw.cpp" />
@@ -427,6 +424,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ProjectReference Include="E:\Codes\C++\VulkanEngine\build\FREETYPE.vcxproj">
       <Project>{8BF0D304-5D64-39DD-917C-06FD9238856E}</Project>
       <Name>FREETYPE</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="E:\Codes\C++\VulkanEngine\build\Shaders.vcxproj">
+      <Project>{B8303347-B034-3045-9190-31E7CCFB7F26}</Project>
+      <Name>Shaders</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>

@@ -4,6 +4,9 @@
     <ClCompile Include="E:\Codes\C++\VulkanEngine\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="E:\Codes\C++\VulkanEngine\src\pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\imgui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
