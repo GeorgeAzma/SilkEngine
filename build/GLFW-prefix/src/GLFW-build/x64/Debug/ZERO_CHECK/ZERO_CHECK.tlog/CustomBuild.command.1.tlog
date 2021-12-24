@@ -1,0 +1,10 @@
+^E:\CODES\C++\VULKANENGINE\BUILD\GLFW-PREFIX\SRC\GLFW-BUILD\CMAKEFILES\F42A44060D00403825EE54F1FC93FE7C\GENERATE.STAMP.RULE
+setlocal
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -SE:/Codes/C++/VulkanEngine/build/GLFW-prefix/src/GLFW -BE:/Codes/C++/VulkanEngine/build/GLFW-prefix/src/GLFW-build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file E:/Codes/C++/VulkanEngine/build/GLFW-prefix/src/GLFW-build/GLFW.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

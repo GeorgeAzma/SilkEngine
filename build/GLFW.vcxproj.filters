@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\3f84d4061651bfbe3b6bba38d6cd35aa\GLFW-mkdir.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\3f84d4061651bfbe3b6bba38d6cd35aa\GLFW-download.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\3f84d4061651bfbe3b6bba38d6cd35aa\GLFW-update.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\3f84d4061651bfbe3b6bba38d6cd35aa\GLFW-patch.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\3f84d4061651bfbe3b6bba38d6cd35aa\GLFW-configure.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\3f84d4061651bfbe3b6bba38d6cd35aa\GLFW-build.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\3f84d4061651bfbe3b6bba38d6cd35aa\GLFW-install.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\75afb1070b8377b00a21c9955c08b036\GLFW-complete.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\e2126fdc38c09acd2f566cfcad1295ac\GLFW.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\GLFW" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{EE325542-A691-32B8-B497-542510E3C267}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

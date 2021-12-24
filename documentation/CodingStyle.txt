@@ -1,0 +1,37 @@
+---------------- Casing -----------------
+
+    Pascal - ThisIsPascalCase
+    Camel - thisIsCamelCase
+    Snake - this_is_snake_case
+    Kebab - this-is-kebab-case
+    UpperCaseSnake - THIS_IS_UPPER_CASE_SNAKE_CASE
+
+    -------Pascal-------
+
+        Classes
+        Structs
+        TypeDefs
+
+    -------Camel-------
+
+        Functions
+
+    -------Snake-------
+
+        Files
+        Folders
+        Variables
+        Lambdas
+
+    -------Kebab-------
+
+        CSS
+        HTML
+
+    -------UpperCaseSnake-------
+
+        Constants
+
+Notes: You can use snake case for functions if you are implementing std like function (like begin(), end()...)
+
+

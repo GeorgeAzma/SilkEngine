@@ -1,0 +1,146 @@
+^E:\CODES\C++\VULKANENGINE\BUILD\CMAKEFILES\516A0637D2ED1B732A165D2CAC73B1D1\GLM-MKDIR.RULE
+setlocal
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/vendor/glm
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/GLM-prefix/src/GLM-build
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/GLM-prefix
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/GLM-prefix/tmp
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/GLM-prefix/src/GLM-stamp/Debug
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/GLM-prefix/src
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/GLM-prefix/src/GLM-stamp
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E touch E:/Codes/C++/VulkanEngine/build/GLM-prefix/src/GLM-stamp/Debug/GLM-mkdir
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^E:\CODES\C++\VULKANENGINE\BUILD\CMAKEFILES\516A0637D2ED1B732A165D2CAC73B1D1\GLM-DOWNLOAD.RULE
+setlocal
+cd E:\Codes\C++\VulkanEngine\vendor
+if %errorlevel% neq 0 goto :cmEnd
+E:
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -P E:/Codes/C++/VulkanEngine/build/GLM-prefix/tmp/GLM-gitclone.cmake
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E touch E:/Codes/C++/VulkanEngine/build/GLM-prefix/src/GLM-stamp/Debug/GLM-download
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^E:\CODES\C++\VULKANENGINE\BUILD\CMAKEFILES\516A0637D2ED1B732A165D2CAC73B1D1\GLM-UPDATE.RULE
+setlocal
+cd E:\Codes\C++\VulkanEngine\vendor\glm
+if %errorlevel% neq 0 goto :cmEnd
+E:
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -P E:/Codes/C++/VulkanEngine/build/GLM-prefix/tmp/GLM-gitupdate.cmake
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^E:\CODES\C++\VULKANENGINE\BUILD\CMAKEFILES\516A0637D2ED1B732A165D2CAC73B1D1\GLM-PATCH.RULE
+setlocal
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E touch E:/Codes/C++/VulkanEngine/build/GLM-prefix/src/GLM-stamp/Debug/GLM-patch
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^E:\CODES\C++\VULKANENGINE\BUILD\CMAKEFILES\516A0637D2ED1B732A165D2CAC73B1D1\GLM-CONFIGURE.RULE
+setlocal
+cd E:\Codes\C++\VulkanEngine\build\GLM-prefix\src\GLM-build
+if %errorlevel% neq 0 goto :cmEnd
+E:
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E touch E:/Codes/C++/VulkanEngine/build/GLM-prefix/src/GLM-stamp/Debug/GLM-configure
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^E:\CODES\C++\VULKANENGINE\BUILD\CMAKEFILES\516A0637D2ED1B732A165D2CAC73B1D1\GLM-BUILD.RULE
+setlocal
+cd E:\Codes\C++\VulkanEngine\build\GLM-prefix\src\GLM-build
+if %errorlevel% neq 0 goto :cmEnd
+E:
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E touch E:/Codes/C++/VulkanEngine/build/GLM-prefix/src/GLM-stamp/Debug/GLM-build
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^E:\CODES\C++\VULKANENGINE\BUILD\CMAKEFILES\516A0637D2ED1B732A165D2CAC73B1D1\GLM-INSTALL.RULE
+setlocal
+cd E:\Codes\C++\VulkanEngine\build\GLM-prefix\src\GLM-build
+if %errorlevel% neq 0 goto :cmEnd
+E:
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E touch E:/Codes/C++/VulkanEngine/build/GLM-prefix/src/GLM-stamp/Debug/GLM-install
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^E:\CODES\C++\VULKANENGINE\BUILD\CMAKEFILES\75AFB1070B8377B00A21C9955C08B036\GLM-COMPLETE.RULE
+setlocal
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E make_directory E:/Codes/C++/VulkanEngine/build/CMakeFiles/Debug
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E touch E:/Codes/C++/VulkanEngine/build/CMakeFiles/Debug/GLM-complete
+if %errorlevel% neq 0 goto :cmEnd
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E touch E:/Codes/C++/VulkanEngine/build/GLM-prefix/src/GLM-stamp/Debug/GLM-done
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^E:\CODES\C++\VULKANENGINE\BUILD\CMAKEFILES\E2126FDC38C09ACD2F566CFCAD1295AC\GLM.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^E:\CODES\C++\VULKANENGINE\CMAKELISTS.TXT
+setlocal
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -SE:/Codes/C++/VulkanEngine -BE:/Codes/C++/VulkanEngine/build --check-stamp-file E:/Codes/C++/VulkanEngine/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

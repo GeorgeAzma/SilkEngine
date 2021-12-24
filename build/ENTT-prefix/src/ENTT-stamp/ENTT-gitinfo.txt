@@ -1,0 +1,3 @@
+repository='https://github.com/skypjack/entt'
+module=''
+tag='origin'

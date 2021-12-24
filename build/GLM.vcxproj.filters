@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\516a0637d2ed1b732a165d2cac73b1d1\GLM-mkdir.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\516a0637d2ed1b732a165d2cac73b1d1\GLM-download.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\516a0637d2ed1b732a165d2cac73b1d1\GLM-update.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\516a0637d2ed1b732a165d2cac73b1d1\GLM-patch.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\516a0637d2ed1b732a165d2cac73b1d1\GLM-configure.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\516a0637d2ed1b732a165d2cac73b1d1\GLM-build.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\516a0637d2ed1b732a165d2cac73b1d1\GLM-install.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\75afb1070b8377b00a21c9955c08b036\GLM-complete.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\e2126fdc38c09acd2f566cfcad1295ac\GLM.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="E:\Codes\C++\VulkanEngine\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\GLM" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{EE325542-A691-32B8-B497-542510E3C267}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

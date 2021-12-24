@@ -1,0 +1,1 @@
+cmd='E:/Resources/CodingResources/C++/CMake/bin/cmake.exe;-DGLFW_BUILD_EXAMPLES=OFF;-DGLFW_BUILD_TESTS=OFF;-DCMAKE_INSTALL_PREFIX=E:/Codes/C++/VulkanEngine/vendor/glfw;-GVisual Studio 16 2019;-DCMAKE_GENERATOR_INSTANCE:INTERNAL=E:/Apps/IDE/VisualStudio/IDE;<SOURCE_DIR><SOURCE_SUBDIR>'

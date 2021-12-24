@@ -1,0 +1,10 @@
+^E:\CODES\C++\VULKANENGINE\BUILD\FREETYPE-PREFIX\SRC\FREETYPE\CMAKELISTS.TXT
+setlocal
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -SE:/Codes/C++/VulkanEngine/build/FREETYPE-prefix/src/FREETYPE -BE:/Codes/C++/VulkanEngine/build/FREETYPE-prefix/src/FREETYPE-build --check-stamp-file E:/Codes/C++/VulkanEngine/build/FREETYPE-prefix/src/FREETYPE-build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
