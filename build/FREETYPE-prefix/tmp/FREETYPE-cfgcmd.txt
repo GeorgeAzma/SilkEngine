@@ -1,1 +1,1 @@
-cmd='E:/Resources/CodingResources/C++/CMake/bin/cmake.exe;-DCMAKE_INSTALL_PREFIX=E:/Codes/C++/VulkanEngine/vendor/freetype;-GVisual Studio 16 2019;-DCMAKE_GENERATOR_INSTANCE:INTERNAL=E:/Apps/IDE/VisualStudio/IDE;<SOURCE_DIR><SOURCE_SUBDIR>'
+cmd='E:/Resources/CodingResources/C++/CMake/bin/cmake.exe;-DCMAKE_INSTALL_PREFIX=E:/Codes/C++/VulkanEngine/vendor/freetype;-GVisual Studio 17 2022;-DCMAKE_GENERATOR_INSTANCE:INTERNAL=E:/Apps/IDE/VisualStudio/IDE;<SOURCE_DIR><SOURCE_SUBDIR>'

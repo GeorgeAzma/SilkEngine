@@ -38,9 +38,9 @@
 //#include <assimp/Importer.hpp>
 //#include <assimp/scene.h>
 //#include <assimp/postprocess.h>
-#include <GLFW/glfw3.h>
-#include <ft2build.h>
-#include <freetype/freetype.h>
+//#include <GLFW/glfw3.h>
+//#include <ft2build.h>
+//#include <freetype/freetype.h>
 //#include <AL/al.h>
 //#include <AL/alc.h>
 //#include <AL/efx.h>

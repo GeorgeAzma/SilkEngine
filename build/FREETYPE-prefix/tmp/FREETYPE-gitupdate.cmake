@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.5)
 
 function(get_hash_for_ref ref out_var err_var)
   execute_process(
-    COMMAND "E:/Apps/Git/cmd/git.exe" rev-parse "${ref}"
+    COMMAND "E:/Apps/Git/cmd/git.exe" rev-parse "${ref}^0"
     WORKING_DIRECTORY "E:/Codes/C++/VulkanEngine/build/FREETYPE-prefix/src/FREETYPE"
     RESULT_VARIABLE error_code
     OUTPUT_VARIABLE ref_hash

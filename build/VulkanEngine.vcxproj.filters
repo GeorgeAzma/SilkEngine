@@ -1,6 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClCompile Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\VulkanEngine.dir\cmake_pch.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="E:\Codes\C++\VulkanEngine\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -33,9 +36,26 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\VulkanEngine.dir\Debug\cmake_pch.hxx">
+      <Filter>Precompile Header File</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\VulkanEngine.dir\Release\cmake_pch.hxx">
+      <Filter>Precompile Header File</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\VulkanEngine.dir\MinSizeRel\cmake_pch.hxx">
+      <Filter>Precompile Header File</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\VulkanEngine.dir\RelWithDebInfo\cmake_pch.hxx">
+      <Filter>Precompile Header File</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
     <CustomBuild Include="E:\Codes\C++\VulkanEngine\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Filter Include="Precompile Header File">
+      <UniqueIdentifier>{1D2CD503-62D9-38E1-A95D-32583636FDE1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{887650E4-7862-35A4-9856-7FEEA0E751A8}</UniqueIdentifier>
     </Filter>

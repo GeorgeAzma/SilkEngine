@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <PreferredToolArchitecture>x64</PreferredToolArchitecture>
   </PropertyGroup>
@@ -23,7 +23,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B73C918C-FC4F-3762-8231-303141B822DA}</ProjectGuid>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.22000.0</WindowsTargetPlatformVersion>
     <Keyword>Win32Proj</Keyword>
     <Platform>x64</Platform>
     <ProjectName>VulkanEngine</ProjectName>
@@ -33,22 +33,22 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -93,16 +93,18 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <Optimization>Disabled</Optimization>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Debug/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>E:/Codes/C++/VulkanEngine/build/VulkanEngine.dir/Debug/cmake_pch.pch</PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
-      <PreprocessorDefinitions>GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_DEBUG;GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>E:\Codes\C++\VulkanEngine\vendor;E:\Codes\C++\VulkanEngine\vendor\imgui;E:\Codes\C++\VulkanEngine\thread_pool;E:\Codes\C++\VulkanEngine\vendor\entt\src;E:\Codes\C++\VulkanEngine\vendor\stb;E:\Codes\C++\VulkanEngine\vendor\glm;E:\Codes\C++\VulkanEngine\vendor\freetype\include\freetype2;E:\Codes\C++\VulkanEngine\vendor\glfw\include;E:\Resources\CodingResources\C++\Includes\Vulkan\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
@@ -156,17 +158,19 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ExceptionHandling>Sync</ExceptionHandling>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <Optimization>MaxSpeed</Optimization>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Release/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>E:/Codes/C++/VulkanEngine/build/VulkanEngine.dir/Release/cmake_pch.pch</PrecompiledHeaderOutputFile>
       <UseFullPaths>false</UseFullPaths>
-      <PreprocessorDefinitions>GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <DebugInformationFormat>
       </DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>E:\Codes\C++\VulkanEngine\vendor;E:\Codes\C++\VulkanEngine\vendor\imgui;E:\Codes\C++\VulkanEngine\thread_pool;E:\Codes\C++\VulkanEngine\vendor\entt\src;E:\Codes\C++\VulkanEngine\vendor\stb;E:\Codes\C++\VulkanEngine\vendor\glm;E:\Codes\C++\VulkanEngine\vendor\freetype\include\freetype2;E:\Codes\C++\VulkanEngine\vendor\glfw\include;E:\Resources\CodingResources\C++\Includes\Vulkan\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
@@ -221,18 +225,20 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <Optimization>MinSpace</Optimization>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/MinSizeRel/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>E:/Codes/C++/VulkanEngine/build/VulkanEngine.dir/MinSizeRel/cmake_pch.pch</PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
-      <PreprocessorDefinitions>NDEBUG;GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);NDEBUG;GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <DebugInformationFormat>
       </DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;NDEBUG;GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;NDEBUG;GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>E:\Codes\C++\VulkanEngine\vendor;E:\Codes\C++\VulkanEngine\vendor\imgui;E:\Codes\C++\VulkanEngine\thread_pool;E:\Codes\C++\VulkanEngine\vendor\entt\src;E:\Codes\C++\VulkanEngine\vendor\stb;E:\Codes\C++\VulkanEngine\vendor\glm;E:\Codes\C++\VulkanEngine\vendor\freetype\include\freetype2;E:\Codes\C++\VulkanEngine\vendor\glfw\include;E:\Resources\CodingResources\C++\Includes\Vulkan\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
@@ -288,16 +294,18 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <Optimization>MaxSpeed</Optimization>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/RelWithDebInfo/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>E:/Codes/C++/VulkanEngine/build/VulkanEngine.dir/RelWithDebInfo/cmake_pch.pch</PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
-      <PreprocessorDefinitions>NDEBUG;GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);NDEBUG;GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;NDEBUG;GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;NDEBUG;GLEW_STATIC;_USE_MATH_DEFINES;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>E:\Codes\C++\VulkanEngine\vendor;E:\Codes\C++\VulkanEngine\vendor\imgui;E:\Codes\C++\VulkanEngine\thread_pool;E:\Codes\C++\VulkanEngine\vendor\entt\src;E:\Codes\C++\VulkanEngine\vendor\stb;E:\Codes\C++\VulkanEngine\vendor\glm;E:\Codes\C++\VulkanEngine\vendor\freetype\include\freetype2;E:\Codes\C++\VulkanEngine\vendor\glfw\include;E:\Resources\CodingResources\C++\Includes\Vulkan\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
@@ -347,7 +355,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <CustomBuild Include="E:\Codes\C++\VulkanEngine\CMakeLists.txt">
-      <StdOutEncoding>UTF-8</StdOutEncoding>
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule E:/Codes/C++/VulkanEngine/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
 E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -SE:/Codes/C++/VulkanEngine -BE:/Codes/C++/VulkanEngine/build --check-stamp-file E:/Codes/C++/VulkanEngine/build/CMakeFiles/generate.stamp
@@ -358,7 +366,7 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.20.1\CMakeCXXCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.20.1\CMakeRCCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.20.1\CMakeSystem.cmake;E:\Codes\C++\VulkanEngine\build\FREETYPE-prefix\tmp\FREETYPE-cfgcmd.txt.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeCXXInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeCommonLanguageInclude.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeGenericSystem.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeInitializeConfigs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeLanguageInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeRCInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInitialize.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CheckCXXSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CheckIncludeFileCXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CheckLibraryExists.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Compiler\CMakeCommonCompilerMacros.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Compiler\MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\ExternalProject-gitupdate.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\ExternalProject.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FetchContent.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FetchContent\CMakeLists.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindGit.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindPackageHandleStandardArgs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindPackageMessage.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindThreads.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindVulkan.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Internal\CheckSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\Windows.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\WindowsPaths.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\RepositoryInfo.txt.in;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.22.1\CMakeCXXCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.22.1\CMakeRCCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.22.1\CMakeSystem.cmake;E:\Codes\C++\VulkanEngine\build\FREETYPE-prefix\tmp\FREETYPE-cfgcmd.txt.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeCXXInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeCommonLanguageInclude.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeGenericSystem.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeInitializeConfigs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeLanguageInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeRCInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeSystemSpecificInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeSystemSpecificInitialize.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CheckCXXSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CheckIncludeFileCXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CheckLibraryExists.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Compiler\CMakeCommonCompilerMacros.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Compiler\MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\ExternalProject-gitupdate.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\ExternalProject.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FetchContent.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FetchContent\CMakeLists.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindGit.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindPackageHandleStandardArgs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindPackageMessage.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindThreads.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindVulkan.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Internal\CheckSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\Windows-MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\Windows-MSVC.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\Windows.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\WindowsPaths.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\RepositoryInfo.txt.in;%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule E:/Codes/C++/VulkanEngine/CMakeLists.txt</Message>
@@ -371,7 +379,7 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.20.1\CMakeCXXCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.20.1\CMakeRCCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.20.1\CMakeSystem.cmake;E:\Codes\C++\VulkanEngine\build\FREETYPE-prefix\tmp\FREETYPE-cfgcmd.txt.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeCXXInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeCommonLanguageInclude.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeGenericSystem.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeInitializeConfigs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeLanguageInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeRCInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInitialize.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CheckCXXSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CheckIncludeFileCXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CheckLibraryExists.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Compiler\CMakeCommonCompilerMacros.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Compiler\MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\ExternalProject-gitupdate.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\ExternalProject.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FetchContent.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FetchContent\CMakeLists.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindGit.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindPackageHandleStandardArgs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindPackageMessage.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindThreads.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindVulkan.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Internal\CheckSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\Windows.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\WindowsPaths.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\RepositoryInfo.txt.in;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.22.1\CMakeCXXCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.22.1\CMakeRCCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.22.1\CMakeSystem.cmake;E:\Codes\C++\VulkanEngine\build\FREETYPE-prefix\tmp\FREETYPE-cfgcmd.txt.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeCXXInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeCommonLanguageInclude.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeGenericSystem.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeInitializeConfigs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeLanguageInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeRCInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeSystemSpecificInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeSystemSpecificInitialize.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CheckCXXSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CheckIncludeFileCXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CheckLibraryExists.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Compiler\CMakeCommonCompilerMacros.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Compiler\MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\ExternalProject-gitupdate.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\ExternalProject.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FetchContent.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FetchContent\CMakeLists.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindGit.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindPackageHandleStandardArgs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindPackageMessage.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindThreads.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindVulkan.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Internal\CheckSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\Windows-MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\Windows-MSVC.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\Windows.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\WindowsPaths.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\RepositoryInfo.txt.in;%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule E:/Codes/C++/VulkanEngine/CMakeLists.txt</Message>
@@ -384,7 +392,7 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.20.1\CMakeCXXCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.20.1\CMakeRCCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.20.1\CMakeSystem.cmake;E:\Codes\C++\VulkanEngine\build\FREETYPE-prefix\tmp\FREETYPE-cfgcmd.txt.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeCXXInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeCommonLanguageInclude.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeGenericSystem.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeInitializeConfigs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeLanguageInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeRCInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInitialize.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CheckCXXSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CheckIncludeFileCXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CheckLibraryExists.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Compiler\CMakeCommonCompilerMacros.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Compiler\MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\ExternalProject-gitupdate.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\ExternalProject.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FetchContent.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FetchContent\CMakeLists.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindGit.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindPackageHandleStandardArgs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindPackageMessage.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindThreads.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindVulkan.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Internal\CheckSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\Windows.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\WindowsPaths.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\RepositoryInfo.txt.in;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.22.1\CMakeCXXCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.22.1\CMakeRCCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.22.1\CMakeSystem.cmake;E:\Codes\C++\VulkanEngine\build\FREETYPE-prefix\tmp\FREETYPE-cfgcmd.txt.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeCXXInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeCommonLanguageInclude.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeGenericSystem.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeInitializeConfigs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeLanguageInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeRCInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeSystemSpecificInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeSystemSpecificInitialize.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CheckCXXSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CheckIncludeFileCXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CheckLibraryExists.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Compiler\CMakeCommonCompilerMacros.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Compiler\MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\ExternalProject-gitupdate.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\ExternalProject.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FetchContent.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FetchContent\CMakeLists.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindGit.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindPackageHandleStandardArgs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindPackageMessage.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindThreads.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindVulkan.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Internal\CheckSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\Windows-MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\Windows-MSVC.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\Windows.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\WindowsPaths.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\RepositoryInfo.txt.in;%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule E:/Codes/C++/VulkanEngine/CMakeLists.txt</Message>
@@ -397,22 +405,94 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.20.1\CMakeCXXCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.20.1\CMakeRCCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.20.1\CMakeSystem.cmake;E:\Codes\C++\VulkanEngine\build\FREETYPE-prefix\tmp\FREETYPE-cfgcmd.txt.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeCXXInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeCommonLanguageInclude.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeGenericSystem.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeInitializeConfigs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeLanguageInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeRCInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CMakeSystemSpecificInitialize.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CheckCXXSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CheckIncludeFileCXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\CheckLibraryExists.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Compiler\CMakeCommonCompilerMacros.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Compiler\MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\ExternalProject-gitupdate.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\ExternalProject.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FetchContent.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FetchContent\CMakeLists.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindGit.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindPackageHandleStandardArgs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindPackageMessage.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindThreads.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\FindVulkan.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Internal\CheckSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\Windows-MSVC.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\Windows.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\Platform\WindowsPaths.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.20\Modules\RepositoryInfo.txt.in;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.22.1\CMakeCXXCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.22.1\CMakeRCCompiler.cmake;E:\Codes\C++\VulkanEngine\build\CMakeFiles\3.22.1\CMakeSystem.cmake;E:\Codes\C++\VulkanEngine\build\FREETYPE-prefix\tmp\FREETYPE-cfgcmd.txt.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeCXXInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeCommonLanguageInclude.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeGenericSystem.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeInitializeConfigs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeLanguageInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeRCInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeSystemSpecificInformation.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CMakeSystemSpecificInitialize.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CheckCXXSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CheckIncludeFileCXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\CheckLibraryExists.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Compiler\CMakeCommonCompilerMacros.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Compiler\MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\ExternalProject-gitupdate.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\ExternalProject.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FetchContent.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FetchContent\CMakeLists.cmake.in;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindGit.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindPackageHandleStandardArgs.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindPackageMessage.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindThreads.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\FindVulkan.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Internal\CheckSourceCompiles.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\Windows-MSVC-CXX.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\Windows-MSVC.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\Windows.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\Platform\WindowsPaths.cmake;E:\Resources\CodingResources\C++\CMake\share\cmake-3.22\Modules\RepositoryInfo.txt.in;%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:\Codes\C++\VulkanEngine\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="E:\Codes\C++\VulkanEngine\main.cpp" />
-    <ClCompile Include="E:\Codes\C++\VulkanEngine\src\pch.cpp" />
-    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\imgui.cpp" />
-    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\imgui_demo.cpp" />
-    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\imgui_draw.cpp" />
-    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\imgui_tables.cpp" />
-    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\backends\imgui_impl_opengl3.cpp" />
-    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\backends\imgui_impl_glfw.cpp" />
-    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\misc\cpp\imgui_stdlib.cpp" />
+    <ClCompile Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\VulkanEngine.dir\cmake_pch.cxx">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Debug/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:/Codes/C++/VulkanEngine/build/VulkanEngine.dir/Debug/cmake_pch.pch</PrecompiledHeaderOutputFile>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Release/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:/Codes/C++/VulkanEngine/build/VulkanEngine.dir/Release/cmake_pch.pch</PrecompiledHeaderOutputFile>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/MinSizeRel/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:/Codes/C++/VulkanEngine/build/VulkanEngine.dir/MinSizeRel/cmake_pch.pch</PrecompiledHeaderOutputFile>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/RelWithDebInfo/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:/Codes/C++/VulkanEngine/build/VulkanEngine.dir/RelWithDebInfo/cmake_pch.pch</PrecompiledHeaderOutputFile>
+    </ClCompile>
+    <ClCompile Include="E:\Codes\C++\VulkanEngine\main.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="E:\Codes\C++\VulkanEngine\src\pch.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\imgui.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\imgui_demo.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\imgui_draw.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\imgui_tables.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\imgui_widgets.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\backends\imgui_impl_opengl3.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\backends\imgui_impl_glfw.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="E:\Codes\C++\VulkanEngine\vendor\imgui\misc\cpp\imgui_stdlib.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">E:/Codes/C++/VulkanEngine/build/CMakeFiles/VulkanEngine.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClInclude Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\VulkanEngine.dir\Debug\cmake_pch.hxx" />
+    <ClInclude Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\VulkanEngine.dir\Release\cmake_pch.hxx" />
+    <ClInclude Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\VulkanEngine.dir\MinSizeRel\cmake_pch.hxx" />
+    <ClInclude Include="E:\Codes\C++\VulkanEngine\build\CMakeFiles\VulkanEngine.dir\RelWithDebInfo\cmake_pch.hxx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="E:\Codes\C++\VulkanEngine\build\ZERO_CHECK.vcxproj">

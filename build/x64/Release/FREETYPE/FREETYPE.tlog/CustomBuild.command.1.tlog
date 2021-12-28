@@ -70,7 +70,7 @@ cd E:\Codes\C++\VulkanEngine\build\FREETYPE-prefix\src\FREETYPE-build
 if %errorlevel% neq 0 goto :cmEnd
 E:
 if %errorlevel% neq 0 goto :cmEnd
-E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -DCMAKE_INSTALL_PREFIX=E:/Codes/C++/VulkanEngine/vendor/freetype "-GVisual Studio 16 2019" -DCMAKE_GENERATOR_INSTANCE:INTERNAL=E:/Apps/IDE/VisualStudio/IDE E:/Codes/C++/VulkanEngine/build/FREETYPE-prefix/src/FREETYPE
+E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -DCMAKE_INSTALL_PREFIX=E:/Codes/C++/VulkanEngine/vendor/freetype "-GVisual Studio 17 2022" -DCMAKE_GENERATOR_INSTANCE:INTERNAL=E:/Apps/IDE/VisualStudio/IDE E:/Codes/C++/VulkanEngine/build/FREETYPE-prefix/src/FREETYPE
 if %errorlevel% neq 0 goto :cmEnd
 E:\Resources\CodingResources\C++\CMake\bin\cmake.exe -E touch E:/Codes/C++/VulkanEngine/build/FREETYPE-prefix/src/FREETYPE-stamp/Release/FREETYPE-configure
 if %errorlevel% neq 0 goto :cmEnd
