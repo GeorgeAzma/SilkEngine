@@ -209,6 +209,9 @@ endforeach()
 target_link_libraries(VulkanEngine ${EXTRA_LIBS})
 target_link_directories(VulkanEngine PUBLIC ${EXTRA_LIB_DIRS})
 
+#Precompiling headers
+target_precompile_headers(VulkanEngine PUBLIC "src/pch.h")
+
 #Building shaders
 find_program(GLSL_VALIDATOR glslangValidator HINTS 
   ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} 
