@@ -5,13 +5,7 @@
       <FullPath>E:\Codes\C++\VulkanEngine\build\x64\Release\ZERO_CHECK</FullPath>
     </ProjectOutput>
     <ProjectOutput>
-      <FullPath>E:\Codes\C++\VulkanEngine\build\x64\Release\FREETYPE</FullPath>
-    </ProjectOutput>
-    <ProjectOutput>
-      <FullPath>E:\Codes\C++\VulkanEngine\build\x64\Release\Shaders</FullPath>
-    </ProjectOutput>
-    <ProjectOutput>
-      <FullPath>E:\Codes\C++\VulkanEngine\build\Release\VulkanEngine.exe</FullPath>
+      <FullPath>E:\Codes\C++\VulkanEngine\build\sandbox\src\Release\Sandbox.exe</FullPath>
     </ProjectOutput>
     <ProjectOutput>
       <FullPath>E:\Codes\C++\VulkanEngine\build\x64\Release\ALL_BUILD</FullPath>

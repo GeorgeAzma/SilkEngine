@@ -1,2 +1,8 @@
+#folders
 build/*
 vendor/*
+
+#files
+*.user
+.vscode
+.vs
