@@ -32,6 +32,7 @@
 
 #include <vulkan/vulkan.h> //Error here should be fine
 #include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 //#include <GLM/glm.hpp>
 //#include <GLM/gtc/matrix_transform.hpp>
 //#include <GLM/gtx/quaternion.hpp>

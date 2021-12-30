@@ -34,4 +34,8 @@
 
 Notes: You can use snake case for functions if you are implementing std like function (like begin(), end()...)
 
+---------------- prefixes/postfixes ----------------
 
+    -------Constructor Parameters-------
+    
+        _starting_with_underscore_to_avoid_confusion_with_member_variables
