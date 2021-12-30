@@ -30,7 +30,8 @@
 #include <numeric>
 #include <optional>
 
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.h> //Error here should be fine
+#include <spdlog/spdlog.h>
 //#include <GLM/glm.hpp>
 //#include <GLM/gtc/matrix_transform.hpp>
 //#include <GLM/gtx/quaternion.hpp>

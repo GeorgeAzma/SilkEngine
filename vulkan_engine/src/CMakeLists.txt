@@ -4,7 +4,7 @@ file(GLOB_RECURSE VULKAN_ENGINE_SOURCES "*.cpp")
 add_library(VulkanEngine STATIC ${VULKAN_ENGINE_SOURCES})
 
 #Link
-target_link_libraries(VulkanEngine Vulkan::Vulkan)
+target_link_libraries(VulkanEngine Vulkan::Vulkan Threads::Threads)
 
 #Precompile headers
 target_precompile_headers(VulkanEngine PUBLIC "pch.h")

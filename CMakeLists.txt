@@ -57,6 +57,8 @@ FetchContent_GetProperties(SPDLOG)
 endif()
 list(APPEND INCLUDE_DIRS vendor/spdlog/include)
 
+find_package(Threads REQUIRED)
+
 #Include dirs
 include_directories(
 "vendor" 
