@@ -5,6 +5,7 @@ class Sandbox : public Application
 public:
     Sandbox()
     {
+        Log::init();
     }
 
     ~Sandbox()
@@ -13,7 +14,7 @@ public:
 
     void run()
     {
-        std::cout << "ran lol" << std::endl;
+        VE_WARN("RAN SUCCESFULLY TROLOLO");
     }
 };
 

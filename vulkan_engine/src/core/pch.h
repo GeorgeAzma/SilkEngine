@@ -29,6 +29,9 @@
 #include <cstdlib>
 #include <numeric>
 #include <optional>
+#include <typeindex>
+#include <typeinfo>
+#include <list>
 
 #include <vulkan/vulkan.h> //Error here should be fine
 #include <spdlog/spdlog.h>

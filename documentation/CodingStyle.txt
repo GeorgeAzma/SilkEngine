@@ -10,11 +10,11 @@
 
         Classes
         Structs
-        TypeDefs
+        TypeDefs/Using (except primitive stuff (uint16_t...))
 
     -------Camel-------
 
-        Functions
+        Functions (except for std functions (begin(), end()...))
 
     -------Snake-------
 
@@ -31,8 +31,6 @@
     -------UpperCaseSnake-------
 
         Constants
-
-Notes: You can use snake case for functions if you are implementing std like function (like begin(), end()...)
 
 ---------------- prefixes/postfixes ----------------
 

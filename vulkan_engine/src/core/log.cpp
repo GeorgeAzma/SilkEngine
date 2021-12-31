@@ -3,17 +3,9 @@
 std::shared_ptr<spdlog::logger> Log::core_logger;
 std::shared_ptr<spdlog::logger> Log::client_logger;
 
-Log::Log()
-{
-}
-
-Log::~Log()
-{
-}
-
 void Log::init()
 {
-    spdlog::set_pattern("%^[%T] %n: %v%$");
+    spdlog::set_pattern("%^[%T][%n]: %v%$");
 
     core_logger = spdlog::stdout_color_mt("VulkanEngine");
     core_logger->set_level(spdlog::level::trace);

@@ -1,5 +1,2 @@
 - Have some kind of SYSTEM class where everything gets initialized
-and you store constepxr variables like ENABLE_DEBUG_OUTPUT which will affect
-vulkan logging and logging in general
-
 - Name the engine and change stuff like VE_TRACE to ENGINE_NAME_TRACE

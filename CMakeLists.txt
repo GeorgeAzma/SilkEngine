@@ -37,7 +37,7 @@ FetchContent_Declare(THREAD_POOL
 GIT_REPOSITORY  https://github.com/bshoshany/thread-pool
 GIT_TAG         v2.0.0
 GIT_SHALLOW     ON
-SOURCE_DIR vendor/thread_pool
+SOURCE_DIR "vendor/thread_pool"
 )
 FetchContent_MakeAvailable(THREAD_POOL)
 FetchContent_GetProperties(THREAD_POOL)
@@ -50,12 +50,12 @@ FetchContent_Declare(SPDLOG
 GIT_REPOSITORY  https://github.com/gabime/spdlog
 GIT_TAG         v1.9.2
 GIT_SHALLOW     ON
-SOURCE_DIR vendor/spdlog
+SOURCE_DIR "vendor/spdlog"
 )
 FetchContent_MakeAvailable(SPDLOG)
 FetchContent_GetProperties(SPDLOG)
 endif()
-list(APPEND INCLUDE_DIRS vendor/spdlog/include)
+list(APPEND INCLUDE_DIRS "vendor/spdlog/include")
 
 find_package(Threads REQUIRED)
 

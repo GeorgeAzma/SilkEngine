@@ -1,3 +1,6 @@
 #include "core/application.h"
 #include "core/log.h"
-#include "entry_point.h"
+#include "core/entry_point.h"
+#include "core/platform.h"
+#include "core/debug_timer.h"
+#include "events/event.h"
