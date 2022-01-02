@@ -21,18 +21,24 @@ private:
 #define VE_CORE_WARN(...) Log::getCoreLogger()->warn(__VA_ARGS__)
 #define VE_CORE_ERROR(...) Log::getCoreLogger()->error(__VA_ARGS__)
 #define VE_CORE_CRITICAL(...) Log::getCoreLogger()->critical(__VA_ARGS__)
-#define VE_CORE_ASSERT(x, ...) \
-    if (!x)                    \
-    VE_CORE_ERROR(__VA_ARGS__)
+#define VE_CORE_ASSERT(x, ...)      \
+    if (!x)                         \
+    {                               \
+        VE_CORE_ERROR(__VA_ARGS__); \
+        VE_DEBUG_BREAK();           \
+    }
 
 #define VE_TRACE(...) Log::getClientLogger()->trace(__VA_ARGS__)
 #define VE_INFO(...) Log::getClientLogger()->info(__VA_ARGS__)
 #define VE_WARN(...) Log::getClientLogger()->warn(__VA_ARGS__)
 #define VE_ERROR(...) Log::getClientLogger()->error(__VA_ARGS__)
 #define VE_CRITICAL(...) Log::getClientLogger()->critical(__VA_ARGS__)
-#define VE_ASSERT(x, ...) \
-    if (!x)               \
-    VE_ERROR(__VA_ARGS__)
+#define VE_ASSERT(x, ...)      \
+    if (!x)                    \
+    {                          \
+        VE_ERROR(__VA_ARGS__); \
+        VE_DEBUG_BREAK();      \
+    }
 #else
 #define VE_CORE_TRACE(...)
 #define VE_CORE_INFO(...)

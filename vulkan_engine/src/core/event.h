@@ -11,7 +11,7 @@ public:
     virtual ~Event() {}
 };
 
-class WindowResizeEvent : Event
+class WindowResizeEvent : public Event
 {
 public:
     WindowResizeEvent(int width, int height)
@@ -20,82 +20,75 @@ public:
     const int width, height;
 };
 
-class WindowCloseEvent : Event
+class WindowCloseEvent : public Event
 {
 public:
     WindowCloseEvent() {}
 };
 
-class KeyPressEvent : Event
+class KeyPressEvent : public Event
 {
 public:
     KeyPressEvent(uint16_t keycode, unsigned int repeat_count = 0)
         : keycode{keycode}, repeat_count{repeat_count} {}
 
-private:
-    uint16_t keycode;
-    unsigned int repeat_count;
+    const uint16_t keycode;
+    const unsigned int repeat_count;
 };
 
-class KeyReleaseEvent : Event
+class KeyReleaseEvent : public Event
 {
 public:
     KeyReleaseEvent(uint16_t keycode)
         : keycode{keycode} {}
 
-private:
-    uint16_t keycode;
+    const uint16_t keycode;
 };
 
-class MousePressEvent : Event
+class MousePressEvent : public Event
 {
 public:
     MousePressEvent(uint16_t button)
         : button{button} {}
 
-private:
-    uint16_t button;
+    const uint16_t button;
 };
 
-class MouseReleaseEvent : Event
+class MouseReleaseEvent : public Event
 {
 public:
     MouseReleaseEvent(uint16_t button)
         : button{button} {}
 
-private:
-    uint16_t button;
+    const uint16_t button;
 };
 
-class MouseMoveEvent : Event
+class MouseMoveEvent : public Event
 {
 public:
     MouseMoveEvent(double x, double y)
         : x{x}, y{y} {}
 
-private:
-    double x, y;
+    const double x, y;
 };
 
-class MouseDragEvent : Event
+class MouseDragEvent : public Event
 {
 public:
     MouseDragEvent(uint16_t button, double x, double y)
         : button{button}, x{x}, y{y} {}
 
-private:
-    uint16_t button;
-    double x, y;
+    const uint16_t button;
+    const double x, y;
 };
 
-class MouseScrollEvent : Event
+class MouseScrollEvent : public Event
 {
 public:
     MouseScrollEvent(double x, double y)
         : x{x}, y{y} {}
 
-private:
-    double x, y;
+    const double x, y;
 };
 
 // Dispatching and such code
