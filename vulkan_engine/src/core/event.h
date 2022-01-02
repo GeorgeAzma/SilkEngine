@@ -14,7 +14,7 @@ public:
 class WindowResizeEvent : Event
 {
 public:
-    WindowResizeEvent(unsigned int width, unsigned int height)
+    WindowResizeEvent(int width, int height)
         : width{width}, height{height} {}
 
     const int width, height;
