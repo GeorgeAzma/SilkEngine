@@ -1,10 +1,9 @@
 #pragma once
+
 #include "log.h"
 #include "window.h"
 #include "layer_stack.h"
 #include "../utils/fixed_update.h"
-
-int main(int argc, char **argv);
 
 struct ApplicationCommandLineArgs
 {
@@ -29,7 +28,6 @@ public:
 
     ApplicationCommandLineArgs getCommandLineArgs() const { return commandLineArgs; }
 
-private:
     void run();
 
 private:
@@ -40,9 +38,6 @@ private:
     LayerStack layerStack;
     double runtime = 0.0;
     FixedUpdate appUpdate;
-
-private:
-    friend int ::main(int argc, char **argv);
 };
 
 // To be defined in client
