@@ -1,3 +1,4 @@
 - Have some kind of SYSTEM class where everything gets initialized
 - Name the engine and change stuff like VE_TRACE to ENGINE_NAME_TRACE
 - handle window event callbacks
+- handle input events

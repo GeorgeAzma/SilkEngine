@@ -1,4 +1,5 @@
 #include "window.h"
+#include "event.h"
 
 static bool GLFWInitialized = false;
 
@@ -37,6 +38,8 @@ Window::Window(const WindowProps &props)
 
     window = glfwCreateWindow(data.width, data.height, data.title.c_str(), data.fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 
+    // RenderCommand::setViewport(0, 0, data.width, data.height);
+
     glfwDefaultWindowHints();
     glfwShowWindow(window);
 
@@ -46,6 +49,80 @@ Window::Window(const WindowProps &props)
     align(WindowAlignment::CENTER);
 
     // Event callbacks
+    glfwSetWindowSizeCallback(window,
+                              [](GLFWwindow *window, int width, int height)
+                              {
+                                  // get void Pointer to window data from somewhere in memory and cast it to struct we gave it at first
+                                  Data &data = *(Data *)glfwGetWindowUserPointer(window);
+                                  data.width = width;
+                                  data.height = height;
+                                  data.projection = glm::ortho(0.0f, (float)width, 0.0f, (float)height);
+                                  Dispatcher::post(WindowResizeEvent(data.width, data.height));
+                              });
+
+    glfwSetWindowCloseCallback(window,
+                               [](GLFWwindow *window)
+                               {
+                                   Data &data = *(Data *)glfwGetWindowUserPointer(window);
+                                   Dispatcher::post(WindowCloseEvent());
+                               });
+
+    glfwSetKeyCallback(window,
+                       [](GLFWwindow *window, int key, int scancode, int action, int mods)
+                       {
+                           Data &data = *(Data *)glfwGetWindowUserPointer(window);
+                           switch (action)
+                           {
+                           case GLFW_PRESS:
+                           {
+                               Dispatcher::post(KeyPressEvent(key, 0));
+                               break;
+                           }
+                           case GLFW_REPEAT:
+                           {
+                               Dispatcher::post(KeyPressEvent(key, 1));
+                               break;
+                           }
+                           case GLFW_RELEASE:
+                           {
+                               Dispatcher::post(KeyReleaseEvent(key));
+                               break;
+                           }
+                           }
+                       });
+
+    glfwSetMouseButtonCallback(window,
+                               [](GLFWwindow *window, int button, int action, int mods)
+                               {
+                                   Data &data = *(Data *)glfwGetWindowUserPointer(window);
+                                   switch (action)
+                                   {
+                                   case GLFW_PRESS:
+                                   {
+                                       Dispatcher::post(MousePressEvent(button));
+                                       break;
+                                   }
+                                   case GLFW_RELEASE:
+                                   {
+                                       Dispatcher::post(MouseReleaseEvent(button));
+                                       break;
+                                   }
+                                   }
+                               });
+
+    glfwSetCursorPosCallback(window,
+                             [](GLFWwindow *window, double mx, double my)
+                             {
+                                 Data &data = *(Data *)glfwGetWindowUserPointer(window);
+                                 Dispatcher::post(MouseMoveEvent(mx, (double)data.height - my));
+                             });
+
+    glfwSetScrollCallback(window,
+                          [](GLFWwindow *window, double sx, double sy)
+                          {
+                              Data &data = *(Data *)glfwGetWindowUserPointer(window);
+                              Dispatcher::post(MouseScrollEvent(sx, sy));
+                          });
 }
 
 Window::~Window()
@@ -108,6 +185,7 @@ void Window::setWidth(unsigned int width)
         return;
     data.width = width;
     glfwSetWindowSize(window, data.width, data.height);
+    updateProjection();
 }
 
 void Window::setHeight(unsigned int height)
@@ -116,6 +194,7 @@ void Window::setHeight(unsigned int height)
         return;
     data.height = height;
     glfwSetWindowSize(window, data.width, data.height);
+    updateProjection();
 }
 
 void Window::setSize(const glm::uvec2 &size)
@@ -125,6 +204,7 @@ void Window::setSize(const glm::uvec2 &size)
     data.width = size.x;
     data.height = size.y;
     glfwSetWindowSize(window, data.width, data.height);
+    updateProjection();
 }
 
 void Window::setTitle(const std::string &title)
