@@ -14,7 +14,6 @@ Application::Application(const std::string &name, ApplicationCommandLineArgs arg
 
 Application::~Application()
 {
-    glfwTerminate();
 }
 
 void Application::pushLayer(Layer *layer)

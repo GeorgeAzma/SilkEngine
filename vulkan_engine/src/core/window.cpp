@@ -5,7 +5,7 @@ static bool GLFWInitialized = false;
 
 static void GLFWErrorCallback(int error, const char *description)
 {
-    VE_CORE_ERROR("GLFW Error (%i): {%s}", error, description);
+    VE_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
 }
 
 Window::Window(const WindowProps &props)
