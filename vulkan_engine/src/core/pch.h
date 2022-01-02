@@ -36,13 +36,14 @@
 #include <vulkan/vulkan.h> //Error here should be fine
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
-//#include <GLM/glm.hpp>
-//#include <GLM/gtc/matrix_transform.hpp>
-//#include <GLM/gtx/quaternion.hpp>
+#include <GLM/glm.hpp>
+#include <GLM/gtc/matrix_transform.hpp>
+#include <GLM/gtx/quaternion.hpp>
 //#include <assimp/Importer.hpp>
 //#include <assimp/scene.h>
 //#include <assimp/postprocess.h>
-//#include <GLFW/glfw3.h>
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 //#include <ft2build.h>
 //#include <freetype/freetype.h>
 //#include <AL/al.h>
