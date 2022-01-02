@@ -78,6 +78,21 @@ else()
     list(APPEND EXTRA_LIBS ${PROJECT_SOURCE_DIR}/vendor/glfw/lib/libglfw3.a)
 endif()
 
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/glm/cmake)
+ExternalProject_Add(GLM
+GIT_REPOSITORY  https://github.com/g-truc/glm
+GIT_TAG origin/master
+GIT_SHALLOW     ON
+SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/glm
+BUILD_COMMAND ""
+CONFIGURE_COMMAND ""
+INSTALL_COMMAND ""
+)
+endif()
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glm)
+
+list(APPEND EXTRA_LIBS Vulkan::Vulkan Threads::Threads)
+
 #Include dirs
 include_directories(
 "vendor" 

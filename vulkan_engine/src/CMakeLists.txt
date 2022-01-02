@@ -10,7 +10,7 @@ target_compile_definitions(VulkanEngine PUBLIC
 )
 
 #Link
-target_link_libraries(VulkanEngine Vulkan::Vulkan Threads::Threads)
+target_link_libraries(VulkanEngine ${EXTRA_LIBS})
 
 #Precompile headers
 target_precompile_headers(VulkanEngine PUBLIC "core/pch.h")
