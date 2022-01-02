@@ -33,7 +33,6 @@
 #include <typeinfo>
 #include <list>
 
-#include <vulkan/vulkan.h> //Error here should be fine
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <GLM/glm.hpp>
@@ -42,7 +41,7 @@
 //#include <assimp/Importer.hpp>
 //#include <assimp/scene.h>
 //#include <assimp/postprocess.h>
-#define GLFW_INCLUDE_VULKAN
+#include <vulkan/vulkan.h> //Error here should be fine
 #include <GLFW/glfw3.h>
 //#include <ft2build.h>
 //#include <freetype/freetype.h>
