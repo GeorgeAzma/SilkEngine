@@ -2,7 +2,6 @@
 
 #include "core/application.h"
 #include "core/log.h"
-#include "core/entry_point.h"
 #include "core/platform.h"
 #include "core/event.h"
 #include "core/layer.h"

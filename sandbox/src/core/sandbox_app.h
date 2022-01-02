@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vulkan_engine.h>
-#include "sandbox.h"
+#include "vulkan_engine.h"
+#include "core/entry_point.h"
 
 class SandboxApp : public Application
 {
