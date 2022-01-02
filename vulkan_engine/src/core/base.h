@@ -18,3 +18,5 @@
 #else
 #define VE_DEBUG_BREAK()
 #endif
+
+#define VE_MAKE_VERSION(major, minor, patch)

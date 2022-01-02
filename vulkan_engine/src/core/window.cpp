@@ -1,7 +1,7 @@
 #include "window.h"
 #include "event.h"
 
-static bool GLFWInitialized = false;
+static bool GLFW_initialized = false;
 
 static void GLFWErrorCallback(int error, const char *description)
 {
@@ -20,12 +20,12 @@ Window::Window(const WindowProps &props)
     data.vsync = false;
     updateProjection();
 
-    if (!GLFWInitialized)
+    if (!GLFW_initialized)
     {
         int success = glfwInit();
         VE_CORE_ASSERT(success, "Couldn't initialize glfw");
         glfwSetErrorCallback(GLFWErrorCallback);
-        GLFWInitialized = true;
+        GLFW_initialized = true;
     }
 
     if (transparent)
@@ -36,7 +36,7 @@ Window::Window(const WindowProps &props)
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    window = glfwCreateWindow(data.width, data.height, data.title.c_str(), data.fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+    window = glfwCreateWindow(data.width, data.height, data.title, data.fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 
     // RenderCommand::setViewport(0, 0, data.width, data.height);
 
@@ -207,12 +207,12 @@ void Window::setSize(const glm::uvec2 &size)
     updateProjection();
 }
 
-void Window::setTitle(const std::string &title)
+void Window::setTitle(const const char *title)
 {
     if (title == data.title)
         return;
     data.title = title;
-    glfwSetWindowTitle(window, data.title.c_str());
+    glfwSetWindowTitle(window, data.title);
 }
 
 void Window::align(WindowAlignment a)

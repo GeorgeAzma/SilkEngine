@@ -22,7 +22,20 @@ target_compile_definitions(VulkanEngine PUBLIC
 )
 
 #Link
-target_link_libraries(VulkanEngine ${EXTRA_LIBS})
+if (DEFINED VULKAN_SDK_PATH)
+    list(APPEND INCLUDE_DIRS "${VULKAN_SDK_PATH}/Include")
+    list(APPEND EXTRA_LIB_DIRS "${VULKAN_SDK_PATH}/Lib")
+    set(Vulkan_FOUND True)
+else()
+    find_package(Vulkan REQUIRED)
+    message(STATUS "Found Vulkan: $ENV{VULKAN_SDK}")
+endif()
+if(NOT Vulkan_FOUND)
+    message("Could not find vulkan")
+else()
+    message(STATUS "Using vulkan lib at: ${Vulkan_LIBRARIES}")
+endif()
+target_link_libraries(VulkanEngine Vulkan::Vulkan)
 
 #Precompile headers
 target_precompile_headers(VulkanEngine PUBLIC "core/pch.h")

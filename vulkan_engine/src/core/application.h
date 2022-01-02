@@ -23,25 +23,25 @@ struct ApplicationCommandLineArgs
 class Application
 {
 public:
-    Application(const std::string &name = "App", ApplicationCommandLineArgs args = {});
+    Application(const char *name = "App", ApplicationCommandLineArgs args = {});
     virtual ~Application();
 
     void pushLayer(Layer *layer);
     void pushOverlay(Layer *layer);
 
-    ApplicationCommandLineArgs getCommandLineArgs() const { return commandLineArgs; }
+    ApplicationCommandLineArgs getCommandLineArgs() const { return command_line_args; }
 
 private:
     void run();
     void onWindowClose(const WindowCloseEvent &e);
 
 private:
-    ApplicationCommandLineArgs commandLineArgs;
+    ApplicationCommandLineArgs command_line_args;
     bool running = true;
     std::shared_ptr<Window> window;
-    LayerStack layerStack;
+    LayerStack layer_stack;
     double runtime = 0.0;
-    FixedUpdate appUpdate;
+    FixedUpdate app_update;
 
 private:
     friend int ::main(int argc, char **argv);

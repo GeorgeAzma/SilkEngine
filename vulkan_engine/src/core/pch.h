@@ -41,7 +41,7 @@
 //#include <assimp/Importer.hpp>
 //#include <assimp/scene.h>
 //#include <assimp/postprocess.h>
-#include <vulkan/vulkan.h> //Error here should be fine
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 //#include <ft2build.h>
 //#include <freetype/freetype.h>

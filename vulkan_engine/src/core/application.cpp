@@ -2,8 +2,8 @@
 #include "../utils/delta.h"
 #include "time.h"
 
-Application::Application(const std::string &name, ApplicationCommandLineArgs args)
-    : commandLineArgs(args), appUpdate(256)
+Application::Application(const char *name, ApplicationCommandLineArgs args)
+    : command_line_args(args), app_update(256)
 {
     WindowProps props{};
     props.title = name;
@@ -18,29 +18,28 @@ Application::~Application()
 
 void Application::pushLayer(Layer *layer)
 {
-    layerStack.pushLayer(layer);
+    layer_stack.pushLayer(layer);
     layer->onAttach();
 }
 
 void Application::pushOverlay(Layer *layer)
 {
-    layerStack.pushOverlay(layer);
+    layer_stack.pushOverlay(layer);
     layer->onAttach();
 }
 
 void Application::run()
 {
-    Delta deltaTime(runtime);
     while (running)
     {
-        if (appUpdate.update())
+        if (app_update.update())
         {
             if (!window->isMinimized())
             {
-                Time::dt = appUpdate.getElapsedTime();
-                Time::frames = appUpdate.getFramesPassed();
-                Time::runtime = appUpdate.getRuntime();
-                for (Layer *layer : layerStack)
+                Time::dt = app_update.getElapsedTime();
+                Time::frames = app_update.getFramesPassed();
+                Time::runtime = app_update.getRuntime();
+                for (Layer *layer : layer_stack)
                     layer->onUpdate();
             }
             window->update();

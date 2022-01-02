@@ -42,6 +42,5 @@
 ---------------- Notes ----------------
 
 - Prefer verbose variable names
-- Prefer C++ standard over C standard (like use std::string instead of const char*)
 - Worry about multiplatform support
 - Comment complex code snippets which are intended to be used by an user

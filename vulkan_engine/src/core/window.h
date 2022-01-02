@@ -7,7 +7,7 @@
 struct WindowProps
 {
     int width = 1280, height = 720;
-    std::string title = "Window";
+    const char *title = "Window";
     bool transparent = false;
 };
 
@@ -47,7 +47,7 @@ public:
     void setWidth(unsigned int width);
     void setHeight(unsigned int height);
     void setSize(const glm::uvec2 &size);
-    void setTitle(const std::string &title);
+    void setTitle(const const char* title);
     void align(WindowAlignment a = WindowAlignment::CENTER);
     // void setIcon(std::shared_ptr<Texture> icon);
 private:
@@ -59,7 +59,7 @@ private:
     struct Data
     {
         int width, height;
-        std::string title;
+        const char *title;
         bool fullscreen;
         bool vsync;
         int x, y;

@@ -3,15 +3,15 @@
 class Layer
 {
 public:
-    Layer(const std::string &name = "Layer");
+    Layer(const std::string &debug_name = "Layer");
     virtual ~Layer() = default;
 
     virtual void onAttach() {}
     virtual void onDetach() {}
     virtual void onUpdate() {}
 
-    const std::string &getName() const { return debugName; }
+    const std::string &getName() const { return debug_name; }
 
 protected:
-    std::string debugName;
+    std::string debug_name;
 };
