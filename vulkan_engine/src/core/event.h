@@ -32,8 +32,9 @@ public:
     KeyPressEvent(uint16_t keycode, unsigned int repeat_count = 0)
         : keycode{keycode}, repeat_count{repeat_count} {}
 
-    const uint16_t keycode;
-    const unsigned int repeat_count;
+private:
+    uint16_t keycode;
+    unsigned int repeat_count;
 };
 
 class KeyReleaseEvent : Event
@@ -42,7 +43,8 @@ public:
     KeyReleaseEvent(uint16_t keycode)
         : keycode{keycode} {}
 
-    const uint16_t keycode;
+private:
+    uint16_t keycode;
 };
 
 class MousePressEvent : Event
@@ -51,7 +53,8 @@ public:
     MousePressEvent(uint16_t button)
         : button{button} {}
 
-    const uint16_t button;
+private:
+    uint16_t button;
 };
 
 class MouseReleaseEvent : Event
@@ -60,7 +63,8 @@ public:
     MouseReleaseEvent(uint16_t button)
         : button{button} {}
 
-    const uint16_t button;
+private:
+    uint16_t button;
 };
 
 class MouseMoveEvent : Event
@@ -69,7 +73,8 @@ public:
     MouseMoveEvent(double x, double y)
         : x{x}, y{y} {}
 
-    const double x, y;
+private:
+    double x, y;
 };
 
 class MouseDragEvent : Event
@@ -78,8 +83,9 @@ public:
     MouseDragEvent(uint16_t button, double x, double y)
         : button{button}, x{x}, y{y} {}
 
-    const uint16_t button;
-    const double x, y;
+private:
+    uint16_t button;
+    double x, y;
 };
 
 class MouseScrollEvent : Event
@@ -88,7 +94,8 @@ public:
     MouseScrollEvent(double x, double y)
         : x{x}, y{y} {}
 
-    const double x, y;
+private:
+    double x, y;
 };
 
 // Dispatching and such code
