@@ -1,4 +1,7 @@
+#pragma once
+
 #include <iostream>
+
 extern Application *createApp();
 
 int main(int argc, char **argv)
