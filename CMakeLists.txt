@@ -20,7 +20,7 @@ add_compile_definitions(_USE_MATH_DEFINES)
 if (DEFINED VULKAN_SDK_PATH)
     list(APPEND INCLUDE_DIRS "${VULKAN_SDK_PATH}/Include")
     list(APPEND EXTRA_LIB_DIRS "${VULKAN_SDK_PATH}/Lib")
-    set(Vulkan_FOUND True)
+    set(Vulkan_FOUND "True")
 else()
     find_package(Vulkan REQUIRED)
     message(STATUS "Found Vulkan: $ENV{VULKAN_SDK}")
@@ -104,6 +104,7 @@ include_directories(
 "vendor" 
 "vulkan_engine/src"
 ${INCLUDE_DIRS}
+"E:/Resources/CodingResources/C++/Includes/Vulkan/Include"
 )
 
 #Sub dirs

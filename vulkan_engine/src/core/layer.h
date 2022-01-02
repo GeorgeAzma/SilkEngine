@@ -3,7 +3,7 @@
 class Layer
 {
 public:
-    Layer(const std::string &debug_name = "Layer");
+    Layer(const char *debug_name = "Layer");
     virtual ~Layer() = default;
 
     virtual void onAttach() {}
