@@ -32,32 +32,51 @@ else()
 endif()
 
 #thread_pool
-if(NOT EXISTS "vendor/thread_pool/.github")
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/thread_pool/.github)
 FetchContent_Declare(THREAD_POOL
 GIT_REPOSITORY  https://github.com/bshoshany/thread-pool
 GIT_TAG         v2.0.0
 GIT_SHALLOW     ON
-SOURCE_DIR "vendor/thread_pool"
+SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/thread_pool
 )
 FetchContent_MakeAvailable(THREAD_POOL)
 FetchContent_GetProperties(THREAD_POOL)
 endif()
-list(APPEND INCLUDE_DIRS vendor/thread_pool)
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/thread_pool)
 
 #spdlog
-if(NOT EXISTS "vendor/spdlog/.github")
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/spdlog/.github)
 FetchContent_Declare(SPDLOG
 GIT_REPOSITORY  https://github.com/gabime/spdlog
 GIT_TAG         v1.9.2
 GIT_SHALLOW     ON
-SOURCE_DIR "vendor/spdlog"
+SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/spdlog
 )
 FetchContent_MakeAvailable(SPDLOG)
 FetchContent_GetProperties(SPDLOG)
 endif()
-list(APPEND INCLUDE_DIRS "vendor/spdlog/include")
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
 
 find_package(Threads REQUIRED)
+
+#glfw
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/glfw/include)
+ExternalProject_Add(GLFW
+GIT_REPOSITORY  https://github.com/glfw/glfw
+GIT_TAG         3.3.5
+GIT_SHALLOW     ON
+INSTALL_DIR ${PROJECT_SOURCE_DIR}/vendor/glfw
+CMAKE_ARGS   -DGLFW_BUILD_EXAMPLES=OFF
+             -DGLFW_BUILD_TESTS=OFF
+             -DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/vendor/glfw
+)
+endif()
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glfw/include)
+if(WIN32)
+    list(APPEND EXTRA_LIBS ${PROJECT_SOURCE_DIR}/vendor/glfw/lib/glfw3.lib)
+else()
+    list(APPEND EXTRA_LIBS ${PROJECT_SOURCE_DIR}/vendor/glfw/lib/libglfw3.a)
+endif()
 
 #Include dirs
 include_directories(

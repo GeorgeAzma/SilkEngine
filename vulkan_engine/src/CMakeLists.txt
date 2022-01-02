@@ -5,9 +5,8 @@ add_library(VulkanEngine STATIC ${VULKAN_ENGINE_SOURCES})
 
 #Defines
 target_compile_definitions(VulkanEngine PUBLIC 
-"$<$<CONFIG:DEBUG>:DEBUG>"
-"$<$<CONFIG:DEBUG>:_DEBUG>"
-"$<$<CONFIG:RELEASE>:DIST>"
+"$<$<CONFIG:DEBUG>:VE_DEBUG>"
+"$<$<CONFIG:RELEASE>:VE_DIST>"
 )
 
 #Link
