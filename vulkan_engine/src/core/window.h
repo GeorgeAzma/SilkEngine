@@ -37,6 +37,7 @@ public:
     bool isFullscreen() const { return data.fullscreen; }
     bool isVsync() const { return data.vsync; }
     bool isTransparent() const { return transparent; }
+    bool isMinimized() const { return data.width == 0 || data.height == 0; }
     const glm::mat4 &getProjection() const { return data.projection; }
     void setVsync(bool vsync);
     void setFullscreen(bool fullscreen);

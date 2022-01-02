@@ -9,6 +9,7 @@ Application::Application(const std::string &name, ApplicationCommandLineArgs arg
     props.title = name;
     window = std::make_shared<Window>(props);
     Log::init();
+    Dispatcher::subscribe(this, &Application::onWindowClose);
 }
 
 Application::~Application()
@@ -35,7 +36,7 @@ void Application::run()
     {
         if (appUpdate.update())
         {
-            if (!minimized)
+            if (!window->isMinimized())
             {
                 Time::dt = appUpdate.getElapsedTime();
                 Time::frames = appUpdate.getFramesPassed();
@@ -46,4 +47,9 @@ void Application::run()
             window->update();
         }
     }
+}
+
+void Application::onWindowClose(const WindowCloseEvent &e)
+{
+    running = false;
 }

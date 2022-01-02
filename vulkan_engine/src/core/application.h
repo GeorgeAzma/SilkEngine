@@ -4,6 +4,7 @@
 #include "window.h"
 #include "layer_stack.h"
 #include "../utils/fixed_update.h"
+#include "event.h"
 
 int main(int argc, char **argv);
 
@@ -32,11 +33,11 @@ public:
 
 private:
     void run();
+    void onWindowClose(const WindowCloseEvent &e);
 
 private:
     ApplicationCommandLineArgs commandLineArgs;
     bool running = true;
-    bool minimized = false;
     std::shared_ptr<Window> window;
     LayerStack layerStack;
     double runtime = 0.0;
