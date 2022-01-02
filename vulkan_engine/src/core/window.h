@@ -1,6 +1,7 @@
 #pragma once
 #include <GLM/glm.hpp>
 #include <GLFW/glfw3.h>
+#include <string>
 
 struct WindowProps
 {
@@ -38,6 +39,13 @@ public:
     const glm::mat4 &getProjection() const { return data.projection; }
     void setVsync(bool vsync);
     void setFullscreen(bool fullscreen);
+    void setX(int x);
+    void setY(int y);
+    void setPosition(const glm::ivec2 &position);
+    void setWidth(unsigned int width);
+    void setHeight(unsigned int height);
+    void setSize(const glm::uvec2 &size);
+    void setTitle(const std::string &title);
     void align(WindowAlignment a = WindowAlignment::CENTER);
     // void setIcon(std::shared_ptr<Texture> icon);
 private:

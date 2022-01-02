@@ -5,30 +5,30 @@
 class FixedUpdate
 {
 public:
-    using UpdateFunc = std::function<void(float)>;
+    using UpdateFunc = std::function<void(double)>;
     FixedUpdate(unsigned int maximumFPS, UpdateFunc func = nullptr);
     bool update();
-    inline unsigned int getFPS() const { return (unsigned int)round(fps); }
-    inline float getFPSf() const { return fps; }
-    inline float getElapsedTime() const { return elapsed; }
-    inline float getRuntime() const { return totalTime; }
-    inline unsigned int getFramesPassed() const { return frames; }
-    inline unsigned int getMaxFPS() const { return maxFPS; }
-    inline float getTimestep() const { return timestep; }
-    inline void setMaxFPS(const unsigned int newMaxFPS)
+    unsigned int getFPS() const { return round(fps); }
+    double getFPSf() const { return fps; }
+    double getElapsedTime() const { return elapsed; }
+    double getRuntime() const { return totalTime; }
+    unsigned int getFramesPassed() const { return frames; }
+    unsigned int getMaxFPS() const { return maxFPS; }
+    double getTimestep() const { return timestep; }
+    void setMaxFPS(unsigned int newMaxFPS)
     {
         maxFPS = newMaxFPS;
-        timestep = 1.0f / newMaxFPS;
+        timestep = 1.0 / newMaxFPS;
     }
     void printFPS();
 
 private:
-    Delta<float> delta;
+    Delta<double> delta;
     UpdateFunc updateFunction;
     unsigned int maxFPS;
-    float elapsed;
-    float fps;
+    double elapsed;
+    double fps;
     unsigned int frames;
-    float timestep;
-    float totalTime;
+    double timestep;
+    double totalTime;
 };

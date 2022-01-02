@@ -77,6 +77,64 @@ void Window::setFullscreen(bool fullscreen)
         glfwSetWindowMonitor(window, nullptr, data.x, data.y, data.width, data.height, GLFW_DONT_CARE);
 }
 
+void Window::setX(int x)
+{
+    if (x == data.x)
+        return;
+    data.x = x;
+    glfwSetWindowPos(window, data.x, data.y);
+}
+
+void Window::setY(int y)
+{
+    if (y == data.y)
+        return;
+    data.y = y;
+    glfwSetWindowPos(window, data.x, data.y);
+}
+
+void Window::setPosition(const glm::ivec2 &position)
+{
+    if (position.x == data.x && position.y == data.y)
+        return;
+    data.x = position.x;
+    data.y = position.y;
+    glfwSetWindowPos(window, data.x, data.y);
+}
+
+void Window::setWidth(unsigned int width)
+{
+    if (width == data.width)
+        return;
+    data.width = width;
+    glfwSetWindowSize(window, data.width, data.height);
+}
+
+void Window::setHeight(unsigned int height)
+{
+    if (height == data.height)
+        return;
+    data.height = height;
+    glfwSetWindowSize(window, data.width, data.height);
+}
+
+void Window::setSize(const glm::uvec2 &size)
+{
+    if (size.x == data.width && size.y == data.height)
+        return;
+    data.width = size.x;
+    data.height = size.y;
+    glfwSetWindowSize(window, data.width, data.height);
+}
+
+void Window::setTitle(const std::string &title)
+{
+    if (title == data.title)
+        return;
+    data.title = title;
+    glfwSetWindowTitle(window, data.title.c_str());
+}
+
 void Window::align(WindowAlignment a)
 {
     auto &x = data.x;

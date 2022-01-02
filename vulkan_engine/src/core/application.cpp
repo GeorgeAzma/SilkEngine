@@ -1,7 +1,9 @@
 #include "application.h"
+#include "../utils/delta.h"
+#include "time.h"
 
 Application::Application(const std::string &name, ApplicationCommandLineArgs args)
-    : commandLineArgs(args)
+    : commandLineArgs(args), appUpdate(256)
 {
     WindowProps props{};
     props.title = name;
@@ -30,16 +32,17 @@ void Application::run()
     Delta deltaTime(runtime);
     while (running)
     {
-        double time = glfwGetTime();
-        Timestep timestep = time - m_LastFrameTime;
-        m_LastFrameTime = time;
-
-        if (!minimized)
+        if (appUpdate.update())
         {
-            for (Layer *layer : layerStack)
-                layer->OnUpdate(timestep);
+            if (!minimized)
+            {
+                time.dt = appUpdate.getElapsedTime();
+                time.frames = appUpdate.getFramesPassed();
+                time.runtime = appUpdate.getRuntime();
+                for (Layer *layer : layerStack)
+                    layer->onUpdate();
+            }
+            window->update();
         }
-
-        m_Window->OnUpdate();
     }
 }

@@ -1,4 +1,3 @@
 - Have some kind of SYSTEM class where everything gets initialized
 - Name the engine and change stuff like VE_TRACE to ENGINE_NAME_TRACE
-- in Window class create setX()/setY()/setWidth()/setHeight()/setTitle() 
 - handle window event callbacks

@@ -2,6 +2,7 @@
 #include "log.h"
 #include "window.h"
 #include "layer_stack.h"
+#include "../utils/fixed_update.h"
 
 struct ApplicationCommandLineArgs
 {
@@ -36,7 +37,7 @@ private:
     std::shared_ptr<Window> window;
     LayerStack layerStack;
     double runtime = 0.0;
-    FixedUpdate s_appUpdate;
+    FixedUpdate appUpdate;
 
 private:
     friend int ::main(int argc, char **argv);

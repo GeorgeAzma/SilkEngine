@@ -5,16 +5,16 @@ FixedUpdate::FixedUpdate(unsigned int maximumFPS, UpdateFunc func)
 
 bool FixedUpdate::update()
 {
-    const float deltaTime = delta.calc(glfwGetTime());
+    const double deltaTime = delta.calc(glfwGetTime());
     elapsed += deltaTime;
     totalTime += deltaTime;
-    if (elapsed > timestep)
+    if (elapsed >= timestep)
     {
         ++frames;
         if (updateFunction)
             updateFunction(elapsed);
-        fps = 1.0f / elapsed;
-        elapsed = 0;
+        fps = 1.0 / elapsed;
+        elapsed -= timestep;
         return true;
     }
     return false;
