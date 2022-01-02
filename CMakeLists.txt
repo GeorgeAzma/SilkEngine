@@ -60,6 +60,8 @@ list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
 find_package(Threads REQUIRED)
 
 #glfw
+set(glfw_build FALSE)
+list(APPEND DEPENDENCIES_TO_ADD glfw_build)
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/glfw/include)
 ExternalProject_Add(GLFW
 GIT_REPOSITORY  https://github.com/glfw/glfw
@@ -70,6 +72,7 @@ CMAKE_ARGS   -DGLFW_BUILD_EXAMPLES=OFF
              -DGLFW_BUILD_TESTS=OFF
              -DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/vendor/glfw
 )
+set(glfw_build TRUE)
 endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glfw/include)
 if(WIN32)

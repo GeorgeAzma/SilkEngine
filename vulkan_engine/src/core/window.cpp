@@ -1,4 +1,5 @@
 #include "window.h"
+
 static bool GLFWInitialized = false;
 
 static void GLFWErrorCallback(int error, const char *description)
@@ -21,7 +22,7 @@ Window::Window(const WindowProps &props)
     if (!GLFWInitialized)
     {
         int success = glfwInit();
-        VE_CORE_ASSERT(success);
+        VE_CORE_ASSERT(success, "Couldn't initialize glfw");
         glfwSetErrorCallback(GLFWErrorCallback);
         GLFWInitialized = true;
     }
