@@ -9,7 +9,6 @@ public:
     virtual void onAttach() {}
     virtual void onDetach() {}
     virtual void onUpdate() {}
-    virtual void onImGuiRender() {}
 
     const std::string &getName() const { return debugName; }
 

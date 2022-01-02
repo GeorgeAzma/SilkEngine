@@ -1,8 +1,8 @@
 #pragma once
 
-inline struct TimeStruct
+namespace Time
 {
-    double dt = 0.0;
-    double runtime = 0.0;
-    unsigned int frames = 0;
-} time;
+    inline double dt = 0.0;
+    inline double runtime = 0.0;
+    inline unsigned int frames = 0;
+}

@@ -1,18 +1,18 @@
 #include <vulkan_engine.h>
 
-class Sandbox : public Application
+class SandboxApp : public Application
 {
 public:
-    Sandbox()
+    SandboxApp()
     {
     }
 
-    ~Sandbox()
+    ~SandboxApp()
     {
     }
 };
 
 Application *createApp()
 {
-    return new Sandbox();
+    return new SandboxApp();
 }

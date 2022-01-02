@@ -13,6 +13,7 @@ Application::Application(const std::string &name, ApplicationCommandLineArgs arg
 
 Application::~Application()
 {
+    glfwTerminate();
 }
 
 void Application::pushLayer(Layer *layer)
@@ -36,9 +37,9 @@ void Application::run()
         {
             if (!minimized)
             {
-                time.dt = appUpdate.getElapsedTime();
-                time.frames = appUpdate.getFramesPassed();
-                time.runtime = appUpdate.getRuntime();
+                Time::dt = appUpdate.getElapsedTime();
+                Time::frames = appUpdate.getFramesPassed();
+                Time::runtime = appUpdate.getRuntime();
                 for (Layer *layer : layerStack)
                     layer->onUpdate();
             }

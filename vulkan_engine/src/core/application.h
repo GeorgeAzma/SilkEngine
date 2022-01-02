@@ -4,6 +4,8 @@
 #include "layer_stack.h"
 #include "../utils/fixed_update.h"
 
+int main(int argc, char **argv);
+
 struct ApplicationCommandLineArgs
 {
     int count = 0;
@@ -11,7 +13,7 @@ struct ApplicationCommandLineArgs
 
     const char *operator[](int index) const
     {
-        VE_CORE_ASSERT(index < Count);
+        VE_CORE_ASSERT(index < count, "Index out of bounds");
         return args[index];
     }
 };
