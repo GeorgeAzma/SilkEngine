@@ -5,16 +5,10 @@ class Sandbox : public Application
 public:
     Sandbox()
     {
-        Log::init();
     }
 
     ~Sandbox()
     {
-    }
-
-    void run()
-    {
-        VE_WARN("RAN SUCCESFULLY TROLOLO");
     }
 };
 

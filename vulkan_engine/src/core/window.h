@@ -5,7 +5,7 @@
 struct WindowProps
 {
     unsigned int width = 1280, height = 720;
-    const char *title = "Window";
+    std::string title = "Window";
     bool transparent = false;
 };
 
@@ -49,7 +49,7 @@ private:
     struct Data
     {
         unsigned int width, height;
-        const char *title;
+        std::string title;
         bool fullscreen;
         bool vsync;
         int x, y;
