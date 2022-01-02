@@ -1,5 +1,6 @@
 #pragma once
 #include <GLM/glm.hpp>
+#include <GLFW/glfw3.h>
 
 struct WindowProps
 {
@@ -20,11 +21,10 @@ enum class WindowAlignment
     TOP_LEFT,
     TOP_RIGHT,
 };
-
 class Window
 {
 public:
-    Window();
+    Window(const WindowProps &props = {});
     ~Window();
     void update();
     unsigned int getWidth() const { return data.width; }
@@ -32,7 +32,7 @@ public:
     unsigned int getX() const { return data.x; }
     unsigned int getY() const { return data.y; }
     GLFWwindow *getGLFWWindow() const { return window; }
-    bool isFullscreen() const { return data.fullscreen }
+    bool isFullscreen() const { return data.fullscreen; }
     bool isVsync() const { return data.vsync; }
     bool isTransparent() const { return transparent; }
     const glm::mat4 &getProjection() const { return data.projection; }
@@ -40,6 +40,8 @@ public:
     void setFullscreen(bool fullscreen);
     void align(WindowAlignment a = WindowAlignment::CENTER);
     // void setIcon(std::shared_ptr<Texture> icon);
+private:
+    void updateProjection();
 
 private:
     GLFWwindow *window;
