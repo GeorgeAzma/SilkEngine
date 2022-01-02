@@ -1,14 +1,15 @@
 #pragma once
 
 #include <iostream>
+#include "application.h"
 
-extern Application *createApp();
+extern Application *createApp(ApplicationCommandLineArgs args);
 
 int main(int argc, char **argv)
 {
     try
     {
-        auto app = createApp();
+        auto app = createApp({argc, argv});
         app->run();
         delete app;
     }

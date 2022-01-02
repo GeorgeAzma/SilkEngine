@@ -22,7 +22,7 @@ private:
 #define VE_CORE_ERROR(...) Log::getCoreLogger()->error(__VA_ARGS__)
 #define VE_CORE_CRITICAL(...) Log::getCoreLogger()->critical(__VA_ARGS__)
 #define VE_CORE_ASSERT(x, ...) \
-    if (x)                     \
+    if (!x)                    \
     VE_CORE_ERROR(__VA_ARGS__)
 
 #define VE_TRACE(...) Log::getClientLogger()->trace(__VA_ARGS__)
@@ -31,7 +31,7 @@ private:
 #define VE_ERROR(...) Log::getClientLogger()->error(__VA_ARGS__)
 #define VE_CRITICAL(...) Log::getClientLogger()->critical(__VA_ARGS__)
 #define VE_ASSERT(x, ...) \
-    if (x)                \
+    if (!x)               \
     VE_ERROR(__VA_ARGS__)
 #else
 #define VE_CORE_TRACE(...)

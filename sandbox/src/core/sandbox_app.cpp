@@ -1,18 +1,15 @@
-#include <vulkan_engine.h>
+#include "sandbox_app.h"
 
-class SandboxApp : public Application
+SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 {
-public:
-    SandboxApp()
-    {
-    }
+    pushLayer(new Sandbox());
+}
 
-    ~SandboxApp()
-    {
-    }
-};
-
-Application *createApp()
+SandboxApp::~SandboxApp()
 {
-    return new SandboxApp();
+}
+
+Application *createApp(ApplicationCommandLineArgs args)
+{
+    return new SandboxApp(args);
 }

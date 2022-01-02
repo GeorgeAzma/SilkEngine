@@ -81,6 +81,9 @@ else()
     list(APPEND EXTRA_LIBS ${PROJECT_SOURCE_DIR}/vendor/glfw/lib/libglfw3.a)
 endif()
 
+#glm
+set(glm_deps FALSE)
+list(APPEND DEPENDENCIES_TO_ADD glm_deps)
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/glm/cmake)
 ExternalProject_Add(GLM
 GIT_REPOSITORY  https://github.com/g-truc/glm

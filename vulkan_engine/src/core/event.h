@@ -1,5 +1,8 @@
 #pragma once
-
+#include <map>
+#include <typeindex>
+#include <vector>
+#include <memory>
 class Event
 {
 public:
@@ -90,4 +93,4 @@ public:
 private:
     static std::map<std::type_index, HandlerList> subscribers;
 };
-std::map<std::type_index, Dispatcher::HandlerList> Dispatcher::subscribers;
+inline std::map<std::type_index, Dispatcher::HandlerList> Dispatcher::subscribers;

@@ -5,7 +5,7 @@
 #include "layer_stack.h"
 #include "../utils/fixed_update.h"
 
-int main(int argc, char **argv);
+// int main(int argc, char **argv);
 
 struct ApplicationCommandLineArgs
 {
@@ -30,7 +30,7 @@ public:
 
     ApplicationCommandLineArgs getCommandLineArgs() const { return commandLineArgs; }
 
-private:
+    // private:
     void run();
 
 private:
@@ -43,7 +43,7 @@ private:
     FixedUpdate appUpdate;
 
 private:
-    friend int ::main(int argc, char **argv);
+    // friend int ::main(int argc, char **argv);
 };
 
 // To be defined in client
