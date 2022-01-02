@@ -33,6 +33,8 @@ Window::Window(const WindowProps &props)
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     }
 
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
     window = glfwCreateWindow(props.width, props.height, data.title, data.fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 
     glfwDefaultWindowHints();
