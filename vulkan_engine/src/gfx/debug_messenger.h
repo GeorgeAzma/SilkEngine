@@ -3,7 +3,7 @@
 class DebugMessenger
 {
 public:
-    DebugMessenger();
+    DebugMessenger(VkInstance instance);
 
 private:
     VkDebugUtilsMessengerEXT debugMessenger;

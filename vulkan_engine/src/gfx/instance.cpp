@@ -57,10 +57,10 @@ std::vector<VkExtensionProperties> Instance::getAvailableExtensions() const
     return extensions;
 }
 
-bool Instance::checkExtensionSupport(const std::vector<const char*>& required_extensions) const
+bool Instance::checkExtensionSupport(const std::vector<const char *> &required_extensions) const
 {
     std::vector<VkExtensionProperties> available_extensions = getAvailableExtensions();
-    for (const char* required_extension : required_extensions)
+    for (const char *required_extension : required_extensions)
     {
         bool extension_found = false;
         for (VkExtensionProperties available_extension : available_extensions)
@@ -77,9 +77,9 @@ bool Instance::checkExtensionSupport(const std::vector<const char*>& required_ex
     return true;
 }
 
-std::vector<const char*> Instance::getRequiredValidationLayers() const
+std::vector<const char *> Instance::getRequiredValidationLayers() const
 {
-    return std::vector<const char*>{"VK_LAYER_KHRONOS_validation"};
+    return std::vector<const char *>{"VK_LAYER_KHRONOS_validation"};
 }
 
 std::vector<VkLayerProperties> Instance::getAvailableValidationLayers() const
@@ -93,10 +93,10 @@ std::vector<VkLayerProperties> Instance::getAvailableValidationLayers() const
     return availableLayers;
 }
 
-bool Instance::checkValidationLayerSupport(const std::vector<const char*>& required_layers) const
+bool Instance::checkValidationLayerSupport(const std::vector<const char *> &required_layers) const
 {
     std::vector<VkLayerProperties> available_layers = getAvailableValidationLayers();
-    for (const char* required_layer : required_layers)
+    for (const char *required_layer : required_layers)
     {
         bool layer_found = false;
         for (VkLayerProperties available_layer : available_layers)
@@ -112,4 +112,3 @@ bool Instance::checkValidationLayerSupport(const std::vector<const char*>& requi
     }
     return true;
 }
-

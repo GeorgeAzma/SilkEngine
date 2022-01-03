@@ -17,22 +17,7 @@ add_compile_definitions(_USE_MATH_DEFINES)
 #|-----Vendor-----|#
 
 #Vulkan
-#if (DEFINED VULKAN_SDK_PATH)
-#    list(APPEND INCLUDE_DIRS "${VULKAN_SDK_PATH}/Include")
-#    list(APPEND EXTRA_LIB_DIRS "${VULKAN_SDK_PATH}/Lib")
-#    set(Vulkan_FOUND True)
-#else()
-#    find_package(Vulkan REQUIRED)
-#    message(STATUS "Found Vulkan: $ENV{VULKAN_SDK}")
-#endif()
-#if(NOT Vulkan_FOUND)
-#    message("Could not find vulkan")
-#else()
-#    message(STATUS "Using vulkan lib at: ${VULKAN_SDK_PATH}/Include")
-#endif()
 find_package(Vulkan)
-	
-# Try extracting VulkanSDK path from ${Vulkan_INCLUDE_DIRS}
 if (NOT ${Vulkan_INCLUDE_DIRS} STREQUAL "")
 	set(VULKAN_PATH ${Vulkan_INCLUDE_DIRS})
 	STRING(REGEX REPLACE "/Include" "" VULKAN_PATH ${VULKAN_PATH})

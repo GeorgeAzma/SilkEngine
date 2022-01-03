@@ -7,6 +7,7 @@ add_library(VulkanEngine STATIC ${VULKAN_ENGINE_SOURCES})
 target_include_directories(VulkanEngine PUBLIC 
 "${PROJECT_SOURCE_DIR}/vendor" 
 "${PROJECT_SOURCE_DIR}/vulkan_engine/src"
+"E:/Resources/CodingResources/Vulkan/Include"
 ${INCLUDE_DIRS}
 )
 

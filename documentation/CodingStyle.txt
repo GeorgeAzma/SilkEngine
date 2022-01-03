@@ -10,11 +10,11 @@
 
         Classes
         Structs
-        TypeDefs/Using (except primitive stuff (uint16_t...))
+        TypeDefs/Using
 
     -------Camel-------
 
-        Functions (except for std functions (begin(), end()...))
+        Functions
 
     -------Snake-------
 
@@ -43,4 +43,6 @@
 
 - Prefer verbose variable names
 - Worry about multiplatform support
+- You can follow coding style of the thing you are programming in 
+  (if making a std function you use snake case, if vulkan use camel case etc.)
 - Comment complex code snippets which are intended to be used by an user
