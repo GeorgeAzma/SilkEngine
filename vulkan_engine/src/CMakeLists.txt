@@ -1,7 +1,14 @@
-file(GLOB_RECURSE VULKAN_ENGINE_SOURCES "*.cpp")
+file(GLOB_RECURSE VULKAN_ENGINE_SOURCES "*.cpp" "*.h" "*.hpp")
 
 #Create VulkanEngine.lib
 add_library(VulkanEngine STATIC ${VULKAN_ENGINE_SOURCES})
+
+#Include dirs
+target_include_directories(VulkanEngine PUBLIC 
+"${PROJECT_SOURCE_DIR}/vendor" 
+"${PROJECT_SOURCE_DIR}/vulkan_engine/src"
+${INCLUDE_DIRS}
+)
 
 #Add dependencies
 foreach(item IN LISTS DEPENDENCIES_TO_ADD)
@@ -26,4 +33,4 @@ target_link_directories(VulkanEngine PUBLIC ${EXTRA_LIB_DIRS})
 target_link_libraries(VulkanEngine ${EXTRA_LIBS})
 
 #Precompile headers
-target_precompile_headers(VulkanEngine PUBLIC "core/pch.h")
+target_precompile_headers(VulkanEngine PUBLIC core/pch.h)

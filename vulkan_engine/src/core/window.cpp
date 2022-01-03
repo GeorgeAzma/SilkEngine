@@ -23,7 +23,7 @@ Window::Window(const WindowProps &props)
     if (!GLFW_initialized)
     {
         int success = glfwInit();
-        VE_CORE_ASSERT(success, "Couldn't initialize glfw");
+        VE_CORE_ASSERT(success, "GLFW Error: Couldn't initialize glfw");
         glfwSetErrorCallback(GLFWErrorCallback);
         GLFW_initialized = true;
     }
@@ -43,7 +43,6 @@ Window::Window(const WindowProps &props)
     glfwDefaultWindowHints();
     glfwShowWindow(window);
 
-    // Set pointer to window data somewhere in memory
     glfwSetWindowUserPointer(window, &data);
     setVsync(data.vsync);
     align(WindowAlignment::CENTER);
