@@ -6,23 +6,24 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
     void *pUserData)
 {
-    std::string message = "Vulkan Error: ";
+    std::string message = "Vulkan: [";
     switch (messageType)
     {
     case VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT:
-        message += "[General]";
+        message += "General";
         break;
     case VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT:
-        message += "[Performance]";
+        message += "Performance";
         break;
     case VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT:
-        message += "[Validation]";
+        message += "Validation";
         break;
     default:
-        message += "[Unknown]";
+        message += "Unknown";
         break;
     }
 
+    message += "] ";
     message += pCallbackData->pMessage;
 
     switch (messageSeverity)
@@ -46,19 +47,45 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 
 static VkResult createDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) 
 {
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-    if (func != nullptr)
-        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-    return VK_ERROR_EXTENSION_NOT_PRESENT;
+    auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"); 
+    
+    if (func == nullptr)
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+    
+    return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
 }
 
-DebugMessenger::DebugMessenger(VkInstance instance)
+static void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+    
+    if (func == nullptr) 
+        return;
+    
+    func(instance, debugMessenger, pAllocator);
+}
+
+DebugMessenger::DebugMessenger(VkInstance* instance, VkInstanceCreateInfo* instanceCreateInfo)
+    : instance{instance}
 {
-    VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+    createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT; //VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | 
     createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
     createInfo.pfnUserCallback = debugCallback;
-    createInfo.pUserData = nullptr; // Optional
-    createDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger);
+    instanceCreateInfo->pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&createInfo;
+}
+
+void DebugMessenger::create()
+{
+    VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT; //VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | 
+    createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    createInfo.pfnUserCallback = debugCallback;
+    VE_CORE_ASSERT(createDebugUtilsMessengerEXT(*instance, &createInfo, nullptr, &debugMessenger) == VK_SUCCESS, "Vulkan: Couldn't create a debug messenger");
+}
+
+DebugMessenger::~DebugMessenger()
+{
+    destroyDebugUtilsMessengerEXT(*instance, debugMessenger, nullptr);
 }

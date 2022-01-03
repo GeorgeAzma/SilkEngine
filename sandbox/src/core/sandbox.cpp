@@ -1,5 +1,6 @@
 #include "Sandbox.h"
 
+Instance* instance = nullptr;
 Sandbox::Sandbox()
     : Layer("Sandbox")
 {
@@ -8,6 +9,7 @@ Sandbox::Sandbox()
 
 void Sandbox::onAttach()
 {
+    instance = new Instance();
 }
 
 void Sandbox::onDetach()
@@ -16,4 +18,9 @@ void Sandbox::onDetach()
 
 void Sandbox::onUpdate()
 {
+    if (instance)
+    {
+        delete instance;
+        instance = nullptr;
+    }
 }

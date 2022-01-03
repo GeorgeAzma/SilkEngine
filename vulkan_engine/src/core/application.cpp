@@ -8,7 +8,9 @@ Application::Application(const char *name, ApplicationCommandLineArgs args)
     WindowProps props{};
     props.title = name;
     window = std::make_shared<Window>(props);
+    
     Log::init();
+    
     Dispatcher::subscribe(this, &Application::onWindowClose);
 }
 

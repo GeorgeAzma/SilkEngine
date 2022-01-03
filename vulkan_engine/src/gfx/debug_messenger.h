@@ -3,8 +3,12 @@
 class DebugMessenger
 {
 public:
-    DebugMessenger(VkInstance instance);
+    DebugMessenger(VkInstance* instance, VkInstanceCreateInfo* instanceCreateInfo = nullptr);
+    void create();
+    ~DebugMessenger();
 
 private:
+    VkInstance* instance = nullptr;
     VkDebugUtilsMessengerEXT debugMessenger;
+    VkDebugUtilsMessengerCreateInfoEXT createInfo;
 };

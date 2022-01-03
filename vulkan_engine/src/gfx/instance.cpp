@@ -15,33 +15,47 @@ Instance::Instance(const AppInfo &app_info)
     createInfo.pApplicationInfo = &application_info;
 
     auto requiredExtensions = getRequiredExtensions();
-    VE_CORE_ASSERT(checkExtensionSupport(requiredExtensions), "Vulkan Error: Required extension(s) not found");
+    VE_CORE_ASSERT(checkExtensionSupport(requiredExtensions), 
+        "Vulkan: Required extension(s) not found");
     createInfo.enabledExtensionCount = requiredExtensions.size();
     createInfo.ppEnabledExtensionNames = requiredExtensions.data();
 
 #ifdef VE_ENABLE_DEBUG_OUTPUT
     auto requiredValidationLayers = getRequiredValidationLayers();
-    VE_CORE_ASSERT(checkValidationLayerSupport(requiredValidationLayers), "Vulkan Error: Required validation layers(s) not found");
+    VE_CORE_ASSERT(checkValidationLayerSupport(requiredValidationLayers), 
+        "Vulkan: Required validation layers(s) not found");
     createInfo.enabledLayerCount = requiredValidationLayers.size();
     createInfo.ppEnabledLayerNames = requiredValidationLayers.data();
+    debugMessenger = new DebugMessenger(&instance, &createInfo);
+#else
+    createInfo.enabledLayerCount = 0;
+    createInfo.pNext = nullptr;
 #endif
 
-    VE_CORE_ASSERT(vkCreateInstance(&createInfo, nullptr, &instance), "Vulkan Error: Couldn't create a vulkan instance");
+    VE_CORE_ASSERT(vkCreateInstance(&createInfo, nullptr, &instance) == VK_SUCCESS, 
+        "Vulkan: Couldn't create a vulkan instance");
+
+    debugMessenger->create();
 }
 
 Instance::~Instance()
 {
+#ifdef VE_ENABLE_DEBUG_OUTPUT
+    delete debugMessenger;
+#endif
     vkDestroyInstance(instance, nullptr);
 }
 
 std::vector<const char *> Instance::getRequiredExtensions() const
 {
-    std::vector<const char *> extensions;
-
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-    for (size_t i = 0; i < glfwExtensionCount; ++i)
-        extensions.emplace_back(glfwExtensions[i]);
+    
+    std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+#ifdef VE_ENABLE_DEBUG_OUTPUT
+    extensions.push_back("VK_EXT_debug_utils");
+#endif
 
     return extensions;
 }
@@ -79,7 +93,10 @@ bool Instance::checkExtensionSupport(const std::vector<const char *> &required_e
 
 std::vector<const char *> Instance::getRequiredValidationLayers() const
 {
-    return std::vector<const char *>{"VK_LAYER_KHRONOS_validation"};
+    return std::vector<const char *>
+    {
+        "VK_LAYER_KHRONOS_validation"
+    };
 }
 
 std::vector<VkLayerProperties> Instance::getAvailableValidationLayers() const

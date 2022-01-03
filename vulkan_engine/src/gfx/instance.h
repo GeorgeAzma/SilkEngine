@@ -1,4 +1,6 @@
 #pragma once
+#include "debug_messenger.h"
+
 struct AppInfo
 {
     const char *name = "App";
@@ -21,4 +23,5 @@ private:
 
 private:
     VkInstance instance;
+    DebugMessenger* debugMessenger = nullptr;
 };

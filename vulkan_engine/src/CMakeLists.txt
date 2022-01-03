@@ -32,6 +32,7 @@ target_compile_definitions(VulkanEngine PUBLIC
 #Link
 target_link_directories(VulkanEngine PUBLIC ${EXTRA_LIB_DIRS})
 target_link_libraries(VulkanEngine ${EXTRA_LIBS})
+target_link_libraries(VulkanEngine "E:/Resources/CodingResources/Vulkan/Lib/vulkan-1.lib")
 
 #Precompile headers
 target_precompile_headers(VulkanEngine PUBLIC 

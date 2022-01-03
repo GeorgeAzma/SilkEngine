@@ -13,3 +13,6 @@
 #include "utils/debug_timer.h"
 #include "utils/fixed_update.h"
 #include "utils/delta.h"
+
+#include "gfx/debug_messenger.h"
+#include "gfx/instance.h"

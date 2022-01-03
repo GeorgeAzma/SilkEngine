@@ -41,8 +41,17 @@
 
 ---------------- Notes ----------------
 
+Disclaimer: Following these notes isn't neccessary but would be preferable
+
 - Prefer verbose variable names
 - Worry about multiplatform support
 - You can follow coding style of the thing you are programming in 
   (if making a std function you use snake case, if vulkan use camel case etc.)
 - Comment complex code snippets which are intended to be used by an user
+- Prefer using smart pointers unless object lifetime is relative to 
+  the program (or even base class), or if memory requires special handling
+
+
+
+
+
