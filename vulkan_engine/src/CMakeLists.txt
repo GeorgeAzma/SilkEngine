@@ -33,4 +33,43 @@ target_link_directories(VulkanEngine PUBLIC ${EXTRA_LIB_DIRS})
 target_link_libraries(VulkanEngine ${EXTRA_LIBS})
 
 #Precompile headers
-target_precompile_headers(VulkanEngine PUBLIC core/pch.h)
+target_precompile_headers(VulkanEngine PUBLIC 
+<iostream>
+<string>
+<unordered_map>
+<unordered_set>
+<map>
+<set>
+<vector>
+<chrono>
+<sstream>
+<fstream>
+<memory>
+<functional>
+<algorithm>
+<utility>
+<array>
+<random>
+<stdlib.h>
+<thread>
+<queue>
+<mutex>
+<condition_variable>
+<bit>
+<math.h>
+<filesystem>
+<future>
+<stdexcept>
+<cstdlib>
+<numeric>
+<optional>
+<typeindex>
+<typeinfo>
+<list>
+<GLM/glm.hpp>
+<GLM/gtc/matrix_transform.hpp>
+<GLM/gtx/quaternion.hpp>
+<vulkan/vulkan.h>
+<GLFW/glfw3.h>
+core/base.h
+core/log.h)
