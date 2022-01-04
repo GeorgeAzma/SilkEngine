@@ -10,50 +10,50 @@ Instance::Instance(const AppInfo &app_info)
     application_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     application_info.apiVersion = VK_API_VERSION_1_2;
 
-    VkInstanceCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    createInfo.pApplicationInfo = &application_info;
+    VkInstanceCreateInfo create_info{};
+    create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    create_info.pApplicationInfo = &application_info;
 
     auto requiredExtensions = getRequiredExtensions();
     VE_CORE_ASSERT(checkExtensionSupport(requiredExtensions), 
         "Vulkan: Required extension(s) not found");
-    createInfo.enabledExtensionCount = requiredExtensions.size();
-    createInfo.ppEnabledExtensionNames = requiredExtensions.data();
+    create_info.enabledExtensionCount = requiredExtensions.size();
+    create_info.ppEnabledExtensionNames = requiredExtensions.data();
 
 #ifdef VE_ENABLE_DEBUG_OUTPUT
-    auto requiredValidationLayers = getRequiredValidationLayers();
-    VE_CORE_ASSERT(checkValidationLayerSupport(requiredValidationLayers), 
+    auto required_validation_layers = getRequiredValidationLayers();
+    VE_CORE_ASSERT(checkValidationLayerSupport(required_validation_layers),
         "Vulkan: Required validation layers(s) not found");
-    createInfo.enabledLayerCount = requiredValidationLayers.size();
-    createInfo.ppEnabledLayerNames = requiredValidationLayers.data();
-    debugMessenger = new DebugMessenger(&instance, &createInfo);
+    create_info.enabledLayerCount = required_validation_layers.size();
+    create_info.ppEnabledLayerNames = required_validation_layers.data();
+    debug_messenger = new DebugMessenger(&instance, &create_info);
 #else
     createInfo.enabledLayerCount = 0;
     createInfo.pNext = nullptr;
 #endif
 
-    VE_CORE_ASSERT(vkCreateInstance(&createInfo, nullptr, &instance) == VK_SUCCESS, 
+    VE_CORE_ASSERT(vkCreateInstance(&create_info, nullptr, &instance) == VK_SUCCESS, 
         "Vulkan: Couldn't create a vulkan instance");
 
 #ifdef VE_ENABLE_DEBUG_OUTPUT
-    debugMessenger->create();
+    debug_messenger->create();
 #endif
 }
 
 Instance::~Instance()
 {
 #ifdef VE_ENABLE_DEBUG_OUTPUT
-    delete debugMessenger;
+    delete debug_messenger;
 #endif
     vkDestroyInstance(instance, nullptr);
 }
 
 std::vector<const char *> Instance::getRequiredExtensions() const
 {
-    uint32_t glfwExtensionCount = 0;
-    const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    uint32_t glfw_extension_count = 0;
+    const char ** glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
     
-    std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+    std::vector<const char*> extensions(glfw_extensions, glfw_extensions + glfw_extension_count);
 
 #ifdef VE_ENABLE_DEBUG_OUTPUT
     extensions.push_back("VK_EXT_debug_utils");
@@ -64,11 +64,11 @@ std::vector<const char *> Instance::getRequiredExtensions() const
 
 std::vector<VkExtensionProperties> Instance::getAvailableExtensions() const
 {
-    uint32_t extensionCount = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+    uint32_t extension_count = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
 
-    std::vector<VkExtensionProperties> extensions(extensionCount);
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+    std::vector<VkExtensionProperties> extensions(extension_count);
+    vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data());
 
     return extensions;
 }
@@ -103,13 +103,13 @@ std::vector<const char *> Instance::getRequiredValidationLayers() const
 
 std::vector<VkLayerProperties> Instance::getAvailableValidationLayers() const
 {
-    uint32_t layerCount = 0;
-    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+    uint32_t layer_count = 0;
+    vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
 
-    std::vector<VkLayerProperties> availableLayers(layerCount);
-    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+    std::vector<VkLayerProperties> available_layers(layer_count);
+    vkEnumerateInstanceLayerProperties(&layer_count, available_layers.data());
 
-    return availableLayers;
+    return available_layers;
 }
 
 bool Instance::checkValidationLayerSupport(const std::vector<const char *> &required_layers) const

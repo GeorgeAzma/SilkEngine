@@ -23,5 +23,5 @@ private:
 
 private:
     VkInstance instance;
-    DebugMessenger* debugMessenger = nullptr;
+    DebugMessenger* debug_messenger = nullptr;
 };
