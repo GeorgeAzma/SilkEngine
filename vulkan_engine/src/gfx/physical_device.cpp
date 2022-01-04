@@ -1,4 +1,5 @@
 #include "physical_device.h"
+#include "logical_device.h"
 #include "queue_family.h"
 
 PhysicalDevice::PhysicalDevice(VkInstance* instance, VkSurfaceKHR* surface)
@@ -54,6 +55,7 @@ int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
 
 	queue_family = QueueFamily(&physical_device, surface);
 	if (!queue_family) return -1;
+	if (!checkPhysicalDeviceExtensionSupport(LogicalDevice::getRequiredLogicalDeviceExtensions(), physical_device)) return -1;
 
 	VkPhysicalDeviceProperties physical_device_properties;
 	VkPhysicalDeviceFeatures physical_device_features;
@@ -72,4 +74,37 @@ int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
 	score += physical_device_features.occlusionQueryPrecise * 25;
 
 	return score;
+}
+
+std::vector<VkExtensionProperties> PhysicalDevice::getAvailablePhysicalDeviceExtensions(VkPhysicalDevice physical_device) const
+{
+	uint32_t extension_count = 0;
+	vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, nullptr);
+
+	std::vector<VkExtensionProperties> available_extensions(extension_count);
+	vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, available_extensions.data());
+
+	return available_extensions;
+}
+
+bool PhysicalDevice::checkPhysicalDeviceExtensionSupport(const std::vector<const char*>& required_extensions, VkPhysicalDevice physical_device) const
+{
+	auto available_extensions = getAvailablePhysicalDeviceExtensions(physical_device);
+
+	for (const auto& required_extension : required_extensions)
+	{
+		bool extension_found = false;
+		for (const auto& available_extension : available_extensions)
+		{
+			if (strcmp(required_extension, available_extension.extensionName) == 0)
+			{
+				extension_found = true;
+			}
+		}
+		if (!extension_found)
+		{
+			return false;
+		}
+	}
+	return true;
 }

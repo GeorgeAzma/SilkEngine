@@ -13,6 +13,8 @@ private:
 	std::vector<VkPhysicalDevice> getAvailablePhysicalDevices() const;
 	void chooseMostSuitablePhysicalDevice(const std::vector<VkPhysicalDevice>& physical_devices);
 	int ratePhysicalDevice(VkPhysicalDevice physical_device);
+	std::vector<VkExtensionProperties> getAvailablePhysicalDeviceExtensions(VkPhysicalDevice physical_device) const;
+	bool checkPhysicalDeviceExtensionSupport(const std::vector<const char*>& required_extensions, VkPhysicalDevice physical_device) const;
 
 private:
 	VkInstance* instance = nullptr;
