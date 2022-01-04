@@ -6,9 +6,9 @@ SwapChain::SwapChain(const VkPhysicalDevice* physical_device, const VkSurfaceKHR
 {
 	support_details = getSwapChainSupportDetails(*physical_device, *surface);
 
-	VkSurfaceFormatKHR surface_format = chooseSwapChainSurfaceFormat();
-	VkPresentModeKHR present_mode = chooseSwapChainPresentMode();
-	VkExtent2D extent = chooseSwapChainExtent();
+	chooseSwapChainSurfaceFormat();
+	chooseSwapChainPresentMode();
+	chooseSwapChainExtent();
 	uint32_t image_count = support_details.capabilities.minImageCount + 1;
 	if (support_details.capabilities.maxImageCount > 0 && 
 		image_count > support_details.capabilities.maxImageCount)
@@ -46,6 +46,10 @@ SwapChain::SwapChain(const VkPhysicalDevice* physical_device, const VkSurfaceKHR
 
 	VE_CORE_ASSERT(vkCreateSwapchainKHR(*logical_device, &create_info, nullptr, &swap_chain) == VK_SUCCESS,
 		"Vulkan: Couldn't create swap chain");
+
+	vkGetSwapchainImagesKHR(*logical_device, swap_chain, &image_count, nullptr);
+	images.resize(image_count);
+	vkGetSwapchainImagesKHR(*logical_device, swap_chain, &image_count, images.data());
 }
 
 SwapChain::~SwapChain()
@@ -79,7 +83,7 @@ SwapChainSupportDetails SwapChain::getSwapChainSupportDetails(VkPhysicalDevice p
 	return details;
 }
 
-VkSurfaceFormatKHR SwapChain::chooseSwapChainSurfaceFormat() const
+void SwapChain::chooseSwapChainSurfaceFormat()
 {
 	std::multimap<int, VkSurfaceFormatKHR> formats;
 
@@ -95,7 +99,7 @@ VkSurfaceFormatKHR SwapChain::chooseSwapChainSurfaceFormat() const
 	VE_CORE_ASSERT(formats.rbegin()->first >= 0, 
 		"Vulkan: Couldn't find supported formats to choose from");
 	
-	return formats.rbegin()->second;
+	this->surface_format = formats.rbegin()->second;
 }
 
 int SwapChain::rateSwapChainSurfaceFormat(VkSurfaceFormatKHR format) const
@@ -108,7 +112,7 @@ int SwapChain::rateSwapChainSurfaceFormat(VkSurfaceFormatKHR format) const
 	return score;
 }
 
-VkPresentModeKHR SwapChain::chooseSwapChainPresentMode() const
+void SwapChain::chooseSwapChainPresentMode()
 {
 	std::multimap<int, VkPresentModeKHR> present_modes;
 
@@ -124,14 +128,15 @@ VkPresentModeKHR SwapChain::chooseSwapChainPresentMode() const
 	VE_CORE_ASSERT(present_modes.rbegin()->first >= 0,
 		"Vulkan: Couldn't find supported present modes to choose from");
 
-	return present_modes.rbegin()->second;
+	this->present_mode = present_modes.rbegin()->second;
 }
 
-VkExtent2D SwapChain::chooseSwapChainExtent() const
+void SwapChain::chooseSwapChainExtent()
 {
 	if (support_details.capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) 
 	{
-		return support_details.capabilities.currentExtent;
+		this->extent = support_details.capabilities.currentExtent;
+		return;
 	}
 
 	int width, height;
@@ -149,7 +154,7 @@ VkExtent2D SwapChain::chooseSwapChainExtent() const
 		support_details.capabilities.minImageExtent.height,
 		support_details.capabilities.maxImageExtent.height);
 
-	return extent;
+	this->extent = extent;
 }
 
 int SwapChain::rateSwapChainPresentMode(VkPresentModeKHR present_mode) const

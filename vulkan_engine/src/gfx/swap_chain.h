@@ -22,9 +22,9 @@ public:
     
 private:
     static SwapChainSupportDetails getSwapChainSupportDetails(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
-    VkSurfaceFormatKHR chooseSwapChainSurfaceFormat() const;
-    VkPresentModeKHR chooseSwapChainPresentMode() const;
-    VkExtent2D chooseSwapChainExtent() const;
+    void chooseSwapChainSurfaceFormat();
+    void chooseSwapChainPresentMode();
+    void chooseSwapChainExtent();
     int rateSwapChainPresentMode(VkPresentModeKHR present_mode) const;
     int rateSwapChainSurfaceFormat(VkSurfaceFormatKHR format) const;
 
@@ -35,6 +35,10 @@ private:
     SwapChainSupportDetails support_details;
     VkSwapchainKHR swap_chain;
     const VkDevice* logical_device = nullptr;
+    std::vector<VkImage> images;
+    VkSurfaceFormatKHR surface_format;
+    VkPresentModeKHR present_mode;
+    VkExtent2D extent;
 
     friend class PhysicalDevice;
 };
