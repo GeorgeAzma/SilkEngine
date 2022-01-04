@@ -7,6 +7,8 @@ public:
     Instance();
     ~Instance();
 
+    VkInstance& getInstance() { return instance; }
+
 private:
     std::vector<const char *> getRequiredExtensions() const;
     std::vector<VkExtensionProperties> getAvailableExtensions() const;

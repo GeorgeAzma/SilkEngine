@@ -1,6 +1,7 @@
 #include "application.h"
 #include "../utils/delta.h"
 #include "time.h"
+#include "../gfx/graphics.h"
 
 Application::Application(const char *name, ApplicationCommandLineArgs args)
     : command_line_args(args), app_update(256)
@@ -9,9 +10,9 @@ Application::Application(const char *name, ApplicationCommandLineArgs args)
     props.title = name;
     window = std::make_shared<Window>(props);
     
-    Log::init();
-    
+    Log::init(); 
     Dispatcher::subscribe(this, &Application::onWindowClose);
+    Graphics::init(window->getGLFWWindow());
 }
 
 Application::~Application()

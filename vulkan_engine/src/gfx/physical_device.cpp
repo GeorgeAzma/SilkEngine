@@ -1,8 +1,8 @@
 #include "physical_device.h"
 #include "queue_family.h"
 
-PhysicalDevice::PhysicalDevice(VkInstance* instance)
-	: instance{instance}
+PhysicalDevice::PhysicalDevice(VkInstance* instance, VkSurfaceKHR* surface)
+	: instance{instance}, surface{surface}
 {
 	auto physical_devices = getAvailablePhysicalDevices();
 	chooseMostSuitablePhysicalDevice(physical_devices);
@@ -17,7 +17,8 @@ std::vector<VkPhysicalDevice> PhysicalDevice::getAvailablePhysicalDevices() cons
 	uint32_t device_count = 0;
 	vkEnumeratePhysicalDevices(*instance, &device_count, nullptr);
 
-	VE_CORE_ASSERT(device_count > 0, "Vulkan: Couldn't find GPU with vulkan support");
+	VE_CORE_ASSERT(device_count > 0, 
+		"Vulkan: Couldn't find GPU with vulkan support");
 
 	std::vector<VkPhysicalDevice> physical_devices(device_count);
 	vkEnumeratePhysicalDevices(*instance, &device_count, physical_devices.data());
@@ -39,16 +40,19 @@ void PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vector<VkPhysic
 	if (candidates.rbegin()->first >= 0)
 	{
 		physical_device = candidates.rbegin()->second;
+		if(&physical_device != queue_family.getPhysicalDevice())
+			queue_family = QueueFamily(&physical_device, surface);
 	}
 
-	VE_CORE_ASSERT(candidates.rbegin()->first >= 0, "Vulkan: Couldn't find suitable vulkan GPU");
+	VE_CORE_ASSERT(candidates.rbegin()->first >= 0, 
+		"Vulkan: Couldn't find suitable vulkan GPU");
 }
 
-int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device) const
+int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
 {
 	int score = 0;
 
-	QueueFamily queue_family(&physical_device);
+	queue_family = QueueFamily(&physical_device, surface);
 	if (!queue_family) return -1;
 
 	VkPhysicalDeviceProperties physical_device_properties;

@@ -14,5 +14,4 @@
 #include "utils/fixed_update.h"
 #include "utils/delta.h"
 
-#include "gfx/debug_messenger.h"
-#include "gfx/instance.h"
+#include "gfx/graphics.h"

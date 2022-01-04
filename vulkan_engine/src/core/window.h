@@ -33,7 +33,7 @@ public:
     unsigned int getHeight() const { return data.height; }
     unsigned int getX() const { return data.x; }
     unsigned int getY() const { return data.y; }
-    GLFWwindow *getGLFWWindow() const { return window; }
+    GLFWwindow *getGLFWWindow() { return window; }
     bool isFullscreen() const { return data.fullscreen; }
     bool isVsync() const { return data.vsync; }
     bool isTransparent() const { return transparent; }
