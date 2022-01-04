@@ -21,8 +21,29 @@ std::vector<VkPhysicalDevice> PhysicalDevice::getAvailablePhysicalDevices() cons
 	return physical_devices;
 }
 
-bool PhysicalDevice::isDeviceSuitable(VkPhysicalDevice physical_device) const
+void PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vector<VkPhysicalDevice>& physical_devices)
 {
+	std::multimap<int, VkPhysicalDevice> candidates;
+	for (const auto& device : physical_devices)
+	{
+		int score = ratePhysicalDevice(device);
+		if(score >= 0)
+			candidates.insert(std::make_pair(score, device));
+	}
+
+
+	if (candidates.rbegin()->first >= 0)
+	{
+		physical_device = candidates.rbegin()->second;
+	}
+
+	VE_CORE_ASSERT(candidates.rbegin()->first >= 0, "Vulkan: Couldn't find suitable vulkan GPU");
+}
+
+int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
+{
+	int score = 0;
+
 	VkPhysicalDeviceProperties physical_device_properties;
 	VkPhysicalDeviceFeatures physical_device_features;
 	vkGetPhysicalDeviceProperties(physical_device, &physical_device_properties);
@@ -31,21 +52,13 @@ bool PhysicalDevice::isDeviceSuitable(VkPhysicalDevice physical_device) const
 	bool has_geometry_shader = physical_device_features.geometryShader;
 	bool is_discrete = physical_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
 
-	bool is_suitable = is_descrete && has_geometry_shader;
+	score += is_discrete * 1000;
+	score += has_geometry_shader * 250;
+	score += physical_device_features.tessellationShader * 150;
+	score += physical_device_features.multiViewport * 100;
+	score += physical_device_features.wideLines * 50;
+	score += physical_device_features.largePoints * 50;
+	score += physical_device_features.occlusionQueryPrecise * 25;
 
-	return is_suitable;
-}
-
-void PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vector<VkPhysicalDevice>& physical_devices)
-{
-	for (const auto& device : physical_devices)
-	{
-		if (isDeviceSuitable(device)) 
-		{
-			physical_device = device;
-			break;
-		}
-	}
-
-	VK_CORE_ASSERT(physical_device != VK_NULL_HANDLE, "Vulkan: Couldn't find suitable vulkan GPU");
+	return score;
 }
