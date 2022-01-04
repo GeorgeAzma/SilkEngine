@@ -10,6 +10,7 @@ Sandbox::Sandbox()
 void Sandbox::onAttach()
 {
     instance = new Instance();
+    delete instance;
 }
 
 void Sandbox::onDetach()
@@ -18,9 +19,4 @@ void Sandbox::onDetach()
 
 void Sandbox::onUpdate()
 {
-    if (instance)
-    {
-        delete instance;
-        instance = nullptr;
-    }
 }

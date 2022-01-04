@@ -35,7 +35,9 @@ Instance::Instance(const AppInfo &app_info)
     VE_CORE_ASSERT(vkCreateInstance(&createInfo, nullptr, &instance) == VK_SUCCESS, 
         "Vulkan: Couldn't create a vulkan instance");
 
+#ifdef VE_ENABLE_DEBUG_OUTPUT
     debugMessenger->create();
+#endif
 }
 
 Instance::~Instance()
