@@ -18,12 +18,19 @@ add_compile_definitions(_USE_MATH_DEFINES)
 
 #Vulkan
 find_package(Vulkan)
-if (NOT ${Vulkan_INCLUDE_DIRS} STREQUAL "")
-	set(VULKAN_PATH ${Vulkan_INCLUDE_DIRS})
-	STRING(REGEX REPLACE "/Include" "" VULKAN_PATH ${VULKAN_PATH})
+if (DEFINED VULKAN_SDK_PATH)
+    list(APPEND INCLUDE_DIRS "${VULKAN_SDK_PATH}/Include")
+    list(APPEND EXTRA_LIB_DIRS "${VULKAN_SDK_PATH}/Lib")
+    set(Vulkan_FOUND "True")
+else()
+    find_package(Vulkan REQUIRED)
+    message(STATUS "Found Vulkan: $ENV{VULKAN_SDK}")
 endif()
-list(APPEND INCLUDE_DIRS "${VULKAN_PATH}/Include")
-list(APPEND EXTRA_LIB_DIRS "${VULKAN_PATH}/Lib")
+if(NOT Vulkan_FOUND)
+    message("Could not find vulkan")
+else()
+    message(STATUS "Using vulkan lib at: ${Vulkan_LIBRARIES}")
+endif()
 
 #thread_pool
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/thread_pool/.github)
@@ -90,6 +97,37 @@ INSTALL_COMMAND ""
 )
 endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glm)
+
+#Shader compilation
+find_program(GLSL_VALIDATOR glslangValidator HINTS 
+  ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} 
+  /usr/bin 
+  /usr/local/bin 
+  ${VULKAN_SDK_PATH}/Bin
+  ${VULKAN_SDK_PATH}/Bin32
+  $ENV{VULKAN_SDK}/Bin
+  $ENV{VULKAN_SDK}/Bin32
+)
+ 
+file(GLOB_RECURSE GLSL_SOURCE_FILES
+    "${PROJECT_SOURCE_DIR}/data/shaders/*.vert"
+    "${PROJECT_SOURCE_DIR}/data/shaders/*.frag"
+)
+ 
+foreach(GLSL ${GLSL_SOURCE_FILES})
+    get_filename_component(FILE_NAME ${GLSL} NAME)
+    set(SPIRV "${PROJECT_SOURCE_DIR}/data/cache/shaders/${FILE_NAME}.spv")
+    add_custom_command(
+        OUTPUT ${SPIRV}
+        COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
+        DEPENDS ${GLSL})
+    list(APPEND SPIRV_BINARY_FILES ${SPIRV})
+endforeach(GLSL)
+ 
+add_custom_target(
+    Shaders
+    DEPENDS ${SPIRV_BINARY_FILES}
+)
 
 #Sub dirs
 add_subdirectory("vulkan_engine/src")

@@ -12,6 +12,7 @@ ${INCLUDE_DIRS}
 )
 
 #Add dependencies
+add_dependencies(VulkanEngine Shaders)
 foreach(item IN LISTS DEPENDENCIES_TO_ADD)
 
     if("${${item}}" MATCHES TRUE)

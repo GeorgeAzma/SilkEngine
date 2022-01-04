@@ -50,10 +50,35 @@ SwapChain::SwapChain(const VkPhysicalDevice* physical_device, const VkSurfaceKHR
 	vkGetSwapchainImagesKHR(*logical_device, swap_chain, &image_count, nullptr);
 	images.resize(image_count);
 	vkGetSwapchainImagesKHR(*logical_device, swap_chain, &image_count, images.data());
+	
+	image_views.resize(images.size());
+	for (size_t i = 0; i < image_views.size(); ++i)
+	{
+		VkImageViewCreateInfo create_info{};
+		create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		create_info.image = images[i];
+		create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		create_info.format = surface_format.format;
+		create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+		create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		create_info.subresourceRange.baseMipLevel = 0;
+		create_info.subresourceRange.levelCount = 1;
+		create_info.subresourceRange.baseArrayLayer = 0;
+		create_info.subresourceRange.layerCount = 1;
+		VE_CORE_ASSERT(vkCreateImageView(*logical_device, &create_info, nullptr, &image_views[i]) == VK_SUCCESS,
+			"Vulkan: Couldn't create image view");
+	}
 }
 
 SwapChain::~SwapChain()
 {
+	for (const auto& image_view : image_views) 
+	{
+		vkDestroyImageView(*logical_device, image_view, nullptr);
+	}
 	vkDestroySwapchainKHR(*logical_device, swap_chain, nullptr);
 }
 

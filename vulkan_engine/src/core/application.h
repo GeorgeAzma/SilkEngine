@@ -3,7 +3,7 @@
 #include "log.h"
 #include "window.h"
 #include "layer_stack.h"
-#include "../utils/fixed_update.h"
+#include "utils/fixed_update.h"
 #include "event.h"
 
 int main(int argc, char **argv);

@@ -39,6 +39,7 @@ private:
     VkSurfaceFormatKHR surface_format;
     VkPresentModeKHR present_mode;
     VkExtent2D extent;
+    std::vector<VkImageView> image_views;
 
     friend class PhysicalDevice;
 };

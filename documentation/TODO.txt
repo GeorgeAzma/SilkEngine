@@ -1,4 +1,5 @@
 - Name the engine and change stuff like VE_TRACE to ENGINE_NAME_TRACE
 - handle input events
-- Configurable vulkan settings (preferably in file format like yaml)
-- Create vulkan object abstarcion classes (Image)
+- Configurable graphics settings (preferably in file format like yaml)
+- Create vulkan object abstraction classes (Image with ImageView) 
+  and rewrite othe classes using these abstractions

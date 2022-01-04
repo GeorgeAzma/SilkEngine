@@ -11,6 +11,7 @@
         Classes
         Structs
         TypeDefs/Using
+        Enum definitions
 
     -------Camel-------
 
@@ -31,6 +32,7 @@
     -------UpperCaseSnake-------
 
         Constants
+        Enum variables
 
 ---------------- Prefixes/Postfixes ----------------
 
@@ -50,8 +52,18 @@ Disclaimer: Following these notes isn't neccessary but would be preferable
 - Comment complex code snippets which are intended to be used by an user
 - Prefer using smart pointers unless object lifetime is relative to 
   the program (or even base class), or if memory requires special handling
+- Create seperate access specifier for member functions and variables
 
 
+---------------- Shaders ----------------
+
+- Allowed shader file extensions: .vert, .frag, .tes, .tcs,
+- Always use glsl for vulkan shading language
+- Use this style for passing data between shaders:
+  out VERTEX_OUTPUT { int data; } vertex_output;
+  in VERTEX_OUTPUT { int data; } fragment_input;
+- Definition/Declaration order is: defines, inputs, 
+  outputs, global variables, functions, local variables
 
 
 

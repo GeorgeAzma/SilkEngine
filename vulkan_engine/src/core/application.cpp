@@ -1,7 +1,7 @@
 #include "application.h"
-#include "../utils/delta.h"
+#include "utils/delta.h"
 #include "time.h"
-#include "../gfx/graphics.h"
+#include "gfx/graphics.h"
 
 Application::Application(const char *name, ApplicationCommandLineArgs args)
     : command_line_args(args), app_update(256)
@@ -20,6 +20,7 @@ Application::Application(const char *name, ApplicationCommandLineArgs args)
 
 Application::~Application()
 {
+    Graphics::cleanup();
     VE_CORE_INFO("Terminated");
 }
 
