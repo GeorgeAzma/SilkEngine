@@ -1,7 +1,11 @@
 #include "physical_device.h"
+#include "queue_family.h"
 
 PhysicalDevice::PhysicalDevice(VkInstance* instance)
+	: instance{instance}
 {
+	auto physical_devices = getAvailablePhysicalDevices();
+	chooseMostSuitablePhysicalDevice(physical_devices);
 }
 
 PhysicalDevice::~PhysicalDevice()
@@ -40,9 +44,12 @@ void PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vector<VkPhysic
 	VE_CORE_ASSERT(candidates.rbegin()->first >= 0, "Vulkan: Couldn't find suitable vulkan GPU");
 }
 
-int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
+int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device) const
 {
 	int score = 0;
+
+	QueueFamily queue_family(&physical_device);
+	if (!queue_family) return -1;
 
 	VkPhysicalDeviceProperties physical_device_properties;
 	VkPhysicalDeviceFeatures physical_device_features;

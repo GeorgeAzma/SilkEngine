@@ -17,6 +17,9 @@ class QueueFamily
 public:
     QueueFamily(VkPhysicalDevice* physical_device);
 
+public:
+    operator bool() const { return indices.isSuitable(); }
+
 private:
     void findQueueFamilies();
 

@@ -19,5 +19,8 @@ void QueueFamily::findQueueFamilies()
 		const auto& queue_family = queue_families[i];
 		if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 			indices.graphics_family = i;
+
+		if (indices.isSuitable()) 
+			break;
 	}
 }
