@@ -7,7 +7,7 @@ public:
     Instance();
     ~Instance();
 
-    VkInstance& getInstance() { return instance; }
+    const VkInstance& getInstance() const { return instance; }
 
 private:
     std::vector<const char *> getRequiredExtensions() const;

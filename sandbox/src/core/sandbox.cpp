@@ -4,7 +4,6 @@ Instance* instance = nullptr;
 Sandbox::Sandbox()
     : Layer("Sandbox")
 {
-    VE_INFO("Logging is working");
 }
 
 void Sandbox::onAttach()

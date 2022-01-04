@@ -3,10 +3,12 @@
 class Surface
 {
 public:
-	Surface(VkInstance* instance, GLFWwindow* window);
+	Surface(const VkInstance* instance, GLFWwindow* window);
 	~Surface();
 
+	const VkSurfaceKHR& getSurface() const { return surface; }
+
 private:
-	VkInstance* instance = nullptr;
+	const VkInstance* instance = nullptr;
 	VkSurfaceKHR surface;
 };

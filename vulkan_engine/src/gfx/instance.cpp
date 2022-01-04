@@ -26,10 +26,11 @@ Instance::Instance()
         "Vulkan: Required validation layers(s) not found");
     create_info.enabledLayerCount = required_validation_layers.size();
     create_info.ppEnabledLayerNames = required_validation_layers.data();
-    debug_messenger = new DebugMessenger(&instance, &create_info);
+    debug_messenger = new DebugMessenger(&instance);
+    create_info.pNext = &debug_messenger->getCreateInfo();
 #else
-    createInfo.enabledLayerCount = 0;
-    createInfo.pNext = nullptr;
+    create_info.enabledLayerCount = 0;
+    create_info.pNext = nullptr;
 #endif
 
     VE_CORE_ASSERT(vkCreateInstance(&create_info, nullptr, &instance) == VK_SUCCESS, 

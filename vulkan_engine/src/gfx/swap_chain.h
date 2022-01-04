@@ -1,0 +1,40 @@
+#pragma once
+
+#include <vector>
+#include <vulkan/vulkan.h>
+
+struct SwapChainSupportDetails 
+{
+    VkSurfaceCapabilitiesKHR capabilities;
+    std::vector<VkSurfaceFormatKHR> formats;
+    std::vector<VkPresentModeKHR> present_modes;
+};
+
+class SwapChain
+{
+public:
+	SwapChain(const VkPhysicalDevice* physical_device, const VkSurfaceKHR* surface, GLFWwindow* window, const VkDevice* logical_device);
+    ~SwapChain();
+
+    const VkSwapchainKHR& getSwapChain() const { return swap_chain; }
+    
+    const SwapChainSupportDetails& getSwapChainSupportDetails() const { return support_details; }
+    
+private:
+    static SwapChainSupportDetails getSwapChainSupportDetails(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
+    VkSurfaceFormatKHR chooseSwapChainSurfaceFormat() const;
+    VkPresentModeKHR chooseSwapChainPresentMode() const;
+    VkExtent2D chooseSwapChainExtent() const;
+    int rateSwapChainPresentMode(VkPresentModeKHR present_mode) const;
+    int rateSwapChainSurfaceFormat(VkSurfaceFormatKHR format) const;
+
+private:
+    const VkPhysicalDevice* physical_device = nullptr;
+    const VkSurfaceKHR* surface = nullptr;
+    GLFWwindow* window = nullptr;
+    SwapChainSupportDetails support_details;
+    VkSwapchainKHR swap_chain;
+    const VkDevice* logical_device = nullptr;
+
+    friend class PhysicalDevice;
+};

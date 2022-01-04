@@ -3,9 +3,10 @@
 class DebugMessenger
 {
 public:
-    DebugMessenger(VkInstance* instance, VkInstanceCreateInfo* instance_create_info = nullptr);
-    void create();
+    DebugMessenger(VkInstance* instance);
     ~DebugMessenger();
+    const VkDebugUtilsMessengerCreateInfoEXT& getCreateInfo() const { return create_info; }
+    void create();
 
 private:
     VkInstance* instance = nullptr;

@@ -1,6 +1,6 @@
 #include "surface.h"
 
-Surface::Surface(VkInstance* instance, GLFWwindow* window)
+Surface::Surface(const VkInstance* instance, GLFWwindow* window)
 	: instance{instance}
 {
 	VE_CORE_ASSERT(glfwCreateWindowSurface(*instance, window, nullptr, &surface) == VK_SUCCESS,

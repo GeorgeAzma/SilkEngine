@@ -7,6 +7,7 @@ std::shared_ptr<spdlog::logger> Log::client_logger;
 
 void Log::init()
 {
+#ifdef VE_ENABLE_DEBUG_OUTPUT
     std::vector<spdlog::sink_ptr> log_sinks;
     log_sinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
     log_sinks.emplace_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>("VulkanEngine.log", true));
@@ -23,4 +24,5 @@ void Log::init()
     spdlog::register_logger(client_logger);
     client_logger->set_level(spdlog::level::trace);
     client_logger->flush_on(spdlog::level::trace);
+#endif
 }

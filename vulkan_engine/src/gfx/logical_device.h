@@ -1,16 +1,18 @@
 #pragma once
-#include "queue_family.h"
 
 class LogicalDevice
 {
 public:
-	LogicalDevice(VkPhysicalDevice* physical_device, QueueFamily queue_family);
+	LogicalDevice(const VkPhysicalDevice* physical_device, const VkSurfaceKHR* surface);
 	~LogicalDevice();
+
+	const VkDevice& getLogicalDevice() const { return logical_device; }
 
 	static std::vector<const char*> getRequiredLogicalDeviceExtensions();
 
 private:
-	VkPhysicalDevice* physical_device = nullptr;
+	const VkPhysicalDevice* physical_device = nullptr;
+	const VkSurfaceKHR* surface = nullptr;
 	VkDevice logical_device;
 	VkQueue graphics_queue;
 	VkQueue present_queue;

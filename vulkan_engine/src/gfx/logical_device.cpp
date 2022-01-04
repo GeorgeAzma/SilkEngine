@@ -1,14 +1,13 @@
 #include "logical_device.h"
+#include "physical_device.h"
 
-LogicalDevice::LogicalDevice(VkPhysicalDevice* physical_device, QueueFamily queue_family)
-	: physical_device{physical_device}
+LogicalDevice::LogicalDevice(const VkPhysicalDevice* physical_device, const VkSurfaceKHR* surface)
+	: physical_device{physical_device}, surface{surface}
 {
+	auto queue_family_indices = PhysicalDevice::findQueueFamilies(*physical_device, *surface);
 	std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-	std::set<uint32_t> unique_queue_families = 
-	{ 
-		*queue_family.getIndices().graphics,
-		*queue_family.getIndices().present
-	};
+	std::vector<uint32_t> queue_families = queue_family_indices.getIndices();
+	std::set<uint32_t> unique_queue_families(queue_families.begin(), queue_families.end());
 
 	float queue_priority = 1.0f;
 	for (uint32_t queue_family : unique_queue_families)
@@ -32,11 +31,11 @@ LogicalDevice::LogicalDevice(VkPhysicalDevice* physical_device, QueueFamily queu
 	create_info.enabledExtensionCount = required_extensions.size();
 	create_info.ppEnabledExtensionNames = required_extensions.data();
 
-	VE_CORE_ASSERT(vkCreateDevice(*physical_device, &create_info, nullptr, &logical_device) == VK_SUCCESS, 
+	VE_CORE_ASSERT(vkCreateDevice(*physical_device, &create_info, nullptr, &logical_device) == VK_SUCCESS,
 		"Vulkan: Couldn't create logical device");
 
-	vkGetDeviceQueue(logical_device, *queue_family.getIndices().graphics, 0, &graphics_queue);
-	vkGetDeviceQueue(logical_device, *queue_family.getIndices().present, 0, &present_queue);
+	vkGetDeviceQueue(logical_device, *queue_family_indices.graphics, 0, &graphics_queue);
+	vkGetDeviceQueue(logical_device, *queue_family_indices.present, 0, &present_queue);
 }
 
 LogicalDevice::~LogicalDevice()

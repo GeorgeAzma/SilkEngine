@@ -69,7 +69,7 @@ inline OStream &operator<<(OStream &os, glm::qua<T, Q> quaternion)
 #define VE_CORE_WARN(...)
 #define VE_CORE_ERROR(...)
 #define VE_CORE_CRITICAL(...)
-#define VE_CORE_ASSERT(x, ...)
+#define VE_CORE_ASSERT(x, ...) x;
 
 #define VE_TRACE(...)
 #define VE_INFO(...)

@@ -6,17 +6,21 @@
 Application::Application(const char *name, ApplicationCommandLineArgs args)
     : command_line_args(args), app_update(256)
 {
+    Log::init(); 
+    VE_CORE_INFO("Started");
+
     WindowProps props{};
     props.title = name;
     window = std::make_shared<Window>(props);
     
-    Log::init(); 
     Dispatcher::subscribe(this, &Application::onWindowClose);
     Graphics::init(window->getGLFWWindow());
+
 }
 
 Application::~Application()
 {
+    VE_CORE_INFO("Terminated");
 }
 
 void Application::pushLayer(Layer *layer)
@@ -52,5 +56,6 @@ void Application::run()
 
 void Application::onWindowClose(const WindowCloseEvent &e)
 {
+    VE_CORE_INFO("Window closed");
     running = false;
 }

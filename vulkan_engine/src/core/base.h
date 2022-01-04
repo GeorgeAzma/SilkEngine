@@ -19,4 +19,7 @@
 #define VE_DEBUG_BREAK()
 #endif
 
-#define VE_MAKE_VERSION(major, minor, patch)
+#define VE_MAKE_VERSION(major, minor, patch) \
+    (((uint32_t(major)) << 22)               \
+    | ((uint32_t(minor)) << 12)              \
+    | (uint32_t(patch)))

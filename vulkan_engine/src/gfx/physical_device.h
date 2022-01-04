@@ -1,13 +1,40 @@
 #pragma once
-#include "queue_family.h"
+
+#include <optional>
+#include <vector>
+#include <type_traits>
+
+struct QueueFamilyIndices
+{
+	std::optional<uint32_t> graphics;
+	std::optional<uint32_t> present;
+
+	bool isSuitable() const
+	{
+		return graphics.has_value() && present.has_value();
+	}
+
+	std::vector<uint32_t> getIndices() const 
+	{ 
+		if (!isSuitable()) 
+			return {};
+
+		return { *graphics, *present };
+	};
+};
 
 class PhysicalDevice
 {
 public:
-	PhysicalDevice(VkInstance* instance, VkSurfaceKHR* surface);
+	PhysicalDevice(const VkInstance* instance, const VkSurfaceKHR* surface);
 	~PhysicalDevice();
 
-	VkPhysicalDevice& getPhysicalDevice() { return physical_device; }
+	const VkPhysicalDevice& getPhysicalDevice() const { return physical_device; }
+	const QueueFamilyIndices& getQueueFamilyIndices() const { return queue_family_indices; }
+	const VkPhysicalDeviceProperties& getProperties() const { return properties; }
+	const VkPhysicalDeviceFeatures& getFeatures() const { return features; }
+
+	static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
 
 private:
 	std::vector<VkPhysicalDevice> getAvailablePhysicalDevices() const;
@@ -17,9 +44,13 @@ private:
 	bool checkPhysicalDeviceExtensionSupport(const std::vector<const char*>& required_extensions, VkPhysicalDevice physical_device) const;
 
 private:
-	VkInstance* instance = nullptr;
-	VkSurfaceKHR* surface = nullptr;
+	const VkInstance* instance = nullptr;
+	const VkSurfaceKHR* surface = nullptr;
+
 	VkPhysicalDevice physical_device = VK_NULL_HANDLE;
-	QueueFamily queue_family;
-	friend class QueueFamily;
+
+	QueueFamilyIndices queue_family_indices = {};
+
+	VkPhysicalDeviceProperties properties;
+	VkPhysicalDeviceFeatures features;
 };

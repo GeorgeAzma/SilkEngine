@@ -64,15 +64,14 @@ static void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMesse
     func(instance, debugMessenger, pAllocator);
 }
 
-DebugMessenger::DebugMessenger(VkInstance* instance, VkInstanceCreateInfo* instance_create_info)
+DebugMessenger::DebugMessenger(VkInstance* instance)
     : instance{instance}
 {
     create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
     create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
     create_info.pfnUserCallback = debugCallback;
-    instance_create_info->pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&create_info;
 }
 
 void DebugMessenger::create()
