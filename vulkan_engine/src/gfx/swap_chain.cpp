@@ -1,10 +1,11 @@
 #include "swap_chain.h"
 #include "physical_device.h"
+#include "graphics.h"
 
-SwapChain::SwapChain(const VkPhysicalDevice* physical_device, const VkSurfaceKHR* surface, GLFWwindow* window, const VkDevice* logical_device)
-	: physical_device{physical_device}, surface{surface}, window{window}, logical_device{logical_device}
+SwapChain::SwapChain(GLFWwindow* window)
+	: window{window}
 {
-	support_details = getSwapChainSupportDetails(*physical_device, *surface);
+	support_details = getSwapChainSupportDetails(Graphics::getPhysicalDevice()->getPhysicalDevice(), Graphics::getSurface()->getSurface());
 
 	chooseSwapChainSurfaceFormat();
 	chooseSwapChainPresentMode();
@@ -18,7 +19,7 @@ SwapChain::SwapChain(const VkPhysicalDevice* physical_device, const VkSurfaceKHR
 
 	VkSwapchainCreateInfoKHR create_info{};
 	create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	create_info.surface = *surface;
+	create_info.surface = Graphics::getSurface()->getSurface();
 	create_info.minImageCount = image_count;
 	create_info.imageFormat = surface_format.format;
 	create_info.imageColorSpace = surface_format.colorSpace;
@@ -31,7 +32,7 @@ SwapChain::SwapChain(const VkPhysicalDevice* physical_device, const VkSurfaceKHR
 	create_info.clipped = VK_TRUE;
 	create_info.oldSwapchain = VK_NULL_HANDLE; //Necessary for resizing and such
 
-	QueueFamilyIndices indices = PhysicalDevice::findQueueFamilies(*physical_device, *surface);
+	auto indices = Graphics::getPhysicalDevice()->getQueueFamilyIndices();
 	if (indices.graphics != indices.present) 
 	{
 		create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -44,12 +45,12 @@ SwapChain::SwapChain(const VkPhysicalDevice* physical_device, const VkSurfaceKHR
 		create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	}
 
-	VE_CORE_ASSERT(vkCreateSwapchainKHR(*logical_device, &create_info, nullptr, &swap_chain) == VK_SUCCESS,
+	VE_CORE_ASSERT(vkCreateSwapchainKHR(Graphics::getLogicalDevice()->getLogicalDevice(), &create_info, nullptr, &swap_chain) == VK_SUCCESS,
 		"Vulkan: Couldn't create swap chain");
 
-	vkGetSwapchainImagesKHR(*logical_device, swap_chain, &image_count, nullptr);
+	vkGetSwapchainImagesKHR(Graphics::getLogicalDevice()->getLogicalDevice(), swap_chain, &image_count, nullptr);
 	images.resize(image_count);
-	vkGetSwapchainImagesKHR(*logical_device, swap_chain, &image_count, images.data());
+	vkGetSwapchainImagesKHR(Graphics::getLogicalDevice()->getLogicalDevice(), swap_chain, &image_count, images.data());
 	
 	image_views.resize(images.size());
 	for (size_t i = 0; i < image_views.size(); ++i)
@@ -68,7 +69,7 @@ SwapChain::SwapChain(const VkPhysicalDevice* physical_device, const VkSurfaceKHR
 		create_info.subresourceRange.levelCount = 1;
 		create_info.subresourceRange.baseArrayLayer = 0;
 		create_info.subresourceRange.layerCount = 1;
-		VE_CORE_ASSERT(vkCreateImageView(*logical_device, &create_info, nullptr, &image_views[i]) == VK_SUCCESS,
+		VE_CORE_ASSERT(vkCreateImageView(Graphics::getLogicalDevice()->getLogicalDevice(), &create_info, nullptr, &image_views[i]) == VK_SUCCESS,
 			"Vulkan: Couldn't create image view");
 	}
 }
@@ -77,9 +78,9 @@ SwapChain::~SwapChain()
 {
 	for (const auto& image_view : image_views) 
 	{
-		vkDestroyImageView(*logical_device, image_view, nullptr);
+		vkDestroyImageView(Graphics::getLogicalDevice()->getLogicalDevice(), image_view, nullptr);
 	}
-	vkDestroySwapchainKHR(*logical_device, swap_chain, nullptr);
+	vkDestroySwapchainKHR(Graphics::getLogicalDevice()->getLogicalDevice(), swap_chain, nullptr);
 }
 
 SwapChainSupportDetails SwapChain::getSwapChainSupportDetails(VkPhysicalDevice physical_device, VkSurfaceKHR surface)

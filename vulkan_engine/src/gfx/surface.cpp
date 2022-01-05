@@ -1,14 +1,14 @@
 #include "surface.h"
+#include "graphics.h"
 
-Surface::Surface(const VkInstance* instance, GLFWwindow* window)
-	: instance{instance}
+Surface::Surface(GLFWwindow* window)
 {
-	VE_CORE_ASSERT(glfwCreateWindowSurface(*instance, window, nullptr, &surface) == VK_SUCCESS,
+	VE_CORE_ASSERT(glfwCreateWindowSurface(Graphics::getInstance()->getInstance(), window, nullptr, &surface) == VK_SUCCESS,
 		"Couldn't create window surface");
 
 }
 
 Surface::~Surface()
 {
-	vkDestroySurfaceKHR(*instance, surface, nullptr);
+	vkDestroySurfaceKHR(Graphics::getInstance()->getInstance(), surface, nullptr);
 }

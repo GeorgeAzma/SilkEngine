@@ -14,8 +14,8 @@ Application::Application(const char *name, ApplicationCommandLineArgs args)
     window = std::make_shared<Window>(props);
     
     Dispatcher::subscribe(this, &Application::onWindowClose);
-    Graphics::init(window->getGLFWWindow());
 
+    Graphics::init(window->getGLFWWindow());
 }
 
 Application::~Application()

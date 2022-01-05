@@ -1,5 +1,9 @@
 #include "debug_messenger.h"
 
+// Custom debug callback, when error/warning... 
+// occures this function is called with the error message 
+// so this is just telling vulkan how to show the error 
+// (or do anything with it but mostly used for displaying the error)
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -45,6 +49,9 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     return VK_FALSE;
 }
 
+// Since debug messenger is an extension we don't have 
+// a function in core vulkan to create the debug messenger 
+// so we write our own
 static VkResult createDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) 
 {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"); 
@@ -64,8 +71,7 @@ static void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMesse
     func(instance, debugMessenger, pAllocator);
 }
 
-DebugMessenger::DebugMessenger(VkInstance* instance)
-    : instance{instance}
+DebugMessenger::DebugMessenger()
 {
     create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -74,12 +80,15 @@ DebugMessenger::DebugMessenger(VkInstance* instance)
     create_info.pfnUserCallback = debugCallback;
 }
 
-void DebugMessenger::create()
+//This doesn't happen in constructor for weird 
+//reason don't worry about it :)
+void DebugMessenger::create(VkInstance instance)
 {
-    VE_CORE_ASSERT(createDebugUtilsMessengerEXT(*instance, &create_info, nullptr, &debug_messenger) == VK_SUCCESS, "Vulkan: Couldn't create a debug messenger");
+    this->instance = instance;
+    VE_CORE_ASSERT(createDebugUtilsMessengerEXT(instance, &create_info, nullptr, &debug_messenger) == VK_SUCCESS, "Vulkan: Couldn't create a debug messenger");
 }
 
 DebugMessenger::~DebugMessenger()
 {
-    destroyDebugUtilsMessengerEXT(*instance, debug_messenger, nullptr);
+    destroyDebugUtilsMessengerEXT(instance, debug_messenger, nullptr);
 }

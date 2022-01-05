@@ -2,4 +2,11 @@
 - handle input events
 - Configurable graphics settings (preferably in file format like yaml)
 - Create vulkan object abstraction classes (Image with ImageView) 
-  and rewrite othe classes using these abstractions
+  and rewrite other classes using these abstractions
+
+
+
+
+- FIX HARDCODED VARIABLES
+- FIX UNAVAILABLE SWAP CHAIN VARIABLES
+- CREATE SWAP CHAIN FRAMEBUFFERS

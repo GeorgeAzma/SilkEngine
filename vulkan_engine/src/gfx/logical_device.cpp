@@ -1,10 +1,14 @@
 #include "logical_device.h"
 #include "physical_device.h"
+#include "graphics.h"
 
-LogicalDevice::LogicalDevice(const VkPhysicalDevice* physical_device, const VkSurfaceKHR* surface)
-	: physical_device{physical_device}, surface{surface}
+LogicalDevice::LogicalDevice()
 {
-	auto queue_family_indices = PhysicalDevice::findQueueFamilies(*physical_device, *surface);
+	// Creating queue families
+	// Every command (like draw call), first goes through
+	// a command queue, queue families are there to group 
+	// related queues like graphics processesing queues etc.
+	auto queue_family_indices = Graphics::getPhysicalDevice()->getQueueFamilyIndices();
 	std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
 	std::vector<uint32_t> queue_families = queue_family_indices.getIndices();
 	std::set<uint32_t> unique_queue_families(queue_families.begin(), queue_families.end());
@@ -20,6 +24,7 @@ LogicalDevice::LogicalDevice(const VkPhysicalDevice* physical_device, const VkSu
 		queue_create_infos.emplace_back(std::move(queue_create_info));
 	}
 
+	// Specifies which device features we want by enabling them
 	VkPhysicalDeviceFeatures device_features{};
 
 	VkDeviceCreateInfo create_info{};
@@ -31,9 +36,10 @@ LogicalDevice::LogicalDevice(const VkPhysicalDevice* physical_device, const VkSu
 	create_info.enabledExtensionCount = required_extensions.size();
 	create_info.ppEnabledExtensionNames = required_extensions.data();
 
-	VE_CORE_ASSERT(vkCreateDevice(*physical_device, &create_info, nullptr, &logical_device) == VK_SUCCESS,
+	VE_CORE_ASSERT(vkCreateDevice(Graphics::getPhysicalDevice()->getPhysicalDevice(), &create_info, nullptr, &logical_device) == VK_SUCCESS,
 		"Vulkan: Couldn't create logical device");
 
+	//Get handles of the requried queues
 	vkGetDeviceQueue(logical_device, *queue_family_indices.graphics, 0, &graphics_queue);
 	vkGetDeviceQueue(logical_device, *queue_family_indices.present, 0, &present_queue);
 }

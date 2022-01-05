@@ -26,7 +26,7 @@ struct QueueFamilyIndices
 class PhysicalDevice
 {
 public:
-	PhysicalDevice(const VkInstance* instance, const VkSurfaceKHR* surface);
+	PhysicalDevice();
 	~PhysicalDevice();
 
 	const VkPhysicalDevice& getPhysicalDevice() const { return physical_device; }
@@ -44,9 +44,6 @@ private:
 	bool checkPhysicalDeviceExtensionSupport(const std::vector<const char*>& required_extensions, VkPhysicalDevice physical_device) const;
 
 private:
-	const VkInstance* instance = nullptr;
-	const VkSurfaceKHR* surface = nullptr;
-
 	VkPhysicalDevice physical_device = VK_NULL_HANDLE;
 
 	QueueFamilyIndices queue_family_indices = {};

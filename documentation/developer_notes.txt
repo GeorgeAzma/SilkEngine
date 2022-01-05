@@ -1,6 +1,8 @@
 Data directory contains data of both the engine and the app files,
 which is messy and has gotta change
 
+Renderer only supports single gpu
+
 Some vulkan abstraction files like "Shader" get their pointer 
 to the logical device from the static Graphics class, 
 this was done so that user doesn't have to give 

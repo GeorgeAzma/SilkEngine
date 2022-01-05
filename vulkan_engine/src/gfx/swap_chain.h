@@ -13,7 +13,7 @@ struct SwapChainSupportDetails
 class SwapChain
 {
 public:
-	SwapChain(const VkPhysicalDevice* physical_device, const VkSurfaceKHR* surface, GLFWwindow* window, const VkDevice* logical_device);
+	SwapChain(GLFWwindow* window);
     ~SwapChain();
 
     const VkSwapchainKHR& getSwapChain() const { return swap_chain; }
@@ -29,12 +29,9 @@ private:
     int rateSwapChainSurfaceFormat(VkSurfaceFormatKHR format) const;
 
 private:
-    const VkPhysicalDevice* physical_device = nullptr;
-    const VkSurfaceKHR* surface = nullptr;
-    GLFWwindow* window = nullptr;
+    GLFWwindow* window;
     SwapChainSupportDetails support_details;
     VkSwapchainKHR swap_chain;
-    const VkDevice* logical_device = nullptr;
     std::vector<VkImage> images;
     VkSurfaceFormatKHR surface_format;
     VkPresentModeKHR present_mode;

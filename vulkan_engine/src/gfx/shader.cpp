@@ -3,15 +3,20 @@
 #include "graphics.h"
 
 Shader::Shader(const std::vector<std::string>& files)
-	: logical_device{&Graphics::getLogicalDevice()->getLogicalDevice()}
+	: logical_device{Graphics::getLogicalDevice()->getLogicalDevice()}
 {
-	std::vector<VkPipelineShaderStageCreateInfo> shader_stage_infos;
+	
+	//Reason we process multiple shader files at a time 
+	//is that later on we might combine shaders into 
+	//a one shader file which will process all the 
+	//shader stages at once similar to this
 	for (auto& file : files)
 	{
 		ShaderType type = getShaderType(file);
 
 		std::vector<char> source = FileUtils::read(file);
 		VkShaderModule shader_module = createShaderModule(source);
+		shader_modules.push_back(shader_module);
 
 		VkShaderStageFlagBits stage_flag{};
 
@@ -45,13 +50,13 @@ Shader::Shader(const std::vector<std::string>& files)
 		shader_stage_info.module = shader_module;
 		shader_stage_info.pName = "main";
 		shader_stage_infos.push_back(shader_stage_info);
-
-		vkDestroyShaderModule(*logical_device, shader_module, nullptr);//I think cleanup should be much further than this
 	}
 }
 
 Shader::~Shader()
 {
+	for(auto& shader_module : shader_modules)
+		vkDestroyShaderModule(logical_device, shader_module, nullptr);//I think cleanup should be much further than this
 }
 
 VkShaderModule Shader::createShaderModule(const std::vector<char>& source) const
@@ -62,7 +67,7 @@ VkShaderModule Shader::createShaderModule(const std::vector<char>& source) const
 	create_info.pCode = (const uint32_t*)source.data();
 
 	VkShaderModule shader_module;
-	VE_CORE_ASSERT(vkCreateShaderModule(*logical_device, &create_info, nullptr, &shader_module) == VK_SUCCESS,
+	VE_CORE_ASSERT(vkCreateShaderModule(logical_device, &create_info, nullptr, &shader_module) == VK_SUCCESS,
 		"Vulkan: Couldn't create shader module");
 
 	return shader_module;

@@ -1,11 +1,12 @@
 #include "physical_device.h"
 #include "logical_device.h"
 #include "swap_chain.h"
+#include "graphics.h"
 
-PhysicalDevice::PhysicalDevice(const VkInstance* instance, const VkSurfaceKHR* surface)
-	: instance{instance}, surface{surface}
+PhysicalDevice::PhysicalDevice()
 {
 	auto physical_devices = getAvailablePhysicalDevices();
+	// a.k.a best gpu you have
 	chooseMostSuitablePhysicalDevice(physical_devices);
 }
 
@@ -13,6 +14,7 @@ PhysicalDevice::~PhysicalDevice()
 {
 }
 
+// Find supported queue families of this device
 QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
 {
 	QueueFamilyIndices queue_family_indices = {};
@@ -44,13 +46,13 @@ QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice physical_d
 std::vector<VkPhysicalDevice> PhysicalDevice::getAvailablePhysicalDevices() const
 {
 	uint32_t device_count = 0;
-	vkEnumeratePhysicalDevices(*instance, &device_count, nullptr);
+	vkEnumeratePhysicalDevices(Graphics::getInstance()->getInstance(), &device_count, nullptr);
 
 	VE_CORE_ASSERT(device_count > 0, 
 		"Vulkan: Couldn't find GPU with vulkan support");
 
 	std::vector<VkPhysicalDevice> physical_devices(device_count);
-	vkEnumeratePhysicalDevices(*instance, &device_count, physical_devices.data());
+	vkEnumeratePhysicalDevices(Graphics::getInstance()->getInstance(), &device_count, physical_devices.data());
 
 	return physical_devices;
 }
@@ -71,20 +73,23 @@ void PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vector<VkPhysic
 	physical_device = candidates.rbegin()->second;
 	vkGetPhysicalDeviceProperties(physical_device, &properties);
 	vkGetPhysicalDeviceFeatures(physical_device, &features);
-	queue_family_indices = findQueueFamilies(physical_device, *surface);
+	queue_family_indices = findQueueFamilies(physical_device, Graphics::getSurface()->getSurface());
 }
 
+// This function decides which one is 
+// the "best" gpu from all the gpu's user has 
+// (mostly 1, sometimes 2 if it also has an integreted gpu)
 int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
 {
 	int score = 0;
 
-	QueueFamilyIndices queue_family_indices = findQueueFamilies(physical_device, *surface);
+	QueueFamilyIndices queue_family_indices = findQueueFamilies(physical_device, Graphics::getSurface()->getSurface());
 	if (!queue_family_indices.isSuitable()) return -1;
 
 	bool extensions_supported = checkPhysicalDeviceExtensionSupport(LogicalDevice::getRequiredLogicalDeviceExtensions(), physical_device);
 	if (!extensions_supported) return -1;
 
-	auto swap_chain_support_details = SwapChain::getSwapChainSupportDetails(physical_device, *surface);
+	auto swap_chain_support_details = SwapChain::getSwapChainSupportDetails(physical_device, Graphics::getSurface()->getSurface());
 	bool is_swap_chain_adequate = !swap_chain_support_details.formats.empty() && !swap_chain_support_details.present_modes.empty();
 	if (!is_swap_chain_adequate) return -1;
 

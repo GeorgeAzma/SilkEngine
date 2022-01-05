@@ -1,11 +1,15 @@
 #pragma once
 
+#include "shader.h"
+
 class GraphicsPipeline
 {
 public:
-	GraphicsPipeline(const VkDevice* logical_device);
+	GraphicsPipeline(Shader shader, VkRenderPass render_pass);
 	~GraphicsPipeline();
 
 private:
-	const VkDevice* logical_device = nullptr;
+	std::vector<VkDynamicState> dynamic_states;
+	VkPipelineLayout pipeline_layout;
+	VkPipeline graphics_pipeline;
 };

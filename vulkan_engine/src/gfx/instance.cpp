@@ -14,6 +14,7 @@ Instance::Instance()
     create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     create_info.pApplicationInfo = &application_info;
 
+    //Get required extensions and see if they are supported
     auto requiredExtensions = getRequiredExtensions();
     VE_CORE_ASSERT(checkExtensionSupport(requiredExtensions), 
         "Vulkan: Required extension(s) not found");
@@ -21,12 +22,15 @@ Instance::Instance()
     create_info.ppEnabledExtensionNames = requiredExtensions.data();
 
 #ifdef VE_ENABLE_DEBUG_OUTPUT
+    //Debug messenger stuff
     auto required_validation_layers = getRequiredValidationLayers();
     VE_CORE_ASSERT(checkValidationLayerSupport(required_validation_layers),
         "Vulkan: Required validation layers(s) not found");
+    //Validation layers are vulkan's way to handle error logging 
+    //(without performance impact when you aren't using them)
     create_info.enabledLayerCount = required_validation_layers.size();
     create_info.ppEnabledLayerNames = required_validation_layers.data();
-    debug_messenger = new DebugMessenger(&instance);
+    debug_messenger = new DebugMessenger();
     create_info.pNext = &debug_messenger->getCreateInfo();
 #else
     create_info.enabledLayerCount = 0;
@@ -37,7 +41,7 @@ Instance::Instance()
         "Vulkan: Couldn't create a vulkan instance");
 
 #ifdef VE_ENABLE_DEBUG_OUTPUT
-    debug_messenger->create();
+    debug_messenger->create(instance);
 #endif
 }
 

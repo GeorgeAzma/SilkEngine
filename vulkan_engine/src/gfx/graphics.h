@@ -11,10 +11,10 @@ public:
 	static void init(GLFWwindow* window);
 	static void cleanup();
 
-	static const Instance* getInstance() { return instance; }
-	static const Surface* getSurface() { return surface; }
-	static const PhysicalDevice* getPhysicalDevice() { return physical_device; }
-	static const LogicalDevice* getLogicalDevice() { return logical_device; }
+	static Instance* getInstance() { return instance; }
+	static Surface* getSurface() { return surface; }
+	static PhysicalDevice* getPhysicalDevice() { return physical_device; }
+	static LogicalDevice* getLogicalDevice() { return logical_device; }
 
 private:
 	static Instance* instance;

@@ -11,14 +11,15 @@ void Graphics::init(GLFWwindow* window)
 	VE_CORE_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
 	
 	instance = new Instance();
-	surface = new Surface(&instance->getInstance(), window);
-	physical_device = new PhysicalDevice(&instance->getInstance(), &surface->getSurface());
-	logical_device = new LogicalDevice(&physical_device->getPhysicalDevice(), &surface->getSurface());
-	swap_chain = new SwapChain(&physical_device->getPhysicalDevice(), &surface->getSurface(), window, &logical_device->getLogicalDevice());
+	surface = new Surface(window);
+	physical_device = new PhysicalDevice();
+	logical_device = new LogicalDevice();
+	swap_chain = new SwapChain(window);
 }
 
 void Graphics::cleanup()
 {
+	delete swap_chain;
 	delete logical_device;
 	delete physical_device;
 	delete surface;
