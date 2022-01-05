@@ -46,13 +46,13 @@ QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice physical_d
 std::vector<VkPhysicalDevice> PhysicalDevice::getAvailablePhysicalDevices() const
 {
 	uint32_t device_count = 0;
-	vkEnumeratePhysicalDevices(Graphics::getInstance()->getInstance(), &device_count, nullptr);
+	vkEnumeratePhysicalDevices(Graphics::instance->getInstance(), &device_count, nullptr);
 
 	VE_CORE_ASSERT(device_count > 0, 
 		"Vulkan: Couldn't find GPU with vulkan support");
 
 	std::vector<VkPhysicalDevice> physical_devices(device_count);
-	vkEnumeratePhysicalDevices(Graphics::getInstance()->getInstance(), &device_count, physical_devices.data());
+	vkEnumeratePhysicalDevices(Graphics::instance->getInstance(), &device_count, physical_devices.data());
 
 	return physical_devices;
 }
@@ -73,7 +73,8 @@ void PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vector<VkPhysic
 	physical_device = candidates.rbegin()->second;
 	vkGetPhysicalDeviceProperties(physical_device, &properties);
 	vkGetPhysicalDeviceFeatures(physical_device, &features);
-	queue_family_indices = findQueueFamilies(physical_device, Graphics::getSurface()->getSurface());
+	queue_family_indices = findQueueFamilies(physical_device, *Graphics::surface);
+	Graphics::surface->getSupportDetails(physical_device);
 }
 
 // This function decides which one is 
@@ -83,14 +84,15 @@ int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
 {
 	int score = 0;
 
-	QueueFamilyIndices queue_family_indices = findQueueFamilies(physical_device, Graphics::getSurface()->getSurface());
+	QueueFamilyIndices queue_family_indices = findQueueFamilies(physical_device, *Graphics::surface);
 	if (!queue_family_indices.isSuitable()) return -1;
 
 	bool extensions_supported = checkPhysicalDeviceExtensionSupport(LogicalDevice::getRequiredLogicalDeviceExtensions(), physical_device);
 	if (!extensions_supported) return -1;
 
-	auto swap_chain_support_details = SwapChain::getSwapChainSupportDetails(physical_device, Graphics::getSurface()->getSurface());
-	bool is_swap_chain_adequate = !swap_chain_support_details.formats.empty() && !swap_chain_support_details.present_modes.empty();
+	Graphics::surface->getSupportDetails(physical_device);
+	bool is_swap_chain_adequate = !Graphics::surface->getFormats().empty() && 
+		!Graphics::surface->getPresentModes().empty();
 	if (!is_swap_chain_adequate) return -1;
 
 	VkPhysicalDeviceProperties physical_device_properties;

@@ -4,11 +4,7 @@
 
 LogicalDevice::LogicalDevice()
 {
-	// Creating queue families
-	// Every command (like draw call), first goes through
-	// a command queue, queue families are there to group 
-	// related queues like graphics processesing queues etc.
-	auto queue_family_indices = Graphics::getPhysicalDevice()->getQueueFamilyIndices();
+	auto queue_family_indices = Graphics::physical_device->getQueueFamilyIndices();
 	std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
 	std::vector<uint32_t> queue_families = queue_family_indices.getIndices();
 	std::set<uint32_t> unique_queue_families(queue_families.begin(), queue_families.end());
@@ -36,8 +32,7 @@ LogicalDevice::LogicalDevice()
 	create_info.enabledExtensionCount = required_extensions.size();
 	create_info.ppEnabledExtensionNames = required_extensions.data();
 
-	VE_CORE_ASSERT(vkCreateDevice(Graphics::getPhysicalDevice()->getPhysicalDevice(), &create_info, nullptr, &logical_device) == VK_SUCCESS,
-		"Vulkan: Couldn't create logical device");
+	Graphics::vulkanAssert(vkCreateDevice(*Graphics::physical_device, &create_info, nullptr, &logical_device));
 
 	//Get handles of the requried queues
 	vkGetDeviceQueue(logical_device, *queue_family_indices.graphics, 0, &graphics_queue);

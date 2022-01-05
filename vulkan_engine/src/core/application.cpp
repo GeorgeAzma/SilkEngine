@@ -47,6 +47,9 @@ void Application::run()
                 Time::dt = app_update.getElapsedTime();
                 Time::frames = app_update.getFramesPassed();
                 Time::runtime = app_update.getRuntime();
+
+                Graphics::update();
+
                 for (Layer *layer : layer_stack)
                     layer->onUpdate();
             }

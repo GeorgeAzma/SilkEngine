@@ -1,7 +1,7 @@
 #include "graphics_pipeline.h"
 #include "graphics.h"
 
-GraphicsPipeline::GraphicsPipeline(Shader shader, VkRenderPass render_pass)
+GraphicsPipeline::GraphicsPipeline(Shader shader)
 {
 	dynamic_states =
 	{
@@ -25,17 +25,14 @@ GraphicsPipeline::GraphicsPipeline(Shader shader, VkRenderPass render_pass)
 	VkViewport viewport{};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
-	//viewport.width = (float)swapChainExtent.width;
-	viewport.width = 1280.0f; //HARDCODED
-	//viewport.height = (float)swapChainExtent.height;
-	viewport.height = 720.0f; //HARDCODED
+	viewport.width = Graphics::swap_chain->getExtent().width;
+	viewport.height = Graphics::swap_chain->getExtent().height;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 
 	VkRect2D scissor{};
 	scissor.offset = { 0, 0 };
-	//scissor.extent = swapChainExtent;
-	scissor.extent = { 1280, 720 }; //HARDCODED
+	scissor.extent = Graphics::swap_chain->getExtent();
 
 	VkPipelineViewportStateCreateInfo viewport_state{};
 	viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -87,8 +84,10 @@ GraphicsPipeline::GraphicsPipeline(Shader shader, VkRenderPass render_pass)
 	dynamicState.dynamicStateCount = dynamic_states.size();
 	dynamicState.pDynamicStates = dynamic_states.data();
 
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	VkPipelineLayoutCreateInfo pipeline_layout_info{};
+	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+	Graphics::vulkanAssert(vkCreatePipelineLayout(*Graphics::logical_device, &pipeline_layout_info, nullptr, &pipeline_layout));
 
 	VkGraphicsPipelineCreateInfo create_info{};
 	create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -101,17 +100,14 @@ GraphicsPipeline::GraphicsPipeline(Shader shader, VkRenderPass render_pass)
 	create_info.pMultisampleState = &multisampling;
 	create_info.pColorBlendState = &color_blending;
 	create_info.layout = pipeline_layout;
-	create_info.renderPass = render_pass;
+	create_info.renderPass = *Graphics::render_pass;
 	create_info.subpass = 0;
 
-	VE_CORE_ASSERT(vkCreateGraphicsPipelines(Graphics::getLogicalDevice()->getLogicalDevice(), VK_NULL_HANDLE, 1, &create_info, nullptr, &graphics_pipeline),
-		"Vulkan: Couldn't create a graphics pipeline");
-
-
+	Graphics::vulkanAssert(vkCreateGraphicsPipelines(*Graphics::logical_device, VK_NULL_HANDLE, 1, &create_info, nullptr, &graphics_pipeline));
 }
 
 GraphicsPipeline::~GraphicsPipeline()
 {
-	vkDestroyPipeline(Graphics::getLogicalDevice()->getLogicalDevice(), graphics_pipeline, nullptr);
-	vkDestroyPipelineLayout(Graphics::getLogicalDevice()->getLogicalDevice(), pipeline_layout, nullptr);
+	vkDestroyPipeline(*Graphics::logical_device, graphics_pipeline, nullptr);
+	vkDestroyPipelineLayout(*Graphics::logical_device, pipeline_layout, nullptr);
 }

@@ -6,12 +6,14 @@ public:
 	LogicalDevice();
 	~LogicalDevice();
 
-	VkDevice& getLogicalDevice() { return logical_device; }
+	operator const VkDevice& () const { return logical_device; }
+	const VkQueue& getGraphicsQueue() const { return graphics_queue; }
+	const VkQueue& getPresentQueue() const { return present_queue; }
 
 	static std::vector<const char*> getRequiredLogicalDeviceExtensions();
 
 private:
-	VkDevice logical_device;
 	VkQueue graphics_queue;
 	VkQueue present_queue;
+	VkDevice logical_device;
 };

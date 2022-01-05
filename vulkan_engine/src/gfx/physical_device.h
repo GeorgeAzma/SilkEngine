@@ -29,7 +29,7 @@ public:
 	PhysicalDevice();
 	~PhysicalDevice();
 
-	const VkPhysicalDevice& getPhysicalDevice() const { return physical_device; }
+	operator const VkPhysicalDevice& () const { return physical_device; }
 	const QueueFamilyIndices& getQueueFamilyIndices() const { return queue_family_indices; }
 	const VkPhysicalDeviceProperties& getProperties() const { return properties; }
 	const VkPhysicalDeviceFeatures& getFeatures() const { return features; }

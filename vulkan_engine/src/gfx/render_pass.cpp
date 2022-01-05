@@ -4,7 +4,7 @@
 RenderPass::RenderPass()
 {
     VkAttachmentDescription color_attachment{};
-    //color_attachment.format = swap_chain_image_format;
+    color_attachment.format = Graphics::swap_chain->getSurfaceFormat().format;
     color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
     color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -17,6 +17,14 @@ RenderPass::RenderPass()
     VkAttachmentReference color_attachment_reference{};
     color_attachment_reference.attachment = 0;
     color_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+    VkSubpassDependency dependency{};
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass = 0;
+    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.srcAccessMask = 0;
+    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
     //The index of the attachment in this array is directly 
     //referenced from the fragment shader with the 
@@ -32,14 +40,13 @@ RenderPass::RenderPass()
     create_info.pAttachments = &color_attachment;
     create_info.subpassCount = 1;
     create_info.pSubpasses = &subpass;
+    create_info.dependencyCount = 1;
+    create_info.pDependencies = &dependency;
 
-    VE_CORE_ASSERT(vkCreateRenderPass(Graphics::getLogicalDevice()->getLogicalDevice(), &create_info, nullptr, &render_pass) == VK_SUCCESS,
-        "Vulkan: Couldn't create a render pass");
-    
-
+    Graphics::vulkanAssert(vkCreateRenderPass(*Graphics::logical_device, &create_info, nullptr, &render_pass));
 }
 
 RenderPass::~RenderPass()
 {
-    vkDestroyRenderPass(Graphics::getLogicalDevice()->getLogicalDevice(), render_pass, nullptr);
+    vkDestroyRenderPass(*Graphics::logical_device, render_pass, nullptr);
 }

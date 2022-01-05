@@ -5,8 +5,10 @@
 class GraphicsPipeline
 {
 public:
-	GraphicsPipeline(Shader shader, VkRenderPass render_pass);
+	GraphicsPipeline(Shader shader);
 	~GraphicsPipeline();
+
+	operator const VkPipeline& () const { return graphics_pipeline; }
 
 private:
 	std::vector<VkDynamicState> dynamic_states;

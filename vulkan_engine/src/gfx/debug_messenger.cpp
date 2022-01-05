@@ -29,6 +29,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 
     message += "] ";
     message += pCallbackData->pMessage;
+    message += '\n';
 
     switch (messageSeverity)
     {
@@ -85,7 +86,8 @@ DebugMessenger::DebugMessenger()
 void DebugMessenger::create(VkInstance instance)
 {
     this->instance = instance;
-    VE_CORE_ASSERT(createDebugUtilsMessengerEXT(instance, &create_info, nullptr, &debug_messenger) == VK_SUCCESS, "Vulkan: Couldn't create a debug messenger");
+    VE_CORE_ASSERT(createDebugUtilsMessengerEXT(instance, &create_info, nullptr, &debug_messenger) == VK_SUCCESS,
+        "Vulkan: Couldn't create a debug messenger");
 }
 
 DebugMessenger::~DebugMessenger()

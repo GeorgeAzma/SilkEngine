@@ -1,4 +1,5 @@
 #include "instance.h"
+#include "graphics.h"
 
 Instance::Instance()
 {
@@ -37,8 +38,7 @@ Instance::Instance()
     create_info.pNext = nullptr;
 #endif
 
-    VE_CORE_ASSERT(vkCreateInstance(&create_info, nullptr, &instance) == VK_SUCCESS, 
-        "Vulkan: Couldn't create a vulkan instance");
+    Graphics::vulkanAssert(vkCreateInstance(&create_info, nullptr, &instance));
 
 #ifdef VE_ENABLE_DEBUG_OUTPUT
     debug_messenger->create(instance);

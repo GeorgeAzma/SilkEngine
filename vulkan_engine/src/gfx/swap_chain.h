@@ -1,14 +1,6 @@
 #pragma once
 
-#include <vector>
-#include <vulkan/vulkan.h>
-
-struct SwapChainSupportDetails 
-{
-    VkSurfaceCapabilitiesKHR capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> present_modes;
-};
+#include "framebuffer.h"
 
 class SwapChain
 {
@@ -16,12 +8,13 @@ public:
 	SwapChain(GLFWwindow* window);
     ~SwapChain();
 
-    const VkSwapchainKHR& getSwapChain() const { return swap_chain; }
-    
-    const SwapChainSupportDetails& getSwapChainSupportDetails() const { return support_details; }
+    operator const VkSwapchainKHR& () const { return swap_chain; }
+    const VkSurfaceFormatKHR& getSurfaceFormat() const { return surface_format; }
+    const VkExtent2D& getExtent() const { return extent; }
+    const std::vector<Framebuffer*>& getFramebuffers() const { return framebuffers; }
+    void createFramebuffers();
     
 private:
-    static SwapChainSupportDetails getSwapChainSupportDetails(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
     void chooseSwapChainSurfaceFormat();
     void chooseSwapChainPresentMode();
     void chooseSwapChainExtent();
@@ -30,13 +23,13 @@ private:
 
 private:
     GLFWwindow* window;
-    SwapChainSupportDetails support_details;
     VkSwapchainKHR swap_chain;
     std::vector<VkImage> images;
     VkSurfaceFormatKHR surface_format;
     VkPresentModeKHR present_mode;
     VkExtent2D extent;
     std::vector<VkImageView> image_views;
+    std::vector<Framebuffer*> framebuffers;
 
     friend class PhysicalDevice;
 };

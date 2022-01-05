@@ -5,34 +5,33 @@
 SwapChain::SwapChain(GLFWwindow* window)
 	: window{window}
 {
-	support_details = getSwapChainSupportDetails(Graphics::getPhysicalDevice()->getPhysicalDevice(), Graphics::getSurface()->getSurface());
-
 	chooseSwapChainSurfaceFormat();
 	chooseSwapChainPresentMode();
 	chooseSwapChainExtent();
-	uint32_t image_count = support_details.capabilities.minImageCount + 1;
-	if (support_details.capabilities.maxImageCount > 0 && 
-		image_count > support_details.capabilities.maxImageCount)
+
+	uint32_t image_count = Graphics::surface->getCapabilities().minImageCount + 1;
+	if (Graphics::surface->getCapabilities().maxImageCount > 0 &&
+		image_count > Graphics::surface->getCapabilities().maxImageCount)
 	{
-		image_count = support_details.capabilities.maxImageCount;
+		image_count = Graphics::surface->getCapabilities().maxImageCount;
 	}
 
 	VkSwapchainCreateInfoKHR create_info{};
 	create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	create_info.surface = Graphics::getSurface()->getSurface();
+	create_info.surface = *Graphics::surface;
 	create_info.minImageCount = image_count;
 	create_info.imageFormat = surface_format.format;
 	create_info.imageColorSpace = surface_format.colorSpace;
 	create_info.imageExtent = extent;
 	create_info.imageArrayLayers = 1; //For stereoscopic 3D apps
 	create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	create_info.preTransform = support_details.capabilities.currentTransform;
+	create_info.preTransform = Graphics::surface->getCapabilities().currentTransform;
 	create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; //For transparent windows
 	create_info.presentMode = present_mode;
 	create_info.clipped = VK_TRUE;
 	create_info.oldSwapchain = VK_NULL_HANDLE; //Necessary for resizing and such
 
-	auto indices = Graphics::getPhysicalDevice()->getQueueFamilyIndices();
+	auto indices = Graphics::physical_device->getQueueFamilyIndices();
 	if (indices.graphics != indices.present) 
 	{
 		create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -45,14 +44,15 @@ SwapChain::SwapChain(GLFWwindow* window)
 		create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	}
 
-	VE_CORE_ASSERT(vkCreateSwapchainKHR(Graphics::getLogicalDevice()->getLogicalDevice(), &create_info, nullptr, &swap_chain) == VK_SUCCESS,
-		"Vulkan: Couldn't create swap chain");
+	Graphics::vulkanAssert(vkCreateSwapchainKHR(*Graphics::logical_device, &create_info, nullptr, &swap_chain));
 
-	vkGetSwapchainImagesKHR(Graphics::getLogicalDevice()->getLogicalDevice(), swap_chain, &image_count, nullptr);
+	vkGetSwapchainImagesKHR(*Graphics::logical_device, swap_chain, &image_count, nullptr);
 	images.resize(image_count);
-	vkGetSwapchainImagesKHR(Graphics::getLogicalDevice()->getLogicalDevice(), swap_chain, &image_count, images.data());
+	vkGetSwapchainImagesKHR(*Graphics::logical_device, swap_chain, &image_count, images.data());
 	
 	image_views.resize(images.size());
+	framebuffers.resize(image_views.size());
+
 	for (size_t i = 0; i < image_views.size(); ++i)
 	{
 		VkImageViewCreateInfo create_info{};
@@ -69,51 +69,38 @@ SwapChain::SwapChain(GLFWwindow* window)
 		create_info.subresourceRange.levelCount = 1;
 		create_info.subresourceRange.baseArrayLayer = 0;
 		create_info.subresourceRange.layerCount = 1;
-		VE_CORE_ASSERT(vkCreateImageView(Graphics::getLogicalDevice()->getLogicalDevice(), &create_info, nullptr, &image_views[i]) == VK_SUCCESS,
-			"Vulkan: Couldn't create image view");
+
+		Graphics::vulkanAssert(vkCreateImageView(*Graphics::logical_device, &create_info, nullptr, &image_views[i]));
+	}
+}
+
+void SwapChain::createFramebuffers()
+{
+	for (size_t i = 0; i < image_views.size(); ++i)
+	{
+		std::vector<VkImageView> attachments = { image_views[i] };
+		framebuffers[i] = new Framebuffer(*Graphics::render_pass, attachments);
 	}
 }
 
 SwapChain::~SwapChain()
 {
+	for (auto& framebuffer : framebuffers)
+	{
+		delete framebuffer;
+	}
 	for (const auto& image_view : image_views) 
 	{
-		vkDestroyImageView(Graphics::getLogicalDevice()->getLogicalDevice(), image_view, nullptr);
+		vkDestroyImageView(*Graphics::logical_device, image_view, nullptr);
 	}
-	vkDestroySwapchainKHR(Graphics::getLogicalDevice()->getLogicalDevice(), swap_chain, nullptr);
-}
-
-SwapChainSupportDetails SwapChain::getSwapChainSupportDetails(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
-{
-	SwapChainSupportDetails details{};
-
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &details.capabilities);
-	uint32_t format_count = 0;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, nullptr);
-
-	if (format_count) 
-	{
-		details.formats.resize(format_count);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, details.formats.data());
-	}
-
-	uint32_t present_mode_count = 0;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &present_mode_count, nullptr);
-
-	if (present_mode_count)
-	{
-		details.present_modes.resize(present_mode_count);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &present_mode_count, details.present_modes.data());
-	}
-
-	return details;
+	vkDestroySwapchainKHR(*Graphics::logical_device, swap_chain, nullptr);
 }
 
 void SwapChain::chooseSwapChainSurfaceFormat()
 {
 	std::multimap<int, VkSurfaceFormatKHR> formats;
 
-	for (const auto& available_format : support_details.formats)
+	for (const auto& available_format : Graphics::surface->getFormats())
 	{
 		int score = rateSwapChainSurfaceFormat(available_format);
 		if (score >= 0)
@@ -142,7 +129,7 @@ void SwapChain::chooseSwapChainPresentMode()
 {
 	std::multimap<int, VkPresentModeKHR> present_modes;
 
-	for (const auto& available_present_mode : support_details.present_modes)
+	for (const auto& available_present_mode : Graphics::surface->getPresentModes())
 	{
 		int score = rateSwapChainPresentMode(available_present_mode);
 		if (score >= 0)
@@ -159,9 +146,9 @@ void SwapChain::chooseSwapChainPresentMode()
 
 void SwapChain::chooseSwapChainExtent()
 {
-	if (support_details.capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) 
+	if (Graphics::surface->getCapabilities().currentExtent.width != std::numeric_limits<uint32_t>::max())
 	{
-		this->extent = support_details.capabilities.currentExtent;
+		this->extent = Graphics::surface->getCapabilities().currentExtent;
 		return;
 	}
 
@@ -169,16 +156,16 @@ void SwapChain::chooseSwapChainExtent()
 	glfwGetFramebufferSize(window, &width, &height);
 	VkExtent2D extent =
 	{
-		width,
-		height
+		(uint32_t)width,
+		(uint32_t)height
 	};
 
 	extent.width = std::clamp(extent.width, 
-		support_details.capabilities.minImageExtent.width, 
-		support_details.capabilities.maxImageExtent.width);
+		Graphics::surface->getCapabilities().minImageExtent.width,
+		Graphics::surface->getCapabilities().maxImageExtent.width);
 	extent.height = std::clamp(extent.height,
-		support_details.capabilities.minImageExtent.height,
-		support_details.capabilities.maxImageExtent.height);
+		Graphics::surface->getCapabilities().minImageExtent.height,
+		Graphics::surface->getCapabilities().maxImageExtent.height);
 
 	this->extent = extent;
 }
@@ -204,4 +191,6 @@ int SwapChain::rateSwapChainPresentMode(VkPresentModeKHR present_mode) const
 		return 250;
 		break;
 	}
+
+	return -1;
 }

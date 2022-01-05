@@ -24,7 +24,6 @@ private:
 	ShaderType getShaderType(const std::string& file);
 
 private:
-	VkDevice logical_device;
 	std::vector<VkPipelineShaderStageCreateInfo> shader_stage_infos;
 	std::vector<VkShaderModule> shader_modules;
 };

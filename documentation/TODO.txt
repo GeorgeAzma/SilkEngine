@@ -1,12 +1,8 @@
 - Name the engine and change stuff like VE_TRACE to ENGINE_NAME_TRACE
 - handle input events
-- Configurable graphics settings (preferably in file format like yaml)
-- Create vulkan object abstraction classes (Image with ImageView) 
+- Configurable graphics settings (preferably in file format like yaml) 
+- Make everything much less explicit, create vulkan object abstraction classes (Image with ImageView) 
   and rewrite other classes using these abstractions
-
-
-
-
-- FIX HARDCODED VARIABLES
-- FIX UNAVAILABLE SWAP CHAIN VARIABLES
-- CREATE SWAP CHAIN FRAMEBUFFERS
+- Fix the mess in Graphics class
+  (and other vulkan classes but they are less mesy)
+- Remove includes from graphics.h for better compile time

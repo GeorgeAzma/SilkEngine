@@ -3,9 +3,7 @@
 #include "graphics.h"
 
 Shader::Shader(const std::vector<std::string>& files)
-	: logical_device{Graphics::getLogicalDevice()->getLogicalDevice()}
 {
-	
 	//Reason we process multiple shader files at a time 
 	//is that later on we might combine shaders into 
 	//a one shader file which will process all the 
@@ -56,7 +54,7 @@ Shader::Shader(const std::vector<std::string>& files)
 Shader::~Shader()
 {
 	for(auto& shader_module : shader_modules)
-		vkDestroyShaderModule(logical_device, shader_module, nullptr);//I think cleanup should be much further than this
+		vkDestroyShaderModule(*Graphics::logical_device, shader_module, nullptr);//I think cleanup should be much further than this
 }
 
 VkShaderModule Shader::createShaderModule(const std::vector<char>& source) const
@@ -67,8 +65,7 @@ VkShaderModule Shader::createShaderModule(const std::vector<char>& source) const
 	create_info.pCode = (const uint32_t*)source.data();
 
 	VkShaderModule shader_module;
-	VE_CORE_ASSERT(vkCreateShaderModule(logical_device, &create_info, nullptr, &shader_module) == VK_SUCCESS,
-		"Vulkan: Couldn't create shader module");
+	Graphics::vulkanAssert(vkCreateShaderModule(*Graphics::logical_device, &create_info, nullptr, &shader_module));
 
 	return shader_module;
 
