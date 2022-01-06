@@ -8,9 +8,24 @@
 #include "graphics_pipeline.h"
 #include "command_pool.h"
 
+//TEMP
+#include "vertex_buffer.h"
+
+class WindowResizeEvent;
+
 class Graphics
 {
 	static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
+	//TEMP
+
+	static inline VertexBuffer* vertex_buffer = nullptr;
+
+	static void createCommandBuffers();
+	static void createSyncObjects();
+
+	static void recreateSwapChain();
+
 public:
 	static void init(GLFWwindow* window);
 	static void update();
@@ -18,6 +33,7 @@ public:
 
 	static constexpr void vulkanAssert(VkResult result);
 
+public:
 	static inline Instance* instance = nullptr;
 	static inline Surface* surface = nullptr;
 	static inline PhysicalDevice* physical_device = nullptr;
@@ -27,11 +43,18 @@ public:
 	static inline RenderPass* render_pass = nullptr;
 	static inline GraphicsPipeline* graphics_pipeline = nullptr;
 	static inline std::vector<VkCommandBuffer> command_buffers = {};
+	static inline GLFWwindow* window = nullptr;
 
 private:
 	static constexpr std::string stringifyResult(VkResult result);
+	static void onWindowResize(const WindowResizeEvent& e);
 
 private:
-	static inline VkSemaphore image_available_semaphore;
-	static inline VkSemaphore render_finished_semaphore;
+	static inline std::vector<VkSemaphore> image_available_semaphores = std::vector<VkSemaphore>(MAX_FRAMES_IN_FLIGHT);
+	static inline std::vector<VkSemaphore> render_finished_semaphores = std::vector<VkSemaphore>(MAX_FRAMES_IN_FLIGHT);
+	static inline std::vector<VkFence> in_flight_fences = std::vector<VkFence>(MAX_FRAMES_IN_FLIGHT);
+	static inline std::vector<VkFence> images_in_flight = {};
+
+	static inline uint32_t current_frame = 0;
+	static inline bool framebuffer_resized = false;
 };

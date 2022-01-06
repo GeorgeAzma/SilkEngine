@@ -6,30 +6,25 @@
 class FixedUpdate
 {
 public:
-    using UpdateFunc = std::function<void(double)>;
-    FixedUpdate(unsigned int maximumFPS, UpdateFunc func = nullptr);
+    FixedUpdate(double interval);
     bool update();
     unsigned int getFPS() const { return round(fps); }
     double getFPSf() const { return fps; }
     double getElapsedTime() const { return elapsed; }
-    double getRuntime() const { return totalTime; }
+    double getRuntime() const { return total_time; }
     unsigned int getFramesPassed() const { return frames; }
-    unsigned int getMaxFPS() const { return maxFPS; }
-    double getTimestep() const { return timestep; }
-    void setMaxFPS(unsigned int newMaxFPS)
+    unsigned int getMaxFPS() const { return 1.0 / interval; }
+    double getInterval() const { return interval; }
+    void setInterval(double interval)
     {
-        maxFPS = newMaxFPS;
-        timestep = 1.0 / newMaxFPS;
+        interval = interval;
     }
-    void printFPS();
 
 private:
     Delta<double> delta;
-    UpdateFunc updateFunction;
-    unsigned int maxFPS;
-    double elapsed;
-    double fps;
-    unsigned int frames;
-    double timestep;
-    double totalTime;
+    double elapsed = 0;
+    double fps = 0;
+    unsigned int frames = 0;
+    double interval = 0;
+    double total_time = 0;
 };

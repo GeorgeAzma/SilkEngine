@@ -1,6 +1,6 @@
 #pragma once
 
-class DebugMessenger
+class DebugMessenger : NonCopyable
 {
 public:
     DebugMessenger();

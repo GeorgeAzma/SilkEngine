@@ -1,6 +1,6 @@
 #pragma once
 
-class Framebuffer
+class Framebuffer : NonCopyable
 {
 public:
 	Framebuffer(VkRenderPass render_pass, const std::vector<VkImageView>& attachments);

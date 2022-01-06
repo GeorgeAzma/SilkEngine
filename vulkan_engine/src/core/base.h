@@ -1,6 +1,8 @@
 #pragma once
 #include "platform.h"
 
+//Small frequently used utility functions/classes/defines etc..
+
 #ifndef VE_DIST
 #define VE_ENABLE_DEBUG_OUTPUT
 #endif
@@ -23,3 +25,21 @@
     (((uint32_t(major)) << 22)               \
     | ((uint32_t(minor)) << 12)              \
     | (uint32_t(patch)))
+
+class NonMovable
+{
+public:
+    NonMovable() {}
+private:
+    NonMovable(NonMovable&&);
+    NonMovable& operator=(NonMovable&&);
+};
+
+class NonCopyable
+{
+public:
+    NonCopyable() {}
+private:
+    NonCopyable(const NonCopyable&);
+    NonCopyable& operator=(const NonCopyable&);
+};

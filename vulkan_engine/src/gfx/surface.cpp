@@ -1,9 +1,9 @@
 #include "surface.h"
 #include "graphics.h"
 
-Surface::Surface(GLFWwindow* window)
+Surface::Surface()
 {
-	VE_CORE_ASSERT(glfwCreateWindowSurface(Graphics::instance->getInstance(), window, nullptr, &surface) == VK_SUCCESS,
+	VE_CORE_ASSERT(glfwCreateWindowSurface(Graphics::instance->getInstance(), Graphics::window, nullptr, &surface) == VK_SUCCESS,
 		"Couldn't create window surface");
 }
 

@@ -23,7 +23,7 @@ struct QueueFamilyIndices
 	};
 };
 
-class PhysicalDevice
+class PhysicalDevice : NonCopyable
 {
 public:
 	PhysicalDevice();

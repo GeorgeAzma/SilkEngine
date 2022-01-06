@@ -4,6 +4,7 @@
 #include <typeindex>
 #include <vector>
 #include <memory>
+#include <GLFW/glfw3.h>
 
 // Different core events
 class Event
@@ -15,81 +16,91 @@ public:
 class WindowResizeEvent : public Event
 {
 public:
-    WindowResizeEvent(int width, int height)
-        : width{width}, height{height} {}
+    WindowResizeEvent(int width, int height, GLFWwindow* window)
+        : width{ width }, height{ height }, window{ window } {}
 
     const int width, height;
+    const GLFWwindow* window;
 };
 
 class WindowCloseEvent : public Event
 {
 public:
-    WindowCloseEvent() {}
+    WindowCloseEvent(GLFWwindow* window) {}
+
+    const GLFWwindow* window;
 };
 
 class KeyPressEvent : public Event
 {
 public:
-    KeyPressEvent(uint16_t keycode, unsigned int repeat_count = 0)
-        : keycode{keycode}, repeat_count{repeat_count} {}
+    KeyPressEvent(uint16_t keycode, unsigned int repeat_count, GLFWwindow* window)
+        : keycode{keycode}, repeat_count{repeat_count}, window{ window } {}
 
-    const uint16_t keycode;
+    const int keycode;
     const unsigned int repeat_count;
+    const GLFWwindow* window;
 };
 
 class KeyReleaseEvent : public Event
 {
 public:
-    KeyReleaseEvent(uint16_t keycode)
-        : keycode{keycode} {}
+    KeyReleaseEvent(int keycode, GLFWwindow* window)
+        : keycode{keycode}, window{ window } {}
 
-    const uint16_t keycode;
+    const int keycode;
+    const GLFWwindow* window;
 };
 
 class MousePressEvent : public Event
 {
 public:
-    MousePressEvent(uint16_t button)
-        : button{button} {}
+    MousePressEvent(int button, GLFWwindow* window)
+        : button{button}, window{ window } {}
 
-    const uint16_t button;
+    const int button;
+    const GLFWwindow* window;
 };
 
 class MouseReleaseEvent : public Event
 {
 public:
-    MouseReleaseEvent(uint16_t button)
-        : button{button} {}
+    MouseReleaseEvent(int button, GLFWwindow* window)
+        : button{button}, window{ window } {}
 
-    const uint16_t button;
+    const int button;
+    const GLFWwindow* window;
 };
 
 class MouseMoveEvent : public Event
 {
 public:
-    MouseMoveEvent(double x, double y)
-        : x{x}, y{y} {}
+    MouseMoveEvent(double x, double y, GLFWwindow* window)
+        : x{x}, y{y}, window{ window } {}
 
     const double x, y;
+    const GLFWwindow* window;
 };
 
 class MouseDragEvent : public Event
 {
 public:
-    MouseDragEvent(uint16_t button, double x, double y)
-        : button{button}, x{x}, y{y} {}
+    MouseDragEvent(int button, double x, double y, GLFWwindow* window)
+        : button{button}, x{x}, y{y}, window{ window } {}
 
-    const uint16_t button;
+    const int button;
     const double x, y;
+    const GLFWwindow* window;
 };
 
 class MouseScrollEvent : public Event
 {
 public:
-    MouseScrollEvent(double x, double y)
-        : x{x}, y{y} {}
+    MouseScrollEvent(double x, double y, GLFWwindow* window)
+        : x{ x }, y{ y }, window{ window } {}
 
     const double x, y;
+    const GLFWwindow* window;
 };
 
 // Dispatching and such code

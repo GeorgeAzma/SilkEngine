@@ -1,26 +1,25 @@
 #include "fixed_update.h"
+#include "core/time.h"
 
-FixedUpdate::FixedUpdate(unsigned int maximumFPS, UpdateFunc func)
-    : maxFPS(maximumFPS), updateFunction(func), elapsed(0), fps(0), frames(0), timestep(1.0f / maxFPS), totalTime(0), delta(glfwGetTime()) {}
+FixedUpdate::FixedUpdate(double interval)
+    : interval(interval), delta(Time::getSystemTime()) {}
 
 bool FixedUpdate::update()
 {
-    const double deltaTime = delta.calc(glfwGetTime());
+    double deltaTime = delta(Time::getSystemTime());
     elapsed += deltaTime;
-    totalTime += deltaTime;
-    if (elapsed >= timestep)
+    total_time += deltaTime;
+
+    if (elapsed >= interval)
     {
+        if (elapsed)
+            fps = 1.0 / elapsed;
+        else 
+            fps = std::numeric_limits<decltype(fps)>::max();
+
         ++frames;
-        if (updateFunction)
-            updateFunction(elapsed);
-        fps = 1.0 / elapsed;
-        elapsed -= timestep;
+        elapsed = 0;
         return true;
     }
     return false;
-}
-
-void FixedUpdate::printFPS()
-{
-    std::cout << "FPS: " << getFPS() << " (" << std::floorf(elapsed * 100000.0f) / 100.0f << " ms)" << std::endl;
 }

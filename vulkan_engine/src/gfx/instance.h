@@ -1,7 +1,7 @@
 #pragma once
 #include "debug_messenger.h"
 
-class Instance
+class Instance : NonCopyable
 {
 public:
     Instance();

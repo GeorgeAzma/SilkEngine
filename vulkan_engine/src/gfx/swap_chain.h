@@ -2,16 +2,17 @@
 
 #include "framebuffer.h"
 
-class SwapChain
+class SwapChain : NonCopyable
 {
 public:
-	SwapChain(GLFWwindow* window);
+    SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain = {});
     ~SwapChain();
 
     operator const VkSwapchainKHR& () const { return swap_chain; }
     const VkSurfaceFormatKHR& getSurfaceFormat() const { return surface_format; }
     const VkExtent2D& getExtent() const { return extent; }
     const std::vector<Framebuffer*>& getFramebuffers() const { return framebuffers; }
+    const std::vector<VkImage>& getImages() const { return images; }
     void createFramebuffers();
     
 private:

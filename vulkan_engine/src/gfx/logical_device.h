@@ -1,6 +1,6 @@
 #pragma once
 
-class LogicalDevice
+class LogicalDevice : NonCopyable
 {
 public:
 	LogicalDevice();

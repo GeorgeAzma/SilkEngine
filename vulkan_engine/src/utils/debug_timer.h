@@ -9,10 +9,11 @@ public:
 
     ~DebugTimer();
 
-    void stop();
+    //Stops the timer and returns time in microseconds (or prints it if print parameter is true)
+    long long stop(bool print = true);
 
 private:
-    std::chrono::time_point<std::chrono::high_resolution_clock> start_point;
+    std::chrono::time_point<std::chrono::steady_clock> start_point;
     const char *name = "Timer";
     bool stopped = false;
     bool show_millis = true;

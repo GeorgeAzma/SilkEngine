@@ -17,3 +17,5 @@ Seperate shader types are in seperate files
 
 Would be cool if we can create a shader parser supporting multipass
 that would make making ping pong shaders 10x easier
+
+Critical cpu times: [vkQueuePresentKHR: 58%, vkQueueSubmit: 20%]

@@ -3,8 +3,8 @@
 #include "time.h"
 #include "gfx/graphics.h"
 
-Application::Application(const char *name, ApplicationCommandLineArgs args)
-    : command_line_args(args), app_update(256)
+Application::Application(const char* name, ApplicationCommandLineArgs args)
+    : command_line_args(args), app_update(0.0)
 {
     Log::init(); 
     VE_CORE_INFO("Started");
@@ -48,11 +48,17 @@ void Application::run()
                 Time::frames = app_update.getFramesPassed();
                 Time::runtime = app_update.getRuntime();
 
+                if (Time::frames % 512 == 0)
+                {
+                    VE_CORE_TRACE("{0} FPS", app_update.getFPS());
+                }
+
                 Graphics::update();
 
                 for (Layer *layer : layer_stack)
                     layer->onUpdate();
             }
+
             window->update();
         }
     }

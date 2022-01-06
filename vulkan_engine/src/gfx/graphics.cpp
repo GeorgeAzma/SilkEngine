@@ -1,23 +1,18 @@
 #include "graphics.h"
+#include "vertex_buffer.h"
+#include "utils/debug_timer.h"
+#include "core/event.h"
+#include "scene/vertex.h"
 
-void Graphics::init(GLFWwindow* window)
+static const std::vector<Vertex> vertices =
 {
-	VE_CORE_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
-	
-	instance = new Instance();
-	surface = new Surface(window);
-	physical_device = new PhysicalDevice();
-	logical_device = new LogicalDevice();
-	command_pool = new CommandPool();
-	swap_chain = new SwapChain(window);
-	render_pass = new RenderPass();
-	swap_chain->createFramebuffers();
-	graphics_pipeline = new GraphicsPipeline(Shader({ 
-		"E:/Codes/C++/VulkanEngine/data/cache/shaders/test.vert.spv", 
-		"E:/Codes/C++/VulkanEngine/data/cache/shaders/test.frag.spv" }));
-	
-	
-	
+	{{ 0.0, -0.5}, {1.0, 0.0, 0.0}},
+	{{ 0.5,  0.5}, {0.0, 1.0, 0.0}},
+	{{-0.5,  0.5}, {0.0, 0.0, 1.0}},
+};
+
+void Graphics::createCommandBuffers()
+{
 	//Create command buffers
 	command_buffers.resize(swap_chain->getFramebuffers().size());
 
@@ -54,33 +49,137 @@ void Graphics::init(GLFWwindow* window)
 
 		vkCmdBindPipeline(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, *Graphics::graphics_pipeline);
 
-		vkCmdDraw(command_buffers[i], 3, 1, 0, 0);
+		//TODO: implement vertex arrays
+		//std::vector<VkBuffer> vertex_buffers;
+		//vertex_buffers.push_back(*vertex_buffer);
+		//const std::vector<VkDeviceSize> offsets = { 0 };
+		//vkCmdBindVertexBuffers(command_buffers[i], 0, 1, vertex_buffers.data(), offsets.data());
+
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = Graphics::swap_chain->getExtent().width;
+		viewport.height = Graphics::swap_chain->getExtent().height;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		vkCmdSetViewport(command_buffers[i], 0, 1, &viewport);
+
+		VkRect2D scissor{};
+		scissor.offset = { 0, 0 };
+		scissor.extent = Graphics::swap_chain->getExtent();
+		vkCmdSetScissor(command_buffers[i], 0, 1, &scissor);
+
+		//vkCmdDraw(command_buffers[i], vertices.size(), 1, 0, 0);
 
 		vkCmdEndRenderPass(command_buffers[i]);
 
 		Graphics::vulkanAssert(vkEndCommandBuffer(command_buffers[i]));
 	}
+}
 
+void Graphics::createSyncObjects()
+{
+	//Create semaphores and fences
+	images_in_flight.resize(swap_chain->getImages().size(), VK_NULL_HANDLE);
 
-
-	//Create semaphores
 	VkSemaphoreCreateInfo semaphore_info{};
 	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-	Graphics::vulkanAssert(vkCreateSemaphore(*logical_device, &semaphore_info, nullptr, &image_available_semaphore));
-	Graphics::vulkanAssert(vkCreateSemaphore(*logical_device, &semaphore_info, nullptr, &render_finished_semaphore));
+	VkFenceCreateInfo fence_info{};
+	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+	{
+		Graphics::vulkanAssert(vkCreateSemaphore(*logical_device, &semaphore_info, nullptr, &image_available_semaphores[i]));
+		Graphics::vulkanAssert(vkCreateSemaphore(*logical_device, &semaphore_info, nullptr, &render_finished_semaphores[i]));
+
+		Graphics::vulkanAssert(vkCreateFence(*logical_device, &fence_info, nullptr, &in_flight_fences[i]));
+	}
+}
+
+void Graphics::recreateSwapChain()
+{
+	vkDeviceWaitIdle(*logical_device);
+
+	if (swap_chain == nullptr)
+	{
+		delete swap_chain;
+		swap_chain = new SwapChain();
+		swap_chain->createFramebuffers();
+	}
+	else
+	{
+		VkSwapchainKHR sc = *swap_chain;
+		SwapChain* old_swap_chain = swap_chain;
+		swap_chain = new SwapChain(sc);
+		swap_chain->createFramebuffers();
+		if (swap_chain->getImages().size() != command_buffers.size())
+		{
+		}
+		delete old_swap_chain;
+		
+		vkFreeCommandBuffers(*logical_device, *command_pool, command_buffers.size(), command_buffers.data());
+		command_buffers.clear();
+		createCommandBuffers();
+	}
+		
+}
+
+void Graphics::init(GLFWwindow* window)
+{
+	VE_CORE_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
+
+	Graphics::window = window;
+	
+	instance = new Instance();
+	surface = new Surface();
+	physical_device = new PhysicalDevice();
+	logical_device = new LogicalDevice();
+	command_pool = new CommandPool();
+	swap_chain = new SwapChain();
+	render_pass = new RenderPass();
+	swap_chain->createFramebuffers();
+	Shader shader = Shader({
+		"E:/Codes/C++/VulkanEngine/data/cache/shaders/test.vert.spv",
+		"E:/Codes/C++/VulkanEngine/data/cache/shaders/test.frag.spv" });
+	GraphicsPipelineProps graphics_pipeline_props{};
+	graphics_pipeline = new GraphicsPipeline({ &shader, { Vertex::getBindingDescription() }, Vertex::getAttributeDescriptions()
+});
+	createCommandBuffers();
+	createSyncObjects();
+
+	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(vertices[0]));
 }
 
 void Graphics::update()
-{
+{	
+	vkWaitForFences(*logical_device, 1, &in_flight_fences[current_frame], VK_TRUE, UINT64_MAX);
+	
 	//Get next swap chain image
 	uint32_t image_index;
-	vkAcquireNextImageKHR(*logical_device, *swap_chain, UINT64_MAX, image_available_semaphore, VK_NULL_HANDLE, &image_index);
+	VkResult result = vkAcquireNextImageKHR(*logical_device, *swap_chain, UINT64_MAX, image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index);
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR)
+	{
+		recreateSwapChain();
+		return;
+	}
+	if (result != VK_SUBOPTIMAL_KHR)
+	{
+		Graphics::vulkanAssert(result);
+	}
+
+	//Check if previous frame is using this image
+	if (images_in_flight[image_index] != VK_NULL_HANDLE) 
+	{
+		vkWaitForFences(*logical_device, 1, &images_in_flight[image_index], VK_TRUE, UINT64_MAX);
+	}
 
 	//Submit the command buffer
 	VkSubmitInfo submit_info{};
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	const std::vector<VkSemaphore> wait_semaphores = { image_available_semaphore };
+	const std::vector<VkSemaphore> wait_semaphores = { image_available_semaphores[current_frame] };
 	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	submit_info.waitSemaphoreCount = wait_semaphores.size();
 	submit_info.pWaitSemaphores = wait_semaphores.data();
@@ -88,11 +187,14 @@ void Graphics::update()
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &command_buffers[image_index];
 
-	const std::vector<VkSemaphore> signal_semaphores = { render_finished_semaphore };
+	const std::vector<VkSemaphore> signal_semaphores = { render_finished_semaphores[current_frame] };
 	submit_info.signalSemaphoreCount = signal_semaphores.size();
 	submit_info.pSignalSemaphores = signal_semaphores.data();
+	
+	//Reset fences
+	vkResetFences(*logical_device, 1, &in_flight_fences[current_frame]);
 
-	Graphics::vulkanAssert(vkQueueSubmit(logical_device->getGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE));
+	Graphics::vulkanAssert(vkQueueSubmit(logical_device->getGraphicsQueue(), 1, &submit_info, in_flight_fences[current_frame]));
 
 	VkPresentInfoKHR present_info{};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -108,15 +210,19 @@ void Graphics::update()
 
 	vkQueuePresentKHR(logical_device->getPresentQueue(), &present_info);
 
-
+	current_frame = (current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void Graphics::cleanup()
 {
 	vkDeviceWaitIdle(*logical_device);
 
-	vkDestroySemaphore(*logical_device, render_finished_semaphore, nullptr);
-	vkDestroySemaphore(*logical_device, image_available_semaphore, nullptr);
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+	{
+		vkDestroySemaphore(*logical_device, render_finished_semaphores[i], nullptr);
+		vkDestroySemaphore(*logical_device, image_available_semaphores[i], nullptr);
+		vkDestroyFence(*logical_device, in_flight_fences[i], nullptr);
+	}
 	delete graphics_pipeline;
 	delete render_pass;
 	delete swap_chain;
@@ -127,9 +233,17 @@ void Graphics::cleanup()
 	delete instance;
 }
 
+void Graphics::onWindowResize(const WindowResizeEvent& e)
+{
+	if (e.window == window)
+	{
+		framebuffer_resized = true;
+	}
+}
+
 constexpr void Graphics::vulkanAssert(VkResult result)
 {
-	VE_CORE_ASSERT(result == VK_SUCCESS, stringifyResult(result));
+	VE_CORE_ASSERT(result == VK_SUCCESS, std::string("Vulkan: ") + stringifyResult(result));
 }
 
 constexpr std::string Graphics::stringifyResult(VkResult result)

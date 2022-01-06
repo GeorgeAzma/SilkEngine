@@ -1,9 +1,9 @@
 #pragma once
 
-class Surface
+class Surface : NonCopyable
 {
 public:
-	Surface(GLFWwindow* window);
+	Surface();
 	~Surface();
 
 	operator const VkSurfaceKHR& () const { return surface; }

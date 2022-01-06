@@ -2,9 +2,10 @@
 #include "physical_device.h"
 #include "graphics.h"
 
-SwapChain::SwapChain(GLFWwindow* window)
-	: window{window}
+SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 {
+	Graphics::surface->getSupportDetails(*Graphics::physical_device);
+
 	chooseSwapChainSurfaceFormat();
 	chooseSwapChainPresentMode();
 	chooseSwapChainExtent();
@@ -29,7 +30,7 @@ SwapChain::SwapChain(GLFWwindow* window)
 	create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; //For transparent windows
 	create_info.presentMode = present_mode;
 	create_info.clipped = VK_TRUE;
-	create_info.oldSwapchain = VK_NULL_HANDLE; //Necessary for resizing and such
+	create_info.oldSwapchain = old_swap_chain ? *old_swap_chain : VK_NULL_HANDLE; //Necessary for resizing and such
 
 	auto indices = Graphics::physical_device->getQueueFamilyIndices();
 	if (indices.graphics != indices.present) 
@@ -76,10 +77,14 @@ SwapChain::SwapChain(GLFWwindow* window)
 
 void SwapChain::createFramebuffers()
 {
-	for (size_t i = 0; i < image_views.size(); ++i)
+	if (Graphics::render_pass != nullptr)
 	{
-		std::vector<VkImageView> attachments = { image_views[i] };
-		framebuffers[i] = new Framebuffer(*Graphics::render_pass, attachments);
+		for (size_t i = 0; i < image_views.size(); ++i)
+		{
+			if (framebuffers[i]) continue;
+			std::vector<VkImageView> attachments = { image_views[i] };
+			framebuffers[i] = new Framebuffer(*Graphics::render_pass, attachments);
+		}
 	}
 }
 
@@ -88,6 +93,7 @@ SwapChain::~SwapChain()
 	for (auto& framebuffer : framebuffers)
 	{
 		delete framebuffer;
+		framebuffer = nullptr;
 	}
 	for (const auto& image_view : image_views) 
 	{

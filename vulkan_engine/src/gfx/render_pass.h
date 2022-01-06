@@ -1,6 +1,6 @@
 #pragma once
 
-class RenderPass
+class RenderPass : NonCopyable
 {
 public:
 	RenderPass();

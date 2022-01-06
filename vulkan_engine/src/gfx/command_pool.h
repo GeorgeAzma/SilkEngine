@@ -1,6 +1,6 @@
 #pragma once
 
-class CommandPool
+class CommandPool : NonCopyable
 {
 public:
 	CommandPool();

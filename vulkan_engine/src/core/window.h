@@ -23,6 +23,7 @@ enum class WindowAlignment
     TOP_LEFT,
     TOP_RIGHT,
 };
+
 class Window
 {
 public:
@@ -64,6 +65,19 @@ private:
         bool vsync;
         int x, y;
         glm::mat4 projection;
+
+        struct Input
+        {
+            bool anyButtonDown = false;
+            int latestButtonDown = false;
+
+            bool anyKeyDown = false;
+            int latestKeyDown = false;
+
+            std::vector<bool> keysDown = std::vector<bool>(GLFW_KEY_LAST + 1, false);
+            std::vector<bool> buttonsDown = std::vector<bool>(GLFW_KEY_LAST + 1, false);
+        } input;
+
     } data;
 
     bool transparent;
