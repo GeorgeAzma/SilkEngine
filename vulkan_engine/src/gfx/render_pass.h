@@ -6,8 +6,8 @@ public:
 	RenderPass();
 	~RenderPass();
 
-	void begin(VkFramebuffer framebuffer, VkCommandBuffer command_buffer);
-	void end(VkCommandBuffer command_buffer);
+	void begin(VkFramebuffer framebuffer);
+	void end();
 
 	operator const VkRenderPass& () const { return render_pass; }
 

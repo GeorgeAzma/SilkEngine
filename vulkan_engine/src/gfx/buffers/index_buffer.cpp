@@ -1,5 +1,6 @@
 #include "index_buffer.h"
 #include "staging_buffer.h"
+#include "gfx/graphics_state.h"
 
 IndexBuffer::IndexBuffer(const void* data, VkDeviceSize size, IndexType index_type)
 	: Buffer(size,
@@ -12,7 +13,7 @@ IndexBuffer::IndexBuffer(const void* data, VkDeviceSize size, IndexType index_ty
 	staging_buffer.copy(buffer);
 }
 
-void IndexBuffer::bind(VkCommandBuffer command_buffer)
+void IndexBuffer::bind()
 {
-	vkCmdBindIndexBuffer(command_buffer, buffer, 0, index_type);
+	vkCmdBindIndexBuffer(*graphics_state.command_buffer, buffer, 0, index_type);
 }

@@ -15,7 +15,6 @@ struct ApplicationCommandLineArgs
 
     const char *operator[](int index) const
     {
-        VE_CORE_ASSERT(index < count, "Index out of bounds");
         return args[index];
     }
 };

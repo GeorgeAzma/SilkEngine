@@ -1,5 +1,6 @@
 #include "graphics_pipeline.h"
 #include "graphics.h"
+#include "graphics_state.h"
 
 const std::vector<VkDynamicState> GraphicsPipeline::dynamic_states =
 {
@@ -97,4 +98,9 @@ GraphicsPipeline::~GraphicsPipeline()
 {
 	vkDestroyPipeline(*Graphics::logical_device, graphics_pipeline, nullptr);
 	vkDestroyPipelineLayout(*Graphics::logical_device, pipeline_layout, nullptr);
+}
+
+void GraphicsPipeline::bind(VkPipelineBindPoint bind_point)
+{
+	vkCmdBindPipeline(*graphics_state.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline);
 }

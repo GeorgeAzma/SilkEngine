@@ -53,5 +53,5 @@ uint32_t Buffer::findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags prop
 		}
 	}
 
-	VE_CRITICAL("Vulkan: Couldn't find suitable memory type");
+	VE_CORE_CRITICAL("Vulkan: Couldn't find suitable memory type");
 }

@@ -15,6 +15,8 @@ public:
 	GraphicsPipeline(const GraphicsPipelineProps& props);
 	~GraphicsPipeline();
 
+	void bind(VkPipelineBindPoint bind_point = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS);
+
 	operator const VkPipeline& () const { return graphics_pipeline; }
 
 private:

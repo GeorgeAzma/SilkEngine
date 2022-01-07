@@ -1,5 +1,6 @@
 #include "vertex_buffer.h"
 #include "gfx/graphics.h"
+#include "gfx/graphics_state.h"
 
 VertexBuffer::VertexBuffer(const void* data, VkDeviceSize size)
 	: Buffer(size,
@@ -13,5 +14,6 @@ VertexBuffer::VertexBuffer(const void* data, VkDeviceSize size)
 
 void VertexBuffer::bind()
 {
-
+	const std::vector<VkDeviceSize> offsets{ 0 };
+	vkCmdBindVertexBuffers(*graphics_state.command_buffer, 0, 1, &buffer, offsets.data());
 }

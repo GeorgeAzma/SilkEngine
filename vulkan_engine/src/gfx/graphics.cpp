@@ -3,6 +3,7 @@
 #include "core/event.h"
 #include "scene/vertex.h"
 #include "enums.h"
+#include "graphics_state.h"
 
 static const std::vector<Vertex> vertices = 
 {
@@ -25,16 +26,13 @@ void Graphics::recordCommandBuffers()
 	for (size_t i = 0; i < command_buffers.size(); i++)
 	{
 		command_buffer->begin({}, i);
+		render_pass->begin(*Graphics::swap_chain->getFramebuffers()[i]);
 
-		render_pass->begin(*Graphics::swap_chain->getFramebuffers()[i], command_buffers[i]);
-
-		vkCmdBindPipeline(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, *Graphics::graphics_pipeline);
+		Graphics::graphics_pipeline->bind();
 
 		//TODO: implement vertex arrays
-		const std::vector<VkBuffer> vertex_buffers = { *vertex_buffer };
-		const std::vector<VkDeviceSize> offsets = { 0 };
-		vkCmdBindVertexBuffers(command_buffers[i], 0, 1, vertex_buffers.data(), offsets.data());
-		index_buffer->bind(command_buffers[i]);
+		vertex_buffer->bind();
+		index_buffer->bind();
 
 		VkViewport viewport{};
 		viewport.x = 0.0f;
@@ -43,17 +41,16 @@ void Graphics::recordCommandBuffers()
 		viewport.height = Graphics::swap_chain->getExtent().height;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(command_buffers[i], 0, 1, &viewport);
+		vkCmdSetViewport(*graphics_state.command_buffer, 0, 1, &viewport);
 
 		VkRect2D scissor{};
 		scissor.offset = { 0, 0 };
 		scissor.extent = Graphics::swap_chain->getExtent();
-		vkCmdSetScissor(command_buffers[i], 0, 1, &scissor);
+		vkCmdSetScissor(*graphics_state.command_buffer, 0, 1, &scissor);
 
-		vkCmdDrawIndexed(command_buffers[i], indices.size(), 1, 0, 0, 0);
+		vkCmdDrawIndexed(*graphics_state.command_buffer, indices.size(), 1, 0, 0, 0);
 
-		render_pass->end(command_buffers[i]);
-
+		render_pass->end();
 		command_buffer->end(i);
 	}
 }
@@ -81,7 +78,7 @@ void Graphics::createSyncObjects()
 
 void Graphics::recreateSwapChain()
 {
-	vkDeviceWaitIdle(*logical_device);
+	Graphics::vulkanAssert(vkDeviceWaitIdle(*logical_device));
 
 	if (swap_chain == nullptr)
 	{
@@ -123,8 +120,8 @@ void Graphics::init(GLFWwindow* window)
 	render_pass = new RenderPass();
 	swap_chain->createFramebuffers();
 	Shader shader = Shader({
-		"E:/Codes/C++/VulkanEngine/data/cache/shaders/test.vert.spv",
-		"E:/Codes/C++/VulkanEngine/data/cache/shaders/test.frag.spv" });
+		"data/cache/shaders/test.vert.spv",
+		"data/cache/shaders/test.frag.spv" });
 	GraphicsPipelineProps graphics_pipeline_props{};
 	graphics_pipeline = new GraphicsPipeline({ &shader, { Vertex::getBindingDescription() }, Vertex::getAttributeDescriptions()
 });
@@ -139,7 +136,7 @@ void Graphics::init(GLFWwindow* window)
 
 void Graphics::update()
 {	
-	vkWaitForFences(*logical_device, 1, &in_flight_fences[current_frame], VK_TRUE, UINT64_MAX);
+	Graphics::vulkanAssert(vkWaitForFences(*logical_device, 1, &in_flight_fences[current_frame], VK_TRUE, UINT64_MAX));
 	
 	//Get next swap chain image
 	uint32_t image_index;
@@ -177,7 +174,7 @@ void Graphics::update()
 	submit_info.pSignalSemaphores = signal_semaphores.data();
 	
 	//Reset fences
-	vkResetFences(*logical_device, 1, &in_flight_fences[current_frame]);
+	Graphics::vulkanAssert(vkResetFences(*logical_device, 1, &in_flight_fences[current_frame]));
 
 	Graphics::vulkanAssert(vkQueueSubmit(logical_device->getGraphicsQueue(), 1, &submit_info, in_flight_fences[current_frame]));
 
@@ -200,7 +197,7 @@ void Graphics::update()
 
 void Graphics::cleanup()
 {
-	vkDeviceWaitIdle(*logical_device);
+	Graphics::vulkanAssert(vkDeviceWaitIdle(*logical_device));
 
 	delete vertex_buffer;
 	delete index_buffer;

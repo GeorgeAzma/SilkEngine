@@ -29,6 +29,9 @@ target_compile_definitions(VulkanEngine PUBLIC
 "$<$<CONFIG:DEBUG>:VE_DEBUG>"
 "$<$<CONFIG:RELEASE>:VE_DIST>"
 )
+target_compile_definitions(VulkanEngine PRIVATE 
+"VE_CORE"
+)
 
 #Link
 target_link_directories(VulkanEngine PUBLIC ${EXTRA_LIB_DIRS})

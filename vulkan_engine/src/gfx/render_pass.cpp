@@ -1,5 +1,6 @@
 #include "render_pass.h"
 #include "graphics.h"
+#include "graphics_state.h"
 
 RenderPass::RenderPass()
 {
@@ -51,7 +52,7 @@ RenderPass::~RenderPass()
     vkDestroyRenderPass(*Graphics::logical_device, render_pass, nullptr);
 }
 
-void RenderPass::begin(VkFramebuffer framebuffer, VkCommandBuffer command_buffer)
+void RenderPass::begin(VkFramebuffer framebuffer)
 {
     VkRenderPassBeginInfo render_pass_begin_info{};
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -65,10 +66,12 @@ void RenderPass::begin(VkFramebuffer framebuffer, VkCommandBuffer command_buffer
     render_pass_begin_info.clearValueCount = 1;
     render_pass_begin_info.pClearValues = &clear_value;
 
-    vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+    VE_CORE_ASSERT(graphics_state.command_buffer, "Command buffer was nullptr");
+    vkCmdBeginRenderPass(*graphics_state.command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void RenderPass::end(VkCommandBuffer command_buffer)
+void RenderPass::end()
 {
-    vkCmdEndRenderPass(command_buffer);
+    VE_CORE_ASSERT(graphics_state.command_buffer, "Command buffer was nullptr");
+    vkCmdEndRenderPass(*graphics_state.command_buffer);
 }

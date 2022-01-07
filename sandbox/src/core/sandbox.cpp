@@ -1,9 +1,9 @@
 #include "Sandbox.h"
 
 Instance* instance = nullptr;
-Sandbox::Sandbox()
-    : Layer("Sandbox")
+Sandbox::Sandbox() : Layer("Sandbox")
 {
+    VE_INFO("TEST");
 }
 
 void Sandbox::onAttach()
