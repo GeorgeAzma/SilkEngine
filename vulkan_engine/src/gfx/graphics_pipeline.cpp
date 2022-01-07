@@ -13,10 +13,10 @@ GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineProps& props)
 {
 	VkPipelineVertexInputStateCreateInfo vertex_input_info{};
 	vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertex_input_info.vertexBindingDescriptionCount = props.vertex_binding_descriptions.size();
-	vertex_input_info.pVertexBindingDescriptions = props.vertex_binding_descriptions.data();
-	vertex_input_info.vertexAttributeDescriptionCount = props.vertex_attribute_descriptions.size();
-	vertex_input_info.pVertexAttributeDescriptions = props.vertex_attribute_descriptions.data();
+	vertex_input_info.vertexBindingDescriptionCount = props.buffer_layout.getBindingDescriptions().size();
+	vertex_input_info.pVertexBindingDescriptions = props.buffer_layout.getBindingDescriptions().data();
+	vertex_input_info.vertexAttributeDescriptionCount = props.buffer_layout.getAttributeDescriptions().size();
+	vertex_input_info.pVertexAttributeDescriptions = props.buffer_layout.getAttributeDescriptions().data();
 
 	VkPipelineInputAssemblyStateCreateInfo input_assembly_info{};
 	input_assembly_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

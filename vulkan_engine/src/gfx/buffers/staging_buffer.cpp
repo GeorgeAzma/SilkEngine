@@ -1,6 +1,7 @@
 #include "staging_buffer.h"
 #include "command_buffer.h"
 #include "gfx/graphics.h"
+#include "utils/debug_timer.h"
 
 StagingBuffer::StagingBuffer(const void* data, VkDeviceSize size)
     : Buffer(size,
@@ -11,7 +12,7 @@ StagingBuffer::StagingBuffer(const void* data, VkDeviceSize size)
     setData(data);
 }
 
-void StagingBuffer::copy(VkBuffer destination) const
+void StagingBuffer::copy(VkBuffer destination) const //~0.8ms
 {
 	VkCommandBufferAllocateInfo allocation_info{};
 	allocation_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;

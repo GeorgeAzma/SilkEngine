@@ -1,12 +1,12 @@
 #pragma once
 
 #include "shader.h"
+#include "buffers/buffer_layout.h"
 
 struct GraphicsPipelineProps
 {
 	Shader* shader;
-	std::vector<VkVertexInputBindingDescription> vertex_binding_descriptions;
-	std::vector<VkVertexInputAttributeDescription> vertex_attribute_descriptions;
+	BufferLayout buffer_layout;
 };
 
 class GraphicsPipeline

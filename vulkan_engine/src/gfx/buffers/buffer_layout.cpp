@@ -1,16 +1,32 @@
 #include "buffer_layout.h"
 #include "gfx/enums.h"
 
-BufferLayout::BufferLayout(const std::initializer_list<BufferElement>& elements) 
-	: elements{elements}
+BufferLayout::BufferLayout(const std::initializer_list<BufferElement>& elements)
 {
-	size_t offset = 0;
-	for (BufferElement& element : this->elements)
+	uint32_t offset = 0;
+	uint32_t location = 0;
+
+	for (const BufferElement& element : elements)
 	{
-		element.offset = offset;
-		offset += EnumInfo::size(element.type);
-		stride += EnumInfo::size(element.type);
+		VkVertexInputAttributeDescription attribute_description{};
+		attribute_description.binding = 0;
+		attribute_description.location = location;
+		attribute_description.offset = offset;
+		attribute_description.format = EnumInfo::type(element.type);
+
+		attribute_descriptions.emplace_back(std::move(attribute_description));
+
+
+		const auto size = EnumInfo::size(element.type);
+
+		location += size / sizeof(glm::vec4);
+		location += ((size % sizeof(glm::vec4)) > 0);
+
+		offset += size;
 	}
 
-	data_size = offset;
+	binding_descriptions.emplace_back();
+	binding_descriptions[0].binding = 0;
+	binding_descriptions[0].stride = offset;
+	binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 }

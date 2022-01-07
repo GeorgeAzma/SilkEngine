@@ -11,8 +11,12 @@ if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
 endif()
 
-add_compile_definitions(GLEW_STATIC)
-add_compile_definitions(_USE_MATH_DEFINES)
+add_compile_definitions(
+GLEW_STATIC 
+_USE_MATH_DEFINES
+GLM_FORCE_RADIANS
+GLM_FORCE_DEPTH_ZERO_TO_ONE
+)
 
 #|-----Vendor-----|#
 
@@ -86,7 +90,7 @@ endif()
 set(glm_deps FALSE)
 list(APPEND DEPENDENCIES_TO_ADD glm_deps)
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/glm/cmake)
-ExternalProject_Add(GLM
+FetchContent_Declare(GLM
 GIT_REPOSITORY  https://github.com/g-truc/glm
 GIT_TAG origin/master
 GIT_SHALLOW     ON
@@ -95,6 +99,8 @@ BUILD_COMMAND ""
 CONFIGURE_COMMAND ""
 INSTALL_COMMAND ""
 )
+FetchContent_MakeAvailable(GLM)
+FetchContent_GetProperties(GLM)
 endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glm)
 

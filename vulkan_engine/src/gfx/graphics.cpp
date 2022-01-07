@@ -4,8 +4,9 @@
 #include "scene/vertex.h"
 #include "enums.h"
 #include "graphics_state.h"
+#include "buffers/buffer_layout.h"
 
-static const std::vector<Vertex> vertices = 
+static const std::vector<Vertex> vertices =
 {
 	{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
 	{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
@@ -13,10 +14,65 @@ static const std::vector<Vertex> vertices =
 	{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
 };
 
-static const std::vector<uint32_t> indices = 
+static const std::vector<uint32_t> indices =
 {
 	0, 1, 2, 2, 3, 0
 };
+
+void Graphics::init(GLFWwindow* window)
+{
+	VE_CORE_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
+	Graphics::window = window;
+	//These most likely won't change
+	instance = new Instance(); //70ms
+	surface = new Surface(); //0.05ms
+	physical_device = new PhysicalDevice(); //10ms
+	logical_device = new LogicalDevice(); //80ms
+	command_pool = new CommandPool(); //0.025ms
+	swap_chain = new SwapChain(); //16ms
+
+	//TODO: IDK how de fuq i can make this user friendly
+
+	render_pass = new RenderPass(); //0.11ms
+
+	swap_chain->createFramebuffers(); //0.036ms
+
+	Shader shader = Shader({
+		"data/cache/shaders/test.vert.spv",
+		"data/cache/shaders/test.frag.spv" }); //1.65ms
+
+	GraphicsPipelineProps graphics_pipeline_props{};
+	graphics_pipeline = new GraphicsPipeline({ &shader, { { Type::VEC2 }, { Type::VEC3 } } }); //1.35ms
+
+	vertex_buffer = new VertexBuffer(
+		vertices.data(),
+		vertices.size() * sizeof(vertices[0])); //2.4ms
+	index_buffer = new IndexBuffer(
+		indices.data(),
+		indices.size() * sizeof(indices[0])); //0.9ms
+
+	//Staticly recorded command buffer
+	command_buffer = new CommandBuffer(swap_chain->getFramebuffers().size());//0.025ms
+	recordCommandBuffers(); //0.211ms
+
+	//Create semaphores and fences (0.064ms)
+	images_in_flight.resize(swap_chain->getImages().size(), VK_NULL_HANDLE);
+
+	VkSemaphoreCreateInfo semaphore_info{};
+	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	VkFenceCreateInfo fence_info{};
+	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+	{
+		Graphics::vulkanAssert(vkCreateSemaphore(*logical_device, &semaphore_info, nullptr, &image_available_semaphores[i]));
+		Graphics::vulkanAssert(vkCreateSemaphore(*logical_device, &semaphore_info, nullptr, &render_finished_semaphores[i]));
+
+		Graphics::vulkanAssert(vkCreateFence(*logical_device, &fence_info, nullptr, &in_flight_fences[i]));
+	}
+}
 
 void Graphics::recordCommandBuffers()
 {
@@ -55,28 +111,7 @@ void Graphics::recordCommandBuffers()
 	}
 }
 
-void Graphics::createSyncObjects()
-{
-	//Create semaphores and fences
-	images_in_flight.resize(swap_chain->getImages().size(), VK_NULL_HANDLE);
-
-	VkSemaphoreCreateInfo semaphore_info{};
-	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-	VkFenceCreateInfo fence_info{};
-	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-	{
-		Graphics::vulkanAssert(vkCreateSemaphore(*logical_device, &semaphore_info, nullptr, &image_available_semaphores[i]));
-		Graphics::vulkanAssert(vkCreateSemaphore(*logical_device, &semaphore_info, nullptr, &render_finished_semaphores[i]));
-
-		Graphics::vulkanAssert(vkCreateFence(*logical_device, &fence_info, nullptr, &in_flight_fences[i]));
-	}
-}
-
-void Graphics::recreateSwapChain()
+void Graphics::recreateSwapChain() //7.5ms
 {
 	Graphics::vulkanAssert(vkDeviceWaitIdle(*logical_device));
 
@@ -93,34 +128,6 @@ void Graphics::recreateSwapChain()
 	delete command_buffer;
 	command_buffer = new CommandBuffer(size);
 	recordCommandBuffers();		
-}
-
-void Graphics::init(GLFWwindow* window)
-{
-	VE_CORE_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
-
-	Graphics::window = window;
-	
-	instance = new Instance();
-	surface = new Surface();
-	physical_device = new PhysicalDevice();
-	logical_device = new LogicalDevice();
-	command_pool = new CommandPool();
-	swap_chain = new SwapChain();
-	render_pass = new RenderPass();
-	swap_chain->createFramebuffers();
-	Shader shader = Shader({
-		"data/cache/shaders/test.vert.spv",
-		"data/cache/shaders/test.frag.spv" });
-	GraphicsPipelineProps graphics_pipeline_props{};
-	graphics_pipeline = new GraphicsPipeline({ &shader, Vertex::getBindingDescriptions(), Vertex::getAttributeDescriptions()});
-
-	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(vertices[0]));
-	index_buffer = new IndexBuffer(indices.data(), indices.size() * sizeof(indices[0]));
-	
-	command_buffer = new CommandBuffer(swap_chain->getFramebuffers().size());
-	recordCommandBuffers();
-	createSyncObjects();
 }
 
 void Graphics::update()
@@ -184,7 +191,7 @@ void Graphics::update()
 	current_frame = (current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void Graphics::cleanup()
+void Graphics::cleanup() //25ms
 {
 	Graphics::vulkanAssert(vkDeviceWaitIdle(*logical_device));
 

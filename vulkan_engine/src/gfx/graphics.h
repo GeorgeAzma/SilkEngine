@@ -25,7 +25,6 @@ class Graphics
 	static inline IndexBuffer* index_buffer = nullptr;
 
 	static void recordCommandBuffers();
-	static void createSyncObjects();
 
 	static void recreateSwapChain();
 
