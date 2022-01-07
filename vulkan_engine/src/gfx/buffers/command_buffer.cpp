@@ -28,12 +28,15 @@ void CommandBuffer::begin(VkCommandBufferUsageFlagBits usage, size_t index)
 	VkCommandBufferBeginInfo begin_info{};
 	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	begin_info.flags = usage;
+
 	Graphics::vulkanAssert(vkBeginCommandBuffer(command_buffers[index], &begin_info));
+
 	graphics_state.command_buffer = &command_buffers[index];
 }
 
 void CommandBuffer::end(size_t index)
 {
 	Graphics::vulkanAssert(vkEndCommandBuffer(command_buffers[index]));
+
 	graphics_state.command_buffer = nullptr;
 }

@@ -4,8 +4,10 @@
 
 LogicalDevice::LogicalDevice()
 {
-	auto queue_family_indices = Graphics::physical_device->getQueueFamilyIndices();
+	const auto& queue_family_indices = Graphics::physical_device->getQueueFamilyIndices();
+
 	std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+
 	std::vector<uint32_t> queue_families = queue_family_indices.getIndices();
 	std::set<uint32_t> unique_queue_families(queue_families.begin(), queue_families.end());
 
@@ -17,6 +19,7 @@ LogicalDevice::LogicalDevice()
 		queue_create_info.queueFamilyIndex = queue_family;
 		queue_create_info.queueCount = 1; 
 		queue_create_info.pQueuePriorities = &queue_priority;
+
 		queue_create_infos.emplace_back(std::move(queue_create_info));
 	}
 

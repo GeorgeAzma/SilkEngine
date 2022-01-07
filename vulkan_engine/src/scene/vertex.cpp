@@ -1,13 +1,15 @@
 #include "vertex.h"
 
-VkVertexInputBindingDescription Vertex::getBindingDescription()
+#define INTERLEAVED 0
+
+std::vector<VkVertexInputBindingDescription> Vertex::getBindingDescriptions()
 {
-	VkVertexInputBindingDescription binding_description{};
-	binding_description.binding = 0;
-	binding_description.stride = sizeof(Vertex);
-	binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-	
-	return binding_description;
+	std::vector<VkVertexInputBindingDescription> binding_descriptions(1, VkVertexInputBindingDescription{});
+	binding_descriptions[0].binding = 0;
+	binding_descriptions[0].stride = sizeof(Vertex);
+	binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	return binding_descriptions;
 }
 
 std::vector<VkVertexInputAttributeDescription> Vertex::getAttributeDescriptions()

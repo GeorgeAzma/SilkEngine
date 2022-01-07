@@ -80,29 +80,19 @@ void Graphics::recreateSwapChain()
 {
 	Graphics::vulkanAssert(vkDeviceWaitIdle(*logical_device));
 
-	if (swap_chain == nullptr)
+	VkSwapchainKHR sc = *swap_chain;
+	SwapChain* old_swap_chain = swap_chain;
+	swap_chain = new SwapChain(sc);
+	swap_chain->createFramebuffers();
+	if (swap_chain->getImages().size() != command_buffer->getCommandBuffers().size())
 	{
-		delete swap_chain;
-		swap_chain = new SwapChain();
-		swap_chain->createFramebuffers();
 	}
-	else
-	{
-		VkSwapchainKHR sc = *swap_chain;
-		SwapChain* old_swap_chain = swap_chain;
-		swap_chain = new SwapChain(sc);
-		swap_chain->createFramebuffers();
-		if (swap_chain->getImages().size() != command_buffer->getCommandBuffers().size())
-		{
-		}
-		delete old_swap_chain;
-		
-		size_t size = command_buffer->getCommandBuffers().size();
-		delete command_buffer;
-		command_buffer = new CommandBuffer(size);
-		recordCommandBuffers();
-	}
-		
+	delete old_swap_chain;
+	
+	size_t size = command_buffer->getCommandBuffers().size();
+	delete command_buffer;
+	command_buffer = new CommandBuffer(size);
+	recordCommandBuffers();		
 }
 
 void Graphics::init(GLFWwindow* window)
@@ -123,8 +113,7 @@ void Graphics::init(GLFWwindow* window)
 		"data/cache/shaders/test.vert.spv",
 		"data/cache/shaders/test.frag.spv" });
 	GraphicsPipelineProps graphics_pipeline_props{};
-	graphics_pipeline = new GraphicsPipeline({ &shader, { Vertex::getBindingDescription() }, Vertex::getAttributeDescriptions()
-});
+	graphics_pipeline = new GraphicsPipeline({ &shader, Vertex::getBindingDescriptions(), Vertex::getAttributeDescriptions()});
 
 	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(vertices[0]));
 	index_buffer = new IndexBuffer(indices.data(), indices.size() * sizeof(indices[0]));
