@@ -1,59 +1,40 @@
 #include "graphics.h"
-#include "vertex_buffer.h"
 #include "utils/debug_timer.h"
 #include "core/event.h"
 #include "scene/vertex.h"
+#include "enums.h"
 
-static const std::vector<Vertex> vertices =
+static const std::vector<Vertex> vertices = 
 {
-	{{ 0.0, -0.5}, {1.0, 0.0, 0.0}},
-	{{ 0.5,  0.5}, {0.0, 1.0, 0.0}},
-	{{-0.5,  0.5}, {0.0, 0.0, 1.0}},
+	{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+	{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+	{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+	{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
 };
 
-void Graphics::createCommandBuffers()
+static const std::vector<uint32_t> indices = 
 {
-	//Create command buffers
-	command_buffers.resize(swap_chain->getFramebuffers().size());
+	0, 1, 2, 2, 3, 0
+};
 
-	//Allocate command buffers
-	VkCommandBufferAllocateInfo alloc_info{};
-	alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	alloc_info.commandPool = *Graphics::command_pool;
-	alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	alloc_info.commandBufferCount = command_buffers.size();
-
-	Graphics::vulkanAssert(vkAllocateCommandBuffers(*Graphics::logical_device, &alloc_info, command_buffers.data()));
+void Graphics::recordCommandBuffers()
+{
+	const auto& command_buffers = command_buffer->getCommandBuffers();
 
 	//Record command buffers
 	for (size_t i = 0; i < command_buffers.size(); i++)
 	{
-		VkCommandBufferBeginInfo begin_info{};
-		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		command_buffer->begin({}, i);
 
-		Graphics::vulkanAssert(vkBeginCommandBuffer(command_buffers[i], &begin_info));
-
-		VkRenderPassBeginInfo render_pass_begin_info{};
-		render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		render_pass_begin_info.renderPass = *Graphics::render_pass;
-		render_pass_begin_info.framebuffer = *swap_chain->getFramebuffers()[i];
-
-		render_pass_begin_info.renderArea.offset = { 0, 0 };
-		render_pass_begin_info.renderArea.extent = swap_chain->getExtent(); //TODO: I think I can set this to the maximum size from framebuffers[i].attachments[j].size;
-
-		VkClearValue clear_value = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
-		render_pass_begin_info.clearValueCount = 1;
-		render_pass_begin_info.pClearValues = &clear_value;
-
-		vkCmdBeginRenderPass(command_buffers[i], &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+		render_pass->begin(*Graphics::swap_chain->getFramebuffers()[i], command_buffers[i]);
 
 		vkCmdBindPipeline(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, *Graphics::graphics_pipeline);
 
 		//TODO: implement vertex arrays
-		//std::vector<VkBuffer> vertex_buffers;
-		//vertex_buffers.push_back(*vertex_buffer);
-		//const std::vector<VkDeviceSize> offsets = { 0 };
-		//vkCmdBindVertexBuffers(command_buffers[i], 0, 1, vertex_buffers.data(), offsets.data());
+		const std::vector<VkBuffer> vertex_buffers = { *vertex_buffer };
+		const std::vector<VkDeviceSize> offsets = { 0 };
+		vkCmdBindVertexBuffers(command_buffers[i], 0, 1, vertex_buffers.data(), offsets.data());
+		index_buffer->bind(command_buffers[i]);
 
 		VkViewport viewport{};
 		viewport.x = 0.0f;
@@ -69,11 +50,11 @@ void Graphics::createCommandBuffers()
 		scissor.extent = Graphics::swap_chain->getExtent();
 		vkCmdSetScissor(command_buffers[i], 0, 1, &scissor);
 
-		//vkCmdDraw(command_buffers[i], vertices.size(), 1, 0, 0);
+		vkCmdDrawIndexed(command_buffers[i], indices.size(), 1, 0, 0, 0);
 
-		vkCmdEndRenderPass(command_buffers[i]);
+		render_pass->end(command_buffers[i]);
 
-		Graphics::vulkanAssert(vkEndCommandBuffer(command_buffers[i]));
+		command_buffer->end(i);
 	}
 }
 
@@ -114,14 +95,15 @@ void Graphics::recreateSwapChain()
 		SwapChain* old_swap_chain = swap_chain;
 		swap_chain = new SwapChain(sc);
 		swap_chain->createFramebuffers();
-		if (swap_chain->getImages().size() != command_buffers.size())
+		if (swap_chain->getImages().size() != command_buffer->getCommandBuffers().size())
 		{
 		}
 		delete old_swap_chain;
 		
-		vkFreeCommandBuffers(*logical_device, *command_pool, command_buffers.size(), command_buffers.data());
-		command_buffers.clear();
-		createCommandBuffers();
+		size_t size = command_buffer->getCommandBuffers().size();
+		delete command_buffer;
+		command_buffer = new CommandBuffer(size);
+		recordCommandBuffers();
 	}
 		
 }
@@ -146,10 +128,13 @@ void Graphics::init(GLFWwindow* window)
 	GraphicsPipelineProps graphics_pipeline_props{};
 	graphics_pipeline = new GraphicsPipeline({ &shader, { Vertex::getBindingDescription() }, Vertex::getAttributeDescriptions()
 });
-	createCommandBuffers();
-	createSyncObjects();
 
 	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(vertices[0]));
+	index_buffer = new IndexBuffer(indices.data(), indices.size() * sizeof(indices[0]));
+	
+	command_buffer = new CommandBuffer(swap_chain->getFramebuffers().size());
+	recordCommandBuffers();
+	createSyncObjects();
 }
 
 void Graphics::update()
@@ -173,19 +158,19 @@ void Graphics::update()
 	//Check if previous frame is using this image
 	if (images_in_flight[image_index] != VK_NULL_HANDLE) 
 	{
-		vkWaitForFences(*logical_device, 1, &images_in_flight[image_index], VK_TRUE, UINT64_MAX);
+		Graphics::vulkanAssert(vkWaitForFences(*logical_device, 1, &images_in_flight[image_index], VK_TRUE, UINT64_MAX));
 	}
 
 	//Submit the command buffer
 	VkSubmitInfo submit_info{};
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	const std::vector<VkSemaphore> wait_semaphores = { image_available_semaphores[current_frame] };
-	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+	VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	submit_info.waitSemaphoreCount = wait_semaphores.size();
 	submit_info.pWaitSemaphores = wait_semaphores.data();
-	submit_info.pWaitDstStageMask = waitStages;
+	submit_info.pWaitDstStageMask = wait_stages;
 	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &command_buffers[image_index];
+	submit_info.pCommandBuffers = &command_buffer->getCommandBuffers()[image_index];
 
 	const std::vector<VkSemaphore> signal_semaphores = { render_finished_semaphores[current_frame] };
 	submit_info.signalSemaphoreCount = signal_semaphores.size();
@@ -216,6 +201,9 @@ void Graphics::update()
 void Graphics::cleanup()
 {
 	vkDeviceWaitIdle(*logical_device);
+
+	delete vertex_buffer;
+	delete index_buffer;
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{

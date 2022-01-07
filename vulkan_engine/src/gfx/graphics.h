@@ -7,9 +7,11 @@
 #include "render_pass.h"
 #include "graphics_pipeline.h"
 #include "command_pool.h"
+#include "buffers/command_buffer.h"
 
 //TEMP
-#include "vertex_buffer.h"
+#include "buffers/vertex_buffer.h"
+#include "buffers/index_buffer.h"
 
 class WindowResizeEvent;
 
@@ -20,8 +22,9 @@ class Graphics
 	//TEMP
 
 	static inline VertexBuffer* vertex_buffer = nullptr;
+	static inline IndexBuffer* index_buffer = nullptr;
 
-	static void createCommandBuffers();
+	static void recordCommandBuffers();
 	static void createSyncObjects();
 
 	static void recreateSwapChain();
@@ -42,7 +45,7 @@ public:
 	static inline SwapChain* swap_chain = nullptr;
 	static inline RenderPass* render_pass = nullptr;
 	static inline GraphicsPipeline* graphics_pipeline = nullptr;
-	static inline std::vector<VkCommandBuffer> command_buffers = {};
+	static inline CommandBuffer* command_buffer = nullptr;
 	static inline GLFWwindow* window = nullptr;
 
 private:

@@ -44,13 +44,13 @@ void Application::run()
         {
             if (!window->isMinimized())
             {
-                Time::dt = app_update.getElapsedTime();
+                Time::dt = app_update.getDeltaTime();
                 Time::frames = app_update.getFramesPassed();
                 Time::runtime = app_update.getRuntime();
 
-                if (Time::frames % 512 == 0)
+                if (Time::frames % 1024 == 0)
                 {
-                    VE_CORE_TRACE("{0} FPS", app_update.getFPS());
+                    VE_CORE_TRACE("{0} FPS ({1:.4} ms)", app_update.getFPS(), (app_update.getDeltaTime() * 1000));
                 }
 
                 Graphics::update();

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "framebuffer.h"
+#include "buffers/framebuffer.h"
 
 class SwapChain : NonCopyable
 {

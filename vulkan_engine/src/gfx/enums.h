@@ -37,8 +37,18 @@ enum class Type
 	MAT4D
 };
 
+enum class IndexType
+{
+	UINT16,
+	UINT32
+};
+
 class EnumInfo
 {
 public:
-	static void type(Type type);
+	static VkFormat type(Type type);
+	static size_t size(Type type);
+	static size_t count(Type type);
+	static size_t rows(Type type);
+	static VkIndexType indexType(IndexType index_type);
 };

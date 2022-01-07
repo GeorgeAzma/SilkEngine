@@ -50,3 +50,25 @@ RenderPass::~RenderPass()
 {
     vkDestroyRenderPass(*Graphics::logical_device, render_pass, nullptr);
 }
+
+void RenderPass::begin(VkFramebuffer framebuffer, VkCommandBuffer command_buffer)
+{
+    VkRenderPassBeginInfo render_pass_begin_info{};
+    render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    render_pass_begin_info.renderPass = *Graphics::render_pass;
+    render_pass_begin_info.framebuffer = framebuffer;
+
+    render_pass_begin_info.renderArea.offset = { 0, 0 };
+    render_pass_begin_info.renderArea.extent = Graphics::swap_chain->getExtent(); //TODO: I think I can set this to the maximum size from framebuffers[i].attachments[j].size;
+
+    VkClearValue clear_value = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
+    render_pass_begin_info.clearValueCount = 1;
+    render_pass_begin_info.pClearValues = &clear_value;
+
+    vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void RenderPass::end(VkCommandBuffer command_buffer)
+{
+    vkCmdEndRenderPass(command_buffer);
+}

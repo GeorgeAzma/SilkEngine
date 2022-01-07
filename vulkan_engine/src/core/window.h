@@ -48,7 +48,7 @@ public:
     void setWidth(unsigned int width);
     void setHeight(unsigned int height);
     void setSize(const glm::uvec2 &size);
-    void setTitle(const const char* title);
+    void setTitle(const char* title);
     void align(WindowAlignment a = WindowAlignment::CENTER);
     // void setIcon(std::shared_ptr<Texture> icon);
 private:

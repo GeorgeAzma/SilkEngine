@@ -10,7 +10,7 @@ public:
     bool update();
     unsigned int getFPS() const { return round(fps); }
     double getFPSf() const { return fps; }
-    double getElapsedTime() const { return elapsed; }
+    double getDeltaTime() const { return delta; }
     double getRuntime() const { return total_time; }
     unsigned int getFramesPassed() const { return frames; }
     unsigned int getMaxFPS() const { return 1.0 / interval; }
