@@ -7,8 +7,8 @@ include(ExternalProject)
 #Some good to have code
 set(CMAKE_CXX_STANDARD 20)
 
-if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE Release)
+if(MSVC)
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
 endif()
 
 add_compile_definitions(
@@ -183,12 +183,6 @@ vulkan_engine/src/core/log.h)
 file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp" "sandbox/src/*.h" "sandbox/src/*.hpp")
 
 add_executable(Sandbox ${SANDBOX_SOURCES})
-
-if(MSVC AND "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-	set_target_properties(Sandbox PROPERTIES LINK_FLAGS 
-	"/subsystem:windows 
-	/ENTRY:mainCRTStartup")
-endif()
 
 target_link_libraries(Sandbox PRIVATE VulkanEngine)
 
