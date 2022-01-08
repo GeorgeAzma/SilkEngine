@@ -81,6 +81,9 @@ size_t EnumInfo::size(Type type)
 	case Type::MAT3D: return 72;
 	case Type::MAT4D: return 128;
 	}
+
+	VE_CORE_ERROR("Unsupported type specified: {0}", type);
+	return 0;
 }
 
 size_t EnumInfo::count(Type type)

@@ -21,23 +21,13 @@ GLM_FORCE_DEPTH_ZERO_TO_ONE
 #|-----Vendor-----|#
 
 #Vulkan
-find_package(Vulkan)
-if (DEFINED VULKAN_SDK_PATH)
-    list(APPEND INCLUDE_DIRS "${VULKAN_SDK_PATH}/Include")
-    list(APPEND EXTRA_LIB_DIRS "${VULKAN_SDK_PATH}/Lib")
-    set(Vulkan_FOUND "True")
-else()
-    find_package(Vulkan REQUIRED)
-    message(STATUS "Found Vulkan: $ENV{VULKAN_SDK}")
-endif()
-if(NOT Vulkan_FOUND)
-    message("Could not find vulkan")
-else()
-    message(STATUS "Using vulkan lib at: ${Vulkan_LIBRARIES}")
-endif()
+find_package(Vulkan REQUIRED FATAL_ERROR)
+list(APPEND INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
+list(APPEND EXTRA_LIBS ${Vulkan_LIBRARIES})
+
 
 #thread_pool
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/thread_pool/.github)
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/thread_pool/.git)
 FetchContent_Declare(THREAD_POOL
 GIT_REPOSITORY  https://github.com/bshoshany/thread-pool
 GIT_TAG         v2.0.0
@@ -50,7 +40,7 @@ endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/thread_pool)
 
 #spdlog
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/spdlog/.github)
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/spdlog/.git)
 FetchContent_Declare(SPDLOG
 GIT_REPOSITORY  https://github.com/gabime/spdlog
 GIT_TAG         v1.9.2
@@ -104,6 +94,104 @@ FetchContent_GetProperties(GLM)
 endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glm)
 
+#Sub dirs
+############################__VULKAN ENGINE__#####################################
+file(GLOB_RECURSE VULKAN_ENGINE_SOURCES 
+"vulkan_engine/src/*.cpp" 
+"vulkan_engine/src/*.h" 
+"vulkan_engine/src/*.hpp")
+
+#Create VulkanEngine.lib
+add_library(VulkanEngine STATIC ${VULKAN_ENGINE_SOURCES})
+
+#Include dirs
+target_include_directories(VulkanEngine PUBLIC 
+"${PROJECT_SOURCE_DIR}/vendor" 
+"${PROJECT_SOURCE_DIR}/vulkan_engine/src"
+${INCLUDE_DIRS}
+)
+
+#Add dependencies
+foreach(item IN LISTS DEPENDENCIES_TO_ADD)
+
+    if("${${item}}" MATCHES TRUE)
+        string(FIND ${item} "_" UNDERLINE_POS)
+        string(SUBSTRING ${item} 0 ${UNDERLINE_POS} USABLE_STRING)
+        string(TOUPPER ${USABLE_STRING} UPPER_STRING)
+        add_dependencies(VulkanEngine ${UPPER_STRING})
+    endif()
+
+endforeach()
+
+#Defines
+target_compile_definitions(VulkanEngine PUBLIC 
+"$<$<CONFIG:DEBUG>:VE_DEBUG>"
+"$<$<CONFIG:RELEASE>:VE_DIST>"
+)
+target_compile_definitions(VulkanEngine PRIVATE 
+"VE_CORE"
+)
+
+#Link
+target_link_directories(VulkanEngine PUBLIC ${EXTRA_LIB_DIRS})
+target_link_libraries(VulkanEngine ${EXTRA_LIBS})
+
+#Precompile headers
+target_precompile_headers(VulkanEngine PUBLIC 
+<iostream>
+<string>
+<unordered_map>
+<unordered_set>
+<map>
+<set>
+<vector>
+<chrono>
+<sstream>
+<fstream>
+<memory>
+<functional>
+<algorithm>
+<utility>
+<array>
+<random>
+<stdlib.h>
+<thread>
+<queue>
+<mutex>
+<condition_variable>
+<bit>
+<math.h>
+<filesystem>
+<future>
+<stdexcept>
+<cstdlib>
+<numeric>
+<optional>
+<typeindex>
+<typeinfo>
+<list>
+<GLM/glm.hpp>
+<GLM/gtc/matrix_transform.hpp>
+<GLM/gtx/quaternion.hpp>
+<vulkan/vulkan.h>
+<GLFW/glfw3.h>
+vulkan_engine/src/core/base.h
+vulkan_engine/src/core/log.h)
+
+
+############################__SANDBOX__#####################################
+file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp" "sandbox/src/*.h" "sandbox/src/*.hpp")
+
+add_executable(Sandbox ${SANDBOX_SOURCES})
+
+if(MSVC AND "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+	set_target_properties(Sandbox PROPERTIES LINK_FLAGS 
+	"/subsystem:windows 
+	/ENTRY:mainCRTStartup")
+endif()
+
+target_link_libraries(Sandbox PRIVATE VulkanEngine)
+
 #Shader compilation
 find_program(GLSL_VALIDATOR glslangValidator HINTS 
   ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} 
@@ -129,12 +217,13 @@ foreach(GLSL ${GLSL_SOURCE_FILES})
         DEPENDS ${GLSL})
     list(APPEND SPIRV_BINARY_FILES ${SPIRV})
 endforeach(GLSL)
- 
-add_custom_target(
-    Shaders
-    DEPENDS ${SPIRV_BINARY_FILES}
-)
 
-#Sub dirs
-add_subdirectory("vulkan_engine/src")
-add_subdirectory("sandbox/src")
+add_custom_target(Shaders DEPENDS ${SPIRV_BINARY_FILES})
+
+add_dependencies(Sandbox Shaders)
+
+#Copy data folder where exe file is
+add_custom_command(TARGET Sandbox POST_BUILD
+COMMAND ${CMAKE_COMMAND} -E copy_directory 
+${PROJECT_SOURCE_DIR}/data 
+$<TARGET_FILE_DIR:Sandbox>/data)

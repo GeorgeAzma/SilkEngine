@@ -33,7 +33,7 @@ public:
 	static void update();
 	static void cleanup();
 
-	static constexpr void vulkanAssert(VkResult result);
+	static void vulkanAssert(VkResult result);
 
 public:
 	static inline Instance* instance = nullptr;

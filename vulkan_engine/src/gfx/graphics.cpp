@@ -8,10 +8,10 @@
 
 static const std::vector<Vertex> vertices =
 {
-	{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-	{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-	{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-	{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+	{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+	{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+	{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+	{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}}
 };
 
 static const std::vector<uint32_t> indices =
@@ -42,14 +42,10 @@ void Graphics::init(GLFWwindow* window)
 		"data/cache/shaders/test.frag.spv" }); //1.65ms
 
 	GraphicsPipelineProps graphics_pipeline_props{};
-	graphics_pipeline = new GraphicsPipeline({ &shader, { { Type::VEC2 }, { Type::VEC3 } } }); //1.35ms
+	graphics_pipeline = new GraphicsPipeline({ &shader, { { Type::VEC3 }, { Type::VEC3 } } }); //1.35ms
 
-	vertex_buffer = new VertexBuffer(
-		vertices.data(),
-		vertices.size() * sizeof(vertices[0])); //2.4ms
-	index_buffer = new IndexBuffer(
-		indices.data(),
-		indices.size() * sizeof(indices[0])); //0.9ms
+	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(vertices[0])); //2.4ms
+	index_buffer = new IndexBuffer(indices.data(), indices.size() * sizeof(indices[0])); //0.9ms
 
 	//Staticly recorded command buffer
 	command_buffer = new CommandBuffer(swap_chain->getFramebuffers().size());//0.025ms
@@ -222,7 +218,7 @@ void Graphics::onWindowResize(const WindowResizeEvent& e)
 	}
 }
 
-constexpr void Graphics::vulkanAssert(VkResult result)
+void Graphics::vulkanAssert(VkResult result)
 {
 	VE_CORE_ASSERT(result == VK_SUCCESS, std::string("Vulkan: ") + stringifyResult(result));
 }

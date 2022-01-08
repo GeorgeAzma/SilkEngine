@@ -60,8 +60,8 @@ Disclaimer: Following these notes isn't neccessary but would be preferable
 - Allowed shader file extensions: .vert, .frag, .tes, .tcs,
 - Always use glsl for vulkan shading language
 - Use this style for passing data between shaders:
-  out VERTEX_OUTPUT { int data; } vertex_output;
-  in VERTEX_OUTPUT { int data; } fragment_input;
+  out VertexOutput { int data; } vertex_output;
+  in VertexOutput { int data; } fragment_input;
 - Definition/Declaration order is: defines, inputs, 
   outputs, global variables, functions, local variables
 
