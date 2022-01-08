@@ -3,7 +3,7 @@
 class CommandBuffer
 {
 public:
-	CommandBuffer(size_t size = 1);
+	CommandBuffer(size_t count = 1);
 	~CommandBuffer();
 
 	void begin(VkCommandBufferUsageFlagBits usage = {}, size_t index = 0);

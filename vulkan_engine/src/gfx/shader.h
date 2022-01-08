@@ -1,15 +1,5 @@
 #pragma once
-
-enum class ShaderType
-{
-	NONE,
-	VERTEX,
-	FRAGMENT,
-	GEOMETRY,
-	COMPUTE,
-	TESSELATION_CONTROL,
-	TESSELATION_EVALUATION
-};
+#include "enums.h"
 
 class Shader : NonCopyable
 {
@@ -21,7 +11,7 @@ public:
 
 private:
 	VkShaderModule createShaderModule(const std::vector<char>& source) const;
-	ShaderType getShaderType(const std::string& file);
+	static ShaderType getShaderType(const std::string& file);
 
 private:
 	std::vector<VkPipelineShaderStageCreateInfo> shader_stage_infos;

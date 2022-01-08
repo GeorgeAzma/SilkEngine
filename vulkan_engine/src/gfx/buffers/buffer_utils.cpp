@@ -26,6 +26,14 @@ void BufferUtils::copy(VkBuffer destination, VkBuffer source, size_t size)
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &(const VkCommandBuffer&)command_buffer;
 
-	vkQueueSubmit(Graphics::logical_device->getGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE);
-	vkQueueWaitIdle(Graphics::logical_device->getGraphicsQueue());
+	Graphics::vulkanAssert(vkQueueSubmit(Graphics::logical_device->getGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE));
+	Graphics::vulkanAssert(vkQueueWaitIdle(Graphics::logical_device->getGraphicsQueue()));
+}
+
+void BufferUtils::setData(const void* data, size_t size, VkDeviceMemory memory)
+{
+	void* buffer_data;
+	vkMapMemory(*Graphics::logical_device, memory, 0, size, 0, &buffer_data);
+	std::memcpy(buffer_data, data, size);
+	vkUnmapMemory(*Graphics::logical_device, memory);
 }

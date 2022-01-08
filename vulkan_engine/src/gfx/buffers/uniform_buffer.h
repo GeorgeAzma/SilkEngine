@@ -2,11 +2,8 @@
 
 #include "buffer.h"
 
-class UniformBuffer : public Buffer
+class UniformBuffer : public Buffer //includes setData(const void* data)
 {
 public:
-	UniformBuffer(size_t size);
-
-private:
-
+	UniformBuffer(VkDeviceSize size);
 };

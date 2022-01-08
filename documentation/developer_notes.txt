@@ -19,3 +19,5 @@ Would be cool if we can create a shader parser supporting multipass
 that would make making ping pong shaders 10x easier
 
 Critical cpu times: [vkQueuePresentKHR: 58%, vkQueueSubmit: 20%]
+
+There are multiple of vulkan objects created because of in_flight frames we can make so engine accounts for in_flight frames and creates multiple objects (much less control tho)

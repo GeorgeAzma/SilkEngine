@@ -2,9 +2,9 @@
 #include "gfx/graphics.h"
 #include "gfx/graphics_state.h"
 
-CommandBuffer::CommandBuffer(size_t size)
+CommandBuffer::CommandBuffer(size_t count)
 {
-	command_buffers.resize(size);
+	command_buffers.resize(count);
 
 	VkCommandBufferAllocateInfo allocation_info{};
 	allocation_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;

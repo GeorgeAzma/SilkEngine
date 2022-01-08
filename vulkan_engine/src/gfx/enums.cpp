@@ -183,3 +183,19 @@ VkIndexType EnumInfo::indexType(IndexType index_type)
 	VE_CORE_ERROR("Unsupported index type specified: {0}", index_type);
 	return VkIndexType(0);
 }
+
+VkShaderStageFlagBits EnumInfo::shaderType(ShaderType shader_type)
+{
+	switch (shader_type)
+	{
+	case ShaderType::VERTEX: return VK_SHADER_STAGE_VERTEX_BIT;
+	case ShaderType::FRAGMENT: return VK_SHADER_STAGE_FRAGMENT_BIT;
+	case ShaderType::GEOMETRY: return VK_SHADER_STAGE_GEOMETRY_BIT;
+	case ShaderType::COMPUTE: return VK_SHADER_STAGE_COMPUTE_BIT;
+	case ShaderType::TESSELATION_CONTROL: return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+	case ShaderType::TESSELATION_EVALUATION: return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+	}
+
+	VE_CORE_ERROR("Unsupported shader type specified: {0}. try renaming shader file extensions to: .vert .frag .geom .tcs .tes", shader_type);
+	return VkShaderStageFlagBits(0);
+}

@@ -4,9 +4,10 @@ class Buffer : NonCopyable
 {
 public:
 	Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
-	~Buffer();
+	virtual ~Buffer();
 
 	void setData(const void* data);
+	size_t getSize() const { return size; }
 
 	operator const VkBuffer& () const { return buffer; }
 

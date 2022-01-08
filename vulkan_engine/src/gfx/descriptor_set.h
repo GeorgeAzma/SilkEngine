@@ -3,10 +3,10 @@
 class DescriptorSet
 {
 public:
-	DescriptorSet();
-	~DescriptorSet();
+	DescriptorSet(VkDescriptorSetLayout layout, size_t count = 1);
+
+	void bind(size_t index = 0);
 
 private:
-	VkDescriptorSetLayout layout{};
-	VkPipelineLayout pipeline_layout;
+	std::vector<VkDescriptorSet> descriptor_sets;
 };

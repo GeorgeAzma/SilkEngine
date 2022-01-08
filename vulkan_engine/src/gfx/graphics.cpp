@@ -19,6 +19,11 @@ static const std::vector<uint32_t> indices =
 	0, 1, 2, 2, 3, 0
 };
 
+struct ColorUniformBuffer
+{
+	glm::vec4 color = glm::vec4(0, 0, 0, 1);
+};
+
 void Graphics::init(GLFWwindow* window)
 {
 	VE_CORE_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
@@ -41,11 +46,23 @@ void Graphics::init(GLFWwindow* window)
 		"data/cache/shaders/test.vert.spv",
 		"data/cache/shaders/test.frag.spv" }); //1.65ms
 
+	descriptor_set_layout = new DescriptorSetLayout();
+	descriptor_set_layout->addBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT)
+		.build();
+
 	GraphicsPipelineProps graphics_pipeline_props{};
 	graphics_pipeline = new GraphicsPipeline({ &shader, { { Type::VEC3 }, { Type::VEC3 } } }); //1.35ms
 
 	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(vertices[0])); //2.4ms
 	index_buffer = new IndexBuffer(indices.data(), indices.size() * sizeof(indices[0])); //0.9ms
+	uniform_buffers.resize(swap_chain->getImages().size());
+	for(auto& uniform_buffer : uniform_buffers)
+		uniform_buffer = new UniformBuffer(sizeof(ColorUniformBuffer));
+	descriptor_pool = new DescriptorPool();
+	descriptor_pool->addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, swap_chain->getImages().size())
+		.setMaxSets(swap_chain->getImages().size()).build();
+
+	descriptor_set = new DescriptorSet(*descriptor_set_layout, swap_chain->getImages().size());
 
 	//Staticly recorded command buffer
 	command_buffer = new CommandBuffer(swap_chain->getFramebuffers().size());//0.025ms
@@ -100,6 +117,8 @@ void Graphics::recordCommandBuffers()
 		scissor.extent = Graphics::swap_chain->getExtent();
 		vkCmdSetScissor(*graphics_state.command_buffer, 0, 1, &scissor);
 
+		descriptor_set->bind(i);
+
 		vkCmdDrawIndexed(*graphics_state.command_buffer, indices.size(), 1, 0, 0, 0);
 
 		render_pass->end();
@@ -114,16 +133,16 @@ void Graphics::recreateSwapChain() //7.5ms
 	VkSwapchainKHR sc = *swap_chain;
 	SwapChain* old_swap_chain = swap_chain;
 	swap_chain = new SwapChain(sc);
-	swap_chain->createFramebuffers();
-	if (swap_chain->getImages().size() != command_buffer->getCommandBuffers().size())
-	{
-	}
-	delete old_swap_chain;
-	
-	size_t size = command_buffer->getCommandBuffers().size();
+
+	size_t command_buffers_size = command_buffer->getCommandBuffers().size();
 	delete command_buffer;
-	command_buffer = new CommandBuffer(size);
-	recordCommandBuffers();		
+	
+	swap_chain->createFramebuffers();
+
+	command_buffer = new CommandBuffer(command_buffers_size);
+	recordCommandBuffers();
+
+	delete old_swap_chain;
 }
 
 void Graphics::update()
@@ -143,6 +162,9 @@ void Graphics::update()
 	{
 		Graphics::vulkanAssert(result);
 	}
+
+	glm::vec4 color = glm::vec4(1, 1, (float)rand() / RAND_MAX, 1);
+	uniform_buffers[image_index]->setData(&color);
 
 	//Check if previous frame is using this image
 	if (images_in_flight[image_index] != VK_NULL_HANDLE) 
@@ -203,6 +225,13 @@ void Graphics::cleanup() //25ms
 	delete graphics_pipeline;
 	delete render_pass;
 	delete swap_chain;
+	for (auto& uniform_buffer : uniform_buffers)
+	{
+		delete uniform_buffer;
+		uniform_buffer = nullptr;
+	}
+	delete descriptor_pool;
+	delete descriptor_set_layout;
 	delete command_pool;
 	delete logical_device;
 	delete physical_device;

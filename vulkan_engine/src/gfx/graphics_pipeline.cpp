@@ -10,6 +10,7 @@ const std::vector<VkDynamicState> GraphicsPipeline::dynamic_states =
 };
 
 GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineProps& props)
+	: props{props}
 {
 	VkPipelineVertexInputStateCreateInfo vertex_input_info{};
 	vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -73,12 +74,14 @@ GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineProps& props)
 
 	VkPipelineLayoutCreateInfo pipeline_layout_info{};
 	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	pipeline_layout_info.setLayoutCount = 1;
+	pipeline_layout_info.pSetLayouts = &(const VkDescriptorSetLayout&)*Graphics::descriptor_set_layout;
 
 	Graphics::vulkanAssert(vkCreatePipelineLayout(*Graphics::logical_device, &pipeline_layout_info, nullptr, &pipeline_layout));
 
 	VkGraphicsPipelineCreateInfo create_info{};
 	create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	create_info.stageCount = 2;
+	create_info.stageCount = props.shader->getShaderStageInfos().size();
 	create_info.pStages = props.shader->getShaderStageInfos().data();
 	create_info.pVertexInputState = &vertex_input_info;
 	create_info.pInputAssemblyState = &input_assembly_info;
@@ -102,5 +105,7 @@ GraphicsPipeline::~GraphicsPipeline()
 
 void GraphicsPipeline::bind(VkPipelineBindPoint bind_point)
 {
-	vkCmdBindPipeline(*graphics_state.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline);
+	this->bind_point = bind_point;
+	vkCmdBindPipeline(*graphics_state.command_buffer, bind_point, graphics_pipeline);
+	graphics_state.bind_point = &this->bind_point;
 }

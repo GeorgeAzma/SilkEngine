@@ -7,12 +7,12 @@ layout(location = 0) in VertexOutput
 
 layout(binding = 0) uniform TransformMatrices
 {
-    vec3 color;
+    vec4 color;
 } transform_matrices;
 
 layout(location = 0) out vec4 color;
 
 void main()
 {
-    color = vec4(fragment_input.color, 1.0);
+    color = vec4(fragment_input.color, 1.0) * transform_matrices.color;
 }

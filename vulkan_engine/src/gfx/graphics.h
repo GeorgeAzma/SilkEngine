@@ -8,8 +8,10 @@
 #include "graphics_pipeline.h"
 #include "command_pool.h"
 #include "buffers/command_buffer.h"
-
-//TEMP
+#include "descriptor_set.h"
+#include "descriptor_set_layout.h"
+#include "descriptor_pool.h"
+#include "buffers/uniform_buffer.h"
 #include "buffers/vertex_buffer.h"
 #include "buffers/index_buffer.h"
 
@@ -18,8 +20,6 @@ class WindowResizeEvent;
 class Graphics
 {
 	static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
-
-	//TEMP
 
 	static inline VertexBuffer* vertex_buffer = nullptr;
 	static inline IndexBuffer* index_buffer = nullptr;
@@ -46,6 +46,10 @@ public:
 	static inline GraphicsPipeline* graphics_pipeline = nullptr;
 	static inline CommandBuffer* command_buffer = nullptr;
 	static inline GLFWwindow* window = nullptr;
+	static inline DescriptorSetLayout* descriptor_set_layout = nullptr;
+	static inline DescriptorSet* descriptor_set = nullptr;
+	static inline DescriptorPool* descriptor_pool = nullptr;
+	static inline std::vector<UniformBuffer*> uniform_buffers = {};
 
 private:
 	static constexpr std::string stringifyResult(VkResult result);

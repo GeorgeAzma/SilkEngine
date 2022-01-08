@@ -5,7 +5,7 @@
 
 struct GraphicsPipelineProps
 {
-	Shader* shader;
+	Shader* shader = nullptr;
 	BufferLayout buffer_layout;
 };
 
@@ -17,10 +17,15 @@ public:
 
 	void bind(VkPipelineBindPoint bind_point = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS);
 
+	const GraphicsPipelineProps& getProps() const { return props; }
+	const VkPipelineLayout& getLayout() const { return pipeline_layout; }
+
 	operator const VkPipeline& () const { return graphics_pipeline; }
 
 private:
 	static const std::vector<VkDynamicState> dynamic_states;
 	VkPipelineLayout pipeline_layout;
 	VkPipeline graphics_pipeline;
+	GraphicsPipelineProps props;
+	VkPipelineBindPoint bind_point = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
 };

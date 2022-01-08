@@ -43,12 +43,24 @@ enum class IndexType
 	UINT32
 };
 
+enum class ShaderType
+{
+	NONE,
+	VERTEX,
+	FRAGMENT,
+	GEOMETRY,
+	COMPUTE,
+	TESSELATION_CONTROL,
+	TESSELATION_EVALUATION
+};
+
 class EnumInfo
 {
 public:
 	static VkFormat type(Type type);
+	static VkIndexType indexType(IndexType index_type);
+	static VkShaderStageFlagBits shaderType(ShaderType shader_type);
 	static size_t size(Type type);
 	static size_t count(Type type);
 	static size_t rows(Type type);
-	static VkIndexType indexType(IndexType index_type);
 };

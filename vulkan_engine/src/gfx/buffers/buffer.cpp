@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include "gfx/graphics.h"
+#include "buffer_utils.h"
 
 Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
 	: size{size}
@@ -33,10 +34,7 @@ Buffer::~Buffer()
 
 void Buffer::setData(const void* data)
 {
-	void* buffer_data;
-	vkMapMemory(*Graphics::logical_device, memory, 0, size, 0, &buffer_data);
-	std::memcpy(buffer_data, data, size);
-	vkUnmapMemory(*Graphics::logical_device, memory);
+	BufferUtils::setData(data, size, memory);
 }
 
 uint32_t Buffer::findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags properties)
