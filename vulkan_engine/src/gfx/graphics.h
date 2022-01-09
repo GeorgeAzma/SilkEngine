@@ -14,6 +14,7 @@
 #include "buffers/uniform_buffer.h"
 #include "buffers/vertex_buffer.h"
 #include "buffers/index_buffer.h"
+#include "image.h"
 
 class WindowResizeEvent;
 
@@ -23,6 +24,7 @@ class Graphics
 
 	static inline VertexBuffer* vertex_buffer = nullptr;
 	static inline IndexBuffer* index_buffer = nullptr;
+	static inline Image* image = nullptr;
 
 	static void recordCommandBuffers();
 

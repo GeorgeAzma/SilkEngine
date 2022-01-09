@@ -25,7 +25,9 @@ public:
 private:
 	void load(const std::string& file);
 	void create(const ImageProps& props);
-	
+	void transitionLayout(VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+	void copyBufferToImage();
+
 public:
 	static VkFormat getDefaultFormatFromChannelCount(int channels);
 
