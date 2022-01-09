@@ -1,7 +1,6 @@
 #include "staging_buffer.h"
 #include "command_buffer.h"
 #include "gfx/graphics.h"
-#include "buffer_utils.h"
 
 StagingBuffer::StagingBuffer(const void* data, VkDeviceSize size)
     : Buffer(size,
@@ -14,5 +13,5 @@ StagingBuffer::StagingBuffer(const void* data, VkDeviceSize size)
 
 void StagingBuffer::copy(VkBuffer destination) const //~0.8ms
 {
-    BufferUtils::copy(destination, buffer, size);
+    Buffer::copy(destination, buffer, size);
 }
