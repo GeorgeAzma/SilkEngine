@@ -20,6 +20,7 @@ Application::Application(const char* name, ApplicationCommandLineArgs args)
 
 Application::~Application()
 {
+    window = nullptr;
     Graphics::cleanup();
     VE_CORE_INFO("Terminated");
 }
