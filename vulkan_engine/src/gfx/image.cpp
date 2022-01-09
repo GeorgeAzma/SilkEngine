@@ -11,7 +11,7 @@ Image::Image(const std::string& file)
 	ImageProps props{};
 	props.width = width;
 	props.height = height;
-	props.format = getDefaultFormatFromChannelCount(channels);
+	props.format = format;
 	create(props);
 }
 
@@ -35,6 +35,7 @@ void Image::load(const std::string& file)
 	this->width = width;
 	this->height = height;
 	this->channels = channels;
+	this->format = getDefaultFormatFromChannelCount(channels);
 
 	size_t size = width * height * channels;
 	staging_buffer = std::make_unique<StagingBuffer>(pixels, size);
@@ -47,6 +48,8 @@ void Image::create(const ImageProps& props)
 	this->width = props.width;
 	this->height = props.height;
 	this->channels = EnumInfo::count(EnumInfo::formatToType(props.format));
+	this->format = props.format;
+
 	VkImageCreateInfo create_info{};
 	create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 	create_info.imageType = VK_IMAGE_TYPE_2D;
@@ -55,7 +58,7 @@ void Image::create(const ImageProps& props)
 	create_info.extent.depth = 1;
 	create_info.mipLevels = 1;
 	create_info.arrayLayers = 1;
-	create_info.format = getDefaultFormatFromChannelCount(channels);
+	create_info.format = format;
 	create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
 	create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	create_info.usage = props.usage;
@@ -81,7 +84,21 @@ void Image::create(const ImageProps& props)
 	transitionLayout(create_info.format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
-void Image::transitionLayout(VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
+void Image::createView()
+{
+	VkImageViewCreateInfo view_info{};
+	view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	view_info.image = image;
+	view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	view_info.format = format;
+	view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	view_info.subresourceRange.baseMipLevel = 0;
+	view_info.subresourceRange.levelCount = 1;
+	view_info.subresourceRange.baseArrayLayer = 0;
+	view_info.subresourceRange.layerCount = 1;
+}
+
+void Image::transitionLayout(VkFormat format/*Unnecessary for some reason don't delete yet*/, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
 	CommandBuffer command_buffer;
 	command_buffer.begin();

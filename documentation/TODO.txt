@@ -7,3 +7,7 @@
   (and other vulkan classes but they are less mesy)
 - Remove includes from graphics.h for better compile time
 - Make image synchronization easier (and other image stuff too)
+- Support mipmaps
+- Support array textures
+- Support multisampled textures
+- Support multisampling
