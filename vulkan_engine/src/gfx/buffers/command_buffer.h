@@ -9,8 +9,9 @@ public:
 	void begin(VkCommandBufferUsageFlagBits usage = {}, size_t index = 0);
 	void end(size_t index = 0);
 
-	const std::vector<VkCommandBuffer>& getCommandBuffers() const { return command_buffers; }
+	void submit(size_t index = 0, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {}, VkPipelineStageFlags* wait_stages = nullptr, VkFence* fence = nullptr);
 
+	const std::vector<VkCommandBuffer>& getCommandBuffers() const { return command_buffers; }
 	operator const VkCommandBuffer& () const { return command_buffers[0]; }
 
 private:

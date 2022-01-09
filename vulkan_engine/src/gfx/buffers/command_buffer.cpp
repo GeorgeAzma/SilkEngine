@@ -40,3 +40,30 @@ void CommandBuffer::end(size_t index)
 
 	graphics_state.command_buffer = nullptr;
 }
+
+void CommandBuffer::submit(size_t index, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores, VkPipelineStageFlags* wait_stages, VkFence* fence)
+{
+	if (graphics_state.command_buffer == &command_buffers[index])
+		end();
+
+	VkSubmitInfo submit_info{};
+	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+	submit_info.waitSemaphoreCount = wait_semaphores.size();
+	submit_info.pWaitSemaphores = wait_semaphores.data();
+
+	submit_info.pWaitDstStageMask = wait_stages;
+
+	submit_info.commandBufferCount = 1;
+	submit_info.pCommandBuffers = &command_buffers[index];
+
+	submit_info.signalSemaphoreCount = signal_semaphores.size();
+	submit_info.pSignalSemaphores = signal_semaphores.data();
+
+	if (fence)
+	{
+		Graphics::vulkanAssert(vkResetFences(*Graphics::logical_device, 1, fence));
+	}
+
+	Graphics::vulkanAssert(vkQueueSubmit(Graphics::logical_device->getGraphicsQueue(), 1, &submit_info, fence ? *fence : VK_NULL_HANDLE));
+}

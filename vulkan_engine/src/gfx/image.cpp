@@ -82,9 +82,7 @@ VkFormat Image::getDefaultFormatFromChannelCount(int channels)
 	case 3: return VK_FORMAT_R8G8B8_SRGB;
 	case 4: return VK_FORMAT_R8G8B8A8_SRGB;
 	}
-}
 
-VkFormat Image::getChannelCountFromFormat(int channels)
-{
-	return;
+	VE_CORE_ERROR("Unsupported channel count specified: {0}", channels);
+	return VkFormat(0);
 }

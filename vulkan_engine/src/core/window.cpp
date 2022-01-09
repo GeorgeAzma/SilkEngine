@@ -204,6 +204,7 @@ void Window::setWidth(unsigned int width)
     if (width == data.width)
         return;
     data.width = width;
+    align();
     glfwSetWindowSize(window, data.width, data.height);
     updateProjection();
 }
@@ -213,6 +214,7 @@ void Window::setHeight(unsigned int height)
     if (height == data.height)
         return;
     data.height = height;
+    align();
     glfwSetWindowSize(window, data.width, data.height);
     updateProjection();
 }
@@ -223,6 +225,7 @@ void Window::setSize(const glm::uvec2 &size)
         return;
     data.width = size.x;
     data.height = size.y;
+    align();
     glfwSetWindowSize(window, data.width, data.height);
     updateProjection();
 }
@@ -237,6 +240,9 @@ void Window::setTitle(const const char *title)
 
 void Window::align(WindowAlignment a)
 {
+    if (a == WindowAlignment::NONE) 
+        return;
+
     auto &x = data.x;
     auto &y = data.y;
     switch (a)

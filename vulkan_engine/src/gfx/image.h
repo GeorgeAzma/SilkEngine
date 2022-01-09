@@ -28,7 +28,6 @@ private:
 	
 public:
 	static VkFormat getDefaultFormatFromChannelCount(int channels);
-	static VkFormat getChannelCountFromFormat(int channels);
 
 private:
 	uint32_t width = 0;

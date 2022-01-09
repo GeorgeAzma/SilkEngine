@@ -13,6 +13,7 @@ struct WindowProps
 
 enum class WindowAlignment
 {
+    NONE,
     CENTER,
     LEFT,
     RIGHT,

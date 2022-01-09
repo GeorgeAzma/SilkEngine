@@ -63,7 +63,6 @@ void Buffer::copy(VkBuffer destination, VkBuffer source, size_t size)
 	allocation_info.commandBufferCount = 1;
 
 	CommandBuffer command_buffer;
-
 	command_buffer.begin(VkCommandBufferUsageFlagBits::VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
 	VkBufferCopy copy_region{};
@@ -73,13 +72,7 @@ void Buffer::copy(VkBuffer destination, VkBuffer source, size_t size)
 	vkCmdCopyBuffer(command_buffer, source, destination, 1, &copy_region);
 
 	command_buffer.end();
-
-	VkSubmitInfo submit_info{};
-	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &(const VkCommandBuffer&)command_buffer;
-
-	Graphics::vulkanAssert(vkQueueSubmit(Graphics::logical_device->getGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE));
+	command_buffer.submit();
 	Graphics::vulkanAssert(vkQueueWaitIdle(Graphics::logical_device->getGraphicsQueue()));
 }
 
