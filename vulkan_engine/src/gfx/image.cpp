@@ -22,6 +22,7 @@ Image::Image(const ImageProps& props)
 
 Image::~Image()
 {
+	staging_buffer = nullptr;
 	vkDestroyImage(*Graphics::logical_device, image, nullptr);
 	vkFreeMemory(*Graphics::logical_device, memory, nullptr);
 }

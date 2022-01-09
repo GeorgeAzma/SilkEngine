@@ -220,6 +220,7 @@ void Graphics::cleanup() //25ms
 	delete descriptor_set;
 	delete descriptor_pool;
 	delete command_pool;
+	delete image;
 	delete logical_device;
 	delete physical_device;
 	delete surface;

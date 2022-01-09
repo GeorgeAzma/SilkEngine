@@ -6,6 +6,4 @@
 - Fix the mess in Graphics class
   (and other vulkan classes but they are less mesy)
 - Remove includes from graphics.h for better compile time
-- Reacreating stuff might not need vkFree commands check that
-- Lots of vulkan stuff doesn't make sense and is written to get something working, fix that
-- Find a way to calm yourself (PAIIIIIIN...)
+- Make image synchronization easier (and other image stuff too)
