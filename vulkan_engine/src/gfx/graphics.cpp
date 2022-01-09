@@ -176,28 +176,10 @@ void Graphics::update()
 	}
 
 	//Submit the command buffer
-	const std::vector<VkSemaphore> wait_semaphores = { image_available_semaphores[current_frame] };
-	VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	const std::vector<VkSemaphore> signal_semaphores = { render_finished_semaphores[current_frame] };
+	VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
-	command_buffer->submit(image_index, wait_semaphores, signal_semaphores, wait_stages, &in_flight_fences[current_frame]);
-	
-	//VkSubmitInfo submit_info{};
-	//submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	//submit_info.waitSemaphoreCount = wait_semaphores.size();
-	//submit_info.pWaitSemaphores = wait_semaphores.data();
-	//submit_info.pWaitDstStageMask = wait_stages;
-	//submit_info.commandBufferCount = 1;
-	//submit_info.pCommandBuffers = &command_buffer->getCommandBuffers()[image_index];
-	//
-	//const std::vector<VkSemaphore> signal_semaphores = { render_finished_semaphores[current_frame] };
-	//submit_info.signalSemaphoreCount = signal_semaphores.size();
-	//submit_info.pSignalSemaphores = signal_semaphores.data();
-	//
-	////Reset fences
-	//Graphics::vulkanAssert(vkResetFences(*logical_device, 1, &in_flight_fences[current_frame]));
-	//
-	//Graphics::vulkanAssert(vkQueueSubmit(logical_device->getGraphicsQueue(), 1, &submit_info, in_flight_fences[current_frame]));
+	command_buffer->submit(image_index, { image_available_semaphores[current_frame] }, signal_semaphores, wait_stages, &in_flight_fences[current_frame]);
 
 	VkPresentInfoKHR present_info{};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
