@@ -1,6 +1,6 @@
 #pragma once
 
-class DescriptorSetLayout
+class DescriptorSetLayout : NonCopyable
 {
 public:
 	~DescriptorSetLayout();

@@ -2,7 +2,7 @@
 
 #include "descriptor_set_layout.h"
 
-class DescriptorSet
+class DescriptorSet : NonCopyable
 {
 public:
 	DescriptorSet(const DescriptorSetLayout& layout, size_t count = 1);

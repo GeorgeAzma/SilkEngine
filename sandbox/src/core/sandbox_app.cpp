@@ -4,6 +4,8 @@
 SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 {
     pushLayer(new Sandbox());
+
+    window->setSize({ 800, 600 });
 }
 
 SandboxApp::~SandboxApp()

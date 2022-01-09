@@ -34,13 +34,15 @@ private:
     void run();
     void onWindowClose(const WindowCloseEvent &e);
 
+protected:
+    std::shared_ptr<Window> window;
+    FixedUpdate app_update;
+
 private:
     ApplicationCommandLineArgs command_line_args;
     bool running = true;
-    std::shared_ptr<Window> window;
     LayerStack layer_stack;
     double runtime = 0.0;
-    FixedUpdate app_update;
 
 private:
     friend int ::main(int argc, char **argv);

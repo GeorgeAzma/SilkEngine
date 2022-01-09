@@ -1,6 +1,6 @@
 #pragma once
 
-class DescriptorPool
+class DescriptorPool : NonCopyable
 {
 public:
 	~DescriptorPool();

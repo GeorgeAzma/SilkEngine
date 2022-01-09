@@ -229,7 +229,7 @@ void Graphics::cleanup() //25ms
 	delete render_pass;
 	delete swap_chain;
 	uniform_buffers.clear();
-	//delete descriptor_set_layout; //this generates an error for some reason
+	delete descriptor_set_layout; //this generates an error for some reason
 	delete descriptor_set;
 	delete descriptor_pool;
 	delete command_pool;
