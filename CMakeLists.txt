@@ -77,8 +77,6 @@ else()
 endif()
 
 #glm
-set(glm_deps FALSE)
-list(APPEND DEPENDENCIES_TO_ADD glm_deps)
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/glm/cmake)
 FetchContent_Declare(GLM
 GIT_REPOSITORY  https://github.com/g-truc/glm
@@ -93,6 +91,22 @@ FetchContent_MakeAvailable(GLM)
 FetchContent_GetProperties(GLM)
 endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glm)
+
+#stb
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/stb/.git)
+FetchContent_Declare(STB
+GIT_REPOSITORY   https://github.com/nothings/stb
+GIT_TAG origin/master
+GIT_SHALLOW     ON
+SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/stb
+BUILD_COMMAND ""
+CONFIGURE_COMMAND ""
+INSTALL_COMMAND ""
+)
+FetchContent_MakeAvailable(STB)
+FetchContent_GetProperties(STB)
+endif()
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/stb)
 
 #Sub dirs
 ############################__VULKAN ENGINE__#####################################
