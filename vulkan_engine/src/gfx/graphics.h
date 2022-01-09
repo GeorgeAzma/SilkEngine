@@ -49,7 +49,7 @@ public:
 	static inline DescriptorSetLayout* descriptor_set_layout = nullptr;
 	static inline DescriptorSet* descriptor_set = nullptr;
 	static inline DescriptorPool* descriptor_pool = nullptr;
-	static inline std::vector<UniformBuffer*> uniform_buffers = {};
+	static inline std::vector<std::shared_ptr<UniformBuffer>> uniform_buffers = {};
 
 private:
 	static constexpr std::string stringifyResult(VkResult result);

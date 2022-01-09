@@ -11,6 +11,7 @@ public:
 	operator const VkDescriptorSetLayout& () { return layout; }
 
 private:
-	VkDescriptorSetLayout layout{};
+	VkDescriptorSetLayout layout;
 	std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings;
+	friend class DescriptorSet;
 };

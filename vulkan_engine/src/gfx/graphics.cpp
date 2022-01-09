@@ -55,14 +55,18 @@ void Graphics::init(GLFWwindow* window)
 
 	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(vertices[0])); //2.4ms
 	index_buffer = new IndexBuffer(indices.data(), indices.size() * sizeof(indices[0])); //0.9ms
-	uniform_buffers.resize(swap_chain->getImages().size());
-	for(auto& uniform_buffer : uniform_buffers)
-		uniform_buffer = new UniformBuffer(sizeof(ColorUniformBuffer));
+	
+	for(size_t i = 0; i < swap_chain->getImages().size(); ++i)
+		uniform_buffers.emplace_back(std::make_shared<UniformBuffer>(sizeof(ColorUniformBuffer)));
+
 	descriptor_pool = new DescriptorPool();
 	descriptor_pool->addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, swap_chain->getImages().size())
 		.setMaxSets(swap_chain->getImages().size()).build();
 
 	descriptor_set = new DescriptorSet(*descriptor_set_layout, swap_chain->getImages().size());
+	for(size_t i = 0; i < uniform_buffers.size(); ++i)
+		descriptor_set->addBuffer(0, { *uniform_buffers[i], 0, VK_WHOLE_SIZE });
+	descriptor_set->build();
 
 	//Staticly recorded command buffer
 	command_buffer = new CommandBuffer(swap_chain->getFramebuffers().size());//0.025ms
@@ -99,7 +103,6 @@ void Graphics::recordCommandBuffers()
 
 		Graphics::graphics_pipeline->bind();
 
-		//TODO: implement vertex arrays
 		vertex_buffer->bind();
 		index_buffer->bind();
 
@@ -225,18 +228,17 @@ void Graphics::cleanup() //25ms
 	delete graphics_pipeline;
 	delete render_pass;
 	delete swap_chain;
-	for (auto& uniform_buffer : uniform_buffers)
-	{
-		delete uniform_buffer;
-		uniform_buffer = nullptr;
-	}
+	uniform_buffers.clear();
+	//delete descriptor_set_layout; //this generates an error for some reason
+	delete descriptor_set;
 	delete descriptor_pool;
-	delete descriptor_set_layout;
 	delete command_pool;
 	delete logical_device;
 	delete physical_device;
 	delete surface;
 	delete instance;
+
+	glfwTerminate();
 }
 
 void Graphics::onWindowResize(const WindowResizeEvent& e)

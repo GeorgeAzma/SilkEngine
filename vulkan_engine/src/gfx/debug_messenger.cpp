@@ -1,4 +1,5 @@
 #include "debug_messenger.h"
+#include "graphics.h"
 
 // Custom debug callback, when error/warning... 
 // occures this function is called with the error message 
@@ -86,8 +87,7 @@ DebugMessenger::DebugMessenger()
 void DebugMessenger::create(VkInstance instance)
 {
     this->instance = instance;
-    VE_CORE_ASSERT(createDebugUtilsMessengerEXT(instance, &create_info, nullptr, &debug_messenger) == VK_SUCCESS,
-        "Vulkan: Couldn't create a debug messenger");
+    Graphics::vulkanAssert(createDebugUtilsMessengerEXT(instance, &create_info, nullptr, &debug_messenger));
 }
 
 DebugMessenger::~DebugMessenger()

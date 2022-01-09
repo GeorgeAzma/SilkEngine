@@ -3,8 +3,7 @@
 
 Surface::Surface()
 {
-	VE_CORE_ASSERT(glfwCreateWindowSurface(Graphics::instance->getInstance(), Graphics::window, nullptr, &surface) == VK_SUCCESS,
-		"Couldn't create window surface");
+	Graphics::vulkanAssert(glfwCreateWindowSurface(Graphics::instance->getInstance(), Graphics::window, nullptr, &surface));
 }
 
 void Surface::getSupportDetails(VkPhysicalDevice physical_device)
