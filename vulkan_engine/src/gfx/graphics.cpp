@@ -55,7 +55,7 @@ void Graphics::init(GLFWwindow* window)
 
 	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(vertices[0])); //2.4ms
 	index_buffer = new IndexBuffer(indices.data(), indices.size() * sizeof(indices[0])); //0.9ms
-	image = new Image("");
+	image = new Image("data/images/test.png");
 
 	for(size_t i = 0; i < swap_chain->getImages().size(); ++i)
 		uniform_buffers.emplace_back(std::make_shared<UniformBuffer>(sizeof(ColorUniformBuffer)));

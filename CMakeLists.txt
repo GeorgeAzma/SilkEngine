@@ -152,6 +152,7 @@ target_link_libraries(VulkanEngine ${EXTRA_LIBS})
 
 #Precompile headers
 target_precompile_headers(VulkanEngine PUBLIC 
+vulkan_engine/src/core/base.h
 <iostream>
 <string>
 <unordered_map>
@@ -189,8 +190,6 @@ target_precompile_headers(VulkanEngine PUBLIC
 <GLM/gtx/quaternion.hpp>
 <vulkan/vulkan.h>
 <GLFW/glfw3.h>
-<stb_image.h>
-vulkan_engine/src/core/base.h
 vulkan_engine/src/core/log.h)
 
 
