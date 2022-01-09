@@ -2,6 +2,7 @@
 
 layout(location = 0) in VertexOutput 
 {
+    vec2 texture_coordinates;
     vec3 color;
 } fragment_input;
 
@@ -15,4 +16,5 @@ layout(location = 0) out vec4 color;
 void main()
 {
     color = vec4(fragment_input.color, 1.0) * transform_matrices.color;
+    color.rg = fragment_input.texture_coordinates.rg;
 }

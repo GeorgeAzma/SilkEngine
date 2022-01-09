@@ -23,6 +23,7 @@ Image::Image(const ImageProps& props)
 Image::~Image()
 {
 	staging_buffer = nullptr;
+	view = nullptr;
 	vkDestroyImage(*Graphics::logical_device, image, nullptr);
 	vkFreeMemory(*Graphics::logical_device, memory, nullptr);
 }
@@ -82,20 +83,8 @@ void Image::create(const ImageProps& props)
 	transitionLayout(create_info.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 	copyBufferToImage();
 	transitionLayout(create_info.format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-}
 
-void Image::createView()
-{
-	VkImageViewCreateInfo view_info{};
-	view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	view_info.image = image;
-	view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	view_info.format = format;
-	view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	view_info.subresourceRange.baseMipLevel = 0;
-	view_info.subresourceRange.levelCount = 1;
-	view_info.subresourceRange.baseArrayLayer = 0;
-	view_info.subresourceRange.layerCount = 1;
+	view = std::make_unique<ImageView>(image, format);
 }
 
 void Image::transitionLayout(VkFormat format/*Unnecessary for some reason don't delete yet*/, VkImageLayout oldLayout, VkImageLayout newLayout)

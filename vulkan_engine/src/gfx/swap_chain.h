@@ -1,6 +1,7 @@
 #pragma once
 
 #include "buffers/framebuffer.h"
+#include "image_view.h"
 
 class SwapChain : NonCopyable
 {
@@ -29,7 +30,7 @@ private:
     VkSurfaceFormatKHR surface_format;
     VkPresentModeKHR present_mode;
     VkExtent2D extent;
-    std::vector<VkImageView> image_views;
+    std::vector<ImageView*> image_views;
     std::vector<Framebuffer*> framebuffers;
 
     friend class PhysicalDevice;

@@ -8,10 +8,10 @@
 
 static const std::vector<Vertex> vertices =
 {
-	{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-	{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-	{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-	{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}}
+	{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+	{{0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+	{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+	{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}}
 };
 
 static const std::vector<uint32_t> indices =
@@ -48,10 +48,11 @@ void Graphics::init(GLFWwindow* window)
 
 	descriptor_set_layout = new DescriptorSetLayout();
 	descriptor_set_layout->addBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT)
+		.addBinding(1, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT)
 		.build();
 
 	GraphicsPipelineProps graphics_pipeline_props{};
-	graphics_pipeline = new GraphicsPipeline({ &shader, { { Type::VEC3 }, { Type::VEC3 } } }); //1.35ms
+	graphics_pipeline = new GraphicsPipeline({ &shader, { { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 } } }); //1.35ms
 
 	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(vertices[0])); //2.4ms
 	index_buffer = new IndexBuffer(indices.data(), indices.size() * sizeof(indices[0])); //0.9ms
@@ -62,6 +63,7 @@ void Graphics::init(GLFWwindow* window)
 
 	descriptor_pool = new DescriptorPool();
 	descriptor_pool->addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, swap_chain->getImages().size())
+		.addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, swap_chain->getImages().size())
 		.setMaxSets(swap_chain->getImages().size()).build();
 
 	descriptor_set = new DescriptorSet(*descriptor_set_layout, swap_chain->getImages().size());

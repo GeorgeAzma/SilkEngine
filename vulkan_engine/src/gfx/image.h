@@ -1,6 +1,7 @@
 #pragma once
 
 #include "buffers/staging_buffer.h"
+#include "image_view.h"
 
 struct ImageProps
 {
@@ -25,7 +26,6 @@ public:
 private:
 	void load(const std::string& file);
 	void create(const ImageProps& props);
-	void createView();
 	void transitionLayout(VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 	void copyBufferToImage();
 
@@ -37,7 +37,7 @@ private:
 	uint32_t height = 0;
 	uint32_t channels = 0;
 	VkImage image;
-	VkImageView view;
+	std::unique_ptr<ImageView> view = nullptr;
 	VkDeviceMemory memory;
 	VkFormat format;
 	std::unique_ptr<StagingBuffer> staging_buffer = nullptr;

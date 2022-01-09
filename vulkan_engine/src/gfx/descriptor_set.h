@@ -8,6 +8,7 @@ public:
 	DescriptorSet(const DescriptorSetLayout& layout, size_t count = 1);
 
 	DescriptorSet& addBuffer(uint32_t binding, VkDescriptorBufferInfo buffer_info);
+	DescriptorSet& addImage(uint32_t binding, VkDescriptorImageInfo image_info);
 	void build();
 
 	void bind(size_t index = 0);

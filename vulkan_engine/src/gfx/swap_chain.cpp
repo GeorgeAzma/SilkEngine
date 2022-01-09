@@ -56,22 +56,7 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 
 	for (size_t i = 0; i < image_views.size(); ++i)
 	{
-		VkImageViewCreateInfo create_info{};
-		create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		create_info.image = images[i];
-		create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		create_info.format = surface_format.format;
-		create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-		create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-		create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-		create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-		create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		create_info.subresourceRange.baseMipLevel = 0;
-		create_info.subresourceRange.levelCount = 1;
-		create_info.subresourceRange.baseArrayLayer = 0;
-		create_info.subresourceRange.layerCount = 1;
-
-		Graphics::vulkanAssert(vkCreateImageView(*Graphics::logical_device, &create_info, nullptr, &image_views[i]));
+		image_views[i] = new ImageView(images[i], surface_format.format);
 	}
 }
 
@@ -82,7 +67,7 @@ void SwapChain::createFramebuffers()
 		for (size_t i = 0; i < image_views.size(); ++i)
 		{
 			if (framebuffers[i]) continue;
-			std::vector<VkImageView> attachments = { image_views[i] };
+			std::vector<VkImageView> attachments = { *image_views[i] };
 			framebuffers[i] = new Framebuffer(*Graphics::render_pass, attachments);
 		}
 	}
@@ -95,9 +80,9 @@ SwapChain::~SwapChain()
 		delete framebuffer;
 		framebuffer = nullptr;
 	}
-	for (const auto& image_view : image_views) 
+	for (auto& image_view : image_views) 
 	{
-		vkDestroyImageView(*Graphics::logical_device, image_view, nullptr);
+		delete image_view;
 	}
 	vkDestroySwapchainKHR(*Graphics::logical_device, swap_chain, nullptr);
 }

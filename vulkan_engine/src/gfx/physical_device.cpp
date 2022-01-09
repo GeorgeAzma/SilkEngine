@@ -85,24 +85,30 @@ int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
 	int score = 0;
 
 	QueueFamilyIndices queue_family_indices = findQueueFamilies(physical_device, *Graphics::surface);
-	if (!queue_family_indices.isSuitable()) return -1;
+	if (!queue_family_indices.isSuitable()) 
+		return -1;
 
 	bool extensions_supported = checkPhysicalDeviceExtensionSupport(LogicalDevice::getRequiredLogicalDeviceExtensions(), physical_device);
-	if (!extensions_supported) return -1;
+	if (!extensions_supported) 
+		return -1;
 
 	Graphics::surface->getSupportDetails(physical_device);
 	bool is_swap_chain_adequate = !Graphics::surface->getFormats().empty() && 
 		!Graphics::surface->getPresentModes().empty();
-	if (!is_swap_chain_adequate) return -1;
+	if (!is_swap_chain_adequate) 
+		return -1;
 
 	VkPhysicalDeviceProperties physical_device_properties;
 	VkPhysicalDeviceFeatures physical_device_features;
 	vkGetPhysicalDeviceProperties(physical_device, &physical_device_properties);
 	vkGetPhysicalDeviceFeatures(physical_device, &physical_device_features);
 
+	if (!physical_device_features.samplerAnisotropy) 
+		return -1;
+
 	bool is_discrete = physical_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
 
-	score += is_discrete * 1000;
+	score += is_discrete * 800;
 	score += physical_device_features.geometryShader * 250;
 	score += physical_device_features.tessellationShader * 150;
 	score += physical_device_features.multiViewport * 100;
