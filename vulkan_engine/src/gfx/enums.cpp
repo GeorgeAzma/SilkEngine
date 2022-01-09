@@ -43,6 +43,36 @@ VkFormat EnumInfo::type(Type type)
 	return VkFormat(0);
 }
 
+Type EnumInfo::formatToType(VkFormat format)
+{
+	switch (format)
+	{
+	case VK_FORMAT_R8_SINT: return Type::BYTE;
+	case VK_FORMAT_R8_UINT: return Type::UBYTE;
+	case VK_FORMAT_R16_SINT: return Type::SHORT;
+	case VK_FORMAT_R16_UINT: return Type::USHORT;
+	case VK_FORMAT_R32_SINT: return Type::INT;
+	case VK_FORMAT_R32_UINT: return Type::UINT;
+	case VK_FORMAT_R32_SFLOAT: return Type::FLOAT;
+	case VK_FORMAT_R64_SFLOAT: return Type::DOUBLE;
+	case VK_FORMAT_R32G32_SFLOAT: return Type::VEC2;
+	case VK_FORMAT_R32G32B32_SFLOAT: return Type::VEC3;
+	case VK_FORMAT_R32G32B32A32_SFLOAT: return Type::VEC4;
+	case VK_FORMAT_R32G32_SINT: return Type::VEC2I;
+	case VK_FORMAT_R32G32B32_SINT: return Type::VEC3I;
+	case VK_FORMAT_R32G32B32A32_SINT: return Type::VEC4I;
+	case VK_FORMAT_R32G32_UINT: return Type::VEC2U;
+	case VK_FORMAT_R32G32B32_UINT:  return Type::VEC3U;
+	case VK_FORMAT_R32G32B32A32_UINT: return Type::VEC4U;
+	case VK_FORMAT_R64G64_SFLOAT: return Type::VEC2D;
+	case VK_FORMAT_R64G64B64_SFLOAT: return Type::VEC3D;
+	case VK_FORMAT_R64G64B64A64_SFLOAT: return Type::VEC4D;
+	}
+
+	VE_CORE_ERROR("Unsupported format specified: {0}", format);
+	return Type(0);
+}
+
 size_t EnumInfo::size(Type type)
 {
 	switch (type)
@@ -98,7 +128,7 @@ size_t EnumInfo::count(Type type)
 	case Type::INT: return 1;
 	case Type::UINT: return 1;
 	case Type::FLOAT: return 1;
-	case Type::DOUBLE: return 1; //TODO: It might be better to write 2x for doubles
+	case Type::DOUBLE: return 1;
 	case Type::VEC2: return 2;
 	case Type::VEC3: return 3;
 	case Type::VEC4: return 4;

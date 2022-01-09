@@ -58,6 +58,7 @@ class EnumInfo
 {
 public:
 	static VkFormat type(Type type);
+	static Type formatToType(VkFormat format);
 	static VkIndexType indexType(IndexType index_type);
 	static VkShaderStageFlagBits shaderType(ShaderType shader_type);
 	static size_t size(Type type);

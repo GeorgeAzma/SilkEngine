@@ -9,7 +9,7 @@ struct GraphicsPipelineProps
 	BufferLayout buffer_layout;
 };
 
-class GraphicsPipeline
+class GraphicsPipeline : NonCopyable
 {
 public:
 	GraphicsPipeline(const GraphicsPipelineProps& props);

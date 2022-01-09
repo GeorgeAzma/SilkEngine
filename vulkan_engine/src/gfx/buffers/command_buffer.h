@@ -1,6 +1,6 @@
 #pragma once
 
-class CommandBuffer
+class CommandBuffer : NonCopyable
 {
 public:
 	CommandBuffer(size_t count = 1);

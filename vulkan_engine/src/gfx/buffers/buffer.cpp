@@ -22,7 +22,7 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlag
 
 	Graphics::vulkanAssert(vkAllocateMemory(*Graphics::logical_device, &allocation_info, nullptr, &memory));
 
-	vkBindBufferMemory(*Graphics::logical_device, buffer, memory, 0);
+	Graphics::vulkanAssert(vkBindBufferMemory(*Graphics::logical_device, buffer, memory, 0));
 }
 
 Buffer::~Buffer()
@@ -86,7 +86,7 @@ void Buffer::copy(VkBuffer destination, VkBuffer source, size_t size)
 void Buffer::setData(const void* data, size_t size, VkDeviceMemory memory)
 {
 	void* buffer_data;
-	vkMapMemory(*Graphics::logical_device, memory, 0, size, 0, &buffer_data);
+	Graphics::vulkanAssert(vkMapMemory(*Graphics::logical_device, memory, 0, size, 0, &buffer_data));
 	std::memcpy(buffer_data, data, size);
 	vkUnmapMemory(*Graphics::logical_device, memory);
 }
