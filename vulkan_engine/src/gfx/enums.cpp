@@ -67,6 +67,10 @@ Type EnumInfo::formatToType(VkFormat format)
 	case VK_FORMAT_R64G64_SFLOAT: return Type::VEC2D;
 	case VK_FORMAT_R64G64B64_SFLOAT: return Type::VEC3D;
 	case VK_FORMAT_R64G64B64A64_SFLOAT: return Type::VEC4D;
+	case VK_FORMAT_R8_SRGB: return Type::FLOAT;
+	case VK_FORMAT_R8G8_SRGB: return Type::VEC2;
+	case VK_FORMAT_R8G8B8_SRGB: return Type::VEC3;
+	case VK_FORMAT_R8G8B8A8_SRGB: return Type::VEC4;
 	}
 
 	VE_CORE_ERROR("Unsupported format specified: {0}", format);

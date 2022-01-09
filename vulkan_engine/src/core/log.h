@@ -44,8 +44,8 @@ inline OStream &operator<<(OStream &os, glm::qua<T, Q> quaternion)
         #define VE_CORE_TRACE(...) Log::getCoreLogger()->trace(__VA_ARGS__)
         #define VE_CORE_INFO(...) Log::getCoreLogger()->info(__VA_ARGS__)
         #define VE_CORE_WARN(...) Log::getCoreLogger()->warn(__VA_ARGS__)
-        #define VE_CORE_ERROR(...) Log::getCoreLogger()->error(__VA_ARGS__)
-        #define VE_CORE_CRITICAL(...) Log::getCoreLogger()->critical(__VA_ARGS__)
+        #define VE_CORE_ERROR(...) Log::getCoreLogger()->error(__VA_ARGS__); VE_DEBUG_BREAK()
+        #define VE_CORE_CRITICAL(...) Log::getCoreLogger()->critical(__VA_ARGS__); VE_DEBUG_BREAK()
         #define VE_CORE_ASSERT(x, ...)      \
             if (!(x))                       \
             {                               \
@@ -56,8 +56,8 @@ inline OStream &operator<<(OStream &os, glm::qua<T, Q> quaternion)
         #define VE_TRACE(...) Log::getClientLogger()->trace(__VA_ARGS__)
         #define VE_INFO(...) Log::getClientLogger()->info(__VA_ARGS__)
         #define VE_WARN(...) Log::getClientLogger()->warn(__VA_ARGS__)
-        #define VE_ERROR(...) Log::getClientLogger()->error(__VA_ARGS__)
-        #define VE_CRITICAL(...) Log::getClientLogger()->critical(__VA_ARGS__)
+        #define VE_ERROR(...) Log::getClientLogger()->error(__VA_ARGS__); VE_DEBUG_BREAK()
+        #define VE_CRITICAL(...) Log::getClientLogger()->critical(__VA_ARGS__); VE_DEBUG_BREAK()
         #define VE_ASSERT(x, ...)      \
             if (!(x))                  \
             {                          \
