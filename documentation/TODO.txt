@@ -11,3 +11,5 @@
 - Support array textures
 - Support multisampled textures
 - Support multisampling
+- Precompute vkGetPhysicalDevice functions (each call costs around 0.015ms)
+- Lots of stuff was written to get stuff working, optimize and clean it up

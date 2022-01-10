@@ -48,6 +48,7 @@ void Graphics::init(GLFWwindow* window)
 	props.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 	props.create_sampler = false;
 	props.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	props.mipmap = false;
 	depth = new Image(props);
 	swap_chain->createFramebuffers(depth->getDescriptorInfo().imageView); //0.036ms
 

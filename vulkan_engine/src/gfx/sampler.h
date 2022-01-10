@@ -6,6 +6,7 @@ struct SamplerProps
 	std::vector<VkSamplerAddressMode> sampler_address_modes;
 	bool anisotropy = true;
 	bool linearMipmap = true;
+	uint32_t mip_levels = 0;
 };
 
 class Sampler

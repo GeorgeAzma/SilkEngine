@@ -28,7 +28,7 @@ Sampler::Sampler(const SamplerProps& props)
 	sampler_info.mipmapMode = props.linearMipmap ? VK_SAMPLER_MIPMAP_MODE_LINEAR : VK_SAMPLER_MIPMAP_MODE_NEAREST;
 	sampler_info.mipLodBias = 0.0f;
 	sampler_info.minLod = 0.0f;
-	sampler_info.maxLod = 0.0f;
+	sampler_info.maxLod = props.mip_levels;
 
 	Graphics::vulkanAssert(vkCreateSampler(*Graphics::logical_device, &sampler_info, nullptr, &sampler));
 }
