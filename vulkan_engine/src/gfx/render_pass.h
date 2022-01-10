@@ -14,15 +14,16 @@ struct Subpass
 	std::vector<VkAttachmentReference> attachment_references;
 	std::vector<VkAttachmentReference> color_attachment_references;
 	VkAttachmentReference depth_attachment_reference;
+	VkAttachmentReference resolve_attachment_reference;
 };
 
 class RenderPass : NonCopyable
 {
 public:
-	RenderPass();
 	~RenderPass();
 
 	RenderPass& addAttachment(uint32_t attachment, VkFormat format, VkImageLayout image_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
+	RenderPass& addResolveAttachment();
 	RenderPass& beginSubpass();
 
 	void build();

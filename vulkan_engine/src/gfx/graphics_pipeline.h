@@ -7,6 +7,7 @@ struct GraphicsPipelineProps
 {
 	Shader* shader = nullptr;
 	BufferLayout buffer_layout;
+	VkSampleCountFlagBits sample_count = VK_SAMPLE_COUNT_1_BIT;
 };
 
 class GraphicsPipeline : NonCopyable

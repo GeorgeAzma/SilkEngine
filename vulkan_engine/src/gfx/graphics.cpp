@@ -45,7 +45,7 @@ void Graphics::init(GLFWwindow* window)
 	props.create_sampler = false;
 	props.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 	props.mipmap = false;
-	//props.samples = physical_device->getMaxSampleCount();
+	props.samples = physical_device->getMaxSampleCount();
 	depth = new Image(props);
 
 	image = new Image("data/images/test.png");
@@ -57,19 +57,20 @@ void Graphics::init(GLFWwindow* window)
 	props.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT 
 		| VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	props.create_sampler = false;
-	props.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; //TODO
+	props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
 	props.mipmap = false;
 	props.samples = physical_device->getMaxSampleCount();
-	//msaa_image = new Image(props);
+	msaa_image = new Image(props);
 
 	render_pass = new RenderPass(); //0.11ms
 	render_pass->beginSubpass()
-		.addAttachment(0, swap_chain->getSurfaceFormat().format, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
-		.addAttachment(1, physical_device->findDepthFormat(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+		.addAttachment(0, swap_chain->getSurfaceFormat().format, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, msaa_image->getProps().samples)
+		.addAttachment(1, physical_device->findDepthFormat(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, msaa_image->getProps().samples)
+		.addResolveAttachment()
 		.build();
 
+	swap_chain->createFramebuffers({ msaa_image->getDescriptorInfo().imageView, depth->getDescriptorInfo().imageView }); //0.036ms
 
-	swap_chain->createFramebuffers(depth->getDescriptorInfo().imageView); //0.036ms
 
 	Shader shader = Shader({
 		"data/cache/shaders/test.vert.spv",
@@ -81,7 +82,7 @@ void Graphics::init(GLFWwindow* window)
 		.build();
 
 	GraphicsPipelineProps graphics_pipeline_props{};
-	graphics_pipeline = new GraphicsPipeline({ &shader, { { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 } } }); //1.35ms
+	graphics_pipeline = new GraphicsPipeline({ &shader, { { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 } }, msaa_image->getProps().samples}); //1.35ms
 
 	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(vertices[0])); //2.4ms
 	index_buffer = new IndexBuffer(indices.data(), indices.size() * sizeof(indices[0])); //0.9ms
@@ -183,7 +184,13 @@ void Graphics::recreateSwapChain() //7.5ms
 	delete depth;
 	depth = new Image(depth_props);
 
-	swap_chain->createFramebuffers(depth->getDescriptorInfo().imageView);
+	ImageProps msaa_props = msaa_image->getProps();
+	msaa_props.width = swap_chain->getExtent().width;
+	msaa_props.height = swap_chain->getExtent().height;
+	delete msaa_image;
+	msaa_image = new Image(msaa_props);
+
+	swap_chain->createFramebuffers({ msaa_image->getDescriptorInfo().imageView, depth->getDescriptorInfo().imageView });
 
 	command_buffer = new CommandBuffer(command_buffers_size);
 	recordCommandBuffers();

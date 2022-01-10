@@ -17,5 +17,6 @@ layout(binding = 1) uniform sampler2D texture_sampler;
 
 void main()
 {
-    color = transform_matrices.color * vec4(fragment_input.color, 1.0) * texture(texture_sampler, fragment_input.texture_coordinates);
+    color = transform_matrices.color * vec4(fragment_input.color, 1.0);
+    color *= texture(texture_sampler, fragment_input.texture_coordinates);
 }
