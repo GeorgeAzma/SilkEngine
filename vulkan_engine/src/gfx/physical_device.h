@@ -32,7 +32,9 @@ public:
 	operator const VkPhysicalDevice& () const { return physical_device; }
 	const QueueFamilyIndices& getQueueFamilyIndices() const { return queue_family_indices; }
 	const VkPhysicalDeviceProperties& getProperties() const { return properties; }
+	const VkFormatProperties& getFormatProperties() const { return format_properties; }
 	const VkPhysicalDeviceFeatures& getFeatures() const { return features; }
+	VkSampleCountFlagBits getMaxSampleCount() const { return max_usable_sample_count; }
 
 	static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
 	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
@@ -45,6 +47,7 @@ private:
 	int ratePhysicalDevice(VkPhysicalDevice physical_device);
 	std::vector<VkExtensionProperties> getAvailablePhysicalDeviceExtensions(VkPhysicalDevice physical_device) const;
 	bool checkPhysicalDeviceExtensionSupport(const std::vector<const char*>& required_extensions, VkPhysicalDevice physical_device) const;
+	VkSampleCountFlagBits getMaxUsableSampleCount() const;
 
 private:
 	VkPhysicalDevice physical_device = VK_NULL_HANDLE;
@@ -53,4 +56,6 @@ private:
 
 	VkPhysicalDeviceProperties properties;
 	VkPhysicalDeviceFeatures features;
+	VkFormatProperties format_properties;
+	VkSampleCountFlagBits max_usable_sample_count;
 };

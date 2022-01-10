@@ -25,6 +25,7 @@ class Graphics
 	static inline VertexBuffer* vertex_buffer = nullptr;
 	static inline IndexBuffer* index_buffer = nullptr;
 	static inline Image* image = nullptr;
+	static inline Image* msaa_image = nullptr;
 	static inline Image* depth = nullptr;
 
 	static void recordCommandBuffers();

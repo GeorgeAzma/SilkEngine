@@ -303,7 +303,7 @@ Image::TransitionInfo Image::getTransitionInfo(VkImageLayout oldLayout, VkImageL
 	}
 	else
 	{
-		VE_CORE_ERROR("unsupported layout transition!");
+		VE_CORE_ERROR("unsupported layout transition: old layout - {0}, new layout - {1}", oldLayout, newLayout);
 	}
 
 	return transition_info;

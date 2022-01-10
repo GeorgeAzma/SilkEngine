@@ -36,10 +36,6 @@ void Graphics::init(GLFWwindow* window)
 	command_pool = new CommandPool(); //0.025ms
 	swap_chain = new SwapChain(); //16ms
 
-	//TODO: IDK how de fuq i can make this user friendly
-
-	render_pass = new RenderPass(); //0.11ms
-
 	VkFormat depth_format = physical_device->findDepthFormat();
 	ImageProps props{};
 	props.width = swap_chain->getExtent().width;
@@ -49,7 +45,30 @@ void Graphics::init(GLFWwindow* window)
 	props.create_sampler = false;
 	props.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 	props.mipmap = false;
+	//props.samples = physical_device->getMaxSampleCount();
 	depth = new Image(props);
+
+	image = new Image("data/images/test.png");
+
+	ImageProps msaa_props{};
+	props.width = swap_chain->getExtent().width;
+	props.height = swap_chain->getExtent().height;
+	props.format = swap_chain->getSurfaceFormat().format;
+	props.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT 
+		| VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	props.create_sampler = false;
+	props.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; //TODO
+	props.mipmap = false;
+	props.samples = physical_device->getMaxSampleCount();
+	//msaa_image = new Image(props);
+
+	render_pass = new RenderPass(); //0.11ms
+	render_pass->beginSubpass()
+		.addAttachment(0, swap_chain->getSurfaceFormat().format, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+		.addAttachment(1, physical_device->findDepthFormat(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+		.build();
+
+
 	swap_chain->createFramebuffers(depth->getDescriptorInfo().imageView); //0.036ms
 
 	Shader shader = Shader({
@@ -64,7 +83,6 @@ void Graphics::init(GLFWwindow* window)
 	GraphicsPipelineProps graphics_pipeline_props{};
 	graphics_pipeline = new GraphicsPipeline({ &shader, { { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 } } }); //1.35ms
 
-	image = new Image("data/images/test.png");
 	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(vertices[0])); //2.4ms
 	index_buffer = new IndexBuffer(indices.data(), indices.size() * sizeof(indices[0])); //0.9ms
 
@@ -176,7 +194,7 @@ void Graphics::recreateSwapChain() //7.5ms
 void Graphics::update()
 {	
 	Graphics::vulkanAssert(vkWaitForFences(*logical_device, 1, &in_flight_fences[current_frame], VK_TRUE, UINT64_MAX));
-	
+
 	//Get next swap chain image
 	uint32_t image_index;
 	VkResult result = vkAcquireNextImageKHR(*logical_device, *swap_chain, UINT64_MAX, image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index);
@@ -214,7 +232,7 @@ void Graphics::update()
 	present_info.pResults = results.data();
 
 	vkQueuePresentKHR(logical_device->getPresentQueue(), &present_info);
-
+	
 	current_frame = (current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
@@ -240,6 +258,7 @@ void Graphics::cleanup() //25ms
 	delete descriptor_pool;
 	delete command_pool;
 	delete image;
+	delete msaa_image;
 	delete depth;
 	delete logical_device;
 	delete physical_device;

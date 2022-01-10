@@ -220,7 +220,7 @@ bool EnumInfo::hasStencil(VkFormat format)
 
 bool EnumInfo::hasDepth(VkFormat format)
 {
-	return hasStencil(format) || format == VK_FORMAT_D32_SFLOAT;
+	return ((format == VK_FORMAT_D32_SFLOAT) || hasStencil(format));
 }
 
 VkImageAspectFlags EnumInfo::getAspectFlags(VkFormat format)
