@@ -46,9 +46,9 @@ GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineProps& props)
 
 	VkPipelineDepthStencilStateCreateInfo depth_stencil_info{};
 	depth_stencil_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-	depth_stencil_info.depthTestEnable = VK_FALSE;
+	depth_stencil_info.depthTestEnable = VK_TRUE;
+	depth_stencil_info.depthWriteEnable = VK_TRUE;
 	depth_stencil_info.stencilTestEnable = VK_FALSE;
-	depth_stencil_info.depthWriteEnable = VK_FALSE;
 	depth_stencil_info.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
 
 	VkPipelineColorBlendAttachmentState color_blend_attachment{};
@@ -93,6 +93,7 @@ GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineProps& props)
 	create_info.layout = pipeline_layout;
 	create_info.renderPass = *Graphics::render_pass;
 	create_info.subpass = 0;
+	create_info.pDepthStencilState = &depth_stencil_info;
 
 	Graphics::vulkanAssert(vkCreateGraphicsPipelines(*Graphics::logical_device, VK_NULL_HANDLE, 1, &create_info, nullptr, &graphics_pipeline));
 }

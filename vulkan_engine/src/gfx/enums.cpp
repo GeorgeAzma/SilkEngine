@@ -71,6 +71,11 @@ Type EnumInfo::formatToType(VkFormat format)
 	case VK_FORMAT_R8G8_SRGB: return Type::VEC2;
 	case VK_FORMAT_R8G8B8_SRGB: return Type::VEC3;
 	case VK_FORMAT_R8G8B8A8_SRGB: return Type::VEC4;
+	case VK_FORMAT_D16_UNORM: return Type::UINT;
+	case VK_FORMAT_D16_UNORM_S8_UINT: return Type::UINT;
+	case VK_FORMAT_D24_UNORM_S8_UINT: return Type::UINT;
+	case VK_FORMAT_D32_SFLOAT_S8_UINT: return Type::FLOAT;
+	case VK_FORMAT_D32_SFLOAT: return Type::FLOAT;
 	}
 
 	VE_CORE_ERROR("Unsupported format specified: {0}", format);
@@ -204,6 +209,35 @@ size_t EnumInfo::rows(Type type)
 	
 	VE_CORE_ERROR("Unsupported type specified: {0}", type);
 	return 0;
+}
+
+bool EnumInfo::hasStencil(VkFormat format)
+{
+	return format == VK_FORMAT_D32_SFLOAT_S8_UINT 
+		|| format == VK_FORMAT_D24_UNORM_S8_UINT
+		|| format == VK_FORMAT_D16_UNORM_S8_UINT;
+}
+
+bool EnumInfo::hasDepth(VkFormat format)
+{
+	return hasStencil(format) || format == VK_FORMAT_D32_SFLOAT;
+}
+
+VkImageAspectFlags EnumInfo::getAspectFlags(VkFormat format)
+{
+	if (!EnumInfo::hasDepth(format))
+	{
+		return VK_IMAGE_ASPECT_COLOR_BIT;
+	}
+	else
+	{
+		if (EnumInfo::hasStencil(format))
+		{
+			return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+		}
+
+		return VK_IMAGE_ASPECT_DEPTH_BIT;
+	}
 }
 
 VkIndexType EnumInfo::indexType(IndexType index_type)

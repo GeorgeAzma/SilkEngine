@@ -14,7 +14,7 @@ public:
     const VkExtent2D& getExtent() const { return extent; }
     const std::vector<Framebuffer*>& getFramebuffers() const { return framebuffers; }
     const std::vector<VkImage>& getImages() const { return images; }
-    void createFramebuffers();
+    void createFramebuffers(VkImageView depth = VK_NULL_HANDLE);
     
 private:
     void chooseSwapChainSurfaceFormat();

@@ -67,3 +67,11 @@ void CommandBuffer::submit(size_t index, const std::vector<VkSemaphore>& wait_se
 
 	Graphics::vulkanAssert(vkQueueSubmit(Graphics::logical_device->getGraphicsQueue(), 1, &submit_info, fence ? *fence : VK_NULL_HANDLE));
 }
+
+void CommandBuffer::wait(VkQueue queue)
+{
+	if (queue != VK_NULL_HANDLE)
+		vkQueueWaitIdle(queue);
+	else
+		vkQueueWaitIdle(Graphics::logical_device->getGraphicsQueue());
+}

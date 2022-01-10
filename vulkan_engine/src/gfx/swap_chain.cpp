@@ -60,14 +60,22 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	}
 }
 
-void SwapChain::createFramebuffers()
+void SwapChain::createFramebuffers(VkImageView depth)
 {
 	if (Graphics::render_pass != nullptr)
 	{
 		for (size_t i = 0; i < image_views.size(); ++i)
 		{
-			if (framebuffers[i]) continue;
-			std::vector<VkImageView> attachments = { *image_views[i] };
+			if (framebuffers[i]) 
+				continue;
+
+			std::vector<VkImageView> attachments;
+
+			attachments.emplace_back(*image_views[i]);
+
+			if (depth != VK_NULL_HANDLE) 
+				attachments.emplace_back(depth);
+
 			framebuffers[i] = new Framebuffer(*Graphics::render_pass, attachments);
 		}
 	}

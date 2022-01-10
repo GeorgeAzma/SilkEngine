@@ -35,6 +35,9 @@ public:
 	const VkPhysicalDeviceFeatures& getFeatures() const { return features; }
 
 	static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
+	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+	VkFormat findDepthFormat();
+	VkFormat findStencilFormat();
 
 private:
 	std::vector<VkPhysicalDevice> getAvailablePhysicalDevices() const;

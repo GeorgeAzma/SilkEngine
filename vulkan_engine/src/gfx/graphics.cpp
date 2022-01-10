@@ -40,7 +40,16 @@ void Graphics::init(GLFWwindow* window)
 
 	render_pass = new RenderPass(); //0.11ms
 
-	swap_chain->createFramebuffers(); //0.036ms
+	VkFormat depth_format = physical_device->findDepthFormat();
+	ImageProps props{};
+	props.width = swap_chain->getExtent().width;
+	props.height = swap_chain->getExtent().height;
+	props.format = depth_format;
+	props.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	props.create_sampler = false;
+	props.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	depth = new Image(props);
+	swap_chain->createFramebuffers(depth->getDescriptorInfo().imageView); //0.036ms
 
 	Shader shader = Shader({
 		"data/cache/shaders/test.vert.spv",
@@ -54,22 +63,28 @@ void Graphics::init(GLFWwindow* window)
 	GraphicsPipelineProps graphics_pipeline_props{};
 	graphics_pipeline = new GraphicsPipeline({ &shader, { { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 } } }); //1.35ms
 
+	image = new Image("data/images/test.png");
 	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(vertices[0])); //2.4ms
 	index_buffer = new IndexBuffer(indices.data(), indices.size() * sizeof(indices[0])); //0.9ms
-	image = new Image("data/images/test.png");
 
-	for(size_t i = 0; i < swap_chain->getImages().size(); ++i)
+	for (size_t i = 0; i < swap_chain->getImages().size(); ++i)
+	{
 		uniform_buffers.emplace_back(std::make_shared<UniformBuffer>(sizeof(ColorUniformBuffer)));
+
+		glm::vec4 color = glm::vec4(0, 1, 1, 1);
+		uniform_buffers[i]->setData(&color);
+	}
 
 	descriptor_pool = new DescriptorPool();
 	descriptor_pool->addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, swap_chain->getImages().size())
 		.addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, swap_chain->getImages().size())
-		.setMaxSets(swap_chain->getImages().size()).build();
+		.setMaxSets(swap_chain->getImages().size() * 2).build();
 
 	descriptor_set = new DescriptorSet(*descriptor_set_layout, swap_chain->getImages().size());
 	for(size_t i = 0; i < uniform_buffers.size(); ++i)
 		descriptor_set->addBuffer(0, { *uniform_buffers[i], 0, VK_WHOLE_SIZE });
-	descriptor_set->build();
+	descriptor_set->addImage(1, image)
+		.build();
 
 	//Staticly recorded command buffer
 	command_buffer = new CommandBuffer(swap_chain->getFramebuffers().size());//0.025ms
@@ -142,8 +157,14 @@ void Graphics::recreateSwapChain() //7.5ms
 
 	size_t command_buffers_size = command_buffer->getCommandBuffers().size();
 	delete command_buffer;
-	
-	swap_chain->createFramebuffers();
+
+	ImageProps depth_props = depth->getProps();
+	depth_props.width = swap_chain->getExtent().width;
+	depth_props.height = swap_chain->getExtent().height;
+	delete depth;
+	depth = new Image(depth_props);
+
+	swap_chain->createFramebuffers(depth->getDescriptorInfo().imageView);
 
 	command_buffer = new CommandBuffer(command_buffers_size);
 	recordCommandBuffers();
@@ -165,12 +186,7 @@ void Graphics::update()
 		return;
 	}
 	if (result != VK_SUBOPTIMAL_KHR)
-	{
 		Graphics::vulkanAssert(result);
-	}
-
-	glm::vec4 color = glm::vec4(1, 1, (float)rand() / RAND_MAX, 1);
-	uniform_buffers[image_index]->setData(&color);
 
 	//Check if previous frame is using this image
 	if (images_in_flight[image_index] != VK_NULL_HANDLE) 
@@ -223,6 +239,7 @@ void Graphics::cleanup() //25ms
 	delete descriptor_pool;
 	delete command_pool;
 	delete image;
+	delete depth;
 	delete logical_device;
 	delete physical_device;
 	delete surface;

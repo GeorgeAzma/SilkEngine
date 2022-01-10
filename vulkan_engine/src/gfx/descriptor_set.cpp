@@ -35,7 +35,7 @@ DescriptorSet& DescriptorSet::addBuffer(uint32_t binding, VkDescriptorBufferInfo
 	return *this;
 }
 
-DescriptorSet& DescriptorSet::addImage(uint32_t binding, VkDescriptorImageInfo image_info)
+DescriptorSet& DescriptorSet::addImage(uint32_t binding, const Image* image)
 {
 	for (size_t i = 0; i < descriptor_sets.size(); ++i)
 	{
@@ -46,7 +46,7 @@ DescriptorSet& DescriptorSet::addImage(uint32_t binding, VkDescriptorImageInfo i
 		descriptor_write.dstArrayElement = 0;
 		descriptor_write.descriptorType = layout->bindings.at(binding).descriptorType;
 		descriptor_write.descriptorCount = 1;
-		descriptor_write.pImageInfo = &image_info;
+		descriptor_write.pImageInfo = &image->getDescriptorInfo();
 		descriptor_writes.emplace_back(std::move(descriptor_write));
 	}
 
