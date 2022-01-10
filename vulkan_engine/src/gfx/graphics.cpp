@@ -98,7 +98,7 @@ void Graphics::init(GLFWwindow* window)
 	descriptor_pool = new DescriptorPool();
 	descriptor_pool->addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, swap_chain->getImages().size())
 		.addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, swap_chain->getImages().size())
-		.setMaxSets(swap_chain->getImages().size() * 2).build();
+		.setMaxSets(64).build();
 
 	descriptor_set = new DescriptorSet(*descriptor_set_layout, swap_chain->getImages().size());
 	for(size_t i = 0; i < uniform_buffers.size(); ++i)

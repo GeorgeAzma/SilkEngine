@@ -14,3 +14,6 @@
 - Precompute vkGetPhysicalDevice functions (each call costs around 0.015ms)
 - Lots of stuff was written to get stuff working, optimize and clean it up
 - Fix dirty swap chain code
+- Write custom 3D model loader/converter
+- Write camera system
+- Integrate entity component system
