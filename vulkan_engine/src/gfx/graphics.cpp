@@ -71,10 +71,11 @@ void Graphics::init(GLFWwindow* window)
 
 	swap_chain->createFramebuffers({ msaa_image->getDescriptorInfo().imageView, depth->getDescriptorInfo().imageView }); //0.036ms
 
-
-	Shader shader = Shader({
+	Shader shader = Shader
+	({
 		"data/cache/shaders/test.vert.spv",
-		"data/cache/shaders/test.frag.spv" }); //1.65ms
+		"data/cache/shaders/test.frag.spv" 
+	}); //1.65ms
 
 	descriptor_set_layout = new DescriptorSetLayout();
 	descriptor_set_layout->addBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT)
@@ -82,7 +83,17 @@ void Graphics::init(GLFWwindow* window)
 		.build();
 
 	GraphicsPipelineProps graphics_pipeline_props{};
-	graphics_pipeline = new GraphicsPipeline({ &shader, { { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 } }, msaa_image->getProps().samples}); //1.35ms
+	graphics_pipeline = new GraphicsPipeline(); //1.35ms
+	graphics_pipeline->addDynamicState(VK_DYNAMIC_STATE_VIEWPORT)
+	    .addDynamicState(VK_DYNAMIC_STATE_SCISSOR)
+		.enable(EnableTag::COLOR_BLENDING)
+		.enable(EnableTag::DEPTH_TEST)
+		.enable(EnableTag::DEPTH_WRITE)
+		.addDescriptorSetLayout(*descriptor_set_layout)
+		.setShader(shader)
+		.setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 } })
+		.setSampleCount(msaa_image->getProps().samples)
+		.build();
 
 	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(vertices[0])); //2.4ms
 	index_buffer = new IndexBuffer(indices.data(), indices.size() * sizeof(indices[0])); //0.9ms
@@ -96,8 +107,8 @@ void Graphics::init(GLFWwindow* window)
 	}
 
 	descriptor_pool = new DescriptorPool();
-	descriptor_pool->addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, swap_chain->getImages().size())
-		.addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, swap_chain->getImages().size())
+	descriptor_pool->addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1)
+		.addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
 		.setMaxSets(64).build();
 
 	descriptor_set = new DescriptorSet(*descriptor_set_layout, swap_chain->getImages().size());

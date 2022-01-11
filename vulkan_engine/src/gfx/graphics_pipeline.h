@@ -1,7 +1,9 @@
 #pragma once
 
+#include "enums.h"
 #include "shader.h"
 #include "buffers/buffer_layout.h"
+#include "descriptor_set_layout.h"
 
 struct GraphicsPipelineProps
 {
@@ -13,20 +15,41 @@ struct GraphicsPipelineProps
 class GraphicsPipeline : NonCopyable
 {
 public:
-	GraphicsPipeline(const GraphicsPipelineProps& props);
 	~GraphicsPipeline();
+
+	GraphicsPipeline& setShader(const Shader& shader);
+	GraphicsPipeline& setVertexLayout(const BufferLayout& layout);
+	GraphicsPipeline& setSampleCount(VkSampleCountFlagBits sample_count);
+	GraphicsPipeline& addDescriptorSetLayout(const DescriptorSetLayout& layout);
+	GraphicsPipeline& addDynamicState(VkDynamicState dynamic_state);
+	GraphicsPipeline& addPushConstant(size_t size, VkShaderStageFlagBits shader_stages, size_t offset = 0);
+	GraphicsPipeline& enable(EnableTag tag);
+
+	void build();
 
 	void bind(VkPipelineBindPoint bind_point = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS);
 
-	const GraphicsPipelineProps& getProps() const { return props; }
 	const VkPipelineLayout& getLayout() const { return pipeline_layout; }
 
 	operator const VkPipeline& () const { return graphics_pipeline; }
 
 private:
-	static const std::vector<VkDynamicState> dynamic_states;
 	VkPipelineLayout pipeline_layout;
 	VkPipeline graphics_pipeline;
-	GraphicsPipelineProps props;
 	VkPipelineBindPoint bind_point = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+
+private:
+	std::vector<VkDynamicState> dynamic_states;
+	VkPipelineVertexInputStateCreateInfo vertex_input_info{};
+	VkPipelineLayoutCreateInfo pipeline_layout_info{};
+	VkPipelineRasterizationStateCreateInfo rasterizer{};
+	VkPipelineMultisampleStateCreateInfo multisampling{};
+	VkPipelineDepthStencilStateCreateInfo depth_stencil_info{};
+	VkPipelineColorBlendAttachmentState color_blend_attachment{};
+	VkPipelineColorBlendStateCreateInfo color_blending{};
+	VkPipelineViewportStateCreateInfo viewport_info{};
+	VkPipelineInputAssemblyStateCreateInfo input_assembly_info{};
+	VkGraphicsPipelineCreateInfo create_info{};
+	std::vector<VkPushConstantRange> push_constant_ranges;
+	std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
 };
