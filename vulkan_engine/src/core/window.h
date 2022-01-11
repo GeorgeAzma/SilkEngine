@@ -40,7 +40,6 @@ public:
     bool isVsync() const { return data.vsync; }
     bool isTransparent() const { return transparent; }
     bool isMinimized() const { return data.width == 0 || data.height == 0; }
-    const glm::mat4 &getProjection() const { return data.projection; }
     void setVsync(bool vsync);
     void setFullscreen(bool fullscreen);
     void setX(int x);
@@ -52,8 +51,6 @@ public:
     void setTitle(const char* title);
     void align(WindowAlignment a = WindowAlignment::CENTER);
     // void setIcon(std::shared_ptr<Texture> icon);
-private:
-    void updateProjection();
 
 private:
     GLFWwindow *window;
@@ -65,7 +62,6 @@ private:
         bool fullscreen;
         bool vsync;
         int x, y;
-        glm::mat4 projection;
 
         struct Input
         {

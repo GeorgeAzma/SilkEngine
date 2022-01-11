@@ -8,10 +8,10 @@
 
 static const std::vector<Vertex> vertices =
 {
-	{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-	{{0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-	{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-	{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}}
+	{{-0.5f, -0.5f, 1.0f}, {1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+	{{0.5f, -0.5f, 1.0f}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+	{{0.5f, 0.5f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+	{{-0.5f, 0.5f, 1.0f}, {1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}}
 };
 
 static const std::vector<uint32_t> indices =
@@ -19,9 +19,9 @@ static const std::vector<uint32_t> indices =
 	0, 1, 2, 2, 3, 0
 };
 
-struct ColorUniformBuffer
+struct Transforms
 {
-	glm::vec4 color = glm::vec4(0, 0, 0, 1);
+	glm::mat4 projection_view;
 };
 
 void Graphics::init(GLFWwindow* window)
@@ -78,7 +78,7 @@ void Graphics::init(GLFWwindow* window)
 	}); //1.65ms
 
 	descriptor_set_layout = new DescriptorSetLayout();
-	descriptor_set_layout->addBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT)
+	descriptor_set_layout->addBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT)
 		.addBinding(1, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT)
 		.build();
 
@@ -100,10 +100,7 @@ void Graphics::init(GLFWwindow* window)
 
 	for (size_t i = 0; i < swap_chain->getImages().size(); ++i)
 	{
-		uniform_buffers.emplace_back(std::make_shared<UniformBuffer>(sizeof(ColorUniformBuffer)));
-
-		glm::vec4 color = glm::vec4(0, 1, 1, 1);
-		uniform_buffers[i]->setData(&color);
+		uniform_buffers.emplace_back(std::make_shared<UniformBuffer>(sizeof(Transforms)));
 	}
 
 	descriptor_pool = new DescriptorPool();
@@ -248,6 +245,11 @@ void Graphics::update()
 	present_info.pImageIndices = &image_index;
 	std::vector<VkResult> results(swap_chains.size());
 	present_info.pResults = results.data();
+
+	glm::mat4 projection = glm::perspective(glm::radians(80.0f), ((float)swap_chain->getExtent().width / swap_chain->getExtent().height), 0.01f, 1000.0f);
+	glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 projection_view = projection * view;
+	uniform_buffers[image_index]->setData(&projection_view);
 
 	vkQueuePresentKHR(logical_device->getPresentQueue(), &present_info);
 	

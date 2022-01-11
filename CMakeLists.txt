@@ -25,9 +25,7 @@ find_package(Vulkan REQUIRED FATAL_ERROR)
 list(APPEND INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 list(APPEND EXTRA_LIBS ${Vulkan_LIBRARIES})
 
-
 #thread_pool
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/thread_pool/.git)
 FetchContent_Declare(THREAD_POOL
 GIT_REPOSITORY  https://github.com/bshoshany/thread-pool
 GIT_TAG         v2.0.0
@@ -36,11 +34,9 @@ SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/thread_pool
 )
 FetchContent_MakeAvailable(THREAD_POOL)
 FetchContent_GetProperties(THREAD_POOL)
-endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/thread_pool)
 
 #spdlog
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/spdlog/.git)
 FetchContent_Declare(SPDLOG
 GIT_REPOSITORY  https://github.com/gabime/spdlog
 GIT_TAG         v1.9.2
@@ -49,7 +45,6 @@ SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/spdlog
 )
 FetchContent_MakeAvailable(SPDLOG)
 FetchContent_GetProperties(SPDLOG)
-endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
 
 find_package(Threads REQUIRED)
@@ -57,7 +52,6 @@ find_package(Threads REQUIRED)
 #glfw
 set(glfw_build FALSE)
 list(APPEND DEPENDENCIES_TO_ADD glfw_build)
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/glfw/include)
 ExternalProject_Add(GLFW
 GIT_REPOSITORY  https://github.com/glfw/glfw
 GIT_TAG         3.3.5
@@ -68,7 +62,6 @@ CMAKE_ARGS   -DGLFW_BUILD_EXAMPLES=OFF
              -DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/vendor/glfw
 )
 set(glfw_build TRUE)
-endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glfw/include)
 if(WIN32)
     list(APPEND EXTRA_LIBS ${PROJECT_SOURCE_DIR}/vendor/glfw/lib/glfw3.lib)
@@ -77,7 +70,6 @@ else()
 endif()
 
 #glm
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/glm/cmake)
 FetchContent_Declare(GLM
 GIT_REPOSITORY  https://github.com/g-truc/glm
 GIT_TAG origin/master
@@ -89,11 +81,23 @@ INSTALL_COMMAND ""
 )
 FetchContent_MakeAvailable(GLM)
 FetchContent_GetProperties(GLM)
-endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glm)
 
+#entt
+FetchContent_Declare(ENTT
+GIT_REPOSITORY  https://github.com/skypjack/entt
+GIT_TAG origin/master
+GIT_SHALLOW     ON
+SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/entt
+BUILD_COMMAND ""
+CONFIGURE_COMMAND ""
+INSTALL_COMMAND ""
+)
+FetchContent_MakeAvailable(ENTT)
+FetchContent_GetProperties(ENTT)
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/entt)
+
 #stb
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/stb/.git)
 FetchContent_Declare(STB
 GIT_REPOSITORY   https://github.com/nothings/stb
 GIT_TAG origin/master
@@ -105,20 +109,18 @@ INSTALL_COMMAND ""
 )
 FetchContent_MakeAvailable(STB)
 FetchContent_GetProperties(STB)
-endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/stb)
 
 #assimp
 set(assimp_build FALSE)
 list(APPEND DEPENDENCIES_TO_ADD assimp_build)
-if(NOT EXISTS ${PROJECT_BINARY_DIR}/vendor/assimp/lib/$<IF:$<CONFIG:Debug>,zlibstaticd${CMAKE_STATIC_LIBRARY_SUFFIX},zlibstatic${CMAKE_STATIC_LIBRARY_SUFFIX}>)
 ExternalProject_Add(ASSIMP
-GIT_REPOSITORY  https://github.com/assimp/assimp.git
+GIT_REPOSITORY  https://github.com/assimp/assimp
 GIT_TAG         v5.0.0
 GIT_SHALLOW     ON
 UPDATE_COMMAND  ""
-CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_BINARY_DIR}/vendor/assimp/lib
-                -DASSIMP_INCLUDE_INSTALL_DIR=${PROJECT_BINARY_DIR}/vendor/assimp/include
+CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_SOURCE_DIR}/vendor/assimp/lib
+                -DASSIMP_INCLUDE_INSTALL_DIR=${PROJECT_SOURCE_DIR}/vendor/assimp/include
                 -DASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT:BOOL=OFF
                 -DASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT:BOOL=OFF
                 -DASSIMP_BUILD_ASSIMP_TOOLS:BOOL=OFF
@@ -135,14 +137,13 @@ CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_BINARY_DIR}/vendor/assimp/lib
                 -DCMAKE_POLICY_DEFAULT_CMP0091:STRING=NEW
 )
 set(assimp_build TRUE)
-endif()
-list(APPEND INCLUDE_DIRS "${PROJECT_BINARY_DIR}/vendor/assimp/include")
+list(APPEND INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/vendor/assimp/include")
 if(MSVC)
 list(APPEND EXTRA_LIBS "assimp" "$<IF:$<CONFIG:Debug>,zlibstaticd,zlibstatic>" "irrXML")
 else()
 	list(APPEND EXTRA_LIBS assimp zlibstatic irrXML)
 endif()
-link_directories("${PROJECT_BINARY_DIR}/vendor/assimp/lib")
+link_directories("${PROJECT_SOURCE_DIR}/vendor/assimp/lib")
 
 #Sub dirs
 ############################__VULKAN ENGINE__#####################################
@@ -152,7 +153,7 @@ file(GLOB_RECURSE VULKAN_ENGINE_SOURCES
 "vulkan_engine/src/*.hpp")
 
 #Create VulkanEngine.lib
-add_library(VulkanEngine STATIC ${VULKAN_ENGINE_SOURCES})
+add_library(VulkanEngine STATIC ${VULKAN_ENGINE_SOURCES} "vulkan_engine/src/utils/math.h")
 
 #Include dirs
 target_include_directories(VulkanEngine PUBLIC 
@@ -232,7 +233,7 @@ vulkan_engine/src/core/log.h)
 ############################__SANDBOX__#####################################
 file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp" "sandbox/src/*.h" "sandbox/src/*.hpp")
 
-add_executable(Sandbox ${SANDBOX_SOURCES})
+add_executable(Sandbox ${SANDBOX_SOURCES} "vulkan_engine/src/utils/math.h")
 
 target_link_libraries(Sandbox PRIVATE VulkanEngine)
 

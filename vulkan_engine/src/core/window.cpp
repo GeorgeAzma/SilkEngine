@@ -18,7 +18,6 @@ Window::Window(const WindowProps &props)
     data.y = 0;
     data.fullscreen = false;
     data.vsync = false;
-    updateProjection();
 
     if (!GLFW_initialized)
     {
@@ -54,7 +53,6 @@ Window::Window(const WindowProps &props)
             Data &data = *(Data *)glfwGetWindowUserPointer(window);
             data.width = width;
             data.height = height;
-            data.projection = glm::ortho(0.0f, (float)width, 0.0f, (float)height);
             Dispatcher::post(WindowResizeEvent(data.width, data.height, window));
         });
 
@@ -206,7 +204,6 @@ void Window::setWidth(unsigned int width)
     data.width = width;
     align();
     glfwSetWindowSize(window, data.width, data.height);
-    updateProjection();
 }
 
 void Window::setHeight(unsigned int height)
@@ -216,7 +213,6 @@ void Window::setHeight(unsigned int height)
     data.height = height;
     align();
     glfwSetWindowSize(window, data.width, data.height);
-    updateProjection();
 }
 
 void Window::setSize(const glm::uvec2 &size)
@@ -227,7 +223,6 @@ void Window::setSize(const glm::uvec2 &size)
     data.height = size.y;
     align();
     glfwSetWindowSize(window, data.width, data.height);
-    updateProjection();
 }
 
 void Window::setTitle(const const char *title)
@@ -297,8 +292,3 @@ void Window::align(WindowAlignment a)
 //     glfwSetWindowIcon(m_window, 1, images);
 //     delete[] images[0].pixels;
 // }
-
-void Window::updateProjection()
-{
-    data.projection = glm::ortho(0.0f, (float)data.width, 0.0f, (float)data.height);
-}

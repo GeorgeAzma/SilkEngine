@@ -60,6 +60,7 @@ VkFormat PhysicalDevice::findSupportedFormat(const std::vector<VkFormat>& candid
 	}
 
 	VE_CORE_ERROR("Vulkan: Couldn't find supported format");
+	return VkFormat(0);
 }
 
 VkFormat PhysicalDevice::findDepthFormat()

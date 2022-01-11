@@ -10,9 +10,14 @@ layout(location = 0) out VertexOutput
     vec3 color;
 } vertex_output;
 
+layout(binding = 0) uniform Transforms
+{
+    mat4 projection_view;
+} transforms;
+
 void main()
 {
-    gl_Position = vec4(in_position, 1.0);
+    gl_Position = transforms.projection_view * vec4(in_position, 1.0);
     vertex_output.texture_coordinates = in_texture_coordinates;
     vertex_output.color = in_color;
 }

@@ -18,7 +18,7 @@ bool FixedUpdate::update()
             fps = std::numeric_limits<decltype(fps)>::max();
 
         ++frames;
-        elapsed = 0;
+        elapsed = 0;  
         return true;
     }
     return false;
