@@ -1,18 +1,27 @@
 #include "sandbox_app.h"
-#include "sandbox.h"
+
+Scene scene;
+std::shared_ptr<Entity> camera;
 
 SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 {
-    pushLayer(new Sandbox());
-
     window->setSize({ 800, 600 });
+    camera = std::make_shared<Entity>(scene.createEntity());
+    camera->addComponent<TransformComponent>();
+    camera->addComponent<CameraComponent>();
+    camera->addComponent<ScriptComponent>().bind<CameraController>();
+    scene.onPlay();
+}
+
+void SandboxApp::onUpdate()
+{
+    scene.onUpdate();
 }
 
 SandboxApp::~SandboxApp()
 {
+    scene.onStop();
 }
-
-
 
 //CREATE APP
 Application *createApp(ApplicationCommandLineArgs args)

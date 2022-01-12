@@ -1,7 +1,9 @@
 #include "application.h"
+#include "input.h"
 #include "utils/delta.h"
 #include "time.h"
 #include "gfx/graphics.h"
+#include "utils/timers.h"
 
 Application::Application(const char* name, ApplicationCommandLineArgs args)
     : command_line_args(args), app_update(0.0)
@@ -12,6 +14,8 @@ Application::Application(const char* name, ApplicationCommandLineArgs args)
     WindowProps props{};
     props.title = name;
     window = std::make_shared<Window>(props);
+
+    Input::init();
     
     Dispatcher::subscribe(this, &Application::onWindowClose);
 
@@ -39,6 +43,9 @@ void Application::pushOverlay(Layer *layer)
 
 void Application::run()
 {
+    using namespace std::chrono_literals;
+    Timers::every(0.5s, [this] { VE_CORE_TRACE("{0} FPS ({1:.4} ms)", app_update.getFPS(), (app_update.getDeltaTime() * 1000)); });
+
     while (running)
     {
         if (app_update.update())
@@ -49,15 +56,14 @@ void Application::run()
                 Time::frames = app_update.getFramesPassed();
                 Time::runtime = app_update.getRuntime();
 
-                if (Time::frames % 1024 == 0)
-                {
-                    VE_CORE_TRACE("{0} FPS ({1:.4} ms)", app_update.getFPS(), (app_update.getDeltaTime() * 1000));
-                }
+                Graphics::update(); 
 
-                Graphics::update();
+                onUpdate();
 
                 for (Layer *layer : layer_stack)
                     layer->onUpdate();
+
+                Timers::update();
             }
 
             window->update();

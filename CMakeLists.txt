@@ -95,7 +95,7 @@ INSTALL_COMMAND ""
 )
 FetchContent_MakeAvailable(ENTT)
 FetchContent_GetProperties(ENTT)
-list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/entt)
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/entt/src)
 
 #stb
 FetchContent_Declare(STB
@@ -148,9 +148,7 @@ link_directories("${PROJECT_SOURCE_DIR}/vendor/assimp/lib")
 #Sub dirs
 ############################__VULKAN ENGINE__#####################################
 file(GLOB_RECURSE VULKAN_ENGINE_SOURCES 
-"vulkan_engine/src/*.cpp" 
-"vulkan_engine/src/*.h" 
-"vulkan_engine/src/*.hpp")
+"vulkan_engine/src/*.cpp")
 
 #Create VulkanEngine.lib
 add_library(VulkanEngine STATIC ${VULKAN_ENGINE_SOURCES} "vulkan_engine/src/utils/math.h")
@@ -227,11 +225,12 @@ vulkan_engine/src/core/base.h
 <GLM/gtx/quaternion.hpp>
 <vulkan/vulkan.h>
 <GLFW/glfw3.h>
+<entt/entt.hpp>
 vulkan_engine/src/core/log.h)
 
 
 ############################__SANDBOX__#####################################
-file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp" "sandbox/src/*.h" "sandbox/src/*.hpp")
+file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp")
 
 add_executable(Sandbox ${SANDBOX_SOURCES} "vulkan_engine/src/utils/math.h")
 

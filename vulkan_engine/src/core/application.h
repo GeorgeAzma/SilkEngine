@@ -30,6 +30,9 @@ public:
 
     ApplicationCommandLineArgs getCommandLineArgs() const { return command_line_args; }
 
+protected:
+    virtual void onUpdate() = 0;
+
 private:
     void run();
     void onWindowClose(const WindowCloseEvent &e);

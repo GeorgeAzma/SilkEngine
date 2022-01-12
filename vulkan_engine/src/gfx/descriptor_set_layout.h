@@ -2,6 +2,7 @@
 
 class DescriptorSetLayout : NonCopyable
 {
+	friend class DescriptorSet;
 public:
 	~DescriptorSetLayout();
 
@@ -13,5 +14,4 @@ public:
 private:
 	VkDescriptorSetLayout layout;
 	std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings;
-	friend class DescriptorSet;
 };

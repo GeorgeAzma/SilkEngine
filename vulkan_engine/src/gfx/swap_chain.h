@@ -5,6 +5,7 @@
 
 class SwapChain : NonCopyable
 {
+    friend class PhysicalDevice;
 public:
     SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain = {});
     ~SwapChain();
@@ -32,6 +33,4 @@ private:
     VkExtent2D extent;
     std::vector<ImageView*> image_views;
     std::vector<Framebuffer*> framebuffers;
-
-    friend class PhysicalDevice;
 };

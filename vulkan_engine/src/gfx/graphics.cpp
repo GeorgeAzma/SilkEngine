@@ -5,6 +5,7 @@
 #include "enums.h"
 #include "graphics_state.h"
 #include "buffers/buffer_layout.h"
+#include "core/time.h"
 
 static const std::vector<Vertex> vertices =
 {
@@ -28,6 +29,9 @@ void Graphics::init(GLFWwindow* window)
 {
 	VE_CORE_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
 	Graphics::window = window;
+
+	Dispatcher::subscribe(onWindowResize);
+
 	//These most likely won't change
 	instance = new Instance(); //70ms
 	surface = new Surface(); //0.05ms
@@ -168,6 +172,7 @@ void Graphics::recordCommandBuffers()
 
 		descriptor_set->bind(i);
 
+		for(size_t i = 0 ; i < 512; ++i)
 		vkCmdDrawIndexed(*graphics_state.command_buffer, indices.size(), 1, 0, 0, 0);
 
 		render_pass->end();
@@ -212,21 +217,19 @@ void Graphics::update()
 
 	//Get next swap chain image
 	uint32_t image_index;
-	VkResult result = vkAcquireNextImageKHR(*logical_device, *swap_chain, UINT64_MAX, image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index);
+	Graphics::vulkanAssert(vkAcquireNextImageKHR(*logical_device, *swap_chain, UINT64_MAX, image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index));
 
-	if (result == VK_ERROR_OUT_OF_DATE_KHR)
-	{
-		recreateSwapChain();
-		return;
-	}
-	if (result != VK_SUBOPTIMAL_KHR)
-		Graphics::vulkanAssert(result);
+	glm::mat4 projection = glm::perspective(glm::radians(80.0f), ((float)swap_chain->getExtent().width / swap_chain->getExtent().height), 0.01f, 1000.0f);
+	glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 projection_view = glm::rotate(projection * view, (float)Time::runtime, { 0.0f, 0.0f, 1.0f });
+	uniform_buffers[image_index]->setData(&projection_view);
 
 	//Check if previous frame is using this image
 	if (images_in_flight[image_index] != VK_NULL_HANDLE) 
 	{
 		Graphics::vulkanAssert(vkWaitForFences(*logical_device, 1, &images_in_flight[image_index], VK_TRUE, UINT64_MAX));
 	}
+	images_in_flight[image_index] = in_flight_fences[current_frame];
 
 	//Submit the command buffer
 	const std::vector<VkSemaphore> signal_semaphores = { render_finished_semaphores[current_frame] };
@@ -245,11 +248,6 @@ void Graphics::update()
 	present_info.pImageIndices = &image_index;
 	std::vector<VkResult> results(swap_chains.size());
 	present_info.pResults = results.data();
-
-	glm::mat4 projection = glm::perspective(glm::radians(80.0f), ((float)swap_chain->getExtent().width / swap_chain->getExtent().height), 0.01f, 1000.0f);
-	glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 projection_view = projection * view;
-	uniform_buffers[image_index]->setData(&projection_view);
 
 	vkQueuePresentKHR(logical_device->getPresentQueue(), &present_info);
 	
@@ -292,7 +290,8 @@ void Graphics::onWindowResize(const WindowResizeEvent& e)
 {
 	if (e.window == window)
 	{
-		framebuffer_resized = true;
+		recreateSwapChain();
+		update();
 	}
 }
 

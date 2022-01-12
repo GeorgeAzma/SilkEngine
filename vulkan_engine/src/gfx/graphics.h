@@ -66,5 +66,4 @@ private:
 	static inline std::vector<VkFence> images_in_flight = {};
 
 	static inline uint32_t current_frame = 0;
-	static inline bool framebuffer_resized = false;
 };

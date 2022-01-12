@@ -60,7 +60,7 @@ void CommandBuffer::submit(size_t index, const std::vector<VkSemaphore>& wait_se
 	submit_info.signalSemaphoreCount = signal_semaphores.size();
 	submit_info.pSignalSemaphores = signal_semaphores.data();
 
-	if (fence)
+	if (fence != VK_NULL_HANDLE)
 	{
 		Graphics::vulkanAssert(vkResetFences(*Graphics::logical_device, 1, fence));
 	}

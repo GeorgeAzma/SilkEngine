@@ -37,6 +37,7 @@ private:
 	VkPipelineLayout pipeline_layout;
 	VkPipeline graphics_pipeline;
 	VkPipelineBindPoint bind_point = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+	VkPipelineCache cache;
 
 private:
 	std::vector<VkDynamicState> dynamic_states;

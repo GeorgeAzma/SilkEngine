@@ -53,7 +53,9 @@ Disclaimer: Following these notes isn't neccessary but would be preferable
 - Prefer using smart pointers unless object lifetime is relative to 
   the program (or even base class), or if memory requires special handling
 - Create seperate access specifier for member functions and variables
-
+- Declarations like "friend class SomeClass;" should go on top 
+  of the class, even on top of access specifiers and it should 
+  be in implicit private access specifier
 
 ---------------- Shaders ----------------
 
