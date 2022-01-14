@@ -11,10 +11,10 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_u
 	buffer_info.usage = usage;
 	buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	VmaAllocationCreateInfo vma_allocation_info = {};
-	vma_allocation_info.usage = vma_usage;
+	VmaAllocationCreateInfo allocation_info = {};
+	allocation_info.usage = vma_usage;
 
-	vmaCreateBuffer(*Graphics::allocator, &buffer_info, &vma_allocation_info, &buffer, &allocation, nullptr);
+	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &buffer_info, &allocation_info, &buffer, &allocation, nullptr));
 }
 
 Buffer::~Buffer()

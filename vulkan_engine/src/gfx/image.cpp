@@ -22,8 +22,7 @@ Image::~Image()
 	staging_buffer = nullptr;
 	view = nullptr;
 	sampler = nullptr;
-	vkDestroyImage(*Graphics::logical_device, image, nullptr);
-	vkFreeMemory(*Graphics::logical_device, memory, nullptr);
+	vmaDestroyImage(*Graphics::allocator, image, allocation);
 }
 
 void Image::load(const std::string& file)
@@ -64,19 +63,10 @@ void Image::create(const ImageProps& props)
 	create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	create_info.samples = props.samples;
 
-	Graphics::vulkanAssert(vkCreateImage(*Graphics::logical_device, &create_info, nullptr, &image));
+	VmaAllocationCreateInfo allocation_info = {};
+	allocation_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-	VkMemoryRequirements memory_requirements;
-	vkGetImageMemoryRequirements(*Graphics::logical_device, image, &memory_requirements);
-
-	VkMemoryAllocateInfo allocation_info{};
-	allocation_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocation_info.allocationSize = memory_requirements.size;
-	allocation_info.memoryTypeIndex = Buffer::findMemoryType(memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-	Graphics::vulkanAssert(vkAllocateMemory(*Graphics::logical_device, &allocation_info, nullptr, &memory));
-
-	vkBindImageMemory(*Graphics::logical_device, image, memory, 0);
+	Graphics::vulkanAssert(vmaCreateImage(*Graphics::allocator, &create_info, &allocation_info, &image, &allocation, nullptr));
 
 	if (staging_buffer.get() != nullptr)
 	{

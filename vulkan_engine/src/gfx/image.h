@@ -3,6 +3,7 @@
 #include "buffers/staging_buffer.h"
 #include "image_view.h"
 #include "sampler.h"
+#include <vk_mem_alloc.h>
 
 struct ImageProps
 {
@@ -60,7 +61,7 @@ private:
 	VkDescriptorImageInfo descriptor_image_info = {};
 	std::unique_ptr<Sampler> sampler;
 	std::unique_ptr<ImageView> view = nullptr;
-	VkDeviceMemory memory;
+	VmaAllocation allocation;
 	std::unique_ptr<StagingBuffer> staging_buffer = nullptr;
 	ImageProps props = {};
 	uint32_t mip_levels = 1;
