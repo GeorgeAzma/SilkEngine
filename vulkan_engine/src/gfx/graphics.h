@@ -15,6 +15,7 @@
 #include "buffers/index_buffer.h"
 #include "image.h"
 #include "scene/vertex.h"
+#include "allocator.h"
 
 class WindowResizeEvent;
 
@@ -32,10 +33,13 @@ public:
 	static void vulkanAssert(VkResult result);
 
 public:
+	static constexpr uint32_t API_VERSION = VK_API_VERSION_1_2;
+
 	static inline Instance* instance = nullptr;
 	static inline Surface* surface = nullptr;
 	static inline PhysicalDevice* physical_device = nullptr;
 	static inline LogicalDevice* logical_device = nullptr;
+	static inline Allocator* allocator = nullptr;
 	static inline CommandPool* command_pool = nullptr;
 	static inline SwapChain* swap_chain = nullptr;
 	static inline GraphicsPipeline* graphics_pipeline = nullptr;

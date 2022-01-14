@@ -115,13 +115,13 @@ void PhysicalDevice::getSwapChainSupportDetails(VkPhysicalDevice physical_device
 std::vector<VkPhysicalDevice> PhysicalDevice::getAvailablePhysicalDevices() const
 {
 	uint32_t device_count = 0;
-	vkEnumeratePhysicalDevices(Graphics::instance->getInstance(), &device_count, nullptr);
+	vkEnumeratePhysicalDevices(*Graphics::instance, &device_count, nullptr);
 
 	VE_CORE_ASSERT(device_count > 0, 
 		"Vulkan: Couldn't find GPU with vulkan support");
 
 	std::vector<VkPhysicalDevice> physical_devices(device_count);
-	vkEnumeratePhysicalDevices(Graphics::instance->getInstance(), &device_count, physical_devices.data());
+	vkEnumeratePhysicalDevices(*Graphics::instance, &device_count, physical_devices.data());
 
 	return physical_devices;
 }

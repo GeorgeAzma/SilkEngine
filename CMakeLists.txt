@@ -111,6 +111,20 @@ FetchContent_MakeAvailable(STB)
 FetchContent_GetProperties(STB)
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/stb)
 
+#vma
+FetchContent_Declare(VMA
+GIT_REPOSITORY   https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+GIT_TAG origin/master
+GIT_SHALLOW     ON
+SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/vma
+BUILD_COMMAND ""
+CONFIGURE_COMMAND ""
+INSTALL_COMMAND ""
+)
+FetchContent_MakeAvailable(VMA)
+FetchContent_GetProperties(VMA)
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/vma/include)
+
 #assimp
 set(assimp_build FALSE)
 list(APPEND DEPENDENCIES_TO_ADD assimp_build)

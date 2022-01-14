@@ -7,8 +7,7 @@ public:
     Instance();
     ~Instance();
 
-    const VkInstance& getInstance() const { return instance; }
-
+    operator const VkInstance& () const { return instance; }
 private:
     std::vector<const char *> getRequiredExtensions() const;
     std::vector<VkExtensionProperties> getAvailableExtensions() const;

@@ -22,6 +22,7 @@ void Graphics::init(GLFWwindow* window)
 	surface = new Surface(); //0.05ms
 	physical_device = new PhysicalDevice(); //10ms
 	logical_device = new LogicalDevice(); //80ms
+	allocator = new Allocator();
 	command_pool = new CommandPool(); //0.025ms
 
 	descriptor_pool = new DescriptorPool();
@@ -106,6 +107,7 @@ void Graphics::cleanup() //25ms
 	delete descriptor_pool;
 	delete command_pool;
 	delete image;
+	delete allocator;
 	delete logical_device;
 	delete physical_device;
 	delete surface;

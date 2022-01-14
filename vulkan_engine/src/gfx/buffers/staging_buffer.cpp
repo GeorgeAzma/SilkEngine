@@ -5,8 +5,7 @@
 StagingBuffer::StagingBuffer(const void* data, VkDeviceSize size)
     : Buffer(size,
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-        VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+        VMA_MEMORY_USAGE_CPU_ONLY)
 {
     setData(data);
 }

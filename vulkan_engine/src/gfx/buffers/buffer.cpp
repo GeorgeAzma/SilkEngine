@@ -1,7 +1,8 @@
 #include "buffer.h"
 #include "gfx/graphics.h"
+#include "gfx/allocator.h"
 
-Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_usage)
 	: size{size}
 {
 	VkBufferCreateInfo buffer_info{};
@@ -10,30 +11,20 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlag
 	buffer_info.usage = usage;
 	buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	Graphics::vulkanAssert(vkCreateBuffer(*Graphics::logical_device, &buffer_info, nullptr, &buffer));
+	VmaAllocationCreateInfo vma_allocation_info = {};
+	vma_allocation_info.usage = vma_usage;
 
-	VkMemoryRequirements memory_requirements{};
-	vkGetBufferMemoryRequirements(*Graphics::logical_device, buffer, &memory_requirements);
-
-	VkMemoryAllocateInfo allocation_info{};
-	allocation_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocation_info.allocationSize = memory_requirements.size;
-	allocation_info.memoryTypeIndex = findMemoryType(memory_requirements.memoryTypeBits, properties);
-
-	Graphics::vulkanAssert(vkAllocateMemory(*Graphics::logical_device, &allocation_info, nullptr, &memory));
-
-	Graphics::vulkanAssert(vkBindBufferMemory(*Graphics::logical_device, buffer, memory, 0));
+	vmaCreateBuffer(*Graphics::allocator, &buffer_info, &vma_allocation_info, &buffer, &allocation, nullptr);
 }
 
 Buffer::~Buffer()
 {
-	vkDestroyBuffer(*Graphics::logical_device, buffer, nullptr);
-	vkFreeMemory(*Graphics::logical_device, memory, nullptr);
+	vmaDestroyBuffer(*Graphics::allocator, buffer, allocation);
 }
 
 void Buffer::setData(const void* data)
 {
-	Buffer::setData(data, size, memory);
+	Buffer::setData(data, size, allocation);
 }
 
 uint32_t Buffer::findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags properties)
@@ -76,10 +67,10 @@ void Buffer::copy(VkBuffer destination, VkBuffer source, size_t size)
 	Graphics::vulkanAssert(vkQueueWaitIdle(Graphics::logical_device->getGraphicsQueue()));
 }
 
-void Buffer::setData(const void* data, size_t size, VkDeviceMemory memory)
+void Buffer::setData(const void* data, size_t size, VmaAllocation allocation)
 {
 	void* buffer_data;
-	Graphics::vulkanAssert(vkMapMemory(*Graphics::logical_device, memory, 0, size, 0, &buffer_data));
+	vmaMapMemory(*Graphics::allocator, allocation, &buffer_data);
 	std::memcpy(buffer_data, data, size);
-	vkUnmapMemory(*Graphics::logical_device, memory);
+	vmaUnmapMemory(*Graphics::allocator, allocation);
 }

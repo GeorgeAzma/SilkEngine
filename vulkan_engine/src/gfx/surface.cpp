@@ -3,10 +3,10 @@
 
 Surface::Surface()
 {
-	Graphics::vulkanAssert(glfwCreateWindowSurface(Graphics::instance->getInstance(), Graphics::window, nullptr, &surface));
+	Graphics::vulkanAssert(glfwCreateWindowSurface(*Graphics::instance, Graphics::window, nullptr, &surface));
 }
 
 Surface::~Surface()
 {
-	vkDestroySurfaceKHR(Graphics::instance->getInstance(), surface, nullptr);
+	vkDestroySurfaceKHR(*Graphics::instance, surface, nullptr);
 }
