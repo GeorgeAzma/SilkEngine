@@ -7,6 +7,9 @@ CommandPool::CommandPool()
 	VkCommandPoolCreateInfo create_info{};
 	create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	create_info.queueFamilyIndex = *queue_family_indices.graphics;
+	create_info.flags =
+		VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | 
+		VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 	Graphics::vulkanAssert(vkCreateCommandPool(*Graphics::logical_device, &create_info, nullptr, &command_pool));
 }

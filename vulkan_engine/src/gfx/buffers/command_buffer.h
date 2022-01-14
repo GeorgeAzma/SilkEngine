@@ -12,9 +12,11 @@ public:
 	void submit(size_t index = 0, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {}, VkPipelineStageFlags* wait_stages = nullptr, VkFence* fence = nullptr);
 	void wait(VkQueue queue = VK_NULL_HANDLE);
 
+	bool wasRecorded(size_t index) const { return recorded[index]; }
 	const std::vector<VkCommandBuffer>& getCommandBuffers() const { return command_buffers; }
 	operator const VkCommandBuffer& () const { return command_buffers[0]; }
 
 private:
 	std::vector<VkCommandBuffer> command_buffers;
+	std::vector<bool> recorded = { false };
 };

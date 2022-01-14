@@ -65,6 +65,10 @@ void Application::run()
 
                 Timers::update();
             }
+            else
+            {
+                glfwWaitEvents();
+            }
 
             window->update();
         }

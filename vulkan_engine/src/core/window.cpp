@@ -37,8 +37,6 @@ Window::Window(const WindowProps &props)
 
     window = glfwCreateWindow(data.width, data.height, data.title, data.fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 
-    // RenderCommand::setViewport(0, 0, data.width, data.height);
-
     glfwDefaultWindowHints();
     glfwShowWindow(window);
 
@@ -53,7 +51,8 @@ Window::Window(const WindowProps &props)
             Data &data = *(Data *)glfwGetWindowUserPointer(window);
             data.width = width;
             data.height = height;
-            Dispatcher::post(WindowResizeEvent(data.width, data.height, window));
+            if(width != 0 && height != 0)
+                Dispatcher::post(WindowResizeEvent(data.width, data.height, window));
         });
 
     glfwSetWindowCloseCallback(window,
@@ -135,11 +134,6 @@ Window::Window(const WindowProps &props)
         {
             Data &data = *(Data *)glfwGetWindowUserPointer(window);
             Dispatcher::post(MouseScrollEvent(sx, sy, window));
-        });
-
-    glfwSetWindowRefreshCallback(window, 
-        [](GLFWwindow* window)
-        {
         });
 }
 

@@ -31,10 +31,15 @@ GraphicsPipeline& GraphicsPipeline::setSampleCount(VkSampleCountFlagBits sample_
 	return *this;
 }
 
+GraphicsPipeline& GraphicsPipeline::setRenderPass(VkRenderPass render_pass)
+{
+	this->render_pass = render_pass;
+	return *this;
+}
+
 GraphicsPipeline& GraphicsPipeline::addDescriptorSetLayout(const DescriptorSetLayout& layout)
 {
 	descriptor_set_layouts.push_back((const VkDescriptorSetLayout&)layout);
-
 	return *this;
 }
 
@@ -51,9 +56,7 @@ GraphicsPipeline& GraphicsPipeline::addPushConstant(size_t size, VkShaderStageFl
 	push_constant_range.offset = 0;
 	push_constant_range.size = size;
 	push_constant_range.stageFlags = shader_stages;
-
 	push_constant_ranges.emplace_back(std::move(push_constant_range));
-
 	return *this;
 }
 
@@ -152,7 +155,7 @@ void GraphicsPipeline::build()
 	create_info.pColorBlendState = &color_blending;
 	create_info.pDynamicState = &dynamic_state;
 	create_info.layout = pipeline_layout;
-	create_info.renderPass = *Graphics::render_pass;
+	create_info.renderPass = render_pass;
 	create_info.subpass = 0;
 	create_info.pDepthStencilState = &depth_stencil_info;
 

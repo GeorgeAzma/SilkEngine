@@ -42,10 +42,10 @@ RenderPass& RenderPass::addAttachment(uint32_t attachment, VkFormat format, VkIm
     return *this;
 }
 
-RenderPass& RenderPass::addResolveAttachment()
+RenderPass& RenderPass::addResolveAttachment(VkFormat format)
 {
     VkAttachmentDescription attachment_description{};
-    attachment_description.format = Graphics::swap_chain->getSurfaceFormat().format;
+    attachment_description.format = format;
     attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
     attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -125,11 +125,11 @@ void RenderPass::begin(VkFramebuffer framebuffer)
 {
     VkRenderPassBeginInfo render_pass_begin_info{};
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    render_pass_begin_info.renderPass = *Graphics::render_pass;
+    render_pass_begin_info.renderPass = render_pass;
     render_pass_begin_info.framebuffer = framebuffer;
 
     render_pass_begin_info.renderArea.offset = { 0, 0 };
-    render_pass_begin_info.renderArea.extent = Graphics::swap_chain->getExtent(); //TODO: I think I can set this to the maximum size from framebuffers[i].attachments[j].size;
+    render_pass_begin_info.renderArea.extent = Graphics::swap_chain->getExtent();
 
     std::vector<VkClearValue> clear_values(2);
     clear_values[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };

@@ -1,24 +1,11 @@
 #include "graphics.h"
 #include "utils/debug_timer.h"
 #include "core/event.h"
-#include "scene/vertex.h"
 #include "enums.h"
 #include "graphics_state.h"
 #include "buffers/buffer_layout.h"
 #include "core/time.h"
 
-static const std::vector<Vertex> vertices =
-{
-	{{-0.5f, -0.5f, 1.0f}, {1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-	{{0.5f, -0.5f, 1.0f}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-	{{0.5f, 0.5f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-	{{-0.5f, 0.5f, 1.0f}, {1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}}
-};
-
-static const std::vector<uint32_t> indices =
-{
-	0, 1, 2, 2, 3, 0
-};
 
 struct Transforms
 {
@@ -30,50 +17,22 @@ void Graphics::init(GLFWwindow* window)
 	VE_CORE_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
 	Graphics::window = window;
 
-	Dispatcher::subscribe(onWindowResize);
-
 	//These most likely won't change
 	instance = new Instance(); //70ms
 	surface = new Surface(); //0.05ms
 	physical_device = new PhysicalDevice(); //10ms
 	logical_device = new LogicalDevice(); //80ms
 	command_pool = new CommandPool(); //0.025ms
-	swap_chain = new SwapChain(); //16ms
 
-	VkFormat depth_format = physical_device->findDepthFormat();
-	ImageProps props{};
-	props.width = swap_chain->getExtent().width;
-	props.height = swap_chain->getExtent().height;
-	props.format = depth_format;
-	props.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-	props.create_sampler = false;
-	props.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-	props.mipmap = false;
-	props.samples = physical_device->getMaxSampleCount();
-	depth = new Image(props);
+	descriptor_pool = new DescriptorPool();
+	descriptor_pool->addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1)
+		.addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
+		.setMaxSets(64).build();
+
+	swap_chain = new SwapChain(); //16ms
 
 	image = new Image("data/images/test.png");
 
-	ImageProps msaa_props{};
-	props.width = swap_chain->getExtent().width;
-	props.height = swap_chain->getExtent().height;
-	props.format = swap_chain->getSurfaceFormat().format;
-	props.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT 
-		| VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	props.create_sampler = false;
-	props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
-	props.mipmap = false;
-	props.samples = physical_device->getMaxSampleCount();
-	msaa_image = new Image(props);
-
-	render_pass = new RenderPass(); //0.11ms
-	render_pass->beginSubpass()
-		.addAttachment(0, swap_chain->getSurfaceFormat().format, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, msaa_image->getProps().samples)
-		.addAttachment(1, physical_device->findDepthFormat(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, msaa_image->getProps().samples)
-		.addResolveAttachment()
-		.build();
-
-	swap_chain->createFramebuffers({ msaa_image->getDescriptorInfo().imageView, depth->getDescriptorInfo().imageView }); //0.036ms
 
 	Shader shader = Shader
 	({
@@ -96,7 +55,8 @@ void Graphics::init(GLFWwindow* window)
 		.addDescriptorSetLayout(*descriptor_set_layout)
 		.setShader(shader)
 		.setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 } })
-		.setSampleCount(msaa_image->getProps().samples)
+		.setSampleCount(swap_chain->getSampleCount())
+		.setRenderPass(swap_chain->getRenderPass())
 		.build();
 
 	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(vertices[0])); //2.4ms
@@ -107,151 +67,33 @@ void Graphics::init(GLFWwindow* window)
 		uniform_buffers.emplace_back(std::make_shared<UniformBuffer>(sizeof(Transforms)));
 	}
 
-	descriptor_pool = new DescriptorPool();
-	descriptor_pool->addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1)
-		.addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
-		.setMaxSets(64).build();
-
 	descriptor_set = new DescriptorSet(*descriptor_set_layout, swap_chain->getImages().size());
 	for(size_t i = 0; i < uniform_buffers.size(); ++i)
 		descriptor_set->addBuffer(0, { *uniform_buffers[i], 0, VK_WHOLE_SIZE });
 	descriptor_set->addImage(1, image)
 		.build();
-
-	//Staticly recorded command buffer
-	command_buffer = new CommandBuffer(swap_chain->getFramebuffers().size());//0.025ms
-	recordCommandBuffers(); //0.211ms
-
-	//Create semaphores and fences (0.064ms)
-	images_in_flight.resize(swap_chain->getImages().size(), VK_NULL_HANDLE);
-
-	VkSemaphoreCreateInfo semaphore_info{};
-	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-	VkFenceCreateInfo fence_info{};
-	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-	{
-		Graphics::vulkanAssert(vkCreateSemaphore(*logical_device, &semaphore_info, nullptr, &image_available_semaphores[i]));
-		Graphics::vulkanAssert(vkCreateSemaphore(*logical_device, &semaphore_info, nullptr, &render_finished_semaphores[i]));
-
-		Graphics::vulkanAssert(vkCreateFence(*logical_device, &fence_info, nullptr, &in_flight_fences[i]));
-	}
 }
 
-void Graphics::recordCommandBuffers()
+void Graphics::beginFrame()
 {
-	const auto& command_buffers = command_buffer->getCommandBuffers();
-
-	//Record command buffers
-	for (size_t i = 0; i < command_buffers.size(); i++)
-	{
-		command_buffer->begin({}, i);
-		render_pass->begin(*Graphics::swap_chain->getFramebuffers()[i]);
-
-		Graphics::graphics_pipeline->bind();
-
-		vertex_buffer->bind();
-		index_buffer->bind();
-
-		VkViewport viewport{};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = Graphics::swap_chain->getExtent().width;
-		viewport.height = Graphics::swap_chain->getExtent().height;
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(*graphics_state.command_buffer, 0, 1, &viewport);
-
-		VkRect2D scissor{};
-		scissor.offset = { 0, 0 };
-		scissor.extent = Graphics::swap_chain->getExtent();
-		vkCmdSetScissor(*graphics_state.command_buffer, 0, 1, &scissor);
-
-		descriptor_set->bind(i);
-
-		for(size_t i = 0 ; i < 512; ++i)
-		vkCmdDrawIndexed(*graphics_state.command_buffer, indices.size(), 1, 0, 0, 0);
-
-		render_pass->end();
-		command_buffer->end(i);
-	}
+	swap_chain->beginFrame();
 }
 
-void Graphics::recreateSwapChain() //7.5ms
+void Graphics::endFrame()
 {
-	Graphics::vulkanAssert(vkDeviceWaitIdle(*logical_device));
-
-	VkSwapchainKHR sc = *swap_chain;
-	SwapChain* old_swap_chain = swap_chain;
-	swap_chain = new SwapChain(sc);
-
-	size_t command_buffers_size = command_buffer->getCommandBuffers().size();
-	delete command_buffer;
-
-	ImageProps depth_props = depth->getProps();
-	depth_props.width = swap_chain->getExtent().width;
-	depth_props.height = swap_chain->getExtent().height;
-	delete depth;
-	depth = new Image(depth_props);
-
-	ImageProps msaa_props = msaa_image->getProps();
-	msaa_props.width = swap_chain->getExtent().width;
-	msaa_props.height = swap_chain->getExtent().height;
-	delete msaa_image;
-	msaa_image = new Image(msaa_props);
-
-	swap_chain->createFramebuffers({ msaa_image->getDescriptorInfo().imageView, depth->getDescriptorInfo().imageView });
-
-	command_buffer = new CommandBuffer(command_buffers_size);
-	recordCommandBuffers();
-
-	delete old_swap_chain;
+	swap_chain->endFrame();
 }
 
 void Graphics::update()
 {	
-	Graphics::vulkanAssert(vkWaitForFences(*logical_device, 1, &in_flight_fences[current_frame], VK_TRUE, UINT64_MAX));
-
-	//Get next swap chain image
-	uint32_t image_index;
-	Graphics::vulkanAssert(vkAcquireNextImageKHR(*logical_device, *swap_chain, UINT64_MAX, image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index));
+	beginFrame();
 
 	glm::mat4 projection = glm::perspective(glm::radians(80.0f), ((float)swap_chain->getExtent().width / swap_chain->getExtent().height), 0.01f, 1000.0f);
 	glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 projection_view = glm::rotate(projection * view, (float)Time::runtime, { 0.0f, 0.0f, 1.0f });
-	uniform_buffers[image_index]->setData(&projection_view);
+	uniform_buffers[swap_chain->getImageIndex()]->setData(&projection_view);
 
-	//Check if previous frame is using this image
-	if (images_in_flight[image_index] != VK_NULL_HANDLE) 
-	{
-		Graphics::vulkanAssert(vkWaitForFences(*logical_device, 1, &images_in_flight[image_index], VK_TRUE, UINT64_MAX));
-	}
-	images_in_flight[image_index] = in_flight_fences[current_frame];
-
-	//Submit the command buffer
-	const std::vector<VkSemaphore> signal_semaphores = { render_finished_semaphores[current_frame] };
-	VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-
-	command_buffer->submit(image_index, { image_available_semaphores[current_frame] }, signal_semaphores, wait_stages, &in_flight_fences[current_frame]);
-
-	VkPresentInfoKHR present_info{};
-	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-	present_info.waitSemaphoreCount = signal_semaphores.size();
-	present_info.pWaitSemaphores = signal_semaphores.data();
-
-	const std::vector<VkSwapchainKHR> swap_chains = { *swap_chain };
-	present_info.swapchainCount = swap_chains.size();
-	present_info.pSwapchains = swap_chains.data();
-	present_info.pImageIndices = &image_index;
-	std::vector<VkResult> results(swap_chains.size());
-	present_info.pResults = results.data();
-
-	vkQueuePresentKHR(logical_device->getPresentQueue(), &present_info);
-	
-	current_frame = (current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
+	endFrame();
 }
 
 void Graphics::cleanup() //25ms
@@ -260,15 +102,7 @@ void Graphics::cleanup() //25ms
 
 	delete vertex_buffer;
 	delete index_buffer;
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-	{
-		vkDestroySemaphore(*logical_device, render_finished_semaphores[i], nullptr);
-		vkDestroySemaphore(*logical_device, image_available_semaphores[i], nullptr);
-		vkDestroyFence(*logical_device, in_flight_fences[i], nullptr);
-	}
 	delete graphics_pipeline;
-	delete render_pass;
 	delete swap_chain;
 	uniform_buffers.clear();
 	delete descriptor_set_layout; //this generates an error for some reason
@@ -276,23 +110,12 @@ void Graphics::cleanup() //25ms
 	delete descriptor_pool;
 	delete command_pool;
 	delete image;
-	delete msaa_image;
-	delete depth;
 	delete logical_device;
 	delete physical_device;
 	delete surface;
 	delete instance;
 
 	glfwTerminate();
-}
-
-void Graphics::onWindowResize(const WindowResizeEvent& e)
-{
-	if (e.window == window)
-	{
-		recreateSwapChain();
-		update();
-	}
 }
 
 void Graphics::vulkanAssert(VkResult result)

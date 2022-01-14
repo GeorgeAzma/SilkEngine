@@ -15,7 +15,7 @@ PhysicalDevice::~PhysicalDevice()
 }
 
 // Find supported queue families of this device
-QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
+QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice physical_device)
 {
 	QueueFamilyIndices queue_family_indices = {};
 
@@ -32,7 +32,7 @@ QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice physical_d
 			queue_family_indices.graphics = i;
 
 		VkBool32 present_support = false;
-		vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, i, surface, &present_support);
+		vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, i, *Graphics::surface, &present_support);
 		if (present_support)
 			queue_family_indices.present = i;
 
@@ -43,7 +43,12 @@ QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice physical_d
 	return queue_family_indices;
 }
 
-VkFormat PhysicalDevice::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) 
+void PhysicalDevice::getSwapChainSupportDetails()
+{
+	getSwapChainSupportDetails(physical_device);
+}
+
+VkFormat PhysicalDevice::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
 {
 	for (VkFormat format : candidates)
 	{
@@ -86,6 +91,27 @@ VkFormat PhysicalDevice::findStencilFormat()
 	);
 }
 
+void PhysicalDevice::getSwapChainSupportDetails(VkPhysicalDevice physical_device)
+{
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, *Graphics::surface, &surface_capabilities);
+	
+	uint32_t format_count = 0;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, *Graphics::surface, &format_count, nullptr);
+	if (format_count)
+	{
+		surface_formats.resize(format_count);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, *Graphics::surface, &format_count, surface_formats.data());
+	}
+
+	uint32_t present_mode_count = 0;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, *Graphics::surface, &present_mode_count, nullptr);
+	if (present_mode_count)
+	{
+		present_modes.resize(present_mode_count);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, *Graphics::surface, &present_mode_count, present_modes.data());
+	}
+}
+
 std::vector<VkPhysicalDevice> PhysicalDevice::getAvailablePhysicalDevices() const
 {
 	uint32_t device_count = 0;
@@ -116,8 +142,8 @@ void PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vector<VkPhysic
 	physical_device = candidates.rbegin()->second;
 	vkGetPhysicalDeviceProperties(physical_device, &properties); 
 	vkGetPhysicalDeviceFeatures(physical_device, &features);
-	queue_family_indices = findQueueFamilies(physical_device, *Graphics::surface);
-	Graphics::surface->getSupportDetails(physical_device);
+	queue_family_indices = findQueueFamilies(physical_device);
+	getSwapChainSupportDetails(physical_device);
 	max_usable_sample_count = getMaxUsableSampleCount();
 }
 
@@ -128,7 +154,7 @@ int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
 {
 	int score = 0;
 
-	QueueFamilyIndices queue_family_indices = findQueueFamilies(physical_device, *Graphics::surface);
+	QueueFamilyIndices queue_family_indices = findQueueFamilies(physical_device);
 	if (!queue_family_indices.isSuitable()) 
 		return -1;
 
@@ -136,9 +162,9 @@ int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
 	if (!extensions_supported) 
 		return -1;
 
-	Graphics::surface->getSupportDetails(physical_device);
-	bool is_swap_chain_adequate = !Graphics::surface->getFormats().empty() && 
-		!Graphics::surface->getPresentModes().empty();
+	getSwapChainSupportDetails(physical_device);
+	bool is_swap_chain_adequate = !surface_formats.empty() &&
+		!present_modes.empty();
 	if (!is_swap_chain_adequate) 
 		return -1;
 

@@ -226,6 +226,8 @@ vulkan_engine/src/core/base.h
 <vulkan/vulkan.h>
 <GLFW/glfw3.h>
 <entt/entt.hpp>
+<semaphore>
+<thread>
 vulkan_engine/src/core/log.h)
 
 

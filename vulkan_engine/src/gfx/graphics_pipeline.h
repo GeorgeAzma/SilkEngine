@@ -20,6 +20,7 @@ public:
 	GraphicsPipeline& setShader(const Shader& shader);
 	GraphicsPipeline& setVertexLayout(const BufferLayout& layout);
 	GraphicsPipeline& setSampleCount(VkSampleCountFlagBits sample_count);
+	GraphicsPipeline& setRenderPass(VkRenderPass render_pass);
 	GraphicsPipeline& addDescriptorSetLayout(const DescriptorSetLayout& layout);
 	GraphicsPipeline& addDynamicState(VkDynamicState dynamic_state);
 	GraphicsPipeline& addPushConstant(size_t size, VkShaderStageFlagBits shader_stages, size_t offset = 0);
@@ -53,4 +54,5 @@ private:
 	VkGraphicsPipelineCreateInfo create_info{};
 	std::vector<VkPushConstantRange> push_constant_ranges;
 	std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
+	VkRenderPass render_pass = VK_NULL_HANDLE;
 };

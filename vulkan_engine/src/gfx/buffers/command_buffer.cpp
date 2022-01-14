@@ -38,6 +38,7 @@ void CommandBuffer::end(size_t index)
 {
 	Graphics::vulkanAssert(vkEndCommandBuffer(command_buffers[index]));
 
+	recorded[index] = true;
 	graphics_state.command_buffer = nullptr;
 }
 
