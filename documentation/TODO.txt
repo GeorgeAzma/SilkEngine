@@ -17,7 +17,3 @@
 - Write custom 3D model loader/converter
 - Write camera system
 - Integrate entity component system
-
-- Move swap chain unrelated stuff to renderer class
-- Implement beginFrame() endFrame() functions
-- Handle command buffer recording efficiently

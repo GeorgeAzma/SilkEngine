@@ -45,7 +45,7 @@ public:
 	static inline DescriptorPool* descriptor_pool = nullptr;
 
 	//TEMP
-	static inline std::vector<std::shared_ptr<UniformBuffer>> uniform_buffers = {};
+	static inline UniformBuffer* uniform_buffer = nullptr;
 	static inline VertexBuffer* vertex_buffer = nullptr;
 	static inline IndexBuffer* index_buffer = nullptr;
 	static inline Image* image = nullptr;

@@ -51,9 +51,8 @@ void SwapChain::recreate()
 {
 	Graphics::vulkanAssert(vkDeviceWaitIdle(*Graphics::logical_device));
 
-	VkSwapchainKHR sc = swap_chain;
-	create(sc);
 	destroy();
+	create();
 }
 
 void SwapChain::createFramebuffers()
@@ -114,9 +113,10 @@ void SwapChain::beginFrame()
 	acquireNextImage(); 
 
 	//RECORDING - TEMP
-	const auto& command_buffers = command_buffer->getCommandBuffers();
 
-	if (command_buffer->wasRecorded(image_index)) return;
+	if (command_buffer->wasRecorded(image_index)) 
+		return;
+
 	command_buffer->begin({}, image_index);
 	render_pass->begin(*framebuffers[image_index]);
 
@@ -260,8 +260,6 @@ SwapChain::~SwapChain()
 
 	destroy();
 }
-
-
 
 void SwapChain::chooseSwapChainSurfaceFormat()
 {

@@ -62,16 +62,12 @@ void Graphics::init(GLFWwindow* window)
 	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(vertices[0])); //2.4ms
 	index_buffer = new IndexBuffer(indices.data(), indices.size() * sizeof(indices[0])); //0.9ms
 
-	for (size_t i = 0; i < swap_chain->getImages().size(); ++i)
-	{
-		uniform_buffers.emplace_back(std::make_shared<UniformBuffer>(sizeof(Transforms)));
-	}
+	uniform_buffer = new UniformBuffer(sizeof(Transforms));
 
 	descriptor_set = new DescriptorSet(*descriptor_set_layout, swap_chain->getImages().size());
-	for(size_t i = 0; i < uniform_buffers.size(); ++i)
-		descriptor_set->addBuffer(0, { *uniform_buffers[i], 0, VK_WHOLE_SIZE });
-	descriptor_set->addImage(1, image)
-		.build();
+	descriptor_set->addBuffer(0, { *uniform_buffer, 0, VK_WHOLE_SIZE })
+	.addImage(1, image)
+	.build();
 }
 
 void Graphics::beginFrame()
@@ -91,7 +87,7 @@ void Graphics::update()
 	glm::mat4 projection = glm::perspective(glm::radians(80.0f), ((float)swap_chain->getExtent().width / swap_chain->getExtent().height), 0.01f, 1000.0f);
 	glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 projection_view = glm::rotate(projection * view, (float)Time::runtime, { 0.0f, 0.0f, 1.0f });
-	uniform_buffers[swap_chain->getImageIndex()]->setData(&projection_view);
+	uniform_buffer->setData(&projection_view);
 
 	endFrame();
 }
@@ -104,7 +100,7 @@ void Graphics::cleanup() //25ms
 	delete index_buffer;
 	delete graphics_pipeline;
 	delete swap_chain;
-	uniform_buffers.clear();
+	delete uniform_buffer;
 	delete descriptor_set_layout; //this generates an error for some reason
 	delete descriptor_set;
 	delete descriptor_pool;
