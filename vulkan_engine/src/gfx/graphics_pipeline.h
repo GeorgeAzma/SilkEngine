@@ -4,6 +4,7 @@
 #include "shader.h"
 #include "buffers/buffer_layout.h"
 #include "descriptor_set_layout.h"
+#include "core/event.h"
 
 struct GraphicsPipelineProps
 {
@@ -15,9 +16,10 @@ struct GraphicsPipelineProps
 class GraphicsPipeline : NonCopyable
 {
 public:
+	GraphicsPipeline();
 	~GraphicsPipeline();
 
-	GraphicsPipeline& setShader(const Shader& shader);
+	GraphicsPipeline& setShader(std::shared_ptr<Shader> shader);
 	GraphicsPipeline& setVertexLayout(const BufferLayout& layout);
 	GraphicsPipeline& setSampleCount(VkSampleCountFlagBits sample_count);
 	GraphicsPipeline& setRenderPass(VkRenderPass render_pass);
@@ -25,6 +27,8 @@ public:
 	GraphicsPipeline& addDynamicState(VkDynamicState dynamic_state);
 	GraphicsPipeline& addPushConstant(size_t size, VkShaderStageFlagBits shader_stages, size_t offset = 0);
 	GraphicsPipeline& enable(EnableTag tag);
+
+	void recreate();
 
 	void build();
 
@@ -34,6 +38,11 @@ public:
 	VkPipelineBindPoint getBindPoint() const { return bind_point; }
 
 	operator const VkPipeline& () const { return graphics_pipeline; }
+	
+private:
+	void destroy();
+	void create();
+	void onWindowResize(const WindowResizeEvent& e);
 
 private:
 	VkPipelineLayout pipeline_layout;
@@ -56,4 +65,7 @@ private:
 	std::vector<VkPushConstantRange> push_constant_ranges;
 	std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
 	VkRenderPass render_pass = VK_NULL_HANDLE;
+	VkPipelineDynamicStateCreateInfo dynamic_state{};
+	BufferLayout layout = {}; 
+	std::shared_ptr<Shader> shader;
 };

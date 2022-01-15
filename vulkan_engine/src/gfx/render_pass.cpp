@@ -120,14 +120,8 @@ void RenderPass::build()
     Graphics::vulkanAssert(vkCreateRenderPass(*Graphics::logical_device, &create_info, nullptr, &render_pass));
 }
 
-void RenderPass::begin(VkFramebuffer framebuffer)
+void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_contents)
 {
-    if (Graphics::active.render_pass.render_pass == render_pass
-        && Graphics::active.render_pass.framebuffer == framebuffer
-        && Graphics::active.render_pass.extent.width == Graphics::swap_chain->getExtent().width
-        && Graphics::active.render_pass.extent.height == Graphics::swap_chain->getExtent().height)
-        return;
-
     VkRenderPassBeginInfo render_pass_begin_info{};
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     render_pass_begin_info.renderPass = render_pass;
@@ -143,17 +137,15 @@ void RenderPass::begin(VkFramebuffer framebuffer)
     render_pass_begin_info.clearValueCount = clear_values.size();
     render_pass_begin_info.pClearValues = clear_values.data();
 
-    vkCmdBeginRenderPass(Graphics::active.command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBeginRenderPass(Graphics::active.command_buffer, &render_pass_begin_info, subpass_contents);
 
-    Graphics::active.render_pass = { render_pass, framebuffer, Graphics::swap_chain->getExtent() };
+    Graphics::active.render_pass = render_pass;
+    Graphics::active.subpass = 0;
 }
 
 void RenderPass::end()
 {
-    if (Graphics::active.render_pass.render_pass == VK_NULL_HANDLE)
-        return;
-
     vkCmdEndRenderPass(Graphics::active.command_buffer);
 
-    Graphics::active.render_pass = {};
+    Graphics::active.render_pass = VK_NULL_HANDLE;
 }

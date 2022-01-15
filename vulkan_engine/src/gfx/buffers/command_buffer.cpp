@@ -2,6 +2,7 @@
 #include "gfx/graphics.h"
 
 CommandBuffer::CommandBuffer(size_t count, VkCommandBufferLevel level)
+	: level(level)
 {
 	command_buffers.resize(count);
 	recorded.resize(count, false);
@@ -28,6 +29,20 @@ void CommandBuffer::begin(VkCommandBufferUsageFlagBits usage, size_t index)
 	VkCommandBufferBeginInfo begin_info{};
 	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	begin_info.flags = usage;
+
+	if (level == VK_COMMAND_BUFFER_LEVEL_SECONDARY)
+	{
+		VkCommandBufferInheritanceInfo inheritance_info{};
+		inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+		
+		if ((usage & VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT) == VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT)
+		{
+			inheritance_info.renderPass = Graphics::active.render_pass;
+			inheritance_info.subpass = Graphics::active.subpass;
+		}
+
+		begin_info.pInheritanceInfo = &inheritance_info;
+	}
 
 	Graphics::vulkanAssert(vkBeginCommandBuffer(command_buffers[index], &begin_info));
 

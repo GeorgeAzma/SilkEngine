@@ -38,25 +38,14 @@ public:
 
 	static inline struct Active
 	{
-	private:
-		struct BoundDescriptorSet
-		{
-			VkDescriptorSet descriptor_set = VK_NULL_HANDLE;
-			VkPipelineBindPoint bind_point = VK_PIPELINE_BIND_POINT_MAX_ENUM;
-		};
-		struct BegunRenderPass
-		{
-			VkRenderPass render_pass = VK_NULL_HANDLE;
-			VkFramebuffer framebuffer = VK_NULL_HANDLE;
-			VkExtent2D extent = { 0, 0 };
-		};
 	public:
 		VkCommandBuffer command_buffer = VK_NULL_HANDLE;
 		GraphicsPipeline* graphics_pipeline = nullptr;
 		VkBuffer vertex_buffer = VK_NULL_HANDLE;
 		VkBuffer index_buffer = VK_NULL_HANDLE;
-		BoundDescriptorSet descriptor_set = {};
-		BegunRenderPass render_pass = {};
+		VkDescriptorSet descriptor_set = {};
+		VkRenderPass render_pass = {};
+		uint32_t subpass = 0;
 	} active;
 private:
 	static constexpr std::string stringifyResult(VkResult result);

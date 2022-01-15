@@ -11,26 +11,27 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
     void *pUserData)
 {
-    std::string message = "Vulkan: [";
-    switch (messageType)
-    {
-    case VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT:
-        message += "General";
-        break;
-    case VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT:
-        message += "Performance";
-        break;
-    case VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT:
-        message += "Validation";
-        break;
-    default:
-        message += "Unknown";
-        break;
-    }
+    std::string message = "[Vulkan]";
+    //switch (messageType)
+    //{
+    //case VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT:
+    //    message += "[General]";
+    //    break;
+    //case VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT:
+    //    message += "[Performance]";
+    //    break;
+    //case VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT:
+    //    message += "[Validation]";
+    //    break;
+    //default:
+    //    message += "[Unknown]";
+    //    break;
+    //}
 
-    message += "] ";
+    message += ' ';
     message += pCallbackData->pMessage;
     message += '\n';
+
 
     switch (messageSeverity)
     {

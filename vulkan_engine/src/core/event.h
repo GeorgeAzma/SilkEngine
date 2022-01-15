@@ -162,10 +162,9 @@ public:
 
     void call(const Event& event) const
     {
-        if (instance && member_function)
-        {
-            (instance->*member_function)(static_cast<const EventType&>(event));
-        }
+        VE_CORE_ASSERT(instance && member_function, 
+            "Attempted to call \"onEvent(const EventType&)\" when it was nullptr, did you forget to unsubscribe event when class got deleted?");
+        (instance->*member_function)(static_cast<const EventType&>(event));
     }
 
     bool operator==(const MemberFunctionHandler& other) const
@@ -189,10 +188,9 @@ public:
 
     void call(const Event& event) const
     {
-        if (function)
-        {
-            (*function)(static_cast<const EventType&>(event));
-        }
+        VE_CORE_ASSERT(function,
+            "Attempted to call \"onEvent(const EventType&)\" when it was nullptr, did you forget to unsubscribe event when class got deleted?");
+        (*function)(static_cast<const EventType&>(event));
     }
 
     bool operator==(const FunctionHandler& other) const

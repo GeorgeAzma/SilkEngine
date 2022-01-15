@@ -28,7 +28,7 @@ public:
 
 	void build();
 
-	void begin(VkFramebuffer framebuffer);
+	void begin(VkFramebuffer framebuffer, VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
 	void end();
 
 

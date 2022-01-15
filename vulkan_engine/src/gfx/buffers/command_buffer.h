@@ -28,5 +28,6 @@ public:
 private:
 	std::vector<VkCommandBuffer> command_buffers;
 	std::vector<bool> recorded;
-	VkFence fence = VK_NULL_HANDLE;
+	VkCommandBufferLevel level;
+	VkFence fence = VK_NULL_HANDLE; 
 };

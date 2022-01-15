@@ -26,6 +26,7 @@ struct Transforms
     glm::mat4 projection_view;
 };
 
+
 SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 { 
     Window::setSize({ 800, 600 });
@@ -40,18 +41,17 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
         .addBinding(1, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT)
         .build();
 
-    Shader shader = Shader
-    ({
+    shared<Shader> shader(
+        new Shader({
         "data/cache/shaders/test.vert.spv",
-        "data/cache/shaders/test.frag.spv"
-    }); //1.65ms
+        "data/cache/shaders/test.frag.spv" 
+        })); //1.65ms
+
     image = new Image("data/images/test.png");
 
     GraphicsPipelineProps graphics_pipeline_props{};
     graphics_pipeline = new GraphicsPipeline(); //1.35ms
-    graphics_pipeline->addDynamicState(VK_DYNAMIC_STATE_VIEWPORT)
-        .addDynamicState(VK_DYNAMIC_STATE_SCISSOR)
-        .enable(EnableTag::COLOR_BLENDING)
+    graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
         .enable(EnableTag::DEPTH_TEST)
         .enable(EnableTag::DEPTH_WRITE)
         .addDescriptorSetLayout(*descriptor_set_layout)
@@ -76,32 +76,17 @@ void SandboxApp::onUpdate()
 {
     scene.onUpdate();
 
-    Graphics::beginFrame(); 
-
+    Graphics::beginFrame();
     graphics_pipeline->bind();
-
-    //VkViewport viewport{};
-    //viewport.x = 0.0f;
-    //viewport.y = 0.0f;
-    //viewport.width = Graphics::swap_chain->getExtent().width;
-    //viewport.height = Graphics::swap_chain->getExtent().height;
-    //viewport.minDepth = 0.0f;
-    //viewport.maxDepth = 1.0f;
-    //vkCmdSetViewport(Graphics::active.command_buffer, 0, 1, &viewport);
-    //
-    //VkRect2D scissor{};
-    //scissor.offset = { 0, 0 };
-    //scissor.extent = Graphics::swap_chain->getExtent();
-    //vkCmdSetScissor(Graphics::active.command_buffer, 0, 1, &scissor);
-    //
-    //vertex_buffer->bind();
-    //index_buffer->bind();
-    //
-    //descriptor_set->bind(Graphics::swap_chain->getImageIndex());
-    //
-    //vkCmdDrawIndexed(Graphics::active.command_buffer, indices.size(), 1, 0, 0, 0);
-    //
-    //uniform_buffer->setData(&camera->getComponent<CameraComponent>().projection_view);
+    
+    vertex_buffer->bind();
+    index_buffer->bind();
+    
+    descriptor_set->bind(Graphics::swap_chain->getImageIndex());
+    
+    vkCmdDrawIndexed(Graphics::active.command_buffer, indices.size(), 1, 0, 0, 0);
+    
+    uniform_buffer->setData(&camera->getComponent<CameraComponent>().projection_view);
 
     Graphics::endFrame();
 }
