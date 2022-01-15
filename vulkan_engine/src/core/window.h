@@ -4,13 +4,6 @@
 #include <GLFW/glfw3.h>
 #include <string>
 
-struct WindowProps
-{
-    int width = 1280, height = 720;
-    const char *title = "Window";
-    bool transparent = false;
-};
-
 enum class WindowAlignment
 {
     NONE,
@@ -28,54 +21,43 @@ enum class WindowAlignment
 class Window
 {
 public:
-    Window(const WindowProps &props = {});
-    ~Window();
-    void update();
-    unsigned int getWidth() const { return data.width; }
-    unsigned int getHeight() const { return data.height; }
-    unsigned int getX() const { return data.x; }
-    unsigned int getY() const { return data.y; }
-    GLFWwindow *getGLFWWindow() { return window; }
-    bool isFullscreen() const { return data.fullscreen; }
-    bool isVsync() const { return data.vsync; }
-    bool isTransparent() const { return transparent; }
-    bool isMinimized() const { return data.width == 0 || data.height == 0; }
-    void setVsync(bool vsync);
-    void setFullscreen(bool fullscreen);
-    void setX(int x);
-    void setY(int y);
-    void setPosition(const glm::ivec2 &position);
-    void setWidth(unsigned int width);
-    void setHeight(unsigned int height);
-    void setSize(const glm::uvec2 &size);
-    void setTitle(const char* title);
-    void align(WindowAlignment a = WindowAlignment::CENTER);
-    // void setIcon(std::shared_ptr<Texture> icon);
+    static void init();
+    static void cleanup();
+    static unsigned int getWidth() { return data.width; }
+    static unsigned int getHeight() { return data.height; }
+    static unsigned int getX() { return data.x; }
+    static unsigned int getY() { return data.y; }
+    static float getAspectRatio() { return (float)data.width / data.height; }
+    static GLFWwindow *getGLFWWindow() { return window; }
+    static bool isFullscreen() { return fullscreen; }
+    static bool isVsync() { return vsync; }
+    static bool isTransparent() { return transparent; }
+    static bool isMinimized() { return data.width == 0 || data.height == 0; }
+    static void setVsync(bool vsync);
+    static void setFullscreen(bool fullscreen);
+    static void setX(int x);
+    static void setY(int y);
+    static void setPosition(const glm::ivec2 &position);
+    static void setWidth(unsigned int width);
+    static void setHeight(unsigned int height);
+    static void setSize(const glm::uvec2 &size);
+    static void setTitle(const char* title);
+    static void align(WindowAlignment a = WindowAlignment::CENTER);
+    //static void setIcon(std::shared_ptr<Texture> icon);
 
 private:
-    GLFWwindow *window;
+    static inline GLFWwindow *window = nullptr;
 
-    struct Data
+    static inline struct Data
     {
-        int width, height;
-        const char *title;
-        bool fullscreen;
-        bool vsync;
-        int x, y;
-
-        struct Input
-        {
-            bool anyButtonDown = false;
-            int latestButtonDown = false;
-
-            bool anyKeyDown = false;
-            int latestKeyDown = false;
-
-            std::vector<bool> keysDown = std::vector<bool>(GLFW_KEY_LAST + 1, false);
-            std::vector<bool> buttonsDown = std::vector<bool>(GLFW_KEY_LAST + 1, false);
-        } input;
-
+        int width = 1280;
+        int height = 720;
+        const char *title = "Window";
+        int x = 0;
+        int y = 0;
     } data;
 
-    bool transparent;
+    static inline bool fullscreen = false;
+    static inline bool vsync = false;
+    static inline bool transparent = false;
 };

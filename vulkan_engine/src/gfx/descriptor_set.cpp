@@ -1,6 +1,5 @@
 #include "descriptor_set.h"
 #include "graphics.h"
-#include "graphics_state.h"
 
 DescriptorSet::DescriptorSet(const DescriptorSetLayout& layout, size_t count)
 	: layout{&layout}
@@ -60,5 +59,10 @@ void DescriptorSet::build()
 
 void DescriptorSet::bind(size_t index)
 {
-	vkCmdBindDescriptorSets(*graphics_state.command_buffer, *graphics_state.bind_point, Graphics::graphics_pipeline->getLayout(), 0, 1, &descriptor_sets[index], 0, nullptr);
+	if (descriptor_sets[index] == Graphics::active.descriptor_set.descriptor_set && Graphics::active.descriptor_set.bind_point == Graphics::active.graphics_pipeline->getBindPoint())
+		return;
+
+	vkCmdBindDescriptorSets(Graphics::active.command_buffer, Graphics::active.graphics_pipeline->getBindPoint(), Graphics::active.graphics_pipeline->getLayout(), 0, 1, &descriptor_sets[index], 0, nullptr);
+	
+	Graphics::active.descriptor_set = { descriptor_sets[index], Graphics::active.graphics_pipeline->getBindPoint() };
 }

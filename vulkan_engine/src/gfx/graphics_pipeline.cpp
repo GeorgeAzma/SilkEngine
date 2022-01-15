@@ -1,6 +1,5 @@
 #include "graphics_pipeline.h"
 #include "graphics.h"
-#include "graphics_state.h"
 
 GraphicsPipeline::~GraphicsPipeline()
 {
@@ -170,6 +169,6 @@ void GraphicsPipeline::build()
 void GraphicsPipeline::bind(VkPipelineBindPoint bind_point)
 {
 	this->bind_point = bind_point;
-	vkCmdBindPipeline(*graphics_state.command_buffer, bind_point, graphics_pipeline);
-	graphics_state.bind_point = &this->bind_point;
+	vkCmdBindPipeline(Graphics::active.command_buffer, bind_point, graphics_pipeline);
+	Graphics::active.graphics_pipeline = this;
 }

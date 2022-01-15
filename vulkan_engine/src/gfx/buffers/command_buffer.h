@@ -1,15 +1,24 @@
 #pragma once
 
+struct CommandBufferSubmitInfo
+{
+	size_t index = 0;
+	VkFence fence = VK_NULL_HANDLE;
+	std::vector<VkSemaphore> wait_semaphores = {};
+	std::vector<VkSemaphore> signal_semaphores = {};
+	VkPipelineStageFlags* wait_stages = nullptr;
+};
+
 class CommandBuffer : NonCopyable
 {
 public:
-	CommandBuffer(size_t count = 1);
+	CommandBuffer(size_t count = 1, VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 	~CommandBuffer();
 
 	void begin(VkCommandBufferUsageFlagBits usage = {}, size_t index = 0);
 	void end(size_t index = 0);
 
-	void submit(size_t index = 0, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {}, VkPipelineStageFlags* wait_stages = nullptr, VkFence* fence = nullptr);
+	void submit(const CommandBufferSubmitInfo& command_buffer_submit_info = {});
 	void wait(VkQueue queue = VK_NULL_HANDLE);
 
 	bool wasRecorded(size_t index) const { return recorded[index]; }
@@ -18,5 +27,6 @@ public:
 
 private:
 	std::vector<VkCommandBuffer> command_buffers;
-	std::vector<bool> recorded = { false };
+	std::vector<bool> recorded;
+	VkFence fence = VK_NULL_HANDLE;
 };

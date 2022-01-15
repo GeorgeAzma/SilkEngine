@@ -1,5 +1,8 @@
 #pragma once
 
+#undef near
+#undef far
+
 struct TransformComponent
 {
 	glm::mat4 transform{1.0f};
@@ -10,6 +13,9 @@ struct TransformComponent
 struct CameraComponent
 {
 	glm::mat4 projection_view;
+	float fov = 80.0f;
+	float near = 0.01f;
+	float far = 1000.0f;
 
 	operator glm::mat4& () { return projection_view; }
 };

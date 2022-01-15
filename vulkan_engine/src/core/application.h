@@ -38,7 +38,6 @@ private:
     void onWindowClose(const WindowCloseEvent &e);
 
 protected:
-    std::shared_ptr<Window> window;
     FixedUpdate app_update;
 
 private:

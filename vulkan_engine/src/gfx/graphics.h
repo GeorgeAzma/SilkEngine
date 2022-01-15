@@ -4,18 +4,10 @@
 #include "physical_device.h"
 #include "logical_device.h"
 #include "swap_chain.h"
-#include "graphics_pipeline.h"
 #include "command_pool.h"
-#include "buffers/command_buffer.h"
-#include "descriptor_set.h"
-#include "descriptor_set_layout.h"
 #include "descriptor_pool.h"
-#include "buffers/uniform_buffer.h"
-#include "buffers/vertex_buffer.h"
-#include "buffers/index_buffer.h"
-#include "image.h"
-#include "scene/vertex.h"
 #include "allocator.h"
+#include "graphics_pipeline.h"
 
 class WindowResizeEvent;
 
@@ -42,29 +34,30 @@ public:
 	static inline Allocator* allocator = nullptr;
 	static inline CommandPool* command_pool = nullptr;
 	static inline SwapChain* swap_chain = nullptr;
-	static inline GraphicsPipeline* graphics_pipeline = nullptr;
-	static inline GLFWwindow* window = nullptr;
-	static inline DescriptorSetLayout* descriptor_set_layout = nullptr;
-	static inline DescriptorSet* descriptor_set = nullptr;
 	static inline DescriptorPool* descriptor_pool = nullptr;
 
-	//TEMP
-	static inline UniformBuffer* uniform_buffer = nullptr;
-	static inline VertexBuffer* vertex_buffer = nullptr;
-	static inline IndexBuffer* index_buffer = nullptr;
-	static inline Image* image = nullptr;
-	static inline const std::vector<Vertex> vertices =
+	static inline struct Active
 	{
-		{{-0.5f, -0.5f, 1.0f}, {1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-		{{0.5f, -0.5f, 1.0f}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-		{{0.5f, 0.5f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-		{{-0.5f, 0.5f, 1.0f}, {1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}}
-	};
-	static inline const std::vector<uint32_t> indices =
-	{
-		0, 1, 2, 2, 3, 0
-	};
-
+	private:
+		struct BoundDescriptorSet
+		{
+			VkDescriptorSet descriptor_set = VK_NULL_HANDLE;
+			VkPipelineBindPoint bind_point = VK_PIPELINE_BIND_POINT_MAX_ENUM;
+		};
+		struct BegunRenderPass
+		{
+			VkRenderPass render_pass = VK_NULL_HANDLE;
+			VkFramebuffer framebuffer = VK_NULL_HANDLE;
+			VkExtent2D extent = { 0, 0 };
+		};
+	public:
+		VkCommandBuffer command_buffer = VK_NULL_HANDLE;
+		GraphicsPipeline* graphics_pipeline = nullptr;
+		VkBuffer vertex_buffer = VK_NULL_HANDLE;
+		VkBuffer index_buffer = VK_NULL_HANDLE;
+		BoundDescriptorSet descriptor_set = {};
+		BegunRenderPass render_pass = {};
+	} active;
 private:
 	static constexpr std::string stringifyResult(VkResult result);
 };

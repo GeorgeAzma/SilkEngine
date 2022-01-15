@@ -11,20 +11,18 @@ Application::Application(const char* name, ApplicationCommandLineArgs args)
     Log::init(); 
     VE_CORE_INFO("Started");
 
-    WindowProps props{};
-    props.title = name;
-    window = std::make_shared<Window>(props);
+    Window::init();
 
     Input::init();
     
     Dispatcher::subscribe(this, &Application::onWindowClose);
 
-    Graphics::init(window->getGLFWWindow());
+    Graphics::init(Window::getGLFWWindow());
 }
 
 Application::~Application()
 {
-    window = nullptr;
+    Window::cleanup();
     Graphics::cleanup();
     VE_CORE_INFO("Terminated");
 }
@@ -50,7 +48,7 @@ void Application::run()
     {
         if (app_update.update())
         {
-            if (!window->isMinimized())
+            if (!Window::isMinimized())
             {
                 Time::dt = app_update.getDeltaTime();
                 Time::frames = app_update.getFramesPassed();
@@ -70,7 +68,7 @@ void Application::run()
                 glfwWaitEvents();
             }
 
-            window->update();
+            glfwPollEvents();
         }
     }
 }

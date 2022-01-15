@@ -24,14 +24,14 @@ public:
 	template<typename T>
 	void removeComponent() const
 	{
-		VE_CORE_ASSERT(hasComponent<T>(), "Entity doesn't have specified component");
+		//VE_CORE_ASSERT(hasComponent<T>(), "Entity doesn't have specified component");
 		scene->registry.remove<T>(entity);
 	}
 
 	template<typename T>
 	T& getComponent()
 	{
-		VE_CORE_ASSERT(hasComponent<T>(), "Entity doesn't have specified component");
+		//VE_CORE_ASSERT(hasComponent<T>(), "Entity doesn't have specified component");
 		return scene->registry.get<T>(entity);
 	}
 

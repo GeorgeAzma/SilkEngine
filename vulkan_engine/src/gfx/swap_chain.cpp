@@ -1,7 +1,7 @@
 #include "swap_chain.h"
 #include "physical_device.h"
 #include "graphics.h"
-#include "graphics_state.h"
+#include "core/window.h"
 
 SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 {
@@ -72,7 +72,7 @@ void SwapChain::createFramebuffers()
 
 void SwapChain::acquireNextImage()
 {
-	Graphics::vulkanAssert(vkWaitForFences(*Graphics::logical_device, 1, &in_flight_fences[current_frame], VK_TRUE, UINT64_MAX));
+	command_buffer->wait();
 	Graphics::vulkanAssert(vkAcquireNextImageKHR(*Graphics::logical_device, swap_chain, UINT64_MAX, image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index));
 }
 
@@ -89,7 +89,7 @@ void SwapChain::present()
 	const std::vector<VkSemaphore> signal_semaphores = { render_finished_semaphores[current_frame] };
 	VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
-	command_buffer->submit(image_index, { image_available_semaphores[current_frame] }, signal_semaphores, wait_stages, &in_flight_fences[current_frame]);
+	command_buffer->submit({ image_index, in_flight_fences[current_frame], { image_available_semaphores[current_frame] }, signal_semaphores, wait_stages });
 
 	VkPresentInfoKHR present_info{};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -112,43 +112,14 @@ void SwapChain::beginFrame()
 {
 	acquireNextImage(); 
 
-	//RECORDING - TEMP
-
-	if (command_buffer->wasRecorded(image_index)) 
-		return;
-
 	command_buffer->begin({}, image_index);
 	render_pass->begin(*framebuffers[image_index]);
-
-	Graphics::graphics_pipeline->bind();
-
-	Graphics::vertex_buffer->bind();
-	Graphics::index_buffer->bind();
-
-	VkViewport viewport{};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = extent.width;
-	viewport.height = extent.height;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	vkCmdSetViewport(*graphics_state.command_buffer, 0, 1, &viewport);
-
-	VkRect2D scissor{};
-	scissor.offset = { 0, 0 };
-	scissor.extent = extent;
-	vkCmdSetScissor(*graphics_state.command_buffer, 0, 1, &scissor);
-
-	Graphics::descriptor_set->bind(image_index);
-
-	vkCmdDrawIndexed(*graphics_state.command_buffer, Graphics::indices.size(), 1, 0, 0, 0);
-
-	render_pass->end();
-	command_buffer->end(image_index);
 }
 
 void SwapChain::endFrame()
 {
+	render_pass->end();
+	command_buffer->end(image_index);
 	present();
 }
 
@@ -292,10 +263,7 @@ int SwapChain::rateSwapChainSurfaceFormat(VkSurfaceFormatKHR format) const
 
 void SwapChain::onWindowResize(const WindowResizeEvent& e)
 {
-	if (e.window == Graphics::window)
-	{
-		recreate();
-	}
+	recreate();
 }
 
 void SwapChain::chooseSwapChainPresentMode()
@@ -326,7 +294,7 @@ void SwapChain::chooseSwapChainExtent()
 	}
 
 	int width, height;
-	glfwGetFramebufferSize(Graphics::window, &width, &height);
+	glfwGetFramebufferSize(Window::getGLFWWindow(), &width, &height);
 	VkExtent2D extent =
 	{
 		(uint32_t)width,

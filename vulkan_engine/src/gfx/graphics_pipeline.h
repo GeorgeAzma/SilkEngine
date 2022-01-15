@@ -31,6 +31,7 @@ public:
 	void bind(VkPipelineBindPoint bind_point = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS);
 
 	const VkPipelineLayout& getLayout() const { return pipeline_layout; }
+	VkPipelineBindPoint getBindPoint() const { return bind_point; }
 
 	operator const VkPipeline& () const { return graphics_pipeline; }
 

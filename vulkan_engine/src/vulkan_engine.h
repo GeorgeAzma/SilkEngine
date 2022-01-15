@@ -29,7 +29,6 @@
 #include "gfx/descriptor_set.h"
 #include "gfx/descriptor_set_layout.h"
 #include "gfx/graphics_pipeline.h"
-#include "gfx/graphics_state.h"
 #include "gfx/image.h"
 #include "gfx/image_view.h"
 #include "gfx/render_pass.h"

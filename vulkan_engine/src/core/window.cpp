@@ -8,17 +8,8 @@ static void GLFWErrorCallback(int error, const char *description)
     VE_CORE_ERROR("GLFW({0}): {1}", error, description);
 }
 
-Window::Window(const WindowProps &props)
-    : transparent(props.transparent)
+void Window::init()
 {
-    data.width = props.width;
-    data.height = props.height;
-    data.title = props.title;
-    data.x = 0;
-    data.y = 0;
-    data.fullscreen = false;
-    data.vsync = false;
-
     if (!GLFW_initialized)
     {
         int success = glfwInit();
@@ -35,13 +26,13 @@ Window::Window(const WindowProps &props)
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    window = glfwCreateWindow(data.width, data.height, data.title, data.fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+    window = glfwCreateWindow(data.width, data.height, data.title, fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 
     glfwDefaultWindowHints();
     glfwShowWindow(window);
 
     glfwSetWindowUserPointer(window, &data);
-    setVsync(data.vsync);
+    setVsync(vsync);
     align(WindowAlignment::CENTER);
 
     // Event callbacks
@@ -52,14 +43,22 @@ Window::Window(const WindowProps &props)
             data.width = width;
             data.height = height;
             if(width != 0 && height != 0)
-                Dispatcher::post(WindowResizeEvent(data.width, data.height, window));
+                Dispatcher::post(WindowResizeEvent(width, height));
+        });
+    glfwSetWindowPosCallback(window,
+        [](GLFWwindow* window, int x, int y)
+        {
+            Data& data = *(Data*)glfwGetWindowUserPointer(window);
+            data.x = x;
+            data.y = y;
+            Dispatcher::post(WindowMoveEvent(x, y));
         });
 
     glfwSetWindowCloseCallback(window,
         [](GLFWwindow *window)
         {
             Data &data = *(Data *)glfwGetWindowUserPointer(window);
-            Dispatcher::post(WindowCloseEvent(window));
+            Dispatcher::post(WindowCloseEvent());
         });
 
     glfwSetKeyCallback(window,
@@ -70,25 +69,17 @@ Window::Window(const WindowProps &props)
             {
             case GLFW_PRESS:
             {
-                data.input.latestKeyDown = key;
-                data.input.keysDown[key] = true;
-                data.input.anyKeyDown = true;
-                Dispatcher::post(KeyPressEvent(key, 0, window));
+                Dispatcher::post(KeyPressEvent(key, 0));
                 break;
             }
             case GLFW_REPEAT:
             {
-                data.input.latestKeyDown = key;
-                data.input.keysDown[key] = true;
-                data.input.anyKeyDown = true;
-                Dispatcher::post(KeyPressEvent(key, 1, window));
+                Dispatcher::post(KeyPressEvent(key, 1));
                 break;
             }
             case GLFW_RELEASE:
             {
-                data.input.keysDown[key] = false;
-                data.input.anyKeyDown = std::accumulate(data.input.keysDown.begin(), data.input.keysDown.end(), 0);
-                Dispatcher::post(KeyReleaseEvent(key, window));
+                Dispatcher::post(KeyReleaseEvent(key));
                 break;
             }
             }
@@ -102,17 +93,12 @@ Window::Window(const WindowProps &props)
             {
             case GLFW_PRESS:
             {
-                data.input.latestButtonDown = button;
-                data.input.buttonsDown[button] = true;
-                data.input.anyButtonDown = true;
-                Dispatcher::post(MousePressEvent(button, window));
+                Dispatcher::post(MousePressEvent(button));
                 break;
             }
             case GLFW_RELEASE:
             {
-                data.input.buttonsDown[button] = false;
-                data.input.anyButtonDown = std::accumulate(data.input.buttonsDown.begin(), data.input.buttonsDown.end(), 0);
-                Dispatcher::post(MouseReleaseEvent(button, window));
+                Dispatcher::post(MouseReleaseEvent(button));
                 break;
             }
             }
@@ -122,44 +108,35 @@ Window::Window(const WindowProps &props)
         [](GLFWwindow *window, double mx, double my)
         {
             Data &data = *(Data *)glfwGetWindowUserPointer(window);
-            Dispatcher::post(MouseMoveEvent(mx, (double)data.height - my, window));
-            if (data.input.anyButtonDown)
-            {
-                Dispatcher::post(MouseDragEvent(data.input.latestButtonDown, mx, (double)data.height - my, window));
-            }
+            Dispatcher::post(MouseMoveEvent(mx, (double)data.height - my));
         });
 
     glfwSetScrollCallback(window,
         [](GLFWwindow *window, double sx, double sy)
         {
             Data &data = *(Data *)glfwGetWindowUserPointer(window);
-            Dispatcher::post(MouseScrollEvent(sx, sy, window));
+            Dispatcher::post(MouseScrollEvent(sx, sy));
         });
 }
 
-Window::~Window()
+void Window::cleanup()
 {
     glfwDestroyWindow(window);
 }
 
-void Window::update()
-{
-    glfwPollEvents();
-}
-
 void Window::setVsync(bool vsync)
 {
-    if (data.vsync == vsync)
+    if (Window::vsync == vsync)
         return;
-    data.vsync = vsync;
+    Window::vsync = vsync;
     glfwSwapInterval((int)vsync);
 }
 
 void Window::setFullscreen(bool fullscreen)
 {
-    if (data.fullscreen == fullscreen)
+    if (Window::fullscreen == fullscreen)
         return;
-    data.fullscreen = fullscreen;
+    Window::fullscreen = fullscreen;
     if (fullscreen)
         glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, data.width, data.height, GLFW_DONT_CARE);
     else

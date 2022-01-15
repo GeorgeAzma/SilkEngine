@@ -32,7 +32,7 @@ QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice physical_d
 			queue_family_indices.graphics = i;
 
 		VkBool32 present_support = false;
-		vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, i, *Graphics::surface, &present_support);
+		Graphics::vulkanAssert(vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, i, *Graphics::surface, &present_support));
 		if (present_support)
 			queue_family_indices.present = i;
 
@@ -93,35 +93,35 @@ VkFormat PhysicalDevice::findStencilFormat()
 
 void PhysicalDevice::getSwapChainSupportDetails(VkPhysicalDevice physical_device)
 {
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, *Graphics::surface, &surface_capabilities);
+	Graphics::vulkanAssert(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, *Graphics::surface, &surface_capabilities));
 	
 	uint32_t format_count = 0;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, *Graphics::surface, &format_count, nullptr);
+	Graphics::vulkanAssert(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, *Graphics::surface, &format_count, nullptr));
 	if (format_count)
 	{
 		surface_formats.resize(format_count);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, *Graphics::surface, &format_count, surface_formats.data());
+		Graphics::vulkanAssert(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, *Graphics::surface, &format_count, surface_formats.data()));
 	}
 
 	uint32_t present_mode_count = 0;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, *Graphics::surface, &present_mode_count, nullptr);
+	Graphics::vulkanAssert(vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, *Graphics::surface, &present_mode_count, nullptr));
 	if (present_mode_count)
 	{
 		present_modes.resize(present_mode_count);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, *Graphics::surface, &present_mode_count, present_modes.data());
+		Graphics::vulkanAssert(vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, *Graphics::surface, &present_mode_count, present_modes.data()));
 	}
 }
 
 std::vector<VkPhysicalDevice> PhysicalDevice::getAvailablePhysicalDevices() const
 {
 	uint32_t device_count = 0;
-	vkEnumeratePhysicalDevices(*Graphics::instance, &device_count, nullptr);
+	Graphics::vulkanAssert(vkEnumeratePhysicalDevices(*Graphics::instance, &device_count, nullptr));
 
 	VE_CORE_ASSERT(device_count > 0, 
 		"Vulkan: Couldn't find GPU with vulkan support");
 
 	std::vector<VkPhysicalDevice> physical_devices(device_count);
-	vkEnumeratePhysicalDevices(*Graphics::instance, &device_count, physical_devices.data());
+	Graphics::vulkanAssert(vkEnumeratePhysicalDevices(*Graphics::instance, &device_count, physical_devices.data()));
 
 	return physical_devices;
 }
@@ -192,10 +192,10 @@ int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
 std::vector<VkExtensionProperties> PhysicalDevice::getAvailablePhysicalDeviceExtensions(VkPhysicalDevice physical_device) const
 {
 	uint32_t extension_count = 0;
-	vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, nullptr);
+	Graphics::vulkanAssert(vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, nullptr));
 
 	std::vector<VkExtensionProperties> available_extensions(extension_count);
-	vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, available_extensions.data());
+	Graphics::vulkanAssert(vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, available_extensions.data()));
 
 	return available_extensions;
 }

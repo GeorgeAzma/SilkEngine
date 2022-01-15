@@ -4,104 +4,105 @@
 #include <typeindex>
 #include <vector>
 #include <memory>
-#include <GLFW/glfw3.h>
 
-// Different core events
+//EVENT
 class Event
 {
 public:
     virtual ~Event() {}
 };
 
+//WINDOW EVENTS
 class WindowResizeEvent : public Event
 {
 public:
-    WindowResizeEvent(int width, int height, GLFWwindow* window)
-        : width{width}, height{height}, window{window} {}
+    WindowResizeEvent(int width, int height)
+        : width(width), height(height) {}
 
     const int width, height;
-    const GLFWwindow* window;
 };
 
 class WindowCloseEvent : public Event
 {
 public:
-    WindowCloseEvent(GLFWwindow* window) {}
-
-    const GLFWwindow* window;
+    WindowCloseEvent() {}
 };
 
+class WindowMoveEvent : public Event
+{
+public:
+    WindowMoveEvent(int x, int y)
+        : x(x), y(y) {}
+
+    const int x, y;
+};
+
+//KEY EVENTS
 class KeyPressEvent : public Event
 {
 public:
-    KeyPressEvent(uint16_t key, unsigned int repeat_count, GLFWwindow* window)
-        : key{key}, repeat_count{repeat_count}, window{window} {}
+    KeyPressEvent(uint16_t key, unsigned int repeat_count)
+        : key(key), repeat_count(repeat_count) {}
 
     const int key;
     const unsigned int repeat_count;
-    const GLFWwindow* window;
-};
+ };
 
 class KeyReleaseEvent : public Event
 {
 public:
-    KeyReleaseEvent(int key, GLFWwindow* window)
-        : key{key}, window{window} {}
+    KeyReleaseEvent(int key)
+        : key(key) {}
 
     const int key;
-    const GLFWwindow* window;
-};
+ };
 
+//MOUSE EVENTS
 class MousePressEvent : public Event
 {
 public:
-    MousePressEvent(int button, GLFWwindow* window)
-        : button{button}, window{window} {}
+    MousePressEvent(int button)
+        : button(button) {}
 
     const int button;
-    const GLFWwindow* window;
-};
+ };
 
 class MouseReleaseEvent : public Event
 {
 public:
-    MouseReleaseEvent(int button, GLFWwindow* window)
-        : button{button}, window{window} {}
+    MouseReleaseEvent(int button)
+        : button(button) {}
 
     const int button;
-    const GLFWwindow* window;
-};
+ };
 
 class MouseMoveEvent : public Event
 {
 public:
-    MouseMoveEvent(double x, double y, GLFWwindow* window)
-        : x{x}, y{y}, window{window} {}
+    MouseMoveEvent(double x, double y)
+        : x(x), y(y) {}
 
     const double x, y;
-    const GLFWwindow* window;
-};
+ };
 
 class MouseDragEvent : public Event
 {
 public:
-    MouseDragEvent(int button, double x, double y, GLFWwindow* window)
-        : button{button}, x{x}, y{y}, window{window} {}
+    MouseDragEvent(int button, double x, double y)
+        : button(button), x(x), y(y) {}
 
     const int button;
     const double x, y;
-    const GLFWwindow* window;
-};
+ };
 
 class MouseScrollEvent : public Event
 {
 public:
-    MouseScrollEvent(double x, double y, GLFWwindow* window)
-        : x{ x }, y{ y }, window{window} {}
+    MouseScrollEvent(double x, double y)
+        : x(x), y(y) {}
 
     const double x, y;
-    const GLFWwindow* window;
-};
+ };
 
 
 
@@ -157,7 +158,7 @@ public:
     typedef void (T::* MemberFunction)(const EventType&);
 
     MemberFunctionHandler(T* instance, MemberFunction member_function)
-        : instance{ instance }, member_function{ member_function } {}
+        : instance(instance), member_function(member_function) {}
 
     void call(const Event& event) const
     {
@@ -184,7 +185,7 @@ public:
     typedef void (*Function)(const EventType&);
 
     FunctionHandler(Function function)
-        : function{ function } {};
+        : function(function) {};
 
     void call(const Event& event) const
     {
