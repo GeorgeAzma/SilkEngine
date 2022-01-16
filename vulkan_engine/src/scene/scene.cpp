@@ -1,6 +1,7 @@
 #include "scene.h"
 #include "entity.h"
 #include "components.h"
+#include "gfx/graphics.h"
 
 Scene::Scene()
 {
@@ -34,7 +35,14 @@ void Scene::onUpdate()
 		{
 			script_component.instance->onUpdate();
 		});
-
+	registry.view<RenderComponent, MeshComponent>().each(
+		[=](auto entity, auto& render_component, auto& mesh_component)
+		{
+			render_component.graphics_pipeline->bind();
+			mesh_component.mesh->vertex_array->bind();
+			render_component.descriptor_set->bind(Graphics::swap_chain->getImageIndex());
+			vkCmdDrawIndexed(Graphics::active.command_buffer, mesh_component.mesh->indices.size(), 1, 0, 0, 0);
+		});
 }
 
 void Scene::onStop()

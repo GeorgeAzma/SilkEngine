@@ -36,6 +36,9 @@ void Window::init()
     setVsync(vsync);
     align(WindowAlignment::CENTER);
 
+    Dispatcher::post(WindowResizeEvent(data.width, data.height));
+    Dispatcher::post(WindowMoveEvent(data.x, data.y));
+
     // Event callbacks
     glfwSetWindowSizeCallback(window,
         [](GLFWwindow *window, int width, int height)

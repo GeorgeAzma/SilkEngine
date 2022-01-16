@@ -51,3 +51,6 @@
 #include "scene/scene.h"
 #include "scene/components.h"
 #include "scene/camera_controller.h"
+
+#include "scene/meshes/mesh.h"
+#include "scene/meshes/circle_mesh.h"

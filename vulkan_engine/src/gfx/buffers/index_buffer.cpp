@@ -2,14 +2,14 @@
 #include "staging_buffer.h"
 #include "gfx/graphics.h"
 
-IndexBuffer::IndexBuffer(const void* data, VkDeviceSize size, IndexType index_type)
-	: Buffer(size,
+IndexBuffer::IndexBuffer(const void* data, VkDeviceSize count, IndexType index_type)
+	: Buffer(count * EnumInfo::size(index_type),
 		VK_BUFFER_USAGE_TRANSFER_DST_BIT |
 		VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
 		VMA_MEMORY_USAGE_GPU_ONLY), 
 	index_type{EnumInfo::indexType(index_type)}
 {
-	StagingBuffer staging_buffer(data, size);
+	StagingBuffer staging_buffer(data, count * EnumInfo::size(index_type));
 	staging_buffer.copy(buffer);
 }
 

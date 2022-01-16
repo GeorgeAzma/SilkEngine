@@ -11,38 +11,34 @@ BufferLayout::BufferLayout(const std::initializer_list<BufferElement>& elements)
 
 	for (const BufferElement& element : elements)
 	{
-		VkVertexInputAttributeDescription attribute_description{};
-		attribute_description.binding = 0;
-		attribute_description.location = location;
-		attribute_description.offset = offset;
-		attribute_description.format = EnumInfo::type(element.type);
-
-		if (element.instanced)
+		size_t size = EnumInfo::size(element.type);
+		size_t actual_rows = (float)size / sizeof(glm::vec4);
+		size_t rows = actual_rows + (size % sizeof(glm::vec4) > 0);
+		for (size_t i = 0; i < rows; ++i)
 		{
-			is_instanced = true;
-			attribute_description.binding = 1;
-			attribute_description.offset = instance_offset;
-			attribute_descriptions.emplace_back(std::move(attribute_description)); 
-			
-			const auto size = EnumInfo::size(element.type);
+			VkVertexInputAttributeDescription attribute_description{};
+			attribute_description.format = EnumInfo::type(element.type);
+			attribute_description.location = location;
 
-			location += size / sizeof(glm::vec4);
-			location += ((size % sizeof(glm::vec4)) > 0);
+			if (element.instanced)
+			{
+				is_instanced = true;
+				attribute_description.offset = instance_offset;
+				attribute_description.binding = 1;
 
-			instance_offset += size;
-		}
-		else
-		{
+				instance_offset += i < actual_rows ? sizeof(glm::vec4) : (size % sizeof(glm::vec4));
+			}
+			else
+			{
+				attribute_description.offset = offset;
+				attribute_description.binding = 0;
+
+				offset += i < actual_rows ? sizeof(glm::vec4) : (size % sizeof(glm::vec4));
+			}
+
+			++location;
 			attribute_descriptions.emplace_back(std::move(attribute_description));
-
-			const auto size = EnumInfo::size(element.type);
-
-			location += size / sizeof(glm::vec4);
-			location += ((size % sizeof(glm::vec4)) > 0);
-
-			offset += size;
 		}
-
 	}
 
 	binding_descriptions.emplace_back();

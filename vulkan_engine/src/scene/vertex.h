@@ -4,5 +4,10 @@ struct Vertex
 {
 	glm::vec3 position;
 	glm::vec2 texture_coordinates;
-	glm::vec3 color;
+	glm::vec3 normal;
+};
+
+struct InstanceData
+{
+	glm::mat4 transform = glm::mat4(1);
 };

@@ -76,6 +76,7 @@ public:
 	static VkIndexType indexType(IndexType index_type);
 	static VkShaderStageFlagBits shaderType(ShaderType shader_type);
 	static size_t size(Type type);
+	static size_t size(IndexType index_type);
 	static size_t count(Type type);
 	static size_t rows(Type type);
 	static bool hasStencil(VkFormat format);

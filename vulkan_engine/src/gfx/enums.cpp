@@ -125,6 +125,17 @@ size_t EnumInfo::size(Type type)
 	return 0;
 }
 
+size_t EnumInfo::size(IndexType index_type)
+{
+	switch (index_type)
+	{
+	case IndexType::UINT16:
+		return 2;
+	case IndexType::UINT32:
+		return 4;
+	}
+}
+
 size_t EnumInfo::count(Type type)
 {
 	switch (type)

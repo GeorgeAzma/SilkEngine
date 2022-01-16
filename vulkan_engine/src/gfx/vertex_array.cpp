@@ -30,7 +30,7 @@ void VertexArray::bind()
 	std::vector<VkBuffer> buffers(vertex_buffers.size());
 	for (size_t i = 0; i < vertex_buffers.size(); ++i)
 		buffers[i] = *vertex_buffers[i];
-
+	
 	vkCmdBindVertexBuffers(Graphics::active.command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
 	index_buffer->bind();
 }

@@ -1,0 +1,22 @@
+#pragma once
+
+#include "gfx/vertex_array.h"
+#include "scene/vertex.h"
+
+class Mesh : NonCopyable
+{
+public:
+	Mesh() = default;
+	Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+	virtual ~Mesh() {}
+
+protected:
+	void init();
+
+public:
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
+	std::shared_ptr<VertexArray> vertex_array = nullptr;
+protected:
+	void calculateTangents();
+};

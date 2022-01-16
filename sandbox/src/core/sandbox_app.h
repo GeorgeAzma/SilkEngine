@@ -14,10 +14,6 @@ private:
 	Scene scene;
 	std::shared_ptr<Entity> camera;
 	std::shared_ptr<UniformBuffer> uniform_buffer = nullptr;
-	std::shared_ptr<VertexBuffer> vertex_buffer = nullptr;
-	std::shared_ptr<VertexBuffer> vertex_buffer2 = nullptr;
-	std::shared_ptr<VertexArray> vertex_array = nullptr;
-	std::shared_ptr<IndexBuffer> index_buffer = nullptr;
 	std::shared_ptr<Image> image = nullptr;
 	std::shared_ptr<DescriptorSetLayout> descriptor_set_layout = nullptr;
 	std::shared_ptr<DescriptorSet> descriptor_set = nullptr;

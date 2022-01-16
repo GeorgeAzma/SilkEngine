@@ -3,6 +3,10 @@
 #include "core/window.h"
 #include "core/log.h"
 #include "utils/math.h"
+#include "scene/meshes/mesh.h"
+#include "gfx/descriptor_set.h"
+#include "gfx/descriptor_set_layout.h"
+#include "gfx/graphics_pipeline.h"
 
 #undef near
 #undef far
@@ -112,5 +116,12 @@ struct ScriptComponent
 
 struct MeshComponent
 {
+	std::shared_ptr<Mesh> mesh;
+};
 
+struct RenderComponent
+{
+	std::shared_ptr<DescriptorSetLayout> descriptor_set_layout;
+	std::shared_ptr<DescriptorSet> descriptor_set;
+	std::shared_ptr<GraphicsPipeline> graphics_pipeline;
 };
