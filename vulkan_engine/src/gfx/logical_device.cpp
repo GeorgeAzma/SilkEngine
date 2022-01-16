@@ -26,6 +26,11 @@ LogicalDevice::LogicalDevice()
 	// Specifies which device features we want by enabling them
 	VkPhysicalDeviceFeatures device_features{};
 	device_features.samplerAnisotropy = VK_TRUE;
+	device_features.occlusionQueryPrecise = VK_TRUE;
+
+	VkPhysicalDeviceVulkan12Features vulkan_12_device_features{};
+	vulkan_12_device_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+	vulkan_12_device_features.hostQueryReset = VK_TRUE;
 
 	VkDeviceCreateInfo create_info{};
 	create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -35,6 +40,7 @@ LogicalDevice::LogicalDevice()
 	auto required_extensions = getRequiredLogicalDeviceExtensions();
 	create_info.enabledExtensionCount = required_extensions.size();
 	create_info.ppEnabledExtensionNames = required_extensions.data();
+	create_info.pNext = &vulkan_12_device_features;
 
 	Graphics::vulkanAssert(vkCreateDevice(*Graphics::physical_device, &create_info, nullptr, &logical_device));
 

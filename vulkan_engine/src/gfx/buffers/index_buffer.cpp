@@ -15,8 +15,5 @@ IndexBuffer::IndexBuffer(const void* data, VkDeviceSize size, IndexType index_ty
 
 void IndexBuffer::bind()
 {
-	if (Graphics::active.index_buffer == buffer)
-		return;
-
 	vkCmdBindIndexBuffer(Graphics::active.command_buffer, buffer, 0, index_type);
 }

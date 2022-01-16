@@ -22,6 +22,23 @@ public:
 	{
 		return next() >> 63ULL;
 	}
+	static glm::vec3 Vec3()
+	{
+		float theta = Float() * 6.283185307179586476925286766559f;
+		float phi = std::acos(Float() * 2 - 1);
+
+		float x = std::sin(phi) * std::cos(theta);
+		float y = std::sin(phi) * std::sin(theta);
+		float z = std::cos(phi);
+
+		return glm::vec3(x, y, z);
+	}
+	static glm::vec2 Vec2()
+	{
+		float theta = Float() * 6.283185307179586476925286766559f;
+
+		return glm::vec2(cos(theta), sin(theta));
+	}
 	static constexpr const uint64_t max()
 	{
 		return std::numeric_limits<uint64_t>::max();

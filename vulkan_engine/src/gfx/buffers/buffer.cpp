@@ -64,11 +64,14 @@ void Buffer::copy(VkBuffer destination, VkBuffer source, size_t size)
 
 	command_buffer.end();
 	command_buffer.submit();
-	Graphics::vulkanAssert(vkQueueWaitIdle(Graphics::logical_device->getGraphicsQueue()));
+	command_buffer.wait();
 }
 
 void Buffer::setData(const void* data, size_t size, VmaAllocation allocation)
 {
+	if (!data) 
+		return;
+
 	void* buffer_data;
 	vmaMapMemory(*Graphics::allocator, allocation, &buffer_data);
 	std::memcpy(buffer_data, data, size);

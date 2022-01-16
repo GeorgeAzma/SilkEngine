@@ -34,6 +34,8 @@
 #include "gfx/image_view.h"
 #include "gfx/render_pass.h"
 #include "gfx/sampler.h"
+#include "gfx/query_pool.h"
+#include "gfx/vertex_array.h"
 
 #include "gfx/buffers/buffer.h"
 #include "gfx/buffers/vertex_buffer.h"

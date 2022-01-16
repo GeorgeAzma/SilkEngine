@@ -13,9 +13,6 @@ VertexBuffer::VertexBuffer(const void* data, VkDeviceSize size)
 
 void VertexBuffer::bind()
 {
-	if (Graphics::active.vertex_buffer == buffer)
-		return;
-
 	constexpr VkDeviceSize offset = 0;
 	vkCmdBindVertexBuffers(Graphics::active.command_buffer, 0, 1, &buffer, &offset);
 }
