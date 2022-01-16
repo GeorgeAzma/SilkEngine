@@ -2,6 +2,7 @@
 #include "input.h"
 #include "utils/delta.h"
 #include "time.h"
+#include "keys.h"
 #include "gfx/graphics.h"
 #include "utils/timers.h"
 
@@ -16,12 +17,15 @@ Application::Application(const char* name, ApplicationCommandLineArgs args)
     Input::init();
     
     Dispatcher::subscribe(this, &Application::onWindowClose);
+    Dispatcher::subscribe(this, &Application::onKeyPress);
 
     Graphics::init(Window::getGLFWWindow());
 }
 
 Application::~Application()
 {
+    Dispatcher::unsubscribe(this, &Application::onWindowClose);
+    Dispatcher::unsubscribe(this, &Application::onKeyPress);
     Window::cleanup();
     Graphics::cleanup();
     VE_CORE_INFO("Terminated");
@@ -77,4 +81,17 @@ void Application::onWindowClose(const WindowCloseEvent &e)
 {
     VE_CORE_INFO("Window closed");
     running = false;
+}
+
+void Application::onKeyPress(const KeyPressEvent& e)
+{
+    switch (e.key)
+    {
+    case Keys::ESCAPE:
+        running = false;
+        break;
+    case Keys::F11:
+        Window::setFullscreen(!Window::isFullscreen());
+        break;
+    }
 }

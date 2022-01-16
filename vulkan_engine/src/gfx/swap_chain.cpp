@@ -73,7 +73,7 @@ void SwapChain::createFramebuffers()
 
 void SwapChain::acquireNextImage()
 {
-	command_buffer->wait();
+	command_buffer->wait(); 
 	Graphics::vulkanAssert(vkAcquireNextImageKHR(*Graphics::logical_device, swap_chain, UINT64_MAX, image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index));
 }
 

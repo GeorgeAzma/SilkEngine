@@ -36,6 +36,7 @@ protected:
 private:
     void run();
     void onWindowClose(const WindowCloseEvent &e);
+    void onKeyPress(const KeyPressEvent &e);
 
 protected:
     FixedUpdate app_update;

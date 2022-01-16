@@ -29,7 +29,7 @@ public:
     static unsigned int getY() { return data.y; }
     static float getAspectRatio() { return (float)data.width / data.height; }
     static GLFWwindow *getGLFWWindow() { return window; }
-    static bool isFullscreen() { return fullscreen; }
+    static bool isFullscreen() { return data.fullscreen; }
     static bool isVsync() { return vsync; }
     static bool isTransparent() { return transparent; }
     static bool isMinimized() { return data.width == 0 || data.height == 0; }
@@ -55,9 +55,9 @@ private:
         const char *title = "Window";
         int x = 0;
         int y = 0;
+        bool fullscreen = false;
     } data;
 
-    static inline bool fullscreen = false;
     static inline bool vsync = false;
     static inline bool transparent = false;
 };

@@ -27,7 +27,7 @@ void Window::init()
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    window = glfwCreateWindow(data.width, data.height, data.title, fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+    window = glfwCreateWindow(data.width, data.height, data.title, data.fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 
     glfwDefaultWindowHints();
     glfwShowWindow(window);
@@ -50,8 +50,11 @@ void Window::init()
         [](GLFWwindow* window, int x, int y)
         {
             Data& data = *(Data*)glfwGetWindowUserPointer(window);
-            data.x = x;
-            data.y = y;
+            if (!data.fullscreen)
+            {
+                data.x = x;
+                data.y = y;
+            }
             Dispatcher::post(WindowMoveEvent(x, y));
         });
 
@@ -79,15 +82,6 @@ void Window::init()
             case GLFW_RELEASE:
             {
                 Dispatcher::post(KeyReleaseEvent(key));
-                switch (key)
-                {
-                case Keys::F11:
-                    setFullscreen(!fullscreen);
-                    break;
-                case Keys::ESCAPE:
-                    break;
-                }
-                break;
             }
             }
         });
@@ -153,10 +147,10 @@ void Window::setVsync(bool vsync)
 
 void Window::setFullscreen(bool fullscreen)
 {
-    if (Window::fullscreen == fullscreen)
+    if (data.fullscreen == fullscreen)
         return;
-    Window::fullscreen = fullscreen;
-    glfwSetWindowMonitor(window, fullscreen ? glfwGetPrimaryMonitor() : nullptr, 0, 0, data.width, data.height, GLFW_DONT_CARE);
+    data.fullscreen = fullscreen;
+    glfwSetWindowMonitor(window, fullscreen ? glfwGetPrimaryMonitor() : nullptr, data.x, data.y, data.width, data.height, GLFW_DONT_CARE);
     Dispatcher::post(WindowFullscreenEvent(fullscreen));
 }
 
