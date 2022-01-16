@@ -46,6 +46,7 @@ private:
     int rateSwapChainSurfaceFormat(VkSurfaceFormatKHR format) const;
 
     void onWindowResize(const WindowResizeEvent& e);
+    void onWindowFullscreen(const WindowFullscreenEvent& e);
 
 private:
     VkSwapchainKHR swap_chain;

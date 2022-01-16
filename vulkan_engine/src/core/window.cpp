@@ -1,4 +1,5 @@
 #include "window.h"
+#include "keys.h"
 #include "event.h"
 
 static bool GLFW_initialized = false;
@@ -57,14 +58,12 @@ void Window::init()
     glfwSetWindowCloseCallback(window,
         [](GLFWwindow *window)
         {
-            Data &data = *(Data *)glfwGetWindowUserPointer(window);
             Dispatcher::post(WindowCloseEvent());
         });
 
     glfwSetKeyCallback(window,
         [](GLFWwindow *window, int key, int scancode, int action, int mods)
         {
-            Data &data = *(Data *)glfwGetWindowUserPointer(window);
             switch (action)
             {
             case GLFW_PRESS:
@@ -80,6 +79,14 @@ void Window::init()
             case GLFW_RELEASE:
             {
                 Dispatcher::post(KeyReleaseEvent(key));
+                switch (key)
+                {
+                case Keys::F11:
+                    setFullscreen(!fullscreen);
+                    break;
+                case Keys::ESCAPE:
+                    break;
+                }
                 break;
             }
             }
@@ -88,7 +95,6 @@ void Window::init()
     glfwSetMouseButtonCallback(window,
         [](GLFWwindow *window, int button, int action, int mods)
         {
-            Data &data = *(Data *)glfwGetWindowUserPointer(window);
             switch (action)
             {
             case GLFW_PRESS:
@@ -107,15 +113,28 @@ void Window::init()
     glfwSetCursorPosCallback(window,
         [](GLFWwindow *window, double mx, double my)
         {
-            Data &data = *(Data *)glfwGetWindowUserPointer(window);
-            Dispatcher::post(MouseMoveEvent(mx, (double)data.height - my));
+            Dispatcher::post(MouseMoveEvent(mx, my));
         });
 
     glfwSetScrollCallback(window,
         [](GLFWwindow *window, double sx, double sy)
         {
-            Data &data = *(Data *)glfwGetWindowUserPointer(window);
             Dispatcher::post(MouseScrollEvent(sx, sy));
+        });
+
+    glfwSetDropCallback(window,
+        [](GLFWwindow* window, int path_count, const char* paths[])
+        {
+            std::vector<const char*> paths_vec(path_count);
+            for (size_t i = 0; i < paths_vec.size(); ++i)
+                paths_vec[i] = paths[i];
+            Dispatcher::post(DragAndDropEvent(paths_vec));
+        });
+
+    glfwSetCharModsCallback(window,
+        [](GLFWwindow* window, unsigned int codepoint, int mods)
+        {
+            Dispatcher::post(CharacterWriteEvent(codepoint));
         });
 }
 
@@ -137,10 +156,8 @@ void Window::setFullscreen(bool fullscreen)
     if (Window::fullscreen == fullscreen)
         return;
     Window::fullscreen = fullscreen;
-    if (fullscreen)
-        glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, data.width, data.height, GLFW_DONT_CARE);
-    else
-        glfwSetWindowMonitor(window, nullptr, data.x, data.y, data.width, data.height, GLFW_DONT_CARE);
+    glfwSetWindowMonitor(window, fullscreen ? glfwGetPrimaryMonitor() : nullptr, 0, 0, data.width, data.height, GLFW_DONT_CARE);
+    Dispatcher::post(WindowFullscreenEvent(fullscreen));
 }
 
 void Window::setX(int x)

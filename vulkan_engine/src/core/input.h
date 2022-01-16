@@ -14,9 +14,17 @@ public:
 	static bool isMouseReleased(int button);
 	static bool isKeyReleased(int key);
 
+	static glm::vec2 getMouse();
+	static float getMouseX();
+	static float getMouseY();
+
+	static void lockMouse();
+	static void unlockMouse();
+
 private:
 	static void onMousePress(const MousePressEvent& e);
 	static void onMouseRelease(const MouseReleaseEvent& e);
+	static void onMouseMove(const MouseMoveEvent& e);
 	static void onKeyPress(const KeyPressEvent& e);
 	static void onKeyRelease(const KeyReleaseEvent& e);
 
@@ -26,4 +34,6 @@ private:
 
 	static inline std::array<bool, GLFW_KEY_LAST + 1> last_keys{false};
 	static inline std::array<bool, GLFW_MOUSE_BUTTON_LAST + 1> last_mouse_buttons{false};
+
+	static inline glm::vec2 mouse = glm::vec2(0);
 };

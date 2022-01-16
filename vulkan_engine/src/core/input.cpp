@@ -1,43 +1,70 @@
 #include "input.h"
 #include "keys.h"
 #include "mouse_buttons.h"
+#include "core/window.h"
 
 void Input::init()
 {
 	Dispatcher::subscribe(onMousePress);
 	Dispatcher::subscribe(onMouseRelease);
+	Dispatcher::subscribe(onMouseMove);
 	Dispatcher::subscribe(onKeyPress);
 	Dispatcher::subscribe(onKeyRelease);
 }
 
-inline bool Input::isMouseDown(int button)
+bool Input::isMouseDown(int button)
 {
 	return mouse_buttons[button];
 }
 
-inline bool Input::isKeyDown(int key)
+bool Input::isKeyDown(int key)
 {
 	return keys[key];
 }
 
-inline bool Input::isMousePressed(int button)
+bool Input::isMousePressed(int button)
 {
 	return mouse_buttons[button] && !last_mouse_buttons[button];
 }
 
-inline bool Input::isKeyPressed(int key)
+bool Input::isKeyPressed(int key)
 {
 	return keys[key] && !last_keys[key];
 }
 
-inline bool Input::isMouseReleased(int button)
+bool Input::isMouseReleased(int button)
 {
 	return !mouse_buttons[button] && last_mouse_buttons[button];
 }
 
-inline bool Input::isKeyReleased(int key)
+bool Input::isKeyReleased(int key)
 {
 	return !keys[key] && last_keys[key];
+}
+
+glm::vec2 Input::getMouse()
+{
+	return mouse;
+}
+
+float Input::getMouseX()
+{
+	return mouse.x;
+}
+
+float Input::getMouseY()
+{
+	return mouse.y;
+}
+
+void Input::lockMouse()
+{
+	glfwSetInputMode(Window::getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+void Input::unlockMouse()
+{
+	glfwSetInputMode(Window::getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
 void Input::onMousePress(const MousePressEvent& e)
@@ -48,6 +75,11 @@ void Input::onMousePress(const MousePressEvent& e)
 void Input::onMouseRelease(const MouseReleaseEvent& e)
 {
 	mouse_buttons[e.button] = false;
+}
+
+void Input::onMouseMove(const MouseMoveEvent& e)
+{
+	mouse = glm::vec2(e.x, e.y);
 }
 
 void Input::onKeyPress(const KeyPressEvent& e)

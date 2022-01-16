@@ -104,11 +104,33 @@ public:
     const double x, y;
  };
 
+class DragAndDropEvent : public Event
+{
+public:
+    DragAndDropEvent(const std::vector<const char*>& paths)
+        : paths(paths) {}
 
+private:
+    std::vector<const char*> paths;
+};
 
+class WindowFullscreenEvent : public Event
+{
+public:
+    WindowFullscreenEvent(bool fullscreen)
+        : fullscreen(fullscreen) {}
 
+    const bool fullscreen;
+};
 
+class CharacterWriteEvent : public Event
+{
+public:
+    CharacterWriteEvent(char character)
+        : character(character) {}
 
+    const char character;
+};
 
 
 
@@ -184,7 +206,7 @@ public:
     typedef void (*Function)(const EventType&);
 
     FunctionHandler(Function function)
-        : function(function) {};
+        : function(function) {}
 
     void call(const Event& event) const
     {

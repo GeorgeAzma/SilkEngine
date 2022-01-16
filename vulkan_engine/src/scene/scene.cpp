@@ -4,10 +4,12 @@
 
 Scene::Scene()
 {
+	Dispatcher::subscribe(this, &Scene::onWindowResize);
 }
 
 Scene::~Scene()
 {
+	Dispatcher::unsubscribe(this, &Scene::onWindowResize);
 }
 
 void Scene::onPlay()
@@ -32,6 +34,7 @@ void Scene::onUpdate()
 		{
 			script_component.instance->onUpdate();
 		});
+
 }
 
 void Scene::onStop()
@@ -46,4 +49,13 @@ void Scene::onStop()
 Entity Scene::createEntity()
 {
 	return { registry.create(), this };
+}
+
+void Scene::onWindowResize(const WindowResizeEvent& e)
+{
+	registry.view<CameraComponent>().each(
+		[=](auto entity, auto& camera_component)
+		{
+			camera_component.onViewportResize();
+		});
 }

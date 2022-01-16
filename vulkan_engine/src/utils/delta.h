@@ -27,7 +27,7 @@ public:
     constexpr operator T() const { return delta; }
 
 private:
-    T delta = 0;
-    T old = 0;
-    T now = 0;
+    T delta = {};
+    T old = {};
+    T now = {};
 };

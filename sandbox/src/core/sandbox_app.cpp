@@ -31,7 +31,6 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 { 
     Window::setSize({ 800, 600 });
     camera = std::make_shared<Entity>(scene.createEntity());
-    camera->addComponent<TransformComponent>();
     camera->addComponent<CameraComponent>();
     camera->addComponent<ScriptComponent>().bind<CameraController>();
     scene.onPlay();
@@ -81,7 +80,7 @@ void SandboxApp::onUpdate()
     
     vertex_buffer->bind();
     index_buffer->bind();
-    
+
     descriptor_set->bind(Graphics::swap_chain->getImageIndex());
     
     vkCmdDrawIndexed(Graphics::active.command_buffer, indices.size(), 1, 0, 0, 0);

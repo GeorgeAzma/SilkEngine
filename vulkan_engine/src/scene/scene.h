@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/event.h"
+
 class Entity;
 
 class Scene
@@ -14,6 +16,9 @@ public:
 	void onStop();
 
 	Entity createEntity();
+
+private:
+	void onWindowResize(const WindowResizeEvent& e);
 
 private:
 	entt::registry registry;

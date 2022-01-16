@@ -195,10 +195,6 @@ target_compile_definitions(VulkanEngine PRIVATE
 "VE_CORE"
 )
 
-#Link
-target_link_directories(VulkanEngine PUBLIC ${EXTRA_LIB_DIRS})
-target_link_libraries(VulkanEngine ${EXTRA_LIBS})
-
 #Precompile headers
 target_precompile_headers(VulkanEngine PUBLIC 
 vulkan_engine/src/core/base.h
@@ -242,8 +238,12 @@ vulkan_engine/src/core/base.h
 <entt/entt.hpp>
 <semaphore>
 <thread>
+<concepts>
 vulkan_engine/src/core/log.h)
 
+#Link
+target_link_directories(VulkanEngine PUBLIC ${EXTRA_LIB_DIRS})
+target_link_libraries(VulkanEngine ${EXTRA_LIBS})
 
 ############################__SANDBOX__#####################################
 file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp")

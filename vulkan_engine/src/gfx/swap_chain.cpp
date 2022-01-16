@@ -6,6 +6,7 @@
 SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 {
 	Dispatcher::subscribe(this, &SwapChain::onWindowResize);
+	Dispatcher::subscribe(this, &SwapChain::onWindowFullscreen);
 
 	chooseSwapChainSurfaceFormat();
 	chooseSwapChainPresentMode();
@@ -220,6 +221,7 @@ void SwapChain::destroy()
 SwapChain::~SwapChain()
 {
 	Dispatcher::unsubscribe(this, &SwapChain::onWindowResize);
+	Dispatcher::unsubscribe(this, &SwapChain::onWindowFullscreen);
 
 	delete render_pass;
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
@@ -262,6 +264,11 @@ int SwapChain::rateSwapChainSurfaceFormat(VkSurfaceFormatKHR format) const
 }
 
 void SwapChain::onWindowResize(const WindowResizeEvent& e)
+{
+	recreate();
+}
+
+void SwapChain::onWindowFullscreen(const WindowFullscreenEvent& e)
 {
 	recreate();
 }
