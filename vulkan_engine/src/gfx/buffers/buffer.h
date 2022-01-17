@@ -8,7 +8,7 @@ public:
 	Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_usage);
 	virtual ~Buffer();
 
-	void setData(const void* data);
+	void setData(const void* data, size_t size = 0);
 	size_t getSize() const { return size; }
 
 	operator const VkBuffer& () const { return buffer; }

@@ -62,8 +62,7 @@ void CommandBuffer::end(size_t index)
 
 void CommandBuffer::submit(const CommandBufferSubmitInfo& command_buffer_submit_info)
 {
-	if (Graphics::active.command_buffer == command_buffers[command_buffer_submit_info.index])
-		end();
+	end();
 
 	VkSubmitInfo submit_info{};
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -86,10 +85,10 @@ void CommandBuffer::submit(const CommandBufferSubmitInfo& command_buffer_submit_
 		Graphics::vulkanAssert(vkResetFences(*Graphics::logical_device, 1, &fence));
 	}
 
-	Graphics::vulkanAssert(vkQueueSubmit(Graphics::logical_device->getGraphicsQueue(), 1, &submit_info, fence));
+	Graphics::vulkanAssert(vkQueueSubmit(command_buffer_submit_info.queue != VK_NULL_HANDLE ? command_buffer_submit_info.queue : Graphics::logical_device->getGraphicsQueue(), 1, &submit_info, fence));
 }
 
-void CommandBuffer::wait(VkQueue queue)
+void CommandBuffer::wait()
 {
 	if (fence != VK_NULL_HANDLE)
 	{
@@ -97,9 +96,6 @@ void CommandBuffer::wait(VkQueue queue)
 	}
 	else
 	{
-		if (queue != VK_NULL_HANDLE)
-			Graphics::vulkanAssert(vkQueueWaitIdle(queue));
-		else
-			Graphics::vulkanAssert(vkQueueWaitIdle(Graphics::logical_device->getGraphicsQueue()));
+		Graphics::vulkanAssert(vkQueueWaitIdle(queue != VK_NULL_HANDLE ? queue : Graphics::logical_device->getGraphicsQueue()));
 	}
 }

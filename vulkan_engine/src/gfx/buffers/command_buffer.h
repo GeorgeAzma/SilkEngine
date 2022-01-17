@@ -7,6 +7,7 @@ struct CommandBufferSubmitInfo
 	std::vector<VkSemaphore> wait_semaphores = {};
 	std::vector<VkSemaphore> signal_semaphores = {};
 	VkPipelineStageFlags* wait_stages = nullptr;
+	VkQueue queue = VK_NULL_HANDLE; //Graphics queue by default
 };
 
 class CommandBuffer : NonCopyable
@@ -19,7 +20,7 @@ public:
 	void end(size_t index = 0);
 
 	void submit(const CommandBufferSubmitInfo& command_buffer_submit_info = {});
-	void wait(VkQueue queue = VK_NULL_HANDLE);
+	void wait();
 
 	bool wasRecorded(size_t index) const { return recorded[index]; }
 	const std::vector<VkCommandBuffer>& getCommandBuffers() const { return command_buffers; }
@@ -30,4 +31,5 @@ private:
 	std::vector<bool> recorded;
 	VkCommandBufferLevel level;
 	VkFence fence = VK_NULL_HANDLE; 
+	VkQueue queue = VK_NULL_HANDLE;
 };

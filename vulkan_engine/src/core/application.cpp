@@ -5,21 +5,19 @@
 #include "keys.h"
 #include "gfx/graphics.h"
 #include "utils/timers.h"
+#include "scene/resources.h"
 
 Application::Application(const char* name, ApplicationCommandLineArgs args)
     : command_line_args(args), app_update(0.0)
 {
     Log::init(); 
     VE_CORE_INFO("Started");
-
     Window::init();
-
-    Input::init();
-    
     Dispatcher::subscribe(this, &Application::onWindowClose);
     Dispatcher::subscribe(this, &Application::onKeyPress);
-
-    Graphics::init(Window::getGLFWWindow());
+    Input::init();
+    Graphics::init();
+    Resources::init();
 }
 
 Application::~Application()
@@ -27,6 +25,7 @@ Application::~Application()
     Dispatcher::unsubscribe(this, &Application::onWindowClose);
     Dispatcher::unsubscribe(this, &Application::onKeyPress);
     Window::cleanup();
+    Resources::cleanup();
     Graphics::cleanup();
     VE_CORE_INFO("Terminated");
 }

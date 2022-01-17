@@ -11,13 +11,15 @@ public:
     ~SandboxApp();
 
 private:
-	Scene scene;
+	std::shared_ptr<Scene> scene;
 	std::shared_ptr<Entity> camera;
 	std::shared_ptr<UniformBuffer> uniform_buffer = nullptr;
 	std::shared_ptr<Image> image = nullptr;
 	std::shared_ptr<DescriptorSetLayout> descriptor_set_layout = nullptr;
 	std::shared_ptr<DescriptorSet> descriptor_set = nullptr;
 	std::shared_ptr<GraphicsPipeline> graphics_pipeline = nullptr;
+	std::shared_ptr<StorageBuffer> storage_buffer = nullptr;
+
 	const std::vector<Vertex> vertices =
 	{
 		{{-0.5f, -0.5f, 1.0f}, {1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},

@@ -22,9 +22,9 @@ Buffer::~Buffer()
 	vmaDestroyBuffer(*Graphics::allocator, buffer, allocation);
 }
 
-void Buffer::setData(const void* data)
+void Buffer::setData(const void* data, size_t size)
 {
-	Buffer::setData(data, size, allocation);
+	Buffer::setData(data, size ? size : this->size, allocation);
 }
 
 uint32_t Buffer::findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags properties)
@@ -54,7 +54,7 @@ void Buffer::copy(VkBuffer destination, VkBuffer source, size_t size)
 	allocation_info.commandBufferCount = 1;
 
 	CommandBuffer command_buffer;
-	command_buffer.begin(VkCommandBufferUsageFlagBits::VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
 	VkBufferCopy copy_region{};
 	copy_region.srcOffset = 0;

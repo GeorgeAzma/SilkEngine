@@ -45,12 +45,15 @@
 #include "gfx/buffers/staging_buffer.h"
 #include "gfx/buffers/buffer_layout.h"
 #include "gfx/buffers/uniform_buffer.h"
+#include "gfx/buffers/storage_buffer.h"
+#include "gfx/buffers/indirect_buffer.h"
 
 #include "scene/vertex.h"
 #include "scene/entity.h"
 #include "scene/scene.h"
 #include "scene/components.h"
 #include "scene/camera_controller.h"
+#include "scene/resources.h"
 
 #include "scene/meshes/mesh.h"
 #include "scene/meshes/circle_mesh.h"

@@ -5,7 +5,7 @@
 #include "buffers/buffer_layout.h"
 #include "core/time.h"
 
-void Graphics::init(GLFWwindow* window)
+void Graphics::init()
 {
 	VE_CORE_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
 
@@ -18,9 +18,10 @@ void Graphics::init(GLFWwindow* window)
 	command_pool = new CommandPool(); //0.025ms
 
 	descriptor_pool = new DescriptorPool();
-	descriptor_pool->addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8)
-		.addSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8)
-		.setMaxSets(64).build();
+	descriptor_pool->addSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8)
+		.addSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8)
+		.addSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 8)
+		.setMaxSets(8).build();
 
 	swap_chain = new SwapChain(); //16ms
 }

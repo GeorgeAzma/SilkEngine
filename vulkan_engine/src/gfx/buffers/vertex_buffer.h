@@ -6,7 +6,7 @@
 class VertexBuffer : public Buffer
 {
 public:
-	VertexBuffer(const void* data, VkDeviceSize size);
+	VertexBuffer(const void* data, VkDeviceSize size, VmaMemoryUsage usage = VMA_MEMORY_USAGE_GPU_ONLY);
 
 	void bind();
 };

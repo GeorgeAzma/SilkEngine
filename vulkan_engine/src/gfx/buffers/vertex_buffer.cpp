@@ -1,11 +1,11 @@
 #include "vertex_buffer.h"
 #include "gfx/graphics.h"
 
-VertexBuffer::VertexBuffer(const void* data, VkDeviceSize size)
+VertexBuffer::VertexBuffer(const void* data, VkDeviceSize size, VmaMemoryUsage usage)
 	: Buffer(size,
 		VK_BUFFER_USAGE_TRANSFER_DST_BIT |
 		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-		VMA_MEMORY_USAGE_GPU_ONLY)
+		usage)
 {
 	StagingBuffer staging_buffer(data, size);
 	staging_buffer.copy(buffer);

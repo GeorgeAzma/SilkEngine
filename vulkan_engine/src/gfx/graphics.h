@@ -14,7 +14,7 @@ class WindowResizeEvent;
 class Graphics
 {
 public:
-	static void init(GLFWwindow* window);
+	static void init();
 	static void update();
 
 	static void beginFrame();
@@ -43,8 +43,8 @@ public:
 		GraphicsPipeline* graphics_pipeline = nullptr;
 		VkBuffer vertex_buffer = VK_NULL_HANDLE;
 		VkBuffer index_buffer = VK_NULL_HANDLE;
-		VkDescriptorSet descriptor_set = {};
-		VkRenderPass render_pass = {};
+		VkDescriptorSet descriptor_set = VK_NULL_HANDLE;
+		VkRenderPass render_pass = VK_NULL_HANDLE;
 		uint32_t subpass = 0;
 	} active;
 private:
