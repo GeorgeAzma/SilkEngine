@@ -22,3 +22,4 @@
 (when material changes etc.) (maybe use event system of symilar onComponentChange()?)
 - Create system which handles buffer creation for multiple frames 
 (perhaps static function like Graphics::createBuffer())
+- Sort meshes and materials and render with minimal binds

@@ -24,6 +24,6 @@ protected:
 	void calculateTangents();
 
 private:
-	const char* name;
+	std::string name;
 	friend class Resources;
 };

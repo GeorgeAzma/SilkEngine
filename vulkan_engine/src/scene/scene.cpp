@@ -27,14 +27,19 @@ void Scene::onPlay()
 			}
 		});
 
-	std::vector<std::shared_ptr<Mesh>> meshes;
-	registry.view<MeshComponent>().each(
-		[&](auto entity, auto& render_component, auto& mesh_component)
+	std::vector<RenderObject> render_objects;
+	registry.view<RenderComponent>().each(
+		[this, &render_objects](auto entity, auto& render_component)
 		{
-			meshes.emplace_back(mesh_component.mesh->name, mesh_component.mesh);
+			if (registry.any_of<TransformComponent>(entity))
+			{
+				InstanceData instance_data = { registry.get<TransformComponent>(entity).transform };
+				render_component.render_object.mesh->vertex_array->getVertexBuffer(1)->setData(&instance_data, sizeof(InstanceData));
+			}
+			render_objects.push_back(render_component.render_object);
 		});
 
-	indirect_batches = batchRenderedObjects(meshes);
+	indirect_batches = batchRenderedObjects(render_objects);
 }
 
 void Scene::onUpdate()
@@ -45,9 +50,14 @@ void Scene::onUpdate()
 			script_component.instance->onUpdate();
 		});
 
+
 	for (auto& batch : indirect_batches)
 	{
+		batch.render_object.material->graphics_pipeline->bind();
+		batch.render_object.mesh->vertex_array->bind();
+		batch.render_object.material->descriptor_set->bind();
 
+		vkCmdDrawIndexed(Graphics::active.command_buffer, batch.render_object.mesh->indices.size(), batch.count, 0, 0, 0);
 	}
 }
 
@@ -75,19 +85,19 @@ void Scene::onWindowResize(const WindowResizeEvent& e)
 		});
 }
 
-std::vector<IndirectBatch> Scene::batchRenderedObjects(const std::vector<std::shared_ptr<Mesh>>& meshes)
+std::vector<IndirectBatch> Scene::batchRenderedObjects(const std::vector<RenderObject>& render_objects)
 {
-	std::vector<IndirectBatch> batches = { { meshes.front(), 0, 1 } };
+	std::vector<IndirectBatch> batches = { { render_objects.front(), 0, 1}};
 
-	for (size_t i = 0; i < meshes.size(); ++i)
+	for (size_t i = 0; i < render_objects.size(); ++i)
 	{
-		if (batches.back() == meshes[i])
+		if (batches.back() == render_objects[i])
 		{
 			++batches.back().count;
 		}
 		else
 		{
-			batches.emplace_back(meshes[i], i, 1);
+			batches.emplace_back(render_objects[i], i, 1);
 		}
 	}
 

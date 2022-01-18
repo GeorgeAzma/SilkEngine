@@ -32,7 +32,7 @@ private:
 		0, 1, 2, 2, 3, 0
 	};
 
-	struct Transforms
+	struct GlobalUniformData
 	{
 		glm::mat4 projection_view;
 	};

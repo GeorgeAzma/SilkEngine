@@ -22,7 +22,7 @@ private:
 	void onWindowResize(const WindowResizeEvent& e);
 
 private:
-	static std::vector<IndirectBatch> batchRenderedObjects(const std::vector<std::shared_ptr<Mesh>>& meshes); //TODO: Support materials uniform buffers layouts etc, so convert mesh shared ptr to RenderObject class
+	static std::vector<IndirectBatch> batchRenderedObjects(const std::vector<RenderObject>& render_object); //TODO: Support materials uniform buffers layouts etc, so convert mesh shared ptr to RenderObject class
 
 private:
 	entt::registry registry;

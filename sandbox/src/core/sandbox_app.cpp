@@ -38,13 +38,13 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
         .setRenderPass(Graphics::swap_chain->getRenderPass())
         .build();
 
-    uniform_buffer = std::make_shared<UniformBuffer>(sizeof(Transforms));
+    uniform_buffer = std::make_shared<UniformBuffer>(sizeof(GlobalUniformData));
     storage_buffer = std::make_shared<StorageBuffer>(sizeof(glm::vec3));
 
-    Vertex vertices[] = { 
-    { {0.0f, 0.5f, 0.0f}, {0.5f, 0.0f}, {0.0f, 0.0f, 0.0f} },
-    { {0.5f, -0.5f, 0.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 0.0f} },
-    { {-0.5f, -0.5f, 0.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 0.0f} } };
+    //Vertex vertices[] = { 
+    //{ {0.0f, 0.5f, 0.0f}, {0.5f, 0.0f}, {0.0f, 0.0f, 0.0f} },
+    //{ {0.5f, -0.5f, 0.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 0.0f} },
+    //{ {-0.5f, -0.5f, 0.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 0.0f} } };
     //indirect_buffer = std::make_shared<IndirectBuffer>(sizeof(VkDrawIndexedIndirectCommand));
 
     descriptor_set = std::make_shared<DescriptorSet>(*descriptor_set_layout, Graphics::swap_chain->getImages().size());
@@ -57,9 +57,8 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     for (size_t i = 0; i < circles.size(); ++i)
     {
         circles[i] = std::make_shared<Entity>(scene->createEntity());
-        circles[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1), glm::vec3(0, 0, 1)));
-        circles[i]->addComponent<MeshComponent>(std::shared_ptr<CircleMesh>(new CircleMesh()));
-        circles[i]->addComponent<RenderComponent>(descriptor_set_layout, descriptor_set, graphics_pipeline);
+        circles[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float()) * 4.0f));
+        circles[i]->addComponent<RenderComponent>(std::shared_ptr<CircleMesh>(new CircleMesh()), std::make_shared<Material>(graphics_pipeline, descriptor_set));
     }
     
     scene->onPlay();

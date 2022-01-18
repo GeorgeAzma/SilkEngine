@@ -198,7 +198,7 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	msaa_image = new Image(props);
 
 	createFramebuffers();
-	command_buffer = new CommandBuffer(framebuffers.size());
+	command_buffer = new CommandBuffer(image_views.size());
 }
 
 void SwapChain::destroy()
