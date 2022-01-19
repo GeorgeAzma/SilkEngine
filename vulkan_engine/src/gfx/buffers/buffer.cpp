@@ -11,10 +11,10 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_u
 	buffer_info.usage = usage;
 	buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	VmaAllocationCreateInfo allocation_info = {};
-	allocation_info.usage = vma_usage;
+	VmaAllocationCreateInfo allocation_create_info = {};
+	allocation_create_info.usage = vma_usage;
 
-	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &buffer_info, &allocation_info, &buffer, &allocation, nullptr));
+	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &buffer_info, &allocation_create_info, &buffer, &allocation, nullptr));
 }
 
 Buffer::~Buffer()
@@ -22,9 +22,18 @@ Buffer::~Buffer()
 	vmaDestroyBuffer(*Graphics::allocator, buffer, allocation);
 }
 
-void Buffer::setData(const void* data, size_t size)
+void Buffer::setData(const void* data, size_t size, size_t offset)
 {
-	Buffer::setData(data, size ? size : this->size, allocation);
+	if (!data)
+		return;
+
+	VE_CORE_ASSERT(((size ? size : this->size) + offset) <= this->size, 
+		"Vulkan: Can't map memory, it's out of bounds");
+
+	void* buffer_data;
+	vmaMapMemory(*Graphics::allocator, allocation, &buffer_data);
+	std::memcpy((uint8_t*)buffer_data + offset, data, size ? size : this->size);
+	vmaUnmapMemory(*Graphics::allocator, allocation);
 }
 
 uint32_t Buffer::findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags properties)
@@ -65,15 +74,4 @@ void Buffer::copy(VkBuffer destination, VkBuffer source, size_t size)
 	command_buffer.end();
 	command_buffer.submit();
 	command_buffer.wait();
-}
-
-void Buffer::setData(const void* data, size_t size, VmaAllocation allocation)
-{
-	if (!data) 
-		return;
-
-	void* buffer_data;
-	vmaMapMemory(*Graphics::allocator, allocation, &buffer_data);
-	std::memcpy(buffer_data, data, size);
-	vmaUnmapMemory(*Graphics::allocator, allocation);
 }

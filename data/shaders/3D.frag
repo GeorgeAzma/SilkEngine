@@ -9,12 +9,7 @@ layout(location = 0) out vec4 color;
 
 layout(binding = 1) uniform sampler2D texture_sampler;
 
-layout(std140, binding = 2) buffer MyBuffer
-{
-    vec3 color;
-} buff;
-
 void main()
 {
-    color = texture(texture_sampler, fragment_input.texture_coordinates) * vec4(buff.color, 1);
+    color = texture(texture_sampler, fragment_input.texture_coordinates);
 }

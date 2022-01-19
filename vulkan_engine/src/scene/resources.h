@@ -9,7 +9,8 @@ public:
 	static void init();
 	static void cleanup();
 
-	static std::shared_ptr<Mesh> getMesh(const std::string&);
+	static std::shared_ptr<Mesh> getMesh(const std::string& name);
+	static std::shared_ptr<Material> getMaterial(const std::string& name);
 	static void addMesh(const std::string& name, std::shared_ptr<Mesh> mesh);
 	static void addMaterial(const std::string& name, std::shared_ptr<Material> material);
 

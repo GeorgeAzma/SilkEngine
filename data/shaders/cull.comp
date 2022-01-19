@@ -1,0 +1,44 @@
+#version 450
+
+layout(local_size_x = 64) in;
+
+layout(binding = 0) buffer CullData
+{
+	uint draw_count;	
+} cull_data;
+
+struct InstanceData
+{
+	mat4 transform;
+};
+
+layout(binding = 1) buffer Instances
+{
+	InstanceData instances[];	
+};
+
+void main()
+{
+	uint ID = gl_GlobalInvocationID.x;
+	if(ID < cull_data.draw_count)
+	{
+		//grab object ID from the buffer
+		//uint object_ID = instances[gID].objectID;
+
+		//check if object is visible
+		//bool visible  = IsVisible(object_ID);
+		//
+		//if(visible)
+		//{
+		//	//get the index of the draw to insert into
+		//	uint batchIndex = instanceBuffer.Instances[gID].batchID;
+		//
+		//	//atomic-add to +1 on the number of instances of that draw command
+		//	uint countIndex = atomicAdd(drawBuffer.Draws[batchIndex].instanceCount,1);
+		//
+		//	//write the object ID into the instance buffer that maps from gl_instanceID into ObjectID
+		//	uint instanceIndex = drawBuffer.Draws[batchIndex].firstInstance + countIndex;
+		//	finalInstanceBuffer.IDs[instanceIndex] = objectID;
+		//}
+	}
+}

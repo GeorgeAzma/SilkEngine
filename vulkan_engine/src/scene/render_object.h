@@ -7,20 +7,24 @@
 
 struct Material
 {
-	std::shared_ptr<GraphicsPipeline> graphics_pipeline = nullptr;
-	std::shared_ptr<DescriptorSet> descriptor_set = nullptr;
+	std::shared_ptr<DescriptorSetLayout> descriptor_set_layout;
+	std::shared_ptr<GraphicsPipeline> graphics_pipeline;
+};
+
+struct MaterialData
+{
+	std::shared_ptr<Material> material;
+	std::shared_ptr<DescriptorSet> descriptor_set;
 };
 
 struct RenderObject
 {
-	std::shared_ptr<Mesh> mesh = nullptr;
-	std::shared_ptr<Material> material = {};
-
-	InstanceData instance_data = {};
+	std::shared_ptr<Mesh> mesh;
+	std::shared_ptr<MaterialData> material_data;
 
 	bool operator==(const RenderObject& other) const
 	{
-		return *mesh == *other.mesh;
+		return *mesh == *other.mesh; //TODO: compare materials too
 	}
 };
 

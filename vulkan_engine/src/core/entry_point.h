@@ -11,6 +11,7 @@ int main(int argc, char **argv)
     {
         auto app = createApp({argc, argv});
         app->run();
+        Graphics::vulkanAssert(vkDeviceWaitIdle(*Graphics::logical_device));
         delete app;
     }
     catch (const std::exception &e)

@@ -27,16 +27,17 @@ void Scene::onPlay()
 			}
 		});
 
-	std::vector<RenderObject> render_objects;
+	size_t index = 0;
 	registry.view<RenderComponent>().each(
-		[this, &render_objects](auto entity, auto& render_component)
+		[this, &index](auto entity, auto& render_component)
 		{
 			if (registry.any_of<TransformComponent>(entity))
 			{
-				InstanceData instance_data = { registry.get<TransformComponent>(entity).transform };
-				render_component.render_object.mesh->vertex_array->getVertexBuffer(1)->setData(&instance_data, sizeof(InstanceData));
+				instance_data.emplace_back(registry.get<TransformComponent>(entity));
+				render_component.render_object.mesh->vertex_array->getVertexBuffer(1)->setData(&instance_data.back(), sizeof(InstanceData), sizeof(InstanceData) * index);
 			}
 			render_objects.push_back(render_component.render_object);
+			index++;
 		});
 
 	indirect_batches = batchRenderedObjects(render_objects);
@@ -50,12 +51,13 @@ void Scene::onUpdate()
 			script_component.instance->onUpdate();
 		});
 
+	//vkCmdDispatch(Graphics::active.command_buffer, render_objects.size() / 64 + (render_objects.size() % 64 != 0), 1, 1);	
 
 	for (auto& batch : indirect_batches)
 	{
-		batch.render_object.material->graphics_pipeline->bind();
+		batch.render_object.material_data->material->graphics_pipeline->bind();
 		batch.render_object.mesh->vertex_array->bind();
-		batch.render_object.material->descriptor_set->bind();
+		batch.render_object.material_data->descriptor_set->bind();
 
 		vkCmdDrawIndexed(Graphics::active.command_buffer, batch.render_object.mesh->indices.size(), batch.count, 0, 0, 0);
 	}
@@ -87,7 +89,7 @@ void Scene::onWindowResize(const WindowResizeEvent& e)
 
 std::vector<IndirectBatch> Scene::batchRenderedObjects(const std::vector<RenderObject>& render_objects)
 {
-	std::vector<IndirectBatch> batches = { { render_objects.front(), 0, 1}};
+	std::vector<IndirectBatch> batches = { { render_objects.front(), 0, 0}};
 
 	for (size_t i = 0; i < render_objects.size(); ++i)
 	{

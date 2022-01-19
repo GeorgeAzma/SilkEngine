@@ -11,12 +11,11 @@ void Mesh::init()
 {
 	auto ibo = std::make_shared<IndexBuffer>(this->indices.data(), this->indices.size());
 	auto vbo = std::make_shared<VertexBuffer>(this->vertices.data(), this->vertices.size() * sizeof(Vertex));
-	InstanceData data{};
-	auto instance_vbo = std::make_shared<VertexBuffer>(&data, sizeof(InstanceData), VMA_MEMORY_USAGE_CPU_TO_GPU);
+	constexpr size_t MAX_INSTANCES = 65536;
+	std::vector<InstanceData> data(MAX_INSTANCES, InstanceData{});
+	auto instance_vbo = std::make_shared<VertexBuffer>(data.data(), sizeof(InstanceData) * data.size(), VMA_MEMORY_USAGE_CPU_TO_GPU);
 	vertex_array = std::shared_ptr<VertexArray>(new VertexArray());
-	vertex_array->setIndexBuffer(ibo)
-		.addVertexBuffer(vbo)
-		.addVertexBuffer(instance_vbo);
+	vertex_array->setIndexBuffer(ibo).addVertexBuffer(vbo).addVertexBuffer(instance_vbo);
 }
 
 void Mesh::calculateTangents()

@@ -2,6 +2,8 @@
 
 #include "core/event.h"
 #include "render_object.h"
+#include "gfx/buffers/indirect_buffer.h"
+#include "gfx/buffers/storage_buffer.h"
 
 class Entity;
 
@@ -27,4 +29,6 @@ private:
 private:
 	entt::registry registry;
 	std::vector<IndirectBatch> indirect_batches;
+	std::vector<RenderObject> render_objects;
+	std::vector<InstanceData> instance_data;
 };

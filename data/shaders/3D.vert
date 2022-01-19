@@ -6,15 +6,15 @@ layout(location = 2) in vec3 in_normal;
 
 layout(location = 3) in mat4 in_transform;
 
-layout(location = 0) out VertexOutput 
-{
-    vec2 texture_coordinates;
-} vertex_output;
-
 layout(binding = 0) uniform Transforms
 {
     mat4 projection_view;
 } transforms;
+
+layout(location = 0) out VertexOutput 
+{
+    vec2 texture_coordinates;
+} vertex_output;
 
 void main()
 {

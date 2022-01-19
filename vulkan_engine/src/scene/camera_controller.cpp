@@ -25,7 +25,7 @@ void CameraController::onUpdate()
 	camera.direction = math::eulerToDirection(camera.rotation);
 	glm::vec3 front2D(glm::normalize(glm::vec3(camera.direction.x, 0, camera.direction.z)));
 
-	float speed = 2.0f * Time::dt;
+	float speed = 10.0f * Time::dt;
 	if (Input::isKeyDown(Keys::W))
 	{
 		camera.position += front2D * speed;

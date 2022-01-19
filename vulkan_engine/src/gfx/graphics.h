@@ -9,10 +9,16 @@
 #include "allocator.h"
 #include "graphics_pipeline.h"
 
+
 class WindowResizeEvent;
 
 class Graphics
 {
+public:
+	struct GlobalUniformData
+	{
+		glm::mat4 projection_view;
+	};
 public:
 	static void init();
 	static void update();
