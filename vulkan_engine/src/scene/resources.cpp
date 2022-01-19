@@ -5,7 +5,7 @@
 
 void Resources::init()
 {
-	addMesh("Circle", makeShared<CircleMesh>());
+	addMesh("Circle", makeShared<CircleMesh>(4));
 
     shared<DescriptorSetLayout> descriptor_set_layout = makeShared<DescriptorSetLayout>();
     descriptor_set_layout->addBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT)

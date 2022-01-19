@@ -23,7 +23,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     for (size_t i = 0; i < circles.size(); ++i)
     {
         circles[i] = makeShared<Entity>(scene->createEntity());
-        circles[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(.01f), glm::vec3(RNG::Float(), RNG::Float(), 0.02f) * 400.0f));
+        circles[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
         circles[i]->addComponent<RenderComponent>(Resources::getMesh("Circle"), material_data);
     }
     

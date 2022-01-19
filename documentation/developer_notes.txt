@@ -3,21 +3,10 @@ which is messy and has gotta change
 
 Renderer only supports single gpu
 
-Some vulkan abstraction files like "Shader" get their pointer 
-to the logical device from the static Graphics class, 
-this was done so that user doesn't have to give 
-a logical_device pointer to constructor everytime 
-he/she wants to create a shader
-
-Shader sources also get copied in the bin folder, which is not neccessary
+Shader sources also get copied in the bin folder, which is not neccessary 
+(but some developer/modder can change them and recompile so that's kinda nice)
 
 Shader compilation is done through cmake
 
-Seperate shader types are in seperate files
-
 Would be cool if we can create a shader parser supporting multipass
 that would make making ping pong shaders 10x easier
-
-Critical cpu times: [vkQueuePresentKHR: 58%, vkQueueSubmit: 20%]
-
-There are multiple of vulkan objects created because of in_flight frames we can make so engine accounts for in_flight frames and creates multiple objects (much less control tho)

@@ -1,22 +1,9 @@
-- Name the engine and change stuff like VE_TRACE to ENGINE_NAME_TRACE
-- handle input events
+- Name the engine and change stuff like VE_TRACE to ENGINE_NAME_TRACE 
+(Engine name ideas: glacier, silk)
 - Configurable graphics settings (preferably in file format like yaml) 
-- Make everything much less explicit, create vulkan object abstraction classes (Image with ImageView) 
-  and rewrite other classes using these abstractions
-- Fix the mess in Graphics class
-  (and other vulkan classes but they are less mesy)
-- Remove includes from graphics.h for better compile time
-- Make image synchronization easier (and other image stuff too)
-- Support mipmaps
 - Support array textures
-- Support multisampled textures
-- Support multisampling
-- Precompute vkGetPhysicalDevice functions (each call costs around 0.015ms)
-- Lots of stuff was written to get stuff working, optimize and clean it up
 - Fix dirty swap chain code
 - Write custom 3D model loader/converter
-- Write camera system
-- Integrate entity component system
 - Seperate dispatchers for related events and create getters for them
 - Create optimized mesh batcher, which rebatches stuff only when it needs to 
 (when material changes etc.) (maybe use event system of symilar onComponentChange()?)

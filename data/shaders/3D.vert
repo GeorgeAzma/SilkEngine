@@ -4,17 +4,18 @@ layout(location = 0) in vec3 in_position;
 layout(location = 1) in vec2 in_texture_coordinates;
 layout(location = 2) in vec3 in_normal;
 
+//Instanced
 layout(location = 3) in mat4 in_transform;
-
-layout(binding = 0) uniform Transforms
-{
-    mat4 projection_view;
-} transforms;
 
 layout(location = 0) out VertexOutput 
 {
     vec2 texture_coordinates;
 } vertex_output;
+
+layout(binding = 0) uniform Transforms
+{
+    mat4 projection_view;
+} transforms;
 
 void main()
 {

@@ -3,5 +3,5 @@ Open command prompt in the parent folder and type:
 cmake -B build -S .
 cmake --build build
 
-Or on windows run build.bat located in the parent folder
+or run "build.bat" on windows and build.sh on linux, located in the workspace folder
 
