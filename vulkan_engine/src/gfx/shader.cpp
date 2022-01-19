@@ -53,6 +53,6 @@ ShaderType Shader::getShaderType(const std::string& file)
 	if (file.find(".tes") != std::string::npos)
 		return ShaderType::TESSELATION_EVALUATION;
 
-	VE_CORE_ERROR("Couldn't determine shader type from file extension, try using these extensions: .vert .frag .tcs .tes");
+	VE_ERROR("Couldn't determine shader type from file extension, try using these extensions: .vert .frag .tcs .tes");
 	return ShaderType::NONE;
 }

@@ -27,7 +27,7 @@ void Buffer::setData(const void* data, size_t size, size_t offset)
 	if (!data)
 		return;
 
-	VE_CORE_ASSERT(((size ? size : this->size) + offset) <= this->size, 
+	VE_ASSERT(((size ? size : this->size) + offset) <= this->size, 
 		"Vulkan: Can't map memory, it's out of bounds");
 
 	void* buffer_data;
@@ -50,7 +50,7 @@ uint32_t Buffer::findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags prop
 		}
 	}
 
-	VE_CORE_ERROR("Vulkan: Couldn't find suitable memory type");
+	VE_ERROR("Vulkan: Couldn't find suitable memory type");
 	return 0;
 }
 

@@ -247,7 +247,7 @@ void SwapChain::chooseSwapChainSurfaceFormat()
 		}
 	}
 
-	VE_CORE_ASSERT(formats.rbegin()->first >= 0, 
+	VE_ASSERT(formats.rbegin()->first >= 0, 
 		"Vulkan: Couldn't find supported formats to choose from");
 	
 	this->surface_format = formats.rbegin()->second;
@@ -286,7 +286,7 @@ void SwapChain::chooseSwapChainPresentMode()
 		}
 	}
 
-	VE_CORE_ASSERT(present_modes.rbegin()->first >= 0,
+	VE_ASSERT(present_modes.rbegin()->first >= 0,
 		"Vulkan: Couldn't find supported present modes to choose from");
 
 	this->present_mode = present_modes.rbegin()->second;

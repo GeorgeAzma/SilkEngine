@@ -7,7 +7,7 @@
 
 void Graphics::init()
 {
-	VE_CORE_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
+	VE_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
 
 	//These most likely won't change
 	instance = new Instance(); //70ms
@@ -56,7 +56,7 @@ void Graphics::cleanup() //25ms
 
 void Graphics::vulkanAssert(VkResult result)
 {
-	VE_CORE_ASSERT(result == VK_SUCCESS, std::string("Vulkan: ") + stringifyResult(result));
+	VE_ASSERT(result == VK_SUCCESS, std::string("Vulkan: ") + stringifyResult(result));
 }
 
 constexpr std::string Graphics::stringifyResult(VkResult result)

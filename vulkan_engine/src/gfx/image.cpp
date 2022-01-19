@@ -30,7 +30,7 @@ void Image::load(const std::string& file)
 {
 	int width, height, channels;
 	stbi_uc* pixels = stbi_load(file.c_str(), &width, &height, &channels, STBI_rgb_alpha);
-	VE_CORE_ASSERT(pixels, "Failed to load image: {0}", file);
+	VE_ASSERT(pixels, "Failed to load image: {0}", file);
 	props.width = width;
 	props.height = height;
 	props.format = getDefaultFormatFromChannelCount(channels);
@@ -158,7 +158,7 @@ void Image::generateMipmaps()
 	VkFormatProperties format_properties;
 	vkGetPhysicalDeviceFormatProperties(*Graphics::physical_device, props.format, &format_properties);
 
-	VE_CORE_ASSERT(format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT,
+	VE_ASSERT(format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT,
 		"Image format does not support linear blitting");
 
 	CommandBuffer command_buffer;
@@ -294,7 +294,7 @@ Image::TransitionInfo Image::getTransitionInfo(VkImageLayout oldLayout, VkImageL
 	}
 	else
 	{
-		VE_CORE_ERROR("unsupported layout transition: old layout - {0}, new layout - {1}", oldLayout, newLayout);
+		VE_ERROR("unsupported layout transition: old layout - {0}, new layout - {1}", oldLayout, newLayout);
 	}
 
 	return transition_info;
@@ -310,6 +310,6 @@ VkFormat Image::getDefaultFormatFromChannelCount(int channels)
 	case 4: return VK_FORMAT_R8G8B8A8_SRGB;
 	}
 
-	VE_CORE_ERROR("Unsupported channel count specified: {0}", channels);
+	VE_ERROR("Unsupported channel count specified: {0}", channels);
 	return VkFormat(0);
 }

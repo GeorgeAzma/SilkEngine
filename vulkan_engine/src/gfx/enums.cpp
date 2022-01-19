@@ -39,7 +39,7 @@ VkFormat EnumInfo::type(Type type)
 	case Type::MAT4D: return VK_FORMAT_R64G64B64A64_SFLOAT;
 	}
 
-	VE_CORE_ERROR("Unsupported type specified: {0}", type);
+	VE_ERROR("Unsupported type specified: {0}", type);
 	return VkFormat(0);
 }
 
@@ -78,7 +78,7 @@ Type EnumInfo::formatToType(VkFormat format)
 	case VK_FORMAT_D32_SFLOAT: return Type::FLOAT;
 	}
 
-	VE_CORE_ERROR("Unsupported format specified: {0}", format);
+	VE_ERROR("Unsupported format specified: {0}", format);
 	return Type(0);
 }
 
@@ -121,7 +121,7 @@ size_t EnumInfo::size(Type type)
 	case Type::MAT4D: return 128;
 	}
 
-	VE_CORE_ERROR("Unsupported type specified: {0}", type);
+	VE_ERROR("Unsupported type specified: {0}", type);
 	return 0;
 }
 
@@ -175,7 +175,7 @@ size_t EnumInfo::count(Type type)
 	case Type::MAT4D: return 16;
 	}	
 	
-	VE_CORE_ERROR("Unsupported type specified: {0}", type);
+	VE_ERROR("Unsupported type specified: {0}", type);
 	return 0;
 }
 
@@ -218,7 +218,7 @@ size_t EnumInfo::rows(Type type)
 	case Type::MAT4D: return 4;
 	}
 	
-	VE_CORE_ERROR("Unsupported type specified: {0}", type);
+	VE_ERROR("Unsupported type specified: {0}", type);
 	return 0;
 }
 
@@ -259,7 +259,7 @@ VkIndexType EnumInfo::indexType(IndexType index_type)
 	case IndexType::UINT32: return VK_INDEX_TYPE_UINT32;
 	}
 
-	VE_CORE_ERROR("Unsupported index type specified: {0}", index_type);
+	VE_ERROR("Unsupported index type specified: {0}", index_type);
 	return VkIndexType(0);
 }
 
@@ -275,6 +275,6 @@ VkShaderStageFlagBits EnumInfo::shaderType(ShaderType shader_type)
 	case ShaderType::TESSELATION_EVALUATION: return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
 	}
 
-	VE_CORE_ERROR("Unsupported shader type specified: {0}. try renaming shader file extensions to: .vert .frag .geom .tcs .tes", shader_type);
+	VE_ERROR("Unsupported shader type specified: {0}. try renaming shader file extensions to: .vert .frag .geom .tcs .tes", shader_type);
 	return VkShaderStageFlagBits(0);
 }

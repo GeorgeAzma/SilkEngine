@@ -36,16 +36,16 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     switch (messageSeverity)
     {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-        VE_CORE_TRACE(message);
+        VE_TRACE(message);
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-        VE_CORE_INFO(message);
+        VE_INFO(message);
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-        VE_CORE_WARN(message);
+        VE_WARN(message);
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-        VE_CORE_ERROR(message);
+        VE_ERROR(message);
         break;
     }
 

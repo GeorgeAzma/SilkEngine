@@ -17,7 +17,7 @@ Instance::Instance()
 
     //Get required extensions and see if they are supported
     auto requiredExtensions = getRequiredExtensions();
-    VE_CORE_ASSERT(checkExtensionSupport(requiredExtensions), 
+    VE_ASSERT(checkExtensionSupport(requiredExtensions), 
         "Vulkan: Required extension(s) not found");
     create_info.enabledExtensionCount = requiredExtensions.size();
     create_info.ppEnabledExtensionNames = requiredExtensions.data();
@@ -25,7 +25,7 @@ Instance::Instance()
 #ifdef VE_ENABLE_DEBUG_OUTPUT
     //Debug messenger stuff
     auto required_validation_layers = getRequiredValidationLayers();
-    VE_CORE_ASSERT(checkValidationLayerSupport(required_validation_layers),
+    VE_ASSERT(checkValidationLayerSupport(required_validation_layers),
         "Vulkan: Required validation layers(s) not found");
     //Validation layers are vulkan's way to handle error logging 
     //(without performance impact when you aren't using them)

@@ -11,7 +11,7 @@ Application::Application(const char* name, ApplicationCommandLineArgs args)
     : command_line_args(args), app_update(0.0)
 {
     Log::init(); 
-    VE_CORE_INFO("Started");
+    VE_INFO("Started");
     Window::init();
     Dispatcher::subscribe(this, &Application::onWindowClose);
     Dispatcher::subscribe(this, &Application::onKeyPress);
@@ -27,7 +27,7 @@ Application::~Application()
     Window::cleanup();
     Resources::cleanup();
     Graphics::cleanup();
-    VE_CORE_INFO("Terminated");
+    VE_INFO("Terminated");
 }
 
 void Application::pushLayer(Layer *layer)
@@ -45,7 +45,7 @@ void Application::pushOverlay(Layer *layer)
 void Application::run()
 {
     using namespace std::chrono_literals;
-    Timers::every(0.5s, [this] { VE_CORE_TRACE("{0} FPS ({1:.4} ms)", app_update.getFPS(), (app_update.getDeltaTime() * 1000)); });
+    Timers::every(0.5s, [this] { VE_TRACE("{0} FPS ({1:.4} ms)", app_update.getFPS(), (app_update.getDeltaTime() * 1000)); });
 
     while (running)
     {
@@ -78,7 +78,7 @@ void Application::run()
 
 void Application::onWindowClose(const WindowCloseEvent &e)
 {
-    VE_CORE_INFO("Window closed");
+    VE_INFO("Window closed");
     running = false;
 }
 

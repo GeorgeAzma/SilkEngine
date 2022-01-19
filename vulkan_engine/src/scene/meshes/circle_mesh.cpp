@@ -2,7 +2,7 @@
 
 CircleMesh::CircleMesh(unsigned int resolution)
 {
-	VE_CORE_ASSERT(resolution >= 2, "Circle Resolution is too low");
+	VE_ASSERT(resolution >= 2, "Circle Resolution is too low");
 	const size_t vertices_count = resolution + 1; // + 1 for Center point
 	const size_t indices_count = resolution * 3;
 	vertices.resize(vertices_count);
