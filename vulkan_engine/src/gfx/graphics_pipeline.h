@@ -12,7 +12,7 @@ public:
 	GraphicsPipeline();
 	~GraphicsPipeline();
 
-	GraphicsPipeline& setShader(std::shared_ptr<Shader> shader);
+	GraphicsPipeline& setShader(shared<Shader> shader);
 	GraphicsPipeline& setVertexLayout(const BufferLayout& layout);
 	GraphicsPipeline& setSampleCount(VkSampleCountFlagBits sample_count);
 	GraphicsPipeline& setRenderPass(VkRenderPass render_pass);
@@ -60,5 +60,5 @@ private:
 	VkRenderPass render_pass = VK_NULL_HANDLE;
 	VkPipelineDynamicStateCreateInfo dynamic_state{};
 	BufferLayout layout = {}; 
-	std::shared_ptr<Shader> shader;
+	shared<Shader> shader;
 };

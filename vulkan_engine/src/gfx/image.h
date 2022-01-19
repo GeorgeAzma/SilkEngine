@@ -59,10 +59,10 @@ public:
 private:
 	VkImage image;
 	VkDescriptorImageInfo descriptor_image_info = {};
-	std::unique_ptr<Sampler> sampler;
-	std::unique_ptr<ImageView> view = nullptr;
+	unique<Sampler> sampler;
+	unique<ImageView> view = nullptr;
 	VmaAllocation allocation;
-	std::unique_ptr<StagingBuffer> staging_buffer = nullptr;
+	unique<StagingBuffer> staging_buffer = nullptr;
 	ImageProps props = {};
 	uint32_t mip_levels = 1;
 };

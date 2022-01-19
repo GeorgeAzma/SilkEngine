@@ -1,8 +1,6 @@
 #pragma once
 #include "platform.h"
 
-//Small frequently used utility functions/classes/defines etc..
-
 #ifndef VE_DIST
 #define VE_ENABLE_DEBUG_OUTPUT
 #endif
@@ -50,13 +48,13 @@ template<typename T>
 using unique = std::unique_ptr<T>;
 
 template<typename T, typename... Args>
-static constexpr std::shared_ptr<T> make_shared(Args&&... args)
+static constexpr std::shared_ptr<T> makeShared(Args&&... args)
 {
     return std::make_shared<T>(std::forward<Args>(args)...);
 }
 
 template<typename T, typename... Args>
-static constexpr std::unique_ptr<T> make_unique(Args&&... args)
+static constexpr std::unique_ptr<T> makeUnique(Args&&... args)
 {
     return std::make_unique<T>(std::forward<Args>(args)...);
 }

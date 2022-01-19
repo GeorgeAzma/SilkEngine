@@ -18,7 +18,7 @@ protected:
 public:
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
-	std::shared_ptr<VertexArray> vertex_array = nullptr;
+	shared<VertexArray> vertex_array = nullptr;
 
 protected:
 	void calculateTangents();

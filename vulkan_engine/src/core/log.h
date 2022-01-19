@@ -13,12 +13,12 @@ class Log
 public:
     static void init();
 
-    static std::shared_ptr<spdlog::logger> &getCoreLogger() { return core_logger; }
-    static std::shared_ptr<spdlog::logger> &getClientLogger() { return client_logger; }
+    static shared<spdlog::logger> &getCoreLogger() { return core_logger; }
+    static shared<spdlog::logger> &getClientLogger() { return client_logger; }
 
 private:
-    static std::shared_ptr<spdlog::logger> core_logger;
-    static std::shared_ptr<spdlog::logger> client_logger;
+    static shared<spdlog::logger> core_logger;
+    static shared<spdlog::logger> client_logger;
 };
 
 template <typename OStream, glm::length_t L, typename T, glm::qualifier Q>

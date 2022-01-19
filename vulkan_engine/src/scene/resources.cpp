@@ -5,20 +5,20 @@
 
 void Resources::init()
 {
-	addMesh("Circle", std::make_shared<CircleMesh>());
+	addMesh("Circle", makeShared<CircleMesh>());
 
-    std::shared_ptr<DescriptorSetLayout> descriptor_set_layout = std::make_shared<DescriptorSetLayout>();
+    shared<DescriptorSetLayout> descriptor_set_layout = makeShared<DescriptorSetLayout>();
     descriptor_set_layout->addBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT)
         .addBinding(1, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT)
         .build();
 
-    std::shared_ptr<Shader> shader(
+    shared<Shader> shader(
         new Shader({
         "data/cache/shaders/3D.vert.spv",
         "data/cache/shaders/3D.frag.spv"
             })); //1.65ms
 
-    std::shared_ptr<GraphicsPipeline> graphics_pipeline = std::make_shared<GraphicsPipeline>(); //1.35ms
+    shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>(); //1.35ms
     graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
         .enable(EnableTag::DEPTH_TEST)
         .enable(EnableTag::DEPTH_WRITE)
@@ -29,7 +29,7 @@ void Resources::init()
         .setRenderPass(Graphics::swap_chain->getRenderPass())
         .build();
 
-	addMaterial("3D", std::make_shared<Material>(descriptor_set_layout, graphics_pipeline));
+	addMaterial("3D", makeShared<Material>(descriptor_set_layout, graphics_pipeline));
 }
 
 void Resources::cleanup()
@@ -38,24 +38,24 @@ void Resources::cleanup()
 	materials.clear();
 }
 
-std::shared_ptr<Mesh> Resources::getMesh(const std::string& name)
+shared<Mesh> Resources::getMesh(const std::string& name)
 {
 	return meshes.at(name);
 }
 
-std::shared_ptr<Material> Resources::getMaterial(const std::string& name)
+shared<Material> Resources::getMaterial(const std::string& name)
 {
     return materials.at(name);
 }
 
 
-void Resources::addMesh(const std::string& name, std::shared_ptr<Mesh> mesh)
+void Resources::addMesh(const std::string& name, shared<Mesh> mesh)
 {
 	mesh->name = name;
 	meshes[name] = mesh;
 }
 
-void Resources::addMaterial(const std::string& name, std::shared_ptr<Material> material)
+void Resources::addMaterial(const std::string& name, shared<Material> material)
 {
 	materials[name] = material;
 }

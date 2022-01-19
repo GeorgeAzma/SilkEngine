@@ -11,10 +11,10 @@ public:
     ~SandboxApp();
 
 private:
-	std::shared_ptr<Scene> scene;
-	std::shared_ptr<Entity> camera;
+	shared<Scene> scene;
+	shared<Entity> camera;
 
-    std::vector<std::shared_ptr<Entity>> circles;
-    std::shared_ptr<UniformBuffer> uniform_buffer;
-    std::shared_ptr<Image> image;
+    std::vector<shared<Entity>> circles;
+    shared<UniformBuffer> uniform_buffer;
+    shared<Image> image;
 };

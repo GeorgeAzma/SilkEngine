@@ -43,7 +43,7 @@ public:
     static void setSize(const glm::uvec2 &size);
     static void setTitle(const char* title);
     static void align(WindowAlignment a = WindowAlignment::CENTER);
-    //static void setIcon(std::shared_ptr<Texture> icon);
+    //static void setIcon(shared<Texture> icon);
 
 private:
     static inline GLFWwindow *window = nullptr;

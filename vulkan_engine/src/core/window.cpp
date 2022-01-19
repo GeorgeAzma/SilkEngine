@@ -267,7 +267,7 @@ void Window::align(WindowAlignment a)
     glfwSetWindowPos(window, x, y);
 }
 
-// void Window::setIcon(std::shared_ptr<Texture> icon)
+// void Window::setIcon(shared<Texture> icon)
 // {
 //     GLFWimage images[1];
 //     images[0].width = icon->getWidth();

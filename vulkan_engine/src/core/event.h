@@ -226,7 +226,7 @@ private:
 
 class Dispatcher
 {
-    typedef std::vector<std::shared_ptr<HandlerFunctionBase>> HandlerList;
+    typedef std::vector<shared<HandlerFunctionBase>> HandlerList;
 
 public:
     template <typename EventType>

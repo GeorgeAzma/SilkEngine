@@ -113,7 +113,7 @@ struct ScriptComponent
 
 struct MeshComponent
 {
-	std::shared_ptr<Mesh> mesh;
+	shared<Mesh> mesh;
 };
 
 struct RenderComponent

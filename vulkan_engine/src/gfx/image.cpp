@@ -36,7 +36,7 @@ void Image::load(const std::string& file)
 	props.format = getDefaultFormatFromChannelCount(channels);
 
 	size_t size = width * height * channels;
-	staging_buffer = std::make_unique<StagingBuffer>(pixels, size);
+	staging_buffer = makeUnique<StagingBuffer>(pixels, size);
 
 	stbi_image_free(pixels);
 }
@@ -83,14 +83,14 @@ void Image::create(const ImageProps& props)
 	
 	if (props.create_view)
 	{
-		view = std::make_unique<ImageView>(image, props.format, mip_levels);
+		view = makeUnique<ImageView>(image, props.format, mip_levels);
 		descriptor_image_info.imageView = *view;
 	}
 	if (props.create_sampler)
 	{
 		SamplerProps sampler_props{};
 		sampler_props.mip_levels = mip_levels;
-		sampler = std::make_unique<Sampler>(sampler_props);
+		sampler = makeUnique<Sampler>(sampler_props);
 		descriptor_image_info.sampler = *sampler;
 	}
 }

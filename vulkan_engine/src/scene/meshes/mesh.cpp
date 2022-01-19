@@ -9,12 +9,12 @@ Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& ind
 
 void Mesh::init()
 {
-	auto ibo = std::make_shared<IndexBuffer>(this->indices.data(), this->indices.size());
-	auto vbo = std::make_shared<VertexBuffer>(this->vertices.data(), this->vertices.size() * sizeof(Vertex));
+	auto ibo = makeShared<IndexBuffer>(this->indices.data(), this->indices.size());
+	auto vbo = makeShared<VertexBuffer>(this->vertices.data(), this->vertices.size() * sizeof(Vertex));
 	constexpr size_t MAX_INSTANCES = 65536;
 	std::vector<InstanceData> data(MAX_INSTANCES, InstanceData{});
-	auto instance_vbo = std::make_shared<VertexBuffer>(data.data(), sizeof(InstanceData) * data.size(), VMA_MEMORY_USAGE_CPU_TO_GPU);
-	vertex_array = std::shared_ptr<VertexArray>(new VertexArray());
+	auto instance_vbo = makeShared<VertexBuffer>(data.data(), sizeof(InstanceData) * data.size(), VMA_MEMORY_USAGE_CPU_TO_GPU);
+	vertex_array = shared<VertexArray>(new VertexArray());
 	vertex_array->setIndexBuffer(ibo).addVertexBuffer(vbo).addVertexBuffer(instance_vbo);
 }
 

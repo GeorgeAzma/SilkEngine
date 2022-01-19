@@ -12,13 +12,13 @@ VertexArray::~VertexArray()
 	index_buffer = nullptr;
 }
 
-VertexArray& VertexArray::addVertexBuffer(std::shared_ptr<VertexBuffer> vertex_buffer)
+VertexArray& VertexArray::addVertexBuffer(shared<VertexBuffer> vertex_buffer)
 {
 	vertex_buffers.emplace_back(vertex_buffer);
 	return *this;
 }
 
-VertexArray& VertexArray::setIndexBuffer(std::shared_ptr<IndexBuffer> index_buffer)
+VertexArray& VertexArray::setIndexBuffer(shared<IndexBuffer> index_buffer)
 {
 	this->index_buffer = index_buffer;
 	return *this;

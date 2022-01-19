@@ -12,7 +12,7 @@ GraphicsPipeline::~GraphicsPipeline()
 	destroy();
 }
 
-GraphicsPipeline& GraphicsPipeline::setShader(std::shared_ptr<Shader> shader)
+GraphicsPipeline& GraphicsPipeline::setShader(shared<Shader> shader)
 {
 	this->shader = shader;
 	create_info.stageCount = shader->getShaderStageInfos().size();
