@@ -27,8 +27,6 @@ Instance::Instance()
     auto required_validation_layers = getRequiredValidationLayers();
     VE_ASSERT(checkValidationLayerSupport(required_validation_layers),
         "Vulkan: Required validation layers(s) not found");
-    //Validation layers are vulkan's way to handle error logging 
-    //(without performance impact when you aren't using them)
     create_info.enabledLayerCount = required_validation_layers.size();
     create_info.ppEnabledLayerNames = required_validation_layers.data();
     debug_messenger = new DebugMessenger();

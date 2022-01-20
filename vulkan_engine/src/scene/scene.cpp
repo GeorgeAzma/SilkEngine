@@ -41,6 +41,8 @@ void Scene::onPlay()
 		});
 
 	indirect_batches = batchRenderedObjects(render_objects);
+
+	indirect_buffer = std::make_shared<IndirectBuffer>(65536 * sizeof(VkDrawIndexedIndirectCommand));
 }
 
 void Scene::onUpdate()
@@ -55,11 +57,18 @@ void Scene::onUpdate()
 
 	for (auto& batch : indirect_batches)
 	{
+		VkDrawIndexedIndirectCommand draw_indexed_indirect_command{};
+		draw_indexed_indirect_command.firstIndex = 0;
+		draw_indexed_indirect_command.firstInstance = 0;
+		draw_indexed_indirect_command.indexCount = batch.render_object.mesh->indices.size();
+		draw_indexed_indirect_command.instanceCount = batch.count;
+		draw_indexed_indirect_command.vertexOffset = 0;
+
 		batch.render_object.material_data->material->graphics_pipeline->bind();
 		batch.render_object.mesh->vertex_array->bind();
 		batch.render_object.material_data->descriptor_set->bind();
 
-		vkCmdDrawIndexed(Graphics::active.command_buffer, batch.render_object.mesh->indices.size(), batch.count, 0, 0, 0);
+		vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, 0, batch.count, sizeof(VkDrawIndexedIndirectCommand));
 	}
 }
 

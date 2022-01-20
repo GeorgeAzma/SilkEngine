@@ -11,3 +11,5 @@
 (perhaps static function like Graphics::createBuffer())
 - Sort meshes and materials and render with minimal binds
 - Support more than 65536 instances, by making vertex buffer resizable
+- Support indexed indirect instanced rendering
+- Batch all the draw commands in single mesh.draw() function

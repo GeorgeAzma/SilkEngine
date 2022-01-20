@@ -31,4 +31,6 @@ private:
 	std::vector<IndirectBatch> indirect_batches;
 	std::vector<RenderObject> render_objects;
 	std::vector<InstanceData> instance_data;
+	std::shared_ptr<IndirectBuffer> indirect_buffer;
+	std::shared_ptr<StorageBuffer> instance_buffer;
 };
