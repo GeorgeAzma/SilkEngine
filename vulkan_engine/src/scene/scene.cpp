@@ -43,7 +43,7 @@ void Scene::onPlay()
 	indirect_batches = batchRenderedObjects(render_objects);
 
 	indirect_buffer = std::make_shared<IndirectBuffer>(65536 * sizeof(VkDrawIndexedIndirectCommand));
-}
+} 
 
 void Scene::onUpdate()
 {
