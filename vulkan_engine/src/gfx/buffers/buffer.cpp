@@ -1,6 +1,6 @@
 #include "buffer.h"
 #include "gfx/graphics.h"
-#include "gfx/allocator.h"
+#include "gfx/allocators/allocator.h"
 
 Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_usage)
 	: size{size}

@@ -1,7 +1,7 @@
 #include "swap_chain.h"
-#include "devices/physical_device.h"
-#include "graphics.h"
-#include "core/window.h"
+#include "gfx/devices/physical_device.h"
+#include "gfx/graphics.h"
+#include "gfx/window/window.h"
 
 SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 {

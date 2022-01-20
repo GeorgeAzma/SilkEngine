@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/window.h"
+#include "gfx/window/window.h"
 #include "core/log.h"
 #include "utils/math.h"
 #include "scene/render_object.h"

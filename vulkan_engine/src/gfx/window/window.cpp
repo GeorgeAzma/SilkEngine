@@ -1,6 +1,6 @@
 #include "window.h"
-#include "keys.h"
-#include "event.h"
+#include "core/keys.h"
+#include "core/event.h"
 
 static bool GLFW_initialized = false;
 

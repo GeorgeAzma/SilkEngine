@@ -1,7 +1,7 @@
 #include "input.h"
 #include "keys.h"
 #include "mouse_buttons.h"
-#include "core/window.h"
+#include "gfx/window/window.h"
 
 void Input::init()
 {

@@ -1,5 +1,5 @@
 #include "command_pool.h"
-#include "graphics.h"
+#include "gfx/graphics.h"
 
 CommandPool::CommandPool()
 {

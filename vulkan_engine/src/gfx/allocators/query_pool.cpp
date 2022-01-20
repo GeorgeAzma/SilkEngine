@@ -1,5 +1,5 @@
 #include "query_pool.h"
-#include "graphics.h"
+#include "gfx/graphics.h"
 #include "utils/bit_utils.h"
 
 QueryPool::QueryPool(VkQueryType query_type, VkQueryPipelineStatisticFlags pipeline_statistic_flags)

@@ -6,7 +6,6 @@
 #include "core/event.h"
 #include "core/layer.h"
 #include "core/time.h"
-#include "core/window.h"
 #include "core/layer_stack.h"
 #include "core/input.h"
 #include "core/mouse_buttons.h"
@@ -24,8 +23,9 @@
 
 #include "gfx/graphics.h"
 #include "gfx/enums.h"
-#include "gfx/command_pool.h"
-#include "gfx/query_pool.h"
+
+#include "gfx/allocators/command_pool.h"
+#include "gfx/allocators/query_pool.h"
 
 #include "gfx/pipeline/shader.h"
 #include "gfx/pipeline/graphics_pipeline.h"
@@ -34,6 +34,8 @@
 #include "gfx/descriptors/descriptor_pool.h"
 #include "gfx/descriptors/descriptor_set.h"
 #include "gfx/descriptors/descriptor_set_layout.h"
+
+#include "gfx/window/window.h"
 
 #include "gfx/images/image.h"
 #include "gfx/images/image_view.h"

@@ -2,7 +2,7 @@
 #include "core/input.h"
 #include "components.h"
 #include "utils/math.h"
-#include "core/window.h"
+#include "gfx/window/window.h"
 #include "core/keys.h"
 #include "core/time.h"
 

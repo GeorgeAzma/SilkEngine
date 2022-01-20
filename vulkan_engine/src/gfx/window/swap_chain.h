@@ -1,11 +1,11 @@
 #pragma once
 
-#include "buffers/framebuffer.h"
-#include "buffers/command_buffer.h"
-#include "images/image_view.h"
-#include "images/image.h"
+#include "gfx/buffers/framebuffer.h"
+#include "gfx/buffers/command_buffer.h"
+#include "gfx/images/image_view.h"
+#include "gfx/images/image.h"
 #include "core/event.h"
-#include "pipeline/render_pass.h"
+#include "gfx/pipeline/render_pass.h"
 
 class SwapChain : NonCopyable
 {
