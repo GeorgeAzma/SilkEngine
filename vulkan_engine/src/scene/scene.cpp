@@ -63,13 +63,11 @@ void Scene::onUpdate()
 		[&](auto entity, auto& script_component)
 		{
 			script_component.instance->onUpdate();
-		});
-
-	//vkCmdDispatch(Graphics::active.command_buffer, render_objects.size() / 64 + (render_objects.size() % 64 != 0), 1, 1);	
+		});	
 
 	for (auto& batch : indirect_batches)
 	{
-		batch.render_object.material_data->material->graphics_pipeline->bind();
+		batch.render_object.material_data->material->pipeline->bind();
 		batch.render_object.mesh->vertex_array->bind();
 		batch.render_object.material_data->descriptor_set->bind();
 

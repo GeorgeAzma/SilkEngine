@@ -9,6 +9,9 @@ public:
 
 	const std::vector<VkPipelineShaderStageCreateInfo>& getShaderStageInfos() const { return shader_stage_infos; }
 
+	operator const VkShaderModule& () const { return shader_modules[0]; }
+	const std::vector<VkShaderModule>& getShaderModules() const { return shader_modules; }
+
 private:
 	VkShaderModule createShaderModule(const std::vector<char>& source) const;
 	static ShaderType getShaderType(const std::string& file);

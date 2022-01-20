@@ -18,19 +18,18 @@ public:
 	GraphicsPipeline& setRenderPass(VkRenderPass render_pass);
 	GraphicsPipeline& addDescriptorSetLayout(const DescriptorSetLayout& layout);
 	GraphicsPipeline& addDynamicState(VkDynamicState dynamic_state);
-	GraphicsPipeline& addPushConstant(size_t size, VkShaderStageFlagBits shader_stages, size_t offset = 0);
+	GraphicsPipeline& addPushConstant(size_t size, VkShaderStageFlags shader_stages, size_t offset = 0);
 	GraphicsPipeline& enable(EnableTag tag);
 
 	void recreate();
 
 	void build();
 
-	void bind(VkPipelineBindPoint bind_point = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS);
+	void bind();
 
 	const VkPipelineLayout& getLayout() const { return pipeline_layout; }
-	VkPipelineBindPoint getBindPoint() const { return bind_point; }
 
-	operator const VkPipeline& () const { return graphics_pipeline; }
+	operator const VkPipeline& () const { return pipeline; }
 	
 private:
 	void destroy();
@@ -38,10 +37,9 @@ private:
 	void onWindowResize(const WindowResizeEvent& e);
 
 private:
-	VkPipelineLayout pipeline_layout;
-	VkPipeline graphics_pipeline;
-	VkPipelineBindPoint bind_point = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
 	VkPipelineCache cache;
+	VkPipeline pipeline;
+	VkPipelineLayout pipeline_layout;
 
 private:
 	std::vector<VkDynamicState> dynamic_states;
@@ -57,8 +55,8 @@ private:
 	VkGraphicsPipelineCreateInfo create_info{};
 	std::vector<VkPushConstantRange> push_constant_ranges;
 	std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
-	VkRenderPass render_pass = VK_NULL_HANDLE;
 	VkPipelineDynamicStateCreateInfo dynamic_state{};
+	VkRenderPass render_pass = VK_NULL_HANDLE;
 	BufferLayout layout = {}; 
 	shared<Shader> shader;
 };

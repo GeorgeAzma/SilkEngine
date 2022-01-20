@@ -6,7 +6,7 @@ class DescriptorSetLayout : NonCopyable
 public:
 	~DescriptorSetLayout();
 
-	DescriptorSetLayout& addBinding(uint32_t binding, VkDescriptorType descriptor_type, VkShaderStageFlagBits shader_stages, size_t count = 1);
+	DescriptorSetLayout& addBinding(uint32_t binding, VkDescriptorType descriptor_type, VkShaderStageFlags shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, size_t count = 1);
 	void build();
 
 	operator const VkDescriptorSetLayout& () { return layout; }

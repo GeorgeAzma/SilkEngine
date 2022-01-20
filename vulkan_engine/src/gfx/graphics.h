@@ -8,6 +8,7 @@
 #include "descriptors/descriptor_pool.h"
 #include "allocator.h"
 #include "pipeline/graphics_pipeline.h"
+#include "pipeline/compute_pipeline.h"
 
 
 class WindowResizeEvent;
@@ -46,7 +47,9 @@ public:
 	{
 	public:
 		VkCommandBuffer command_buffer = VK_NULL_HANDLE;
-		GraphicsPipeline* graphics_pipeline = nullptr;
+		VkPipeline pipeline = VK_NULL_HANDLE;
+		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
+		VkPipelineBindPoint bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		VkBuffer vertex_buffer = VK_NULL_HANDLE;
 		VkBuffer index_buffer = VK_NULL_HANDLE;
 		VkDescriptorSet descriptor_set = VK_NULL_HANDLE;

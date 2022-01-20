@@ -2,13 +2,14 @@
 
 #include "meshes/mesh.h"
 #include "gfx/pipeline/graphics_pipeline.h"
+#include "gfx/pipeline/compute_pipeline.h"
 #include "gfx/descriptors/descriptor_set.h"
 #include "vertex.h"
 
 struct Material
 {
 	shared<DescriptorSetLayout> descriptor_set_layout;
-	shared<GraphicsPipeline> graphics_pipeline;
+	shared<GraphicsPipeline> pipeline;
 
 	std::string name;
 
@@ -21,6 +22,25 @@ struct Material
 struct MaterialData
 {
 	shared<Material> material;
+	shared<DescriptorSet> descriptor_set;
+};
+
+struct ComputeMaterial
+{
+	shared<DescriptorSetLayout> descriptor_set_layout;
+	shared<ComputePipeline> pipeline;
+
+	std::string name;
+
+	bool operator==(const ComputeMaterial& other) const
+	{
+		return name == other.name;
+	}
+};
+
+struct ComputeMaterialData
+{
+	shared<ComputeMaterial> material;
 	shared<DescriptorSet> descriptor_set;
 };
 

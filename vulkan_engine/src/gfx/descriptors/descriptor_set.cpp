@@ -59,7 +59,7 @@ void DescriptorSet::build()
 
 void DescriptorSet::bind(size_t index)
 {
-	vkCmdBindDescriptorSets(Graphics::active.command_buffer, Graphics::active.graphics_pipeline->getBindPoint(), Graphics::active.graphics_pipeline->getLayout(), 0, 1, &descriptor_sets[index], 0, nullptr);
+	vkCmdBindDescriptorSets(Graphics::active.command_buffer, Graphics::active.bind_point, Graphics::active.pipeline_layout, 0, 1, &descriptor_sets[index], 0, nullptr);
 	
 	Graphics::active.descriptor_set = descriptor_sets[index];
 }

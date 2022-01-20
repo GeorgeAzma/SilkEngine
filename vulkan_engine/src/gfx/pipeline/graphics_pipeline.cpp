@@ -55,7 +55,7 @@ GraphicsPipeline& GraphicsPipeline::addDynamicState(VkDynamicState dynamic_state
 }
 
 
-GraphicsPipeline& GraphicsPipeline::addPushConstant(size_t size, VkShaderStageFlagBits shader_stages, size_t offset)
+GraphicsPipeline& GraphicsPipeline::addPushConstant(size_t size, VkShaderStageFlags shader_stages, size_t offset)
 {
 	VkPushConstantRange push_constant_range{};
 	push_constant_range.offset = 0;
@@ -168,17 +168,18 @@ void GraphicsPipeline::build()
 	create();
 }
 
-void GraphicsPipeline::bind(VkPipelineBindPoint bind_point)
+void GraphicsPipeline::bind()
 {
-	this->bind_point = bind_point;
-	vkCmdBindPipeline(Graphics::active.command_buffer, bind_point, graphics_pipeline);
-	Graphics::active.graphics_pipeline = this;
+	vkCmdBindPipeline(Graphics::active.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+	Graphics::active.pipeline = pipeline;
+	Graphics::active.pipeline_layout = pipeline_layout;
+	Graphics::active.bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS;
 }
 
 void GraphicsPipeline::destroy()
 {
 	vkDestroyPipelineCache(*Graphics::logical_device, cache, nullptr);
-	vkDestroyPipeline(*Graphics::logical_device, graphics_pipeline, nullptr);
+	vkDestroyPipeline(*Graphics::logical_device, pipeline, nullptr);
 	vkDestroyPipelineLayout(*Graphics::logical_device, pipeline_layout, nullptr);
 }
 
@@ -201,7 +202,7 @@ void GraphicsPipeline::create()
 	create_info.pViewportState = &viewport_info;
 	create_info.layout = pipeline_layout;
 
-	Graphics::vulkanAssert(vkCreateGraphicsPipelines(*Graphics::logical_device, VK_NULL_HANDLE, 1, &create_info, nullptr, &graphics_pipeline));
+	Graphics::vulkanAssert(vkCreateGraphicsPipelines(*Graphics::logical_device, VK_NULL_HANDLE, 1, &create_info, nullptr, &pipeline));
 
 	//Create cache
 	VkPipelineCacheCreateInfo pipeline_cache_info = {};
