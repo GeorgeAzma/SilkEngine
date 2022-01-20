@@ -1,6 +1,6 @@
 #include "shader.h"
 #include "utils/file_utils.h"
-#include "graphics.h"
+#include "gfx/graphics.h"
 
 Shader::Shader(const std::vector<std::string>& files)
 {

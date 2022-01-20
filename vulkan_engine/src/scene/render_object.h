@@ -1,8 +1,8 @@
 #pragma once
 
 #include "meshes/mesh.h"
-#include "gfx/graphics_pipeline.h"
-#include "gfx/descriptor_set.h"
+#include "gfx/pipeline/graphics_pipeline.h"
+#include "gfx/descriptors/descriptor_set.h"
 #include "vertex.h"
 
 struct Material

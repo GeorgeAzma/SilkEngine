@@ -1,5 +1,5 @@
 #pragma once
-#include "enums.h"
+#include "gfx/enums.h"
 
 class Shader : NonCopyable
 {

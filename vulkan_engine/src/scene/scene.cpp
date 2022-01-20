@@ -103,14 +103,14 @@ void Scene::onWindowResize(const WindowResizeEvent& e)
 
 std::vector<IndirectBatch> Scene::batchRenderedObjects(const std::vector<RenderObject>& render_objects)
 {
-	std::vector<IndirectBatch> batches = { { render_objects.front(), 0, 0}};
-	std::vector<InstanceData> instance_data;
+	std::vector<IndirectBatch> batches = { { render_objects.front(), 0, 0} };
+	std::vector<InstanceData> instance_data = { render_objects.front().instance_data };
 
 	for (size_t i = 0; i < render_objects.size(); ++i)
 	{
-		instance_data.emplace_back(render_objects[i].instance_data);
 		if (batches.back() == render_objects[i])
 		{
+			instance_data.emplace_back(render_objects[i].instance_data);
 			++batches.back().count;
 		}
 		else
@@ -118,6 +118,7 @@ std::vector<IndirectBatch> Scene::batchRenderedObjects(const std::vector<RenderO
 			batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(instance_data.data(), instance_data.size() * sizeof(InstanceData));
 			batches.emplace_back(render_objects[i], batches.size(), 1);
 			instance_data.clear();
+			instance_data.emplace_back(render_objects[i].instance_data);
 		}
 	}
 	batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(instance_data.data(), instance_data.size() * sizeof(InstanceData));

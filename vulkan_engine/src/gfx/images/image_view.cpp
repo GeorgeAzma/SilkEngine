@@ -1,6 +1,6 @@
 #include "image_view.h"
-#include "graphics.h"
-#include "enums.h"
+#include "gfx/graphics.h"
+#include "gfx/enums.h"
 
 ImageView::ImageView(VkImage image, VkFormat format, uint32_t mip_levels)
 {

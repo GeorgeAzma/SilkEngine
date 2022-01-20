@@ -11,7 +11,7 @@ void Mesh::init()
 {
 	auto ibo = makeShared<IndexBuffer>(this->indices.data(), this->indices.size());
 	auto vbo = makeShared<VertexBuffer>(this->vertices.data(), this->vertices.size() * sizeof(Vertex));
-	constexpr size_t MAX_INSTANCES = 65536;
+	constexpr size_t MAX_INSTANCES = 1024 * 1024; //1mb
 	std::vector<InstanceData> data(MAX_INSTANCES, InstanceData{});
 	auto instance_vbo = makeShared<VertexBuffer>(data.data(), sizeof(InstanceData) * data.size(), VMA_MEMORY_USAGE_CPU_TO_GPU);
 	vertex_array = shared<VertexArray>(new VertexArray());

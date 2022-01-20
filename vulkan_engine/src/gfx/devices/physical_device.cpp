@@ -1,7 +1,7 @@
 #include "physical_device.h"
 #include "logical_device.h"
-#include "swap_chain.h"
-#include "graphics.h"
+#include "gfx/swap_chain.h"
+#include "gfx/graphics.h"
 
 PhysicalDevice::PhysicalDevice()
 {

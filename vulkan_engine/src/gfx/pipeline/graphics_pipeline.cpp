@@ -1,5 +1,5 @@
 #include "graphics_pipeline.h"
-#include "graphics.h"
+#include "gfx/graphics.h"
 
 GraphicsPipeline::GraphicsPipeline()
 {

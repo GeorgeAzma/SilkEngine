@@ -1,9 +1,9 @@
 #pragma once
 
-#include "enums.h"
+#include "gfx/enums.h"
 #include "shader.h"
-#include "buffers/buffer_layout.h"
-#include "descriptor_set_layout.h"
+#include "gfx/buffers/buffer_layout.h"
+#include "gfx/descriptors/descriptor_set_layout.h"
 #include "core/event.h"
 
 class GraphicsPipeline : NonCopyable

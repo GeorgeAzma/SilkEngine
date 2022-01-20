@@ -1,5 +1,5 @@
 #include "render_pass.h"
-#include "graphics.h"
+#include "gfx/graphics.h"
 
 RenderPass::~RenderPass()
 {

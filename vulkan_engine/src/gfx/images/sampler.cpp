@@ -1,5 +1,5 @@
 #include "sampler.h"
-#include "graphics.h"
+#include "gfx/graphics.h"
 
 Sampler::Sampler(const SamplerProps& props)
 {

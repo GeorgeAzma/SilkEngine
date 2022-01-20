@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gfx/vertex_array.h"
+#include "gfx/buffers/vertex_array.h"
 #include "scene/vertex.h"
 
 class Mesh : NonCopyable

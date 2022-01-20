@@ -1,5 +1,5 @@
 #include "descriptor_set_layout.h"
-#include "graphics.h"
+#include "gfx/graphics.h"
 
 DescriptorSetLayout& DescriptorSetLayout::addBinding(uint32_t binding, VkDescriptorType descriptor_type, VkShaderStageFlagBits shader_stages, size_t count)
 {

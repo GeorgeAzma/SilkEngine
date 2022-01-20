@@ -1,6 +1,6 @@
 #pragma once
 
-#include "buffers/staging_buffer.h"
+#include "gfx/buffers/staging_buffer.h"
 #include "image_view.h"
 #include "sampler.h"
 #include <vk_mem_alloc.h>

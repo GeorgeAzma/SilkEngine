@@ -2,10 +2,10 @@
 
 #include "buffers/framebuffer.h"
 #include "buffers/command_buffer.h"
-#include "image_view.h"
-#include "image.h"
+#include "images/image_view.h"
+#include "images/image.h"
 #include "core/event.h"
-#include "render_pass.h"
+#include "pipeline/render_pass.h"
 
 class SwapChain : NonCopyable
 {

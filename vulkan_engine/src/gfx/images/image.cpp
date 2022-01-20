@@ -1,7 +1,7 @@
 #include "image.h"
-#include "graphics.h"
-#include "buffers/buffer.h"
-#include "enums.h"
+#include "gfx/graphics.h"
+#include "gfx/buffers/buffer.h"
+#include "gfx/enums.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 

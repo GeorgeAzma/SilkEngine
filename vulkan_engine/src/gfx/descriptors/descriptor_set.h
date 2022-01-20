@@ -1,7 +1,7 @@
 #pragma once
 
 #include "descriptor_set_layout.h"
-#include "image.h"
+#include "gfx/images/image.h"
 
 class DescriptorSet : NonCopyable
 {

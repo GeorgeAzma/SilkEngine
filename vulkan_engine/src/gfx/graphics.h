@@ -1,13 +1,13 @@
 #pragma once
 #include "instance.h"
 #include "surface.h"
-#include "physical_device.h"
-#include "logical_device.h"
+#include "devices/physical_device.h"
+#include "devices/logical_device.h"
 #include "swap_chain.h"
 #include "command_pool.h"
-#include "descriptor_pool.h"
+#include "descriptors/descriptor_pool.h"
 #include "allocator.h"
-#include "graphics_pipeline.h"
+#include "pipeline/graphics_pipeline.h"
 
 
 class WindowResizeEvent;

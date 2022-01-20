@@ -24,18 +24,20 @@
 
 #include "gfx/graphics.h"
 #include "gfx/enums.h"
-#include "gfx/shader.h"
 #include "gfx/command_pool.h"
-#include "gfx/descriptor_pool.h"
-#include "gfx/descriptor_set.h"
-#include "gfx/descriptor_set_layout.h"
-#include "gfx/graphics_pipeline.h"
-#include "gfx/image.h"
-#include "gfx/image_view.h"
-#include "gfx/render_pass.h"
-#include "gfx/sampler.h"
 #include "gfx/query_pool.h"
-#include "gfx/vertex_array.h"
+
+#include "gfx/pipeline/shader.h"
+#include "gfx/pipeline/graphics_pipeline.h"
+#include "gfx/pipeline/render_pass.h"
+
+#include "gfx/descriptors/descriptor_pool.h"
+#include "gfx/descriptors/descriptor_set.h"
+#include "gfx/descriptors/descriptor_set_layout.h"
+
+#include "gfx/images/image.h"
+#include "gfx/images/image_view.h"
+#include "gfx/images/sampler.h"
 
 #include "gfx/buffers/buffer.h"
 #include "gfx/buffers/vertex_buffer.h"
@@ -47,6 +49,7 @@
 #include "gfx/buffers/uniform_buffer.h"
 #include "gfx/buffers/storage_buffer.h"
 #include "gfx/buffers/indirect_buffer.h"
+#include "gfx/buffers/vertex_array.h"
 
 #include "scene/vertex.h"
 #include "scene/entity.h"
@@ -57,3 +60,4 @@
 
 #include "scene/meshes/mesh.h"
 #include "scene/meshes/circle_mesh.h"
+#include "scene/meshes/rectangle_mesh.h"
