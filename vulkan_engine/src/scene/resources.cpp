@@ -1,11 +1,13 @@
 #include "resources.h"
 #include "meshes/circle_mesh.h"
+#include "meshes/rectangle_mesh.h"
 #include "gfx/graphics.h"
 #include "gfx/buffers/uniform_buffer.h"
 
 void Resources::init()
 {
 	addMesh("Circle", makeShared<CircleMesh>());
+	addMesh("Rectangle", makeShared<RectangleMesh>());
 
     shared<DescriptorSetLayout> descriptor_set_layout = makeShared<DescriptorSetLayout>();
     descriptor_set_layout->addBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT)
@@ -57,5 +59,6 @@ void Resources::addMesh(const std::string& name, shared<Mesh> mesh)
 
 void Resources::addMaterial(const std::string& name, shared<Material> material)
 {
+    material->name = name;
 	materials[name] = material;
 }

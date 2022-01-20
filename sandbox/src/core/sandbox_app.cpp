@@ -19,12 +19,20 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
     shared<MaterialData> material_data = makeShared<MaterialData>(Resources::getMaterial("3D"), descriptor_set);
 
-    circles.resize(65536);
+    circles.resize(65536 / 2);
     for (size_t i = 0; i < circles.size(); ++i)
     {
         circles[i] = makeShared<Entity>(scene->createEntity());
         circles[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
         circles[i]->addComponent<RenderComponent>(Resources::getMesh("Circle"), material_data);
+    }
+
+    squares.resize(65536 / 2);
+    for (size_t i = 0; i < squares.size(); ++i)
+    {
+        squares[i] = makeShared<Entity>(scene->createEntity());
+        squares[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
+        squares[i]->addComponent<RenderComponent>(Resources::getMesh("Rectangle"), material_data);
     }
     
     scene->onPlay();

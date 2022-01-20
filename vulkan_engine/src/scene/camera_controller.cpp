@@ -18,10 +18,10 @@ void CameraController::onUpdate()
 	float sensitivity = 0.003f;
 	glm::vec2 dm = delta_mouse(Input::getMouse()) * sensitivity;
 	camera.rotation += glm::vec3(dm.x, dm.y, 0.0f);
-	camera.rotation.y = std::min(camera.rotation.y, glm::half_pi<float>());
-	camera.rotation.y = std::max(camera.rotation.y, -glm::half_pi<float>());
+	camera.rotation.y = std::min(camera.rotation.y, glm::half_pi<float>() * 0.9999f);
+	camera.rotation.y = std::max(camera.rotation.y, -glm::half_pi<float>() * 0.9999f);
 	if (camera.rotation.x < -glm::pi<float>()) camera.rotation.x = glm::pi<float>();
-	if (camera.rotation.x > glm::pi<float>()) camera.rotation.x = -glm::pi<float>();
+	else if (camera.rotation.x > glm::pi<float>()) camera.rotation.x = -glm::pi<float>();
 	camera.direction = math::eulerToDirection(camera.rotation);
 	glm::vec3 front2D(glm::normalize(glm::vec3(camera.direction.x, 0, camera.direction.z)));
 

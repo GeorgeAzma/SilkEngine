@@ -9,6 +9,13 @@ struct Material
 {
 	shared<DescriptorSetLayout> descriptor_set_layout;
 	shared<GraphicsPipeline> graphics_pipeline;
+
+	std::string name;
+
+	bool operator==(const Material& other) const
+	{
+		return name == other.name;
+	}
 };
 
 struct MaterialData
@@ -22,9 +29,11 @@ struct RenderObject
 	shared<Mesh> mesh;
 	shared<MaterialData> material_data;
 
+	InstanceData instance_data;
+
 	bool operator==(const RenderObject& other) const
 	{
-		return *mesh == *other.mesh; //TODO: compare materials too
+		return *mesh == *other.mesh && *other.material_data->material == *material_data->material;
 	}
 };
 

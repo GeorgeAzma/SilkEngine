@@ -15,6 +15,7 @@ private:
 	shared<Entity> camera;
 
     std::vector<shared<Entity>> circles;
+    std::vector<shared<Entity>> squares;
     shared<UniformBuffer> uniform_buffer;
     shared<Image> image;
 };
