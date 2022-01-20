@@ -19,7 +19,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
     shared<MaterialData> material_data = makeShared<MaterialData>(Resources::getMaterial("3D"), descriptor_set);
 
-    circles.resize(65536 / 2);
+    circles.resize(65536);
     for (size_t i = 0; i < circles.size(); ++i)
     {
         circles[i] = makeShared<Entity>(scene->createEntity());
@@ -27,7 +27,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
         circles[i]->addComponent<RenderComponent>(Resources::getMesh("Circle"), material_data);
     }
 
-    squares.resize(65536 / 2);
+    squares.resize(65536);
     for (size_t i = 0; i < squares.size(); ++i)
     {
         squares[i] = makeShared<Entity>(scene->createEntity());
