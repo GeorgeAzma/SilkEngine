@@ -1,9 +1,9 @@
 #include "camera_controller.h"
-#include "core/input.h"
+#include "core/input/input.h"
 #include "components.h"
 #include "utils/math.h"
 #include "gfx/window/window.h"
-#include "core/keys.h"
+#include "core/input/keys.h"
 #include "core/time.h"
 
 void CameraController::onCreate()

@@ -7,10 +7,11 @@
 #include "core/layer.h"
 #include "core/time.h"
 #include "core/layer_stack.h"
-#include "core/input.h"
-#include "core/mouse_buttons.h"
-#include "core/joystick_buttons.h"
-#include "core/keys.h"
+
+#include "core/input/mouse_buttons.h"
+#include "core/input/joystick_buttons.h"
+#include "core/input/keys.h"
+#include "core/input/input.h"
 
 #include "utils/debug_timer.h"
 #include "utils/fixed_update.h"

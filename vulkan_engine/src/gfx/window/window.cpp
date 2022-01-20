@@ -1,5 +1,5 @@
 #include "window.h"
-#include "core/keys.h"
+#include "core/input/keys.h"
 #include "core/event.h"
 
 static bool GLFW_initialized = false;
