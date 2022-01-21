@@ -58,7 +58,7 @@ void Scene::onUpdate()
 		Graphics::global_uniform->setDataChecked(&main_camera->projection_view, sizeof(glm::mat4), 0);
 	}
 
-	indirect_batches = batchRenderedObjects(render_objects);
+	//batchRenderObjects();
 	std::vector<VkDrawIndexedIndirectCommand> draw_commands;
 	for (const auto& batch : indirect_batches)
 	{
@@ -117,29 +117,48 @@ void Scene::onComponentCreate(entt::registry& registry, entt::entity entity)
 		render_component.render_object.instance_data = std::move(instance_data);
 	}
 	render_objects.push_back(render_component.render_object);
+	addBatchRenderObject(render_component.render_object);
 }
 
-std::vector<IndirectBatch> Scene::batchRenderedObjects(const std::vector<RenderObject>& render_objects)
+void Scene::batchRenderObjects()
 {
 	if (render_objects.empty())
-		return {};
+		return;
 
-	std::vector<IndirectBatch> batches;
+	indirect_batches.clear();
 	std::vector<std::vector<RenderObject>> clusters = GeneralUtils::groupDuplicates(render_objects);
 
 	for (const std::vector<RenderObject>& cluster : clusters)
 	{
-		batches.emplace_back(cluster.front(), batches.size(), 1, std::vector<InstanceData>{ cluster.front().instance_data });
-		SK_ASSERT(batches.size() < Graphics::MAX_BATCHES, "batches.size() exceeds MAX_BATCHES");
+		indirect_batches.emplace_back(cluster.front(), indirect_batches.size(), 1, std::vector<InstanceData>{ cluster.front().instance_data });
+		SK_ASSERT(indirect_batches.size() < Graphics::MAX_BATCHES, "batches.size() exceeds MAX_BATCHES");
 
 		for (size_t i = 0; i < cluster.size(); ++i)
 		{
-			batches.back().instance_data.emplace_back(cluster[i].instance_data);
-			++batches.back().count;
+			indirect_batches.back().instance_data.emplace_back(cluster[i].instance_data);
+			++indirect_batches.back().count;
 		}
 		
-		batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(batches.back().instance_data.data(), batches.back().instance_data.size() * sizeof(InstanceData));
+		indirect_batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(indirect_batches.back().instance_data.data(), indirect_batches.back().instance_data.size() * sizeof(InstanceData));
 	}
-	
-	return batches;
+}
+
+void Scene::addBatchRenderObject(const RenderObject& render_object)
+{
+	for (size_t i = 0; i < indirect_batches.size(); ++i)
+	{
+		if (indirect_batches[i].render_object == render_object)
+		{
+			indirect_batches[i].instance_data.emplace_back(render_object.instance_data);
+			indirect_batches[i].render_object.mesh->vertex_array->getVertexBuffer(1)->setData(
+				&render_object.instance_data, sizeof(InstanceData),
+				indirect_batches[i].count * sizeof(InstanceData));
+			++indirect_batches[i].count;
+			return;
+		}
+	}
+
+	indirect_batches.emplace_back(render_object, indirect_batches.size(), 1, std::vector<InstanceData>{ render_object.instance_data });
+	indirect_batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(
+		&render_object.instance_data, sizeof(InstanceData));
 }

@@ -43,7 +43,7 @@ void SandboxApp::onUpdate()
         circles.push_back(Entity(scene->createEntity())); 
         circles.back().addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
         circles.back().addComponent<RenderComponent>(Resources::getMesh("Circle"), material_data);
-        for(size_t i = 0; i < 244; ++i)
+        
         squares.push_back(Entity(scene->createEntity()));
         squares.back().addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
         squares.back().addComponent<RenderComponent>(Resources::getMesh("Rectangle"), material_data);
