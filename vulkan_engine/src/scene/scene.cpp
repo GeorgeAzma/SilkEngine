@@ -2,6 +2,7 @@
 #include "entity.h"
 #include "components.h"
 #include "gfx/graphics.h"
+#include "scene/resources.h"
 
 Scene::Scene()
 {
@@ -54,7 +55,14 @@ void Scene::onPlay()
 		draw_indexed_indirect_command.vertexOffset = 0;
 		draw_commands.emplace_back(std::move(draw_indexed_indirect_command));
 	}
-	indirect_buffer->setData(draw_commands.data());
+	indirect_buffer->setData(draw_commands.data()); 
+
+	instance_buffer = std::make_shared<StorageBuffer>(1);
+	
+	shared<DescriptorSet> cull_descriptor_set = makeShared<DescriptorSet>(*Resources::getComputeMaterial("Cull")->descriptor_set_layout);
+	cull_descriptor_set->addBuffer(0, { *instance_buffer, 0, VK_WHOLE_SIZE })
+		.build();
+	shared<ComputeMaterialData> cull_material_data = makeShared<ComputeMaterialData>(Resources::getComputeMaterial("Cull"), cull_descriptor_set);
 } 
 
 void Scene::onUpdate()
@@ -65,6 +73,7 @@ void Scene::onUpdate()
 			script_component.instance->onUpdate();
 		});	
 
+	Graphics::beginRenderPass();
 	for (auto& batch : indirect_batches)
 	{
 		batch.render_object.material_data->material->pipeline->bind();
@@ -72,6 +81,21 @@ void Scene::onUpdate()
 		batch.render_object.material_data->descriptor_set->bind();
 
 		vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, batch.first * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
+	}
+	Graphics::endRenderPass();
+
+	//TODO: determine how to choose main camera
+	CameraComponent* main_camera = nullptr;
+	registry.view<CameraComponent>().each(
+		[&](auto entity, auto& camera_component)
+		{
+			main_camera = &camera_component;
+		});
+
+	//TODO: not too scalable
+	if (main_camera)
+	{
+		Graphics::global_uniform->setData(&main_camera->projection_view, sizeof(glm::mat4), 0);
 	}
 }
 

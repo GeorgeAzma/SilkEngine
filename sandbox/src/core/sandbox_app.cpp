@@ -10,13 +10,11 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     camera->addComponent<ScriptComponent>().bind<CameraController>();
 
     image = makeShared<Image>("data/images/test.png");
-    uniform_buffer = makeShared<UniformBuffer>(sizeof(Graphics::GlobalUniformData));
 
     shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>(*Resources::getMaterial("3D")->descriptor_set_layout);
-    descriptor_set->addBuffer(0, { *uniform_buffer, 0, VK_WHOLE_SIZE })
+    descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE })
         .addImage(1, *image)
         .build();
-
     shared<MaterialData> material_data = makeShared<MaterialData>(Resources::getMaterial("3D"), descriptor_set);
 
     circles.resize(65536);
@@ -34,7 +32,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
         squares[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
         squares[i]->addComponent<RenderComponent>(Resources::getMesh("Rectangle"), material_data);
     }
-    
+
     scene->onPlay();
 }
 
@@ -47,8 +45,6 @@ void SandboxApp::onUpdate()
     
     scene->onUpdate();
     
-    uniform_buffer->setData(&camera->getComponent<CameraComponent>().projection_view);
-
     Graphics::endFrame();
 }
 

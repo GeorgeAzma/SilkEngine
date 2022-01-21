@@ -9,6 +9,7 @@
 #include "allocators/allocator.h"
 #include "pipeline/graphics_pipeline.h"
 #include "pipeline/compute_pipeline.h"
+#include "buffers/uniform_buffer.h"
 
 
 class WindowResizeEvent;
@@ -24,7 +25,9 @@ public:
 	static void init();
 
 	static void beginFrame();
+	static void beginRenderPass();
 	static void endFrame();
+	static void endRenderPass();
 
 	static void cleanup();
 
@@ -41,6 +44,7 @@ public:
 	static inline CommandPool* command_pool = nullptr;
 	static inline SwapChain* swap_chain = nullptr;
 	static inline DescriptorPool* descriptor_pool = nullptr;
+	static inline UniformBuffer* global_uniform = nullptr;
 
 	static inline struct Active
 	{

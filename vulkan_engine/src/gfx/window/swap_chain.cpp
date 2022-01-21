@@ -20,7 +20,7 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	sample_count = Graphics::physical_device->getMaxSampleCount();
 
 	render_pass = new RenderPass(); //0.11ms
-	render_pass->beginSubpass()
+	render_pass->addSubpass()
 		.addAttachment(surface_format.format, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, sample_count)
 		.addAttachment(depth_format, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, sample_count)
 		.addResolveAttachment(surface_format.format)
@@ -114,14 +114,22 @@ void SwapChain::beginFrame()
 	acquireNextImage(); 
 
 	command_buffer->begin({}, image_index);
+}
+
+void SwapChain::beginRenderPass()
+{
 	render_pass->begin(*framebuffers[image_index]);
 }
 
 void SwapChain::endFrame()
 {
-	render_pass->end();
 	command_buffer->end(image_index);
 	present();
+}
+
+void SwapChain::endRenderPass()
+{
+	render_pass->end();
 }
 
 void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)

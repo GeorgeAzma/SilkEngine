@@ -66,7 +66,7 @@ RenderPass& RenderPass::addResolveAttachment(VkFormat format)
     return *this;
 }
 
-RenderPass& RenderPass::beginSubpass()
+RenderPass& RenderPass::addSubpass()
 {
     subpasses.emplace_back();
 
@@ -99,6 +99,7 @@ void RenderPass::build()
         subpasses.emplace_back(subpass_description);
     }
     
+    //TODO: IDK but this doesn't belong here
     VkSubpassDependency dependency{};
     dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
     dependency.dstSubpass = 0;
@@ -124,6 +125,9 @@ void RenderPass::build()
 
 void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_contents)
 {
+    if (Graphics::active.render_pass == render_pass)
+        return;
+
     VkRenderPassBeginInfo render_pass_begin_info{};
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     render_pass_begin_info.renderPass = render_pass;
@@ -158,6 +162,9 @@ void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_cont
 
 void RenderPass::end()
 {
+    if (Graphics::active.render_pass != render_pass)
+        return;
+
     vkCmdEndRenderPass(Graphics::active.command_buffer);
 
     Graphics::active.render_pass = VK_NULL_HANDLE;

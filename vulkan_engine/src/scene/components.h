@@ -24,7 +24,12 @@ enum class CameraType
 struct CameraComponent
 {
 public:
-	CameraComponent() { onViewportResize(); }
+	CameraComponent() 
+	{ 
+		direction = math::eulerToDirection(rotation);
+		view = glm::lookAt(position, position + direction, math::UP); 
+		onViewportResize(); 
+	}
 
 	operator const glm::mat4& () { return projection_view; }
 
@@ -39,7 +44,7 @@ public:
 			projection = glm::ortho(0.0f, (float)Window::getWidth(), 0.0f, (float)Window::getHeight(), 0.0f, 1.0f);
 			break;
 		}
-		projection_view = projection * view;
+		updateProjectionView();
 	}
 
 	void setFOV(float fov)
@@ -54,25 +59,32 @@ public:
 			projection = glm::ortho(0.0f, (float)Window::getWidth(), 0.0f, (float)Window::getHeight(), 0.0f, 1.0f);
 			break;
 		}
-		projection_view = projection * view;
+		updateProjectionView();
 	}
 
 	void setNear(float near)
 	{
-		//SK_ASSERT(type == CameraType::PERSPECTIVE, "Only perspective cameras have near variable");
+		SK_ASSERT(type == CameraType::PERSPECTIVE, "Only perspective cameras have near variable");
 		this->near = near;
 		projection = glm::perspective(glm::radians(fov), (float)Window::getAspectRatio(), near, far);
-		projection_view = projection * view;
+		updateProjectionView();
 	}
 
 	void setFar(float far)
 	{
-		//SK_ASSERT(type == CameraType::PERSPECTIVE, "Only perspective cameras have near variable");
+		SK_ASSERT(type == CameraType::PERSPECTIVE, "Only perspective cameras have near variable");
 		this->far = far;
 		projection = glm::perspective(glm::radians(fov), (float)Window::getAspectRatio(), near, far);
+		updateProjectionView();
+	}
+
+private:
+	void updateProjectionView()
+	{
 		projection_view = projection * view;
 	}
 
+public:
 	glm::mat4 projection_view = glm::mat4(1);
 	glm::mat4 projection = glm::mat4(1);
 	glm::mat4 view = glm::mat4(1);

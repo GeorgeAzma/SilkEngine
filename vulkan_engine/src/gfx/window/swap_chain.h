@@ -33,7 +33,9 @@ public:
     void present();
 
     void beginFrame();
+    void beginRenderPass();
     void endFrame();
+    void endRenderPass();
     
 private:
     void create(const std::optional<VkSwapchainKHR>& old_swap_chain = {});
