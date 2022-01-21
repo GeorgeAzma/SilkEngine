@@ -1,5 +1,6 @@
 #include "mesh.h"
 #include "gfx/buffers/buffer_layout.h"
+#include "gfx/graphics.h"
 
 Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
 	: vertices(vertices), indices(indices)
@@ -11,8 +12,7 @@ void Mesh::init()
 {
 	auto ibo = makeShared<IndexBuffer>(this->indices.data(), this->indices.size());
 	auto vbo = makeShared<VertexBuffer>(this->vertices.data(), this->vertices.size() * sizeof(Vertex));
-	constexpr size_t MAX_INSTANCES = 1024 * 1024; //1mb
-	std::vector<InstanceData> data(MAX_INSTANCES, InstanceData{});
+	std::vector<InstanceData> data(Graphics::MAX_INSTANCES, InstanceData{});
 	auto instance_vbo = makeShared<VertexBuffer>(data.data(), sizeof(InstanceData) * data.size(), VMA_MEMORY_USAGE_CPU_TO_GPU);
 	vertex_array = shared<VertexArray>(new VertexArray());
 	vertex_array->setIndexBuffer(ibo).addVertexBuffer(vbo).addVertexBuffer(instance_vbo);

@@ -2,6 +2,9 @@
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 #include "gfx/graphics.h"
+#include "gfx/instance.h"
+#include "gfx/devices/logical_device.h"
+#include "gfx/devices/physical_device.h"
 
 Allocator::Allocator()
 {

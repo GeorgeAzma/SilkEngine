@@ -2,6 +2,8 @@
 #include "gfx/devices/physical_device.h"
 #include "gfx/graphics.h"
 #include "gfx/window/window.h"
+#include "gfx/window/surface.h"
+#include "gfx/devices/logical_device.h"
 
 SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 {
@@ -112,7 +114,6 @@ void SwapChain::present()
 void SwapChain::beginFrame()
 {
 	acquireNextImage(); 
-
 	command_buffer->begin({}, image_index);
 }
 

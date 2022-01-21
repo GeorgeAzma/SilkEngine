@@ -1,6 +1,7 @@
 #include "shader.h"
 #include "utils/file_utils.h"
 #include "gfx/graphics.h"
+#include "gfx/devices/logical_device.h"
 
 Shader::Shader(const std::vector<std::string>& files)
 {

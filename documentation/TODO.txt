@@ -1,15 +1,13 @@
-- Configurable graphics settings (preferably in file format like yaml) 
-- Support array textures
-- Fix dirty swap chain code and render pass code
-- Write custom 3D model loader/converter
-- Seperate dispatchers for related events and create getters for them
 - Create optimized mesh batcher, which rebatches stuff only when it needs to 
 (when material changes etc.) (maybe use event system of symilar onComponentChange()?)
+- Write custom 3D model loader/converter
 - Create system which handles buffer creation for multiple frames 
 (perhaps static function like Graphics::createBuffer())
 - Sort meshes and materials and render with minimal binds
-- Support more instances, by making vertex buffer resizable
-- Support indexed indirect instanced rendering
-- Batch all the draw commands in single mesh.draw() function
 - Multiple render passes
-- Compute shader support
+- Fix dirty swap chain code and render pass code
+- Support array textures
+- Batch all the draw commands in single mesh.draw() function
+- Support more instances, by making vertex buffer resizable
+- Seperate dispatchers for related events and create getters for them
+- Configurable graphics settings (preferably in file format like yaml) 

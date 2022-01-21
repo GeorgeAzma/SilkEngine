@@ -1,5 +1,6 @@
 #include "descriptor_pool.h"
 #include "gfx/graphics.h"
+#include "gfx/devices/logical_device.h"
 
 DescriptorPool::~DescriptorPool()
 {

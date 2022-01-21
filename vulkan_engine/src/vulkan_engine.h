@@ -21,6 +21,7 @@
 #include "utils/RNG.h"
 #include "utils/timers.h"
 #include "utils/detected.h"
+#include "utils/thread_pool.h"
 
 #include "gfx/graphics.h"
 #include "gfx/enums.h"

@@ -1,5 +1,7 @@
 #include "command_pool.h"
 #include "gfx/graphics.h"
+#include "gfx/devices/physical_device.h"
+#include "gfx/devices/logical_device.h"
 
 CommandPool::CommandPool()
 {

@@ -1,5 +1,6 @@
 #include "framebuffer.h"
 #include "gfx/graphics.h"
+#include "gfx/devices/logical_device.h"
 
 Framebuffer::Framebuffer(VkRenderPass render_pass, const std::vector<VkImageView>& attachments, uint32_t width, uint32_t height)
 {

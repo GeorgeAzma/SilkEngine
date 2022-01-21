@@ -1,18 +1,15 @@
 #pragma once
-#include "instance.h"
-#include "window/surface.h"
-#include "devices/physical_device.h"
-#include "devices/logical_device.h"
-#include "window/swap_chain.h"
-#include "allocators/command_pool.h"
-#include "descriptors/descriptor_pool.h"
-#include "allocators/allocator.h"
-#include "pipeline/graphics_pipeline.h"
-#include "pipeline/compute_pipeline.h"
-#include "buffers/uniform_buffer.h"
-
 
 class WindowResizeEvent;
+class Instance;
+class Surface;
+class PhysicalDevice;
+class LogicalDevice;
+class Allocator;
+class CommandPool;
+class SwapChain;
+class DescriptorPool;
+class UniformBuffer;
 
 class Graphics
 {
@@ -34,6 +31,7 @@ public:
 	static void vulkanAssert(VkResult result);
 
 public:
+	static constexpr size_t MAX_INSTANCES = 1024 * 1024; //1mb * sizeof(InstanceData)
 	static constexpr uint32_t API_VERSION = VK_API_VERSION_1_2;
 
 	static inline Instance* instance = nullptr;

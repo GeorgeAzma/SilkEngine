@@ -1,5 +1,8 @@
 #include "render_pass.h"
 #include "gfx/graphics.h"
+#include "gfx/devices/logical_device.h"
+#include "gfx/enums.h"
+#include "gfx/window/swap_chain.h"
 
 RenderPass::~RenderPass()
 {

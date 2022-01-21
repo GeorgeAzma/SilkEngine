@@ -3,6 +3,7 @@
 #include "meshes/rectangle_mesh.h"
 #include "gfx/graphics.h"
 #include "gfx/buffers/uniform_buffer.h"
+#include "gfx/window/swap_chain.h"
 
 void Resources::init()
 {
@@ -25,16 +26,6 @@ void Resources::init()
         .setRenderPass(Graphics::swap_chain->getRenderPass())
         .build();
 	addMaterial("3D", makeShared<Material>(descriptor_set_layout, graphics_pipeline));
-    
-    descriptor_set_layout = makeShared<DescriptorSetLayout>();
-    descriptor_set_layout->addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT)
-        .build();
-    shader = shared<Shader>(new Shader({ "data/cache/shaders/cull.comp.spv" })); //1.65ms
-    shared<ComputePipeline> compute_pipeline = makeShared<ComputePipeline>(); //1.35ms
-    compute_pipeline->addDescriptorSetLayout(*descriptor_set_layout)
-        .setShader(shader)
-        .build();
-    addComputeMaterial("Cull", makeShared<ComputeMaterial>(descriptor_set_layout, compute_pipeline));
 }
 
 void Resources::cleanup()

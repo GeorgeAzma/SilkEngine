@@ -1,5 +1,6 @@
 #include "descriptor_set_layout.h"
 #include "gfx/graphics.h"
+#include "gfx/devices/logical_device.h"
 
 DescriptorSetLayout& DescriptorSetLayout::addBinding(uint32_t binding, VkDescriptorType descriptor_type, VkShaderStageFlags shader_stages, size_t count)
 {

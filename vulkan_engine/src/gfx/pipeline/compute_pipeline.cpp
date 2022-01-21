@@ -1,5 +1,6 @@
 #include "compute_pipeline.h"
 #include "gfx/graphics.h"
+#include "gfx/devices/logical_device.h"
 
 ComputePipeline::ComputePipeline()
 {

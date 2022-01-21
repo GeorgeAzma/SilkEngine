@@ -2,6 +2,8 @@
 #include "gfx/graphics.h"
 #include "gfx/buffers/buffer.h"
 #include "gfx/enums.h"
+#include "gfx/buffers/command_buffer.h"
+#include "gfx/devices/physical_device.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 

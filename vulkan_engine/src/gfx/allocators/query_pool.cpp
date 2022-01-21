@@ -1,6 +1,7 @@
 #include "query_pool.h"
 #include "gfx/graphics.h"
 #include "utils/bit_utils.h"
+#include "gfx/devices/logical_device.h"
 
 QueryPool::QueryPool(VkQueryType query_type, VkQueryPipelineStatisticFlags pipeline_statistic_flags)
 	: query_type(query_type), pipeline_statistic_flags()

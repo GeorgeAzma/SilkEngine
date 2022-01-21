@@ -1,5 +1,7 @@
 #include "descriptor_set.h"
 #include "gfx/graphics.h"
+#include "gfx/devices/logical_device.h"
+#include "gfx/descriptors/descriptor_pool.h"
 
 DescriptorSet::DescriptorSet(const DescriptorSetLayout& layout, size_t count)
 	: layout{&layout}

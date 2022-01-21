@@ -1,9 +1,19 @@
 #include "graphics.h"
-#include "utils/debug_timer.h"
 #include "core/event.h"
 #include "enums.h"
 #include "buffers/buffer_layout.h"
 #include "core/time.h"
+#include "instance.h"
+#include "window/surface.h"
+#include "devices/physical_device.h"
+#include "devices/logical_device.h"
+#include "window/swap_chain.h"
+#include "allocators/command_pool.h"
+#include "descriptors/descriptor_pool.h"
+#include "allocators/allocator.h"
+#include "pipeline/graphics_pipeline.h"
+#include "pipeline/compute_pipeline.h"
+#include "buffers/uniform_buffer.h"
 
 void Graphics::init()
 {

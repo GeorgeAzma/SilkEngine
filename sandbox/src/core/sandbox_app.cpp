@@ -39,9 +39,6 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 void SandboxApp::onUpdate()
 {
     Graphics::beginFrame();
-
-    //Resources::getComputeMaterial("Cull")->pipeline->bind();
-    //vkCmdDispatch(Graphics::active.command_buffer, 1, 1, 1);
     
     scene->onUpdate();
     

@@ -1,5 +1,7 @@
 #include "command_buffer.h"
 #include "gfx/graphics.h"
+#include "gfx/devices/logical_device.h"
+#include "gfx/allocators/command_pool.h"
 
 CommandBuffer::CommandBuffer(size_t count, VkCommandBufferLevel level)
 	: level(level)

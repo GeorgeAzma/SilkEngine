@@ -1,5 +1,7 @@
 #include "graphics_pipeline.h"
 #include "gfx/graphics.h"
+#include "gfx/window/swap_chain.h"
+#include "gfx/devices/logical_device.h"
 
 GraphicsPipeline::GraphicsPipeline()
 {

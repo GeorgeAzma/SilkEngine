@@ -2,6 +2,8 @@
 #include "logical_device.h"
 #include "gfx/window/swap_chain.h"
 #include "gfx/graphics.h"
+#include "gfx/window/surface.h"
+#include "gfx/instance.h"
 
 PhysicalDevice::PhysicalDevice()
 {
