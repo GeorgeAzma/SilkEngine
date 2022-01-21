@@ -199,11 +199,11 @@ endforeach()
 
 #Defines
 target_compile_definitions(VulkanEngine PUBLIC 
-"$<$<CONFIG:DEBUG>:VE_DEBUG>"
-"$<$<CONFIG:RELEASE>:VE_DIST>"
+"$<$<CONFIG:DEBUG>:SK_DEBUG>"
+"$<$<CONFIG:RELEASE>:SK_DIST>"
 )
 target_compile_definitions(VulkanEngine PRIVATE 
-"VE_CORE"
+"SK_CORE"
 )
 
 #Precompile headers

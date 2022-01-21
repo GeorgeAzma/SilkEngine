@@ -22,7 +22,6 @@ public:
 	};
 public:
 	static void init();
-	static void update();
 
 	static void beginFrame();
 	static void endFrame();

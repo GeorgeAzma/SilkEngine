@@ -6,7 +6,7 @@ RenderPass::~RenderPass()
     vkDestroyRenderPass(*Graphics::logical_device, render_pass, nullptr);
 }
 
-RenderPass& RenderPass::addAttachment(uint32_t attachment, VkFormat format, VkImageLayout image_layout, VkSampleCountFlagBits samples)
+RenderPass& RenderPass::addAttachment(VkFormat format, VkImageLayout image_layout, VkSampleCountFlagBits samples)
 {
     VkAttachmentDescription attachment_description{};
     attachment_description.format = format;
@@ -21,7 +21,7 @@ RenderPass& RenderPass::addAttachment(uint32_t attachment, VkFormat format, VkIm
     subpasses.back().attachments.emplace_back(attachment_description);
     
     VkAttachmentReference attachment_reference{};
-    attachment_reference.attachment = attachment;
+    attachment_reference.attachment = subpasses.back().attachments.size() - 1;
     attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     if (EnumInfo::hasDepth(attachment_description.format))
     {
@@ -32,7 +32,9 @@ RenderPass& RenderPass::addAttachment(uint32_t attachment, VkFormat format, VkIm
     {
         subpasses.back().color_attachment_references.emplace_back(attachment_reference);
     }
-    else
+    else if(attachment_reference.layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+        || attachment_reference.layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL
+        || attachment_reference.layout == VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL)
     {
         subpasses.back().depth_attachment_reference = attachment_reference;
     }
@@ -130,9 +132,20 @@ void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_cont
     render_pass_begin_info.renderArea.offset = { 0, 0 };
     render_pass_begin_info.renderArea.extent = Graphics::swap_chain->getExtent();
 
-    std::vector<VkClearValue> clear_values(2);
-    clear_values[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-    clear_values[1].depthStencil = { 1.0f, 0 };
+    std::vector<VkClearValue> clear_values(subpasses.back().attachments.size());
+    for (size_t i = 0; i < clear_values.size(); ++i)
+    {
+        VkClearValue clear_value{};
+        if (EnumInfo::hasDepth(subpasses.back().attachments[i].format))
+        {
+            clear_value.depthStencil = { 1.0f, 0 };
+        }
+        else
+        {
+            clear_value.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+        }
+        clear_values[i] = clear_value;
+    }
 
     render_pass_begin_info.clearValueCount = clear_values.size();
     render_pass_begin_info.pClearValues = clear_values.data();

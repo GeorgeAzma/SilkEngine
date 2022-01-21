@@ -56,6 +56,6 @@ ShaderType Shader::getShaderType(const std::string& file)
 	if (file.find(".comp") != std::string::npos)
 		return ShaderType::COMPUTE;
 
-	VE_ERROR("Couldn't determine shader type from file extension, try using these extensions: .vert .frag .tcs .tes .comp");
+	SK_ERROR("Couldn't determine shader type from file extension, try using these extensions: .vert .frag .tcs .tes .comp");
 	return ShaderType::NONE;
 }

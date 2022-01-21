@@ -1,6 +1,6 @@
 #include "logical_device.h"
 #include "physical_device.h"
-#include "graphics.h"
+#include "gfx/graphics.h"
 
 LogicalDevice::LogicalDevice()
 {

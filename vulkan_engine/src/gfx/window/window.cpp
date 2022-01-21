@@ -6,7 +6,7 @@ static bool GLFW_initialized = false;
 
 static void GLFWErrorCallback(int error, const char *description)
 {
-    VE_ERROR("GLFW({0}): {1}", error, description);
+    SK_ERROR("GLFW({0}): {1}", error, description);
 }
 
 void Window::init()
@@ -14,7 +14,7 @@ void Window::init()
     if (!GLFW_initialized)
     {
         int success = glfwInit();
-        VE_ASSERT(success, "GLFW: Couldn't initialize glfw");
+        SK_ASSERT(success, "GLFW: Couldn't initialize glfw");
         glfwSetErrorCallback(GLFWErrorCallback);
         GLFW_initialized = true;
     }

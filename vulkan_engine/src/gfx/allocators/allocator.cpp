@@ -1,7 +1,7 @@
 #include "allocator.h"
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
-#include "graphics.h"
+#include "gfx/graphics.h"
 
 Allocator::Allocator()
 {

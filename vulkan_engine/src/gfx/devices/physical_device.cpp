@@ -1,6 +1,6 @@
 #include "physical_device.h"
 #include "logical_device.h"
-#include "gfx/swap_chain.h"
+#include "gfx/window/swap_chain.h"
 #include "gfx/graphics.h"
 
 PhysicalDevice::PhysicalDevice()
@@ -64,7 +64,7 @@ VkFormat PhysicalDevice::findSupportedFormat(const std::vector<VkFormat>& candid
 		}
 	}
 
-	VE_ERROR("Vulkan: Couldn't find supported format");
+	SK_ERROR("Vulkan: Couldn't find supported format");
 	return VkFormat(0);
 }
 
@@ -117,7 +117,7 @@ std::vector<VkPhysicalDevice> PhysicalDevice::getAvailablePhysicalDevices() cons
 	uint32_t device_count = 0;
 	Graphics::vulkanAssert(vkEnumeratePhysicalDevices(*Graphics::instance, &device_count, nullptr));
 
-	VE_ASSERT(device_count > 0, 
+	SK_ASSERT(device_count > 0, 
 		"Vulkan: Couldn't find GPU with vulkan support");
 
 	std::vector<VkPhysicalDevice> physical_devices(device_count);
@@ -136,7 +136,7 @@ void PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vector<VkPhysic
 			candidates.insert(std::make_pair(score, device));
 	}
 
-	VE_ASSERT(candidates.rbegin()->first >= 0, 
+	SK_ASSERT(candidates.rbegin()->first >= 0, 
 		"Vulkan: Couldn't find suitable vulkan GPU");
 
 	physical_device = candidates.rbegin()->second;

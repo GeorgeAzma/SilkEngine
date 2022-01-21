@@ -59,7 +59,7 @@ public:
 
 	void setNear(float near)
 	{
-		//VE_ASSERT(type == CameraType::PERSPECTIVE, "Only perspective cameras have near variable");
+		//SK_ASSERT(type == CameraType::PERSPECTIVE, "Only perspective cameras have near variable");
 		this->near = near;
 		projection = glm::perspective(glm::radians(fov), (float)Window::getAspectRatio(), near, far);
 		projection_view = projection * view;
@@ -67,7 +67,7 @@ public:
 
 	void setFar(float far)
 	{
-		//VE_ASSERT(type == CameraType::PERSPECTIVE, "Only perspective cameras have near variable");
+		//SK_ASSERT(type == CameraType::PERSPECTIVE, "Only perspective cameras have near variable");
 		this->far = far;
 		projection = glm::perspective(glm::radians(fov), (float)Window::getAspectRatio(), near, far);
 		projection_view = projection * view;

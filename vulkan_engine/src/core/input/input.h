@@ -14,6 +14,14 @@ public:
 	static bool isMouseReleased(int button);
 	static bool isKeyReleased(int key);
 
+	static void setKey(const std::string& name, int key);
+	static void setMouseButton(const std::string& name, int button);
+	static void setJoystickButton(const std::string& name, int button);
+
+	static int getKey(const std::string& name);
+	static int getMouseButton(const std::string& name);
+	static int getJoystickButton(const std::string& name);
+
 	static glm::vec2 getMouse();
 	static float getMouseX();
 	static float getMouseY();
@@ -36,4 +44,8 @@ private:
 	static inline std::array<bool, GLFW_MOUSE_BUTTON_LAST + 1> last_mouse_buttons{false};
 
 	static inline glm::vec2 mouse = glm::vec2(0);
+
+	static inline std::unordered_map<std::string, int> key_binds;
+	static inline std::unordered_map<std::string, int> mouse_button_binds;
+	static inline std::unordered_map<std::string, int> joystick_button_binds;
 };

@@ -7,7 +7,7 @@ shared<spdlog::logger> Log::client_logger;
 
 void Log::init()
 {
-#ifdef VE_ENABLE_DEBUG_OUTPUT
+#ifdef SK_ENABLE_DEBUG_OUTPUT
     std::vector<spdlog::sink_ptr> log_sinks;
     log_sinks.emplace_back(makeShared<spdlog::sinks::stdout_color_sink_mt>());
     log_sinks.emplace_back(makeShared<spdlog::sinks::basic_file_sink_mt>("VulkanEngine.log", true));

@@ -42,8 +42,11 @@ void SandboxApp::onUpdate()
 {
     Graphics::beginFrame();
 
+    //Resources::getComputeMaterial("Cull")->pipeline->bind();
+    //vkCmdDispatch(Graphics::active.command_buffer, 1, 1, 1);
+    
     scene->onUpdate();
-
+    
     uniform_buffer->setData(&camera->getComponent<CameraComponent>().projection_view);
 
     Graphics::endFrame();

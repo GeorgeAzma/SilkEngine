@@ -21,8 +21,8 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 
 	render_pass = new RenderPass(); //0.11ms
 	render_pass->beginSubpass()
-		.addAttachment(0, surface_format.format, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, sample_count)
-		.addAttachment(1, depth_format, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, sample_count)
+		.addAttachment(surface_format.format, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, sample_count)
+		.addAttachment(depth_format, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, sample_count)
 		.addResolveAttachment(surface_format.format)
 		.build();
 
@@ -142,7 +142,7 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; //For transparent windows
 	create_info.presentMode = present_mode;
 	create_info.clipped = VK_TRUE;
-	//create_info.oldSwapchain = old_swap_chain ? *old_swap_chain : VK_NULL_HANDLE; //Necessary for resizing and such
+	create_info.oldSwapchain = old_swap_chain ? *old_swap_chain : VK_NULL_HANDLE; //Necessary for resizing and such
 
 	const auto& indices = Graphics::physical_device->getQueueFamilyIndices();
 	if (indices.graphics != indices.present) 
@@ -247,7 +247,7 @@ void SwapChain::chooseSwapChainSurfaceFormat()
 		}
 	}
 
-	VE_ASSERT(formats.rbegin()->first >= 0, 
+	SK_ASSERT(formats.rbegin()->first >= 0, 
 		"Vulkan: Couldn't find supported formats to choose from");
 	
 	this->surface_format = formats.rbegin()->second;
@@ -286,7 +286,7 @@ void SwapChain::chooseSwapChainPresentMode()
 		}
 	}
 
-	VE_ASSERT(present_modes.rbegin()->first >= 0,
+	SK_ASSERT(present_modes.rbegin()->first >= 0,
 		"Vulkan: Couldn't find supported present modes to choose from");
 
 	this->present_mode = present_modes.rbegin()->second;

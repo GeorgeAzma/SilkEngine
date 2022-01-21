@@ -7,7 +7,7 @@ Instance::Instance()
     application_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     application_info.pApplicationName = "App";
     application_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    application_info.pEngineName = "VulkanEngine";
+    application_info.pEngineName = "Silk Engine";
     application_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     application_info.apiVersion = Graphics::API_VERSION;
 
@@ -17,15 +17,15 @@ Instance::Instance()
 
     //Get required extensions and see if they are supported
     auto requiredExtensions = getRequiredExtensions();
-    VE_ASSERT(checkExtensionSupport(requiredExtensions), 
+    SK_ASSERT(checkExtensionSupport(requiredExtensions), 
         "Vulkan: Required extension(s) not found");
     create_info.enabledExtensionCount = requiredExtensions.size();
     create_info.ppEnabledExtensionNames = requiredExtensions.data();
 
-#ifdef VE_ENABLE_DEBUG_OUTPUT
+#ifdef SK_ENABLE_DEBUG_OUTPUT
     //Debug messenger stuff
     auto required_validation_layers = getRequiredValidationLayers();
-    VE_ASSERT(checkValidationLayerSupport(required_validation_layers),
+    SK_ASSERT(checkValidationLayerSupport(required_validation_layers),
         "Vulkan: Required validation layers(s) not found");
     create_info.enabledLayerCount = required_validation_layers.size();
     create_info.ppEnabledLayerNames = required_validation_layers.data();
@@ -38,14 +38,14 @@ Instance::Instance()
 
     Graphics::vulkanAssert(vkCreateInstance(&create_info, nullptr, &instance));
 
-#ifdef VE_ENABLE_DEBUG_OUTPUT
+#ifdef SK_ENABLE_DEBUG_OUTPUT
     debug_messenger->create(instance);
 #endif
 }
 
 Instance::~Instance()
 {
-#ifdef VE_ENABLE_DEBUG_OUTPUT
+#ifdef SK_ENABLE_DEBUG_OUTPUT
     delete debug_messenger;
 #endif
     vkDestroyInstance(instance, nullptr);
@@ -58,7 +58,7 @@ std::vector<const char *> Instance::getRequiredExtensions() const
     
     std::vector<const char*> extensions(glfw_extensions, glfw_extensions + glfw_extension_count);
 
-#ifdef VE_ENABLE_DEBUG_OUTPUT
+#ifdef SK_ENABLE_DEBUG_OUTPUT
     extensions.push_back("VK_EXT_debug_utils");
 #endif
 

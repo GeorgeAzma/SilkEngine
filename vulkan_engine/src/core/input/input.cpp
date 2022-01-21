@@ -42,6 +42,36 @@ bool Input::isKeyReleased(int key)
 	return !keys[key] && last_keys[key];
 }
 
+void Input::setKey(const std::string& name, int key)
+{
+	key_binds[name] = key;
+}
+
+void Input::setMouseButton(const std::string& name, int button)
+{
+	mouse_button_binds[name] = button;
+}
+
+void Input::setJoystickButton(const std::string& name, int button)
+{
+	joystick_button_binds[name] = button;
+}
+
+int Input::getKey(const std::string& name)
+{
+	return key_binds.at(name);
+}
+
+int Input::getMouseButton(const std::string& name)
+{
+	return mouse_button_binds.at(name);
+}
+
+int Input::getJoystickButton(const std::string& name)
+{
+	return joystick_button_binds.at(name);
+}
+
 glm::vec2 Input::getMouse()
 {
 	return mouse;

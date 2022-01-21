@@ -184,7 +184,7 @@ public:
 
     void call(const Event& event) const
     {
-        VE_ASSERT(instance && member_function, 
+        SK_ASSERT(instance && member_function, 
             "Attempted to call \"onEvent(const EventType&)\" when it was nullptr, did you forget to unsubscribe event when class got deleted?");
         (instance->*member_function)(static_cast<const EventType&>(event));
     }
@@ -210,7 +210,7 @@ public:
 
     void call(const Event& event) const
     {
-        VE_ASSERT(function,
+        SK_ASSERT(function,
             "Attempted to call \"onEvent(const EventType&)\" when it was nullptr, did you forget to unsubscribe event when class got deleted?");
         (*function)(static_cast<const EventType&>(event));
     }

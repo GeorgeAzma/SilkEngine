@@ -1,6 +1,6 @@
 #include "surface.h"
-#include "graphics.h"
-#include "core/window.h"
+#include "gfx/graphics.h"
+#include "gfx/window/window.h"
 
 Surface::Surface()
 {

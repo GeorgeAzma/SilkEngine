@@ -22,7 +22,7 @@ class RenderPass : NonCopyable
 public:
 	~RenderPass();
 
-	RenderPass& addAttachment(uint32_t attachment, VkFormat format, VkImageLayout image_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
+	RenderPass& addAttachment(VkFormat format, VkImageLayout image_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
 	RenderPass& addResolveAttachment(VkFormat format);
 	RenderPass& beginSubpass();
 

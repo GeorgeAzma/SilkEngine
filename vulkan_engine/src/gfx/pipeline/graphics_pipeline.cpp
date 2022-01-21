@@ -78,7 +78,7 @@ GraphicsPipeline& GraphicsPipeline::enable(EnableTag tag)
 	case EnableTag::DEPTH_WRITE:
 		depth_stencil_info.depthWriteEnable = VK_TRUE;
 		break;
-	case EnableTag::PRIMITIVE_RESTART:
+	case EnableTag::PRIMITISK_RESTART:
 		input_assembly_info.primitiveRestartEnable = VK_TRUE;
 		break;
 	case EnableTag::SAMPLE_SHADING:
@@ -178,7 +178,7 @@ void GraphicsPipeline::bind()
 
 void GraphicsPipeline::destroy()
 {
-	vkDestroyPipelineCache(*Graphics::logical_device, cache, nullptr);
+	//vkDestroyPipelineCache(*Graphics::logical_device, cache, nullptr);
 	vkDestroyPipeline(*Graphics::logical_device, pipeline, nullptr);
 	vkDestroyPipelineLayout(*Graphics::logical_device, pipeline_layout, nullptr);
 }
@@ -205,9 +205,9 @@ void GraphicsPipeline::create()
 	Graphics::vulkanAssert(vkCreateGraphicsPipelines(*Graphics::logical_device, VK_NULL_HANDLE, 1, &create_info, nullptr, &pipeline));
 
 	//Create cache
-	VkPipelineCacheCreateInfo pipeline_cache_info = {};
-	pipeline_cache_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-	Graphics::vulkanAssert(vkCreatePipelineCache(*Graphics::logical_device, &pipeline_cache_info, nullptr, &cache));
+	//VkPipelineCacheCreateInfo pipeline_cache_info = {};
+	//pipeline_cache_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+	//Graphics::vulkanAssert(vkCreatePipelineCache(*Graphics::logical_device, &pipeline_cache_info, nullptr, &cache));
 }
 
 void GraphicsPipeline::onWindowResize(const WindowResizeEvent& e)

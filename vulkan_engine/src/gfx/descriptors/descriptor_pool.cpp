@@ -1,5 +1,5 @@
 #include "descriptor_pool.h"
-#include "graphics.h"
+#include "gfx/graphics.h"
 
 DescriptorPool::~DescriptorPool()
 {

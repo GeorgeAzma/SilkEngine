@@ -7,7 +7,7 @@
 
 void Graphics::init()
 {
-	VE_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
+	SK_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
 
 	//These most likely won't change
 	instance = new Instance(); //70ms
@@ -36,10 +36,6 @@ void Graphics::endFrame()
 	swap_chain->endFrame();
 }
 
-void Graphics::update()
-{	
-}
-
 void Graphics::cleanup() //25ms
 {
 	delete swap_chain;
@@ -56,7 +52,7 @@ void Graphics::cleanup() //25ms
 
 void Graphics::vulkanAssert(VkResult result)
 {
-	VE_ASSERT(result == VK_SUCCESS, std::string("Vulkan: ") + stringifyResult(result));
+	SK_ASSERT(result == VK_SUCCESS, std::string("Vulkan: ") + stringifyResult(result));
 }
 
 constexpr std::string Graphics::stringifyResult(VkResult result)
