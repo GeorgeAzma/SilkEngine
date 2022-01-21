@@ -5,6 +5,7 @@
 #include "scene/resources.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/buffers/uniform_buffer.h"
+#include "utils/general_utils.h"
 
 Scene::Scene()
 {
@@ -32,23 +33,7 @@ void Scene::onPlay()
 			}
 		});
 
-	indirect_batches = batchRenderedObjects(render_objects);
-
-	indirect_buffer = std::make_shared<IndirectBuffer>(indirect_batches.size() * sizeof(VkDrawIndexedIndirectCommand));
-
-	std::vector<VkDrawIndexedIndirectCommand> draw_commands;
-	for (const auto& batch : indirect_batches)
-	{
-		VkDrawIndexedIndirectCommand draw_indexed_indirect_command{};
-		draw_indexed_indirect_command.firstIndex = 0;
-		draw_indexed_indirect_command.firstInstance = 0;
-		draw_indexed_indirect_command.indexCount = batch.render_object.mesh->indices.size();
-		draw_indexed_indirect_command.instanceCount = batch.count;
-		draw_indexed_indirect_command.vertexOffset = 0;
-		draw_commands.emplace_back(std::move(draw_indexed_indirect_command));
-	}
-	indirect_buffer->setData(draw_commands.data());
-
+	indirect_buffer = std::make_shared<IndirectBuffer>(Graphics::MAX_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
 }
 
 void Scene::onUpdate()
@@ -72,6 +57,20 @@ void Scene::onUpdate()
 	{
 		Graphics::global_uniform->setDataChecked(&main_camera->projection_view, sizeof(glm::mat4), 0);
 	}
+
+	indirect_batches = batchRenderedObjects(render_objects);
+	std::vector<VkDrawIndexedIndirectCommand> draw_commands;
+	for (const auto& batch : indirect_batches)
+	{
+		VkDrawIndexedIndirectCommand draw_indexed_indirect_command{};
+		draw_indexed_indirect_command.firstIndex = 0;
+		draw_indexed_indirect_command.firstInstance = 0;
+		draw_indexed_indirect_command.indexCount = batch.render_object.mesh->indices.size();
+		draw_indexed_indirect_command.instanceCount = batch.count;
+		draw_indexed_indirect_command.vertexOffset = 0;
+		draw_commands.emplace_back(std::move(draw_indexed_indirect_command));
+	}
+	indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(draw_commands[0]));
 
 	Graphics::beginRenderPass();
 	for (auto& batch : indirect_batches)
@@ -122,23 +121,25 @@ void Scene::onComponentCreate(entt::registry& registry, entt::entity entity)
 
 std::vector<IndirectBatch> Scene::batchRenderedObjects(const std::vector<RenderObject>& render_objects)
 {
-	std::vector<IndirectBatch> batches = { { render_objects.front(), 0, 0 } };
+	if (render_objects.empty())
+		return {};
 
-	for (size_t i = 0; i < render_objects.size(); ++i)
+	std::vector<IndirectBatch> batches;
+	std::vector<std::vector<RenderObject>> clusters = GeneralUtils::groupDuplicates(render_objects);
+
+	for (const std::vector<RenderObject>& cluster : clusters)
 	{
-		if (batches.back() == render_objects[i])
+		batches.emplace_back(cluster.front(), batches.size(), 1, std::vector<InstanceData>{ cluster.front().instance_data });
+		SK_ASSERT(batches.size() < Graphics::MAX_BATCHES, "batches.size() exceeds MAX_BATCHES");
+
+		for (size_t i = 0; i < cluster.size(); ++i)
 		{
-			batches.back().instance_data.emplace_back(render_objects[i].instance_data);
+			batches.back().instance_data.emplace_back(cluster[i].instance_data);
 			++batches.back().count;
 		}
-		else
-		{
-			batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(batches.back().instance_data.data(), batches.back().instance_data.size() * sizeof(InstanceData));
-			batches.emplace_back(render_objects[i], batches.size(), 1, std::vector<InstanceData>{ render_objects[i].instance_data });
-			batches.back().instance_data.emplace_back(render_objects[i].instance_data);
-		}
+		
+		batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(batches.back().instance_data.data(), batches.back().instance_data.size() * sizeof(InstanceData));
 	}
-	batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(batches.back().instance_data.data(), batches.back().instance_data.size() * sizeof(InstanceData));
-
+	
 	return batches;
 }

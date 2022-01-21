@@ -25,7 +25,7 @@ private:
 	void onComponentCreate(entt::registry& registry, entt::entity entity);
 
 private:
-	static std::vector<IndirectBatch> batchRenderedObjects(const std::vector<RenderObject>& render_object); //TODO: Support materials uniform buffers layouts etc, so convert mesh shared ptr to RenderObject class
+	std::vector<IndirectBatch> batchRenderedObjects(const std::vector<RenderObject>& render_object); //TODO: Support materials uniform buffers layouts etc, so convert mesh shared ptr to RenderObject class
 
 private:
 	entt::registry registry;

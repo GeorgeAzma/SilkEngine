@@ -15,22 +15,22 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE })
         .addImage(1, *image)
         .build();
-    shared<MaterialData> material_data = makeShared<MaterialData>(Resources::getMaterial("3D"), descriptor_set);
+    material_data = makeShared<MaterialData>(Resources::getMaterial("3D"), descriptor_set);
 
-    circles.resize(65536);
+    circles.resize(0);
     for (size_t i = 0; i < circles.size(); ++i)
     {
-        circles[i] = makeShared<Entity>(scene->createEntity());
-        circles[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
-        circles[i]->addComponent<RenderComponent>(Resources::getMesh("Circle"), material_data);
+        circles[i] = Entity(scene->createEntity());
+        circles[i].addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
+        circles[i].addComponent<RenderComponent>(Resources::getMesh("Circle"), material_data);
     }
 
-    squares.resize(65536);
+    squares.resize(0);
     for (size_t i = 0; i < squares.size(); ++i)
     {
-        squares[i] = makeShared<Entity>(scene->createEntity());
-        squares[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
-        squares[i]->addComponent<RenderComponent>(Resources::getMesh("Rectangle"), material_data);
+        squares[i] = Entity(scene->createEntity());
+        squares[i].addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
+        squares[i].addComponent<RenderComponent>(Resources::getMesh("Rectangle"), material_data);
     }
 
     scene->onPlay();
@@ -38,6 +38,21 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
 void SandboxApp::onUpdate()
 {
+    if (RNG::Uint() % 2 < 2)
+    {
+        circles.push_back(Entity(scene->createEntity())); 
+        circles.back().addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
+        circles.back().addComponent<RenderComponent>(Resources::getMesh("Circle"), material_data);
+        for(size_t i = 0; i < 244; ++i)
+        squares.push_back(Entity(scene->createEntity()));
+        squares.back().addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
+        squares.back().addComponent<RenderComponent>(Resources::getMesh("Rectangle"), material_data);
+    }
+    else
+    {
+ 
+    }
+
     Graphics::beginFrame();
     
     scene->onUpdate();

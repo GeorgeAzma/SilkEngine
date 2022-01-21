@@ -18,6 +18,11 @@ public:
 	{
 		glm::mat4 projection_view;
 	};
+	static struct Statistics
+	{
+		size_t batches = 0;
+		size_t instances = 0;
+	} stats;
 public:
 	static void init();
 
@@ -32,6 +37,7 @@ public:
 
 public:
 	static constexpr size_t MAX_INSTANCES = 1024 * 1024; //1mb * sizeof(InstanceData)
+	static constexpr size_t MAX_BATCHES = 1024;
 	static constexpr uint32_t API_VERSION = VK_API_VERSION_1_2;
 
 	static inline Instance* instance = nullptr;

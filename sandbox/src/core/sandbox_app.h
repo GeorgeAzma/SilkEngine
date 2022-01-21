@@ -14,7 +14,8 @@ private:
 	shared<Scene> scene;
 	shared<Entity> camera;
 
-    std::vector<shared<Entity>> circles;
-    std::vector<shared<Entity>> squares;
-    shared<Image> image;
+    std::vector<Entity> circles;
+    std::vector<Entity> squares;
+    shared<MaterialData> material_data;
+    shared<Image> image; 
 };

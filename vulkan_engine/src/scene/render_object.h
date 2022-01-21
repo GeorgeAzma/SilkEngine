@@ -53,7 +53,8 @@ struct RenderObject
 
 	bool operator==(const RenderObject& other) const
 	{
-		return *mesh == *other.mesh && *other.material_data->material == *material_data->material;
+		return (*mesh == *other.mesh) 
+			&& (*other.material_data->material == *material_data->material);
 	}
 };
 
