@@ -9,11 +9,13 @@
 Scene::Scene()
 {
 	Dispatcher::subscribe(this, &Scene::onWindowResize);
+	registry.on_construct<RenderComponent>().connect<&Scene::onComponentCreate>(this);
 }
 
 Scene::~Scene()
 {
 	Dispatcher::unsubscribe(this, &Scene::onWindowResize);
+	registry.on_construct<RenderComponent>().disconnect<&Scene::onComponentCreate>(this);
 }
 
 void Scene::onPlay()
@@ -28,18 +30,6 @@ void Scene::onPlay()
 
 				script_component.instance->onCreate();
 			}
-		});
-
-	registry.view<RenderComponent>().each(
-		[this](auto entity, auto& render_component)
-		{
-			if (registry.any_of<TransformComponent>(entity))
-			{
-				InstanceData instance_data{};
-				instance_data.transform = registry.get<TransformComponent>(entity).transform;
-				render_component.render_object.instance_data = std::move(instance_data);
-			}
-			render_objects.push_back(render_component.render_object);
 		});
 
 	indirect_batches = batchRenderedObjects(render_objects);
@@ -58,7 +48,8 @@ void Scene::onPlay()
 		draw_commands.emplace_back(std::move(draw_indexed_indirect_command));
 	}
 	indirect_buffer->setData(draw_commands.data());
-} 
+
+}
 
 void Scene::onUpdate()
 {
@@ -66,7 +57,7 @@ void Scene::onUpdate()
 		[&](auto entity, auto& script_component)
 		{
 			script_component.instance->onUpdate();
-		});	
+		});
 
 	//TODO: determine how to choose main camera
 	CameraComponent* main_camera = nullptr;
@@ -82,15 +73,15 @@ void Scene::onUpdate()
 		Graphics::global_uniform->setDataChecked(&main_camera->projection_view, sizeof(glm::mat4), 0);
 	}
 
+	Graphics::beginRenderPass();
 	for (auto& batch : indirect_batches)
 	{
-		Graphics::beginRenderPass();
 		batch.render_object.material_data->material->pipeline->bind();
 		batch.render_object.mesh->vertex_array->bind();
 		batch.render_object.material_data->descriptor_set->bind();
 		vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, batch.first * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
-		Graphics::endRenderPass();
 	}
+	Graphics::endRenderPass();
 }
 
 void Scene::onStop()
@@ -117,27 +108,37 @@ void Scene::onWindowResize(const WindowResizeEvent& e)
 		});
 }
 
+void Scene::onComponentCreate(entt::registry& registry, entt::entity entity)
+{
+	auto& render_component = registry.get<RenderComponent>(entity);
+	if (registry.any_of<TransformComponent>(entity))
+	{
+		InstanceData instance_data{};
+		instance_data.transform = registry.get<TransformComponent>(entity).transform;
+		render_component.render_object.instance_data = std::move(instance_data);
+	}
+	render_objects.push_back(render_component.render_object);
+}
+
 std::vector<IndirectBatch> Scene::batchRenderedObjects(const std::vector<RenderObject>& render_objects)
 {
-	std::vector<IndirectBatch> batches = { { render_objects.front(), 0, 0} };
-	std::vector<InstanceData> instance_data = { render_objects.front().instance_data };
+	std::vector<IndirectBatch> batches = { { render_objects.front(), 0, 0 } };
 
 	for (size_t i = 0; i < render_objects.size(); ++i)
 	{
 		if (batches.back() == render_objects[i])
 		{
-			instance_data.emplace_back(render_objects[i].instance_data);
+			batches.back().instance_data.emplace_back(render_objects[i].instance_data);
 			++batches.back().count;
 		}
 		else
 		{
-			batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(instance_data.data(), instance_data.size() * sizeof(InstanceData));
-			batches.emplace_back(render_objects[i], batches.size(), 1);
-			instance_data.clear();
-			instance_data.emplace_back(render_objects[i].instance_data);
+			batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(batches.back().instance_data.data(), batches.back().instance_data.size() * sizeof(InstanceData));
+			batches.emplace_back(render_objects[i], batches.size(), 1, std::vector<InstanceData>{ render_objects[i].instance_data });
+			batches.back().instance_data.emplace_back(render_objects[i].instance_data);
 		}
 	}
-	batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(instance_data.data(), instance_data.size() * sizeof(InstanceData));
+	batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(batches.back().instance_data.data(), batches.back().instance_data.size() * sizeof(InstanceData));
 
 	return batches;
 }

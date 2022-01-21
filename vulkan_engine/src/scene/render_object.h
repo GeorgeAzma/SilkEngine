@@ -61,7 +61,9 @@ struct IndirectBatch
 {
 	RenderObject render_object;
 	size_t first = 0;
-	size_t count = 0;
+	size_t count = 0; 
+	
+	std::vector<InstanceData> instance_data;
 
 	bool operator==(const RenderObject& render_object) const
 	{
