@@ -9,6 +9,7 @@ public:
 	virtual ~Buffer();
 
 	void setData(const void* data, size_t size = 0, size_t offset = 0);
+	void setDataChecked(const void* data, size_t size = 0, size_t offset = 0);
 	size_t getSize() const { return size; }
 
 	operator const VkBuffer& () const { return buffer; }
@@ -23,4 +24,7 @@ public:
 protected:
 	VkBuffer buffer;
 	VmaAllocation allocation;
+
+private:
+	uint8_t* data = nullptr;
 };

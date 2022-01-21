@@ -78,7 +78,6 @@ public:
 		updateProjectionView();
 	}
 
-private:
 	void updateProjectionView()
 	{
 		projection_view = projection * view;

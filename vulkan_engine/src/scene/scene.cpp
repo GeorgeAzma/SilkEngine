@@ -95,7 +95,7 @@ void Scene::onUpdate()
 	//TODO: not too scalable
 	if (main_camera)
 	{
-		Graphics::global_uniform->setData(&main_camera->projection_view, sizeof(glm::mat4), 0);
+		Graphics::global_uniform->setDataChecked(&main_camera->projection_view, sizeof(glm::mat4), 0);
 	}
 }
 

@@ -19,6 +19,7 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_u
 
 Buffer::~Buffer()
 {
+	delete[] data;
 	vmaDestroyBuffer(*Graphics::allocator, buffer, allocation);
 }
 
@@ -34,6 +35,23 @@ void Buffer::setData(const void* data, size_t size, size_t offset)
 	vmaMapMemory(*Graphics::allocator, allocation, &buffer_data);
 	std::memcpy((uint8_t*)buffer_data + offset, data, size ? size : this->size);
 	vmaUnmapMemory(*Graphics::allocator, allocation);
+}
+
+void Buffer::setDataChecked(const void* data, size_t size, size_t offset)
+{
+	SK_ASSERT(((size ? size : this->size) + offset) <= this->size,
+		"Vulkan: Can't map memory, it's out of bounds");
+
+	if (!this->data)
+	{
+		this->data = new uint8_t[this->size];
+	}
+
+	if (std::memcmp(data, this->data + offset, size) != 0)
+	{
+		std::memcpy(this->data + offset, data, size);
+		setData(data, size, offset);
+	}
 }
 
 uint32_t Buffer::findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags properties)

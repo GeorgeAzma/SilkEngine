@@ -61,7 +61,7 @@ void CameraController::onUpdate()
 	if (needs_update)
 	{
 		camera.view = glm::lookAt(camera.position, camera.position + camera.direction, math::UP);
-		camera.projection_view = camera.projection * camera.view;
+		camera.updateProjectionView();
 	}
 }
 
