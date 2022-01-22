@@ -12,6 +12,12 @@ void Input::init()
 	Dispatcher::subscribe(onKeyRelease);
 }
 
+void Input::update()
+{
+	memcpy(last_mouse_buttons.data(), mouse_buttons.data(), mouse_buttons.size() * sizeof(bool));
+	memcpy(last_keys.data(), keys.data(), keys.size() * sizeof(bool));
+}
+
 bool Input::isMouseDown(int button)
 {
 	return mouse_buttons[button];

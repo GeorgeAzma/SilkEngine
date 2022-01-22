@@ -18,7 +18,7 @@ public:
 	void onUpdate();
 	void onStop();
 
-	Entity createEntity();
+	shared<Entity> createEntity();
 	void removeEntity(const entt::entity& entity);
 
 private:

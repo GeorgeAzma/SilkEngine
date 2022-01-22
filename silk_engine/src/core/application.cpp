@@ -57,12 +57,14 @@ void Application::run()
                 Time::frames = app_update.getFramesPassed();
                 Time::runtime = app_update.getRuntime();
 
+
                 onUpdate();
 
                 for (Layer *layer : layer_stack)
                     layer->onUpdate();
 
                 Timers::update();
+                Input::update();
             }
             else
             {

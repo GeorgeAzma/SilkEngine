@@ -7,6 +7,8 @@ class Input
 public:
 	static void init();
 
+	static void update();
+
 	static bool isMouseDown(int button);
 	static bool isKeyDown(int key);
 	static bool isMousePressed(int button);

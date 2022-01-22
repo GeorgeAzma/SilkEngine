@@ -2,14 +2,12 @@
 
 #include "scene.h"
 
-class Entity
+class Entity : NonCopyable
 {
 public:
 	Entity(entt::entity handle, Scene* scene);
 
-	~Entity()
-	{
-	}
+	~Entity();
 
 	template<typename T, typename... Args>
 	T& addComponent(Args&&... args)
