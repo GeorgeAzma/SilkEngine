@@ -38,7 +38,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
 void SandboxApp::onUpdate()
 {
-    if (Input::isKeyReleased(Keys::Z)) 
+    if (Input::isKeyPressed(Keys::Z)) 
     {
         circles.push_back(scene->createEntity()); 
         circles.back()->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));

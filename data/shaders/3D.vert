@@ -6,6 +6,7 @@ layout(location = 2) in vec3 in_normal;
 
 //Instanced
 layout(location = 3) in mat4 in_transform;
+layout(location = 7) in uint texture_index;
 
 layout(location = 0) out VertexOutput 
 {
