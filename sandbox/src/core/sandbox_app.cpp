@@ -38,7 +38,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
 void SandboxApp::onUpdate()
 {
-    if (RNG::Uint() % 4 < 0)
+    if (RNG::Uint() % 4 < 0) 
     {
         //circles.push_back(Entity(scene->createEntity())); 
         //circles.back().addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
