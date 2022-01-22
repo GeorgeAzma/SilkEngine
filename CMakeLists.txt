@@ -173,15 +173,15 @@ link_directories("${PROJECT_SOURCE_DIR}/vendor/assimp/lib")
 #Sub dirs
 ############################__VULKAN ENGINE__#####################################
 file(GLOB_RECURSE VULKAN_ENGINE_SOURCES 
-"vulkan_engine/src/*.cpp")
+"silk_engine/src/*.cpp")
 
 #Create VulkanEngine.lib
-add_library(VulkanEngine STATIC ${VULKAN_ENGINE_SOURCES} "vulkan_engine/src/utils/math.h")
+add_library(VulkanEngine STATIC ${VULKAN_ENGINE_SOURCES} "silk_engine/src/utils/math.h")
 
 #Include dirs
 target_include_directories(VulkanEngine PUBLIC 
 "${PROJECT_SOURCE_DIR}/vendor" 
-"${PROJECT_SOURCE_DIR}/vulkan_engine/src"
+"${PROJECT_SOURCE_DIR}/silk_engine/src"
 ${INCLUDE_DIRS}
 )
 
@@ -208,7 +208,7 @@ target_compile_definitions(VulkanEngine PRIVATE
 
 #Precompile headers
 target_precompile_headers(VulkanEngine PUBLIC 
-vulkan_engine/src/core/base.h
+silk_engine/src/core/base.h
 <iostream>
 <string>
 <unordered_map>
@@ -250,7 +250,7 @@ vulkan_engine/src/core/base.h
 <semaphore>
 <thread>
 <concepts>
-vulkan_engine/src/core/log.h)
+silk_engine/src/core/log.h)
 
 #Link
 target_link_directories(VulkanEngine PUBLIC ${EXTRA_LIB_DIRS})
@@ -259,7 +259,7 @@ target_link_libraries(VulkanEngine ${EXTRA_LIBS})
 ############################__SANDBOX__#####################################
 file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp")
 
-add_executable(Sandbox ${SANDBOX_SOURCES} "vulkan_engine/src/utils/math.h")
+add_executable(Sandbox ${SANDBOX_SOURCES} "silk_engine/src/utils/math.h")
 
 target_link_libraries(Sandbox PRIVATE VulkanEngine)
 

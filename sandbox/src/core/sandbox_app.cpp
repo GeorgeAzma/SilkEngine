@@ -17,20 +17,20 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
         .build();
     material_data = makeShared<MaterialData>(Resources::getMaterial("3D"), descriptor_set);
 
-    circles.resize(0);
+    circles.resize(256);
     for (size_t i = 0; i < circles.size(); ++i)
     {
-        circles[i] = Entity(scene->createEntity());
-        circles[i].addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
-        circles[i].addComponent<RenderComponent>(Resources::getMesh("Circle"), material_data);
+        circles[i] = makeShared<Entity>(scene->createEntity());
+        circles[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
+        circles[i]->addComponent<RenderComponent>(Resources::getMesh("Circle"), material_data);
     }
 
-    squares.resize(0);
+    squares.resize(256);
     for (size_t i = 0; i < squares.size(); ++i)
     {
-        squares[i] = Entity(scene->createEntity());
-        squares[i].addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
-        squares[i].addComponent<RenderComponent>(Resources::getMesh("Rectangle"), material_data);
+        squares[i] = makeShared<Entity>(scene->createEntity());
+        squares[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
+        squares[i]->addComponent<RenderComponent>(Resources::getMesh("Rectangle"), material_data);
     }
 
     scene->onPlay();
@@ -38,19 +38,20 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
 void SandboxApp::onUpdate()
 {
-    if (RNG::Uint() % 2 < 2)
+    if (RNG::Uint() % 4 < 0)
     {
-        circles.push_back(Entity(scene->createEntity())); 
-        circles.back().addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
-        circles.back().addComponent<RenderComponent>(Resources::getMesh("Circle"), material_data);
+        //circles.push_back(Entity(scene->createEntity())); 
+        //circles.back().addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
+        //circles.back().addComponent<RenderComponent>(Resources::getMesh("Circle"), material_data);
         
-        squares.push_back(Entity(scene->createEntity()));
-        squares.back().addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
-        squares.back().addComponent<RenderComponent>(Resources::getMesh("Rectangle"), material_data);
+        //squares.push_back(Entity(scene->createEntity()));
+        //squares.back().addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
+        //squares.back().addComponent<RenderComponent>(Resources::getMesh("Rectangle"), material_data);
     }
     else
     {
- 
+        if (circles.size())
+            circles.pop_back();
     }
 
     Graphics::beginFrame();

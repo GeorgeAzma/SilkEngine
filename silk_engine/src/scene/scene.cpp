@@ -27,7 +27,7 @@ void Scene::onPlay()
 			if (!script_component.instance)
 			{
 				script_component.instance = script_component.instantiate_script();
-				script_component.instance->entity = Entity{ entity, this };
+				script_component.instance->entity = makeShared<Entity>(entity, this);
 
 				script_component.instance->onCreate();
 			}
@@ -98,6 +98,11 @@ Entity Scene::createEntity()
 	return { registry.create(), this };
 }
 
+void Scene::removeEntity(const entt::entity& entity)
+{
+	registry.destroy(entity); //TODO: Fix the error
+}
+
 void Scene::onWindowResize(const WindowResizeEvent& e)
 {
 	registry.view<CameraComponent>().each(
@@ -116,11 +121,16 @@ void Scene::onComponentCreate(entt::registry& registry, entt::entity entity)
 		instance_data.transform = registry.get<TransformComponent>(entity).transform;
 		render_component.render_object.instance_data = std::move(instance_data);
 	}
-	render_objects.push_back(render_component.render_object);
 	addBatchRenderObject(render_component.render_object);
 }
 
-void Scene::batchRenderObjects()
+void Scene::onComponentDestroy(entt::registry& registry, entt::entity entity)
+{
+	auto& render_component = registry.get<RenderComponent>(entity);
+	removeBatchRenderObject(render_component.render_object);
+}
+
+/*void Scene::batchRenderObjects()
 {
 	if (render_objects.empty())
 		return;
@@ -141,7 +151,7 @@ void Scene::batchRenderObjects()
 		
 		indirect_batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(indirect_batches.back().instance_data.data(), indirect_batches.back().instance_data.size() * sizeof(InstanceData));
 	}
-}
+}*/
 
 void Scene::addBatchRenderObject(const RenderObject& render_object)
 {
@@ -161,4 +171,21 @@ void Scene::addBatchRenderObject(const RenderObject& render_object)
 	indirect_batches.emplace_back(render_object, indirect_batches.size(), 1, std::vector<InstanceData>{ render_object.instance_data });
 	indirect_batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(
 		&render_object.instance_data, sizeof(InstanceData));
+}
+
+void Scene::removeBatchRenderObject(const RenderObject& render_object)
+{
+	for (size_t i = 0; i < indirect_batches.size(); ++i)
+	{
+		if (indirect_batches[i].render_object == render_object)
+		{
+			indirect_batches[i].instance_data.erase(indirect_batches[i].instance_data.begin() + i);
+			--indirect_batches[i].count;
+
+			indirect_batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(
+				indirect_batches[i].instance_data.data(), indirect_batches[i].instance_data.size() * sizeof(InstanceData));
+
+			return;
+		}
+	}
 }

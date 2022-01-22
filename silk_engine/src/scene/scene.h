@@ -19,18 +19,19 @@ public:
 	void onStop();
 
 	Entity createEntity();
+	void removeEntity(const entt::entity& entity);
 
 private:
 	void onWindowResize(const WindowResizeEvent& e);
 	void onComponentCreate(entt::registry& registry, entt::entity entity);
+	void onComponentDestroy(entt::registry& registry, entt::entity entity);
 
 private:
-	void batchRenderObjects();
-	void addBatchRenderObject(const RenderObject& object);
+	void addBatchRenderObject(const RenderObject& render_object);
+	void removeBatchRenderObject(const RenderObject& render_object);
 
 private:
 	entt::registry registry;
 	std::vector<IndirectBatch> indirect_batches;
-	std::vector<RenderObject> render_objects;
 	std::shared_ptr<IndirectBuffer> indirect_buffer;
 };
