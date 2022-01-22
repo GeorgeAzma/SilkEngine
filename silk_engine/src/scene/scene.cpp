@@ -137,29 +137,6 @@ void Scene::onComponentDestroy(entt::registry& registry, entt::entity entity) //
 	removeBatchRenderObject(render_component.render_object);
 }
 
-/*void Scene::batchRenderObjects()
-{
-	if (render_objects.empty())
-		return;
-
-	indirect_batches.clear();
-	std::vector<std::vector<RenderObject>> clusters = GeneralUtils::groupDuplicates(render_objects);
-
-	for (const std::vector<RenderObject>& cluster : clusters)
-	{
-		indirect_batches.emplace_back(cluster.front(), indirect_batches.size(), 1, std::vector<InstanceData>{ cluster.front().instance_data });
-		SK_ASSERT(indirect_batches.size() < Graphics::MAX_BATCHES, "batches.size() exceeds MAX_BATCHES");
-
-		for (size_t i = 0; i < cluster.size(); ++i)
-		{
-			indirect_batches.back().instance_data.emplace_back(cluster[i].instance_data);
-			++indirect_batches.back().count;
-		}
-
-		indirect_batches.back().render_object.mesh->vertex_array->getVertexBuffer(1)->setData(indirect_batches.back().instance_data.data(), indirect_batches.back().instance_data.size() * sizeof(InstanceData));
-	}
-}*/
-
 void Scene::addBatchRenderObject(const RenderObject& render_object)
 {
 	for (size_t i = 0; i < indirect_batches.size(); ++i)
@@ -175,7 +152,7 @@ void Scene::addBatchRenderObject(const RenderObject& render_object)
 	indirect_batches.emplace_back(render_object, std::vector<InstanceData>{render_object.instance_data});
 }
 
-void Scene::removeBatchRenderObject(const RenderObject& render_object) //TODO: this only deletes last object
+void Scene::removeBatchRenderObject(const RenderObject& render_object)
 {
 	for (size_t i = 0; i < indirect_batches.size(); ++i)
 	{
