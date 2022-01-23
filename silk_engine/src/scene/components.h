@@ -4,9 +4,7 @@
 #include "core/log.h"
 #include "utils/math.h"
 #include "scene/render_object.h"
-
-#undef near
-#undef far
+#include "scene/camera.h"
 
 struct TransformComponent
 {
@@ -15,89 +13,11 @@ struct TransformComponent
 	operator glm::mat4& () { return transform; }
 };
 
-enum class CameraType
-{
-	PERSPECTIVE,
-	ORTHOGRAPHIC
-};
-
 struct CameraComponent
 {
-public:
-	CameraComponent() 
-	{ 
-		direction = math::eulerToDirection(rotation);
-		view = glm::lookAt(position, position + direction, math::UP); 
-		onViewportResize(); 
-	}
+	Camera camera;
 
-	operator const glm::mat4& () { return projection_view; }
-
-	void onViewportResize()
-	{
-		switch (type)
-		{
-		case CameraType::PERSPECTIVE:
-			projection = glm::perspective(glm::radians(fov), Window::getAspectRatio(), near, far);
-			break;
-		case CameraType::ORTHOGRAPHIC:
-			projection = glm::ortho(0.0f, (float)Window::getWidth(), 0.0f, (float)Window::getHeight(), 0.0f, 1.0f);
-			break;
-		}
-		updateProjectionView();
-	}
-
-	void setFOV(float fov)
-	{
-		this->fov = fov;
-		switch(type)
-		{
-		case CameraType::PERSPECTIVE:
-			projection = glm::perspective(glm::radians(fov), Window::getAspectRatio(), near, far);
-			break;
-		case CameraType::ORTHOGRAPHIC:
-			projection = glm::ortho(0.0f, (float)Window::getWidth(), 0.0f, (float)Window::getHeight(), 0.0f, 1.0f);
-			break;
-		}
-		updateProjectionView();
-	}
-
-	void setNear(float near)
-	{
-		SK_ASSERT(type == CameraType::PERSPECTIVE, "Only perspective cameras have near variable");
-		this->near = near;
-		projection = glm::perspective(glm::radians(fov), (float)Window::getAspectRatio(), near, far);
-		updateProjectionView();
-	}
-
-	void setFar(float far)
-	{
-		SK_ASSERT(type == CameraType::PERSPECTIVE, "Only perspective cameras have near variable");
-		this->far = far;
-		projection = glm::perspective(glm::radians(fov), (float)Window::getAspectRatio(), near, far);
-		updateProjectionView();
-	}
-
-	void updateProjectionView()
-	{
-		projection_view = projection * view;
-	}
-
-public:
-	glm::mat4 projection_view = glm::mat4(1);
-	glm::mat4 projection = glm::mat4(1);
-	glm::mat4 view = glm::mat4(1);
-
-	glm::vec3 position = glm::vec3(0);
-	glm::vec3 rotation = glm::vec3(0);
-	glm::vec3 direction = glm::vec3(0);
-
-private:
-	float fov = 80.0f;
-	float near = 0.01f;
-	float far = 1000.0f;
-
-	CameraType type = CameraType::PERSPECTIVE;
+	operator Camera& () { return camera; }
 };
 
 struct ScriptComponent

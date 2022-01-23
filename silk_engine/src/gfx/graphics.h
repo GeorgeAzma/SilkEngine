@@ -26,11 +26,6 @@ public:
 public:
 	static void init();
 
-	static void beginFrame();
-	static void beginRenderPass();
-	static void endFrame();
-	static void endRenderPass();
-
 	static void cleanup();
 
 	static void vulkanAssert(VkResult result);

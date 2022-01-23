@@ -137,7 +137,7 @@ list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/vma/include)
 #assimp
 set(assimp_build FALSE)
 list(APPEND DEPENDENCIES_TO_ADD assimp_build)
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/assimp)
+#if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/assimp)
 ExternalProject_Add(ASSIMP
 GIT_REPOSITORY  https://github.com/assimp/assimp
 GIT_TAG         v5.0.0
@@ -161,7 +161,7 @@ CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_SOURCE_DIR}/vendor/assimp/lib
                 -DCMAKE_POLICY_DEFAULT_CMP0091:STRING=NEW
 )
 set(assimp_build TRUE)
-endif()
+#endif()
 list(APPEND INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/vendor/assimp/include")
 if(MSVC)
 list(APPEND EXTRA_LIBS "assimp" "$<IF:$<CONFIG:Debug>,zlibstaticd,zlibstatic>" "irrXML")
@@ -176,7 +176,7 @@ file(GLOB_RECURSE VULKAN_ENGINE_SOURCES
 "silk_engine/src/*.cpp")
 
 #Create VulkanEngine.lib
-add_library(VulkanEngine STATIC ${VULKAN_ENGINE_SOURCES} "silk_engine/src/utils/math.h")
+add_library(VulkanEngine STATIC ${VULKAN_ENGINE_SOURCES} "silk_engine/src/utils/math.h" "silk_engine/src/scene/camera.cpp")
 
 #Include dirs
 target_include_directories(VulkanEngine PUBLIC 
@@ -259,7 +259,7 @@ target_link_libraries(VulkanEngine ${EXTRA_LIBS})
 ############################__SANDBOX__#####################################
 file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp")
 
-add_executable(Sandbox ${SANDBOX_SOURCES} "silk_engine/src/utils/math.h")
+add_executable(Sandbox ${SANDBOX_SOURCES} "silk_engine/src/utils/math.h" "silk_engine/src/scene/camera.cpp")
 
 target_link_libraries(Sandbox PRIVATE VulkanEngine)
 

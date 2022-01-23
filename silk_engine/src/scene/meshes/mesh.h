@@ -2,9 +2,11 @@
 
 #include "gfx/buffers/vertex_array.h"
 #include "scene/vertex.h"
+#include "scene/AABB.h"
 
 class Mesh : NonCopyable
 {
+	static constexpr size_t MAX_VERTEX_COUNT_TO_CALCULATE_BOUNDS = 65536;
 public:
 	Mesh() = default;
 	Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
@@ -25,5 +27,8 @@ protected:
 
 private:
 	std::string name;
+	AABB aabb;
+
 	friend class Resources;
+	friend class Scene;
 };

@@ -20,6 +20,11 @@ Shader::Shader(const std::vector<std::string>& files)
 	}
 }
 
+Shader::Shader(const std::string& file)
+	: Shader(std::vector<std::string>{ file })
+{
+}
+
 Shader::~Shader()
 {
 	for(auto& shader_module : shader_modules)

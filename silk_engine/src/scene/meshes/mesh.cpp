@@ -10,12 +10,29 @@ Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& ind
 
 void Mesh::init()
 {
+	aabb.max = glm::vec3(-std::numeric_limits<float>::max());
+	aabb.min = glm::vec3(std::numeric_limits<float>::max());
+
 	auto ibo = makeShared<IndexBuffer>(this->indices.data(), this->indices.size());
 	auto vbo = makeShared<VertexBuffer>(this->vertices.data(), this->vertices.size() * sizeof(Vertex));
 	std::vector<InstanceData> data(Graphics::MAX_INSTANCES, InstanceData{});
 	auto instance_vbo = makeShared<VertexBuffer>(data.data(), sizeof(InstanceData) * data.size(), VMA_MEMORY_USAGE_CPU_TO_GPU);
 	vertex_array = shared<VertexArray>(new VertexArray());
 	vertex_array->setIndexBuffer(ibo).addVertexBuffer(vbo).addVertexBuffer(instance_vbo);
+
+	if (vertices.size() <= MAX_VERTEX_COUNT_TO_CALCULATE_BOUNDS)
+	{
+		for (size_t i = 0; i < vertices.size(); ++i)
+		{
+			aabb.max = glm::max(vertices[i].position, aabb.max);
+			aabb.min = glm::min(vertices[i].position, aabb.min);
+		}
+	}
+	else
+	{
+		aabb.max = glm::vec3(std::numeric_limits<float>::max());
+		aabb.min = glm::vec3(-std::numeric_limits<float>::max());
+	}
 }
 
 void Mesh::calculateTangents()

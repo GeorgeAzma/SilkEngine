@@ -14,6 +14,8 @@ public:
 
 	void bind(size_t index = 0);
 
+	const DescriptorSetLayout& getLayout() const { return *layout; }
+
 private:
 	const DescriptorSetLayout* layout = nullptr;
 	std::vector<VkDescriptorSet> descriptor_sets;

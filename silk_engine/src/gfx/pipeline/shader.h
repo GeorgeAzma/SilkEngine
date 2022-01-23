@@ -5,6 +5,7 @@ class Shader : NonCopyable
 {
 public:
 	Shader(const std::vector<std::string>& files);
+	Shader(const std::string& file); //Handy for compute shader
 	~Shader();
 
 	const std::vector<VkPipelineShaderStageCreateInfo>& getShaderStageInfos() const { return shader_stage_infos; }

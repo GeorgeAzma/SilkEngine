@@ -17,20 +17,22 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
         .build();
     material_data = makeShared<MaterialData>(Resources::getMaterial("3D"), descriptor_set);
 
-    circles.resize(2);
+    auto circle = Resources::getMesh("Circle");
+    circles.resize(400000);
     for (size_t i = 0; i < circles.size(); ++i)
     {
         circles[i] = scene->createEntity();
-        circles[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
-        circles[i]->addComponent<RenderComponent>(Resources::getMesh("Circle"), material_data);
+        circles[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float() * 1.5f, RNG::Float(), 0.05f) * 1500.0f));
+        circles[i]->addComponent<RenderComponent>(circle, material_data);
     }
 
-    squares.resize(2);
+    auto rectangle = Resources::getMesh("Rectangle");
+    squares.resize(400000);
     for (size_t i = 0; i < squares.size(); ++i)
     {
         squares[i] = scene->createEntity();
-        squares[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
-        squares[i]->addComponent<RenderComponent>(Resources::getMesh("Rectangle"), material_data);
+        squares[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float() * 1.5f, RNG::Float(), 0.05f) * 1500.0f));
+        squares[i]->addComponent<RenderComponent>(rectangle, material_data);
     }
 
     scene->onPlay();
@@ -38,23 +40,19 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
 void SandboxApp::onUpdate()
 {
-    if (Input::isKeyPressed(Keys::Z)) 
+    if (RNG::Uint() % 64 == 0) 
     {
         circles.push_back(scene->createEntity()); 
         circles.back()->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float() + 0.05f) * 50.0f));
         circles.back()->addComponent<RenderComponent>(Resources::getMesh("Circle"), material_data);
     }
-    if (Input::isKeyReleased(Keys::X))
+    if (Input::isKeyDown(Keys::X))
     {
         if (circles.size())
-            circles.erase(circles.begin());
+            circles.pop_back();
     }
-
-    Graphics::beginFrame();
     
     scene->onUpdate();
-    
-    Graphics::endFrame();
 }
 
 SandboxApp::~SandboxApp()

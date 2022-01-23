@@ -44,6 +44,15 @@ struct ComputeMaterialData
 	shared<DescriptorSet> descriptor_set;
 };
 
+struct CullData
+{
+	glm::vec3 min;
+	uint32_t index;
+	glm::vec3 max;
+	uint32_t count;
+	std::array<glm::vec4, 6> planes;
+};
+
 struct RenderObject
 {
 	shared<Mesh> mesh;

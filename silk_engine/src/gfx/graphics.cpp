@@ -38,26 +38,6 @@ void Graphics::init()
 	global_uniform = new UniformBuffer(sizeof(GlobalUniformData));
 }
 
-void Graphics::beginFrame()
-{
-	swap_chain->beginFrame();
-}
-
-void Graphics::beginRenderPass()
-{
-	swap_chain->beginRenderPass();
-}
-
-void Graphics::endFrame()
-{
-	swap_chain->endFrame();
-}
-
-void Graphics::endRenderPass()
-{
-	swap_chain->endRenderPass();
-}
-
 void Graphics::cleanup() //25ms
 {
 	delete global_uniform;
