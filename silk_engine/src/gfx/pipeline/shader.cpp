@@ -7,13 +7,14 @@ Shader::Shader(const std::vector<std::string>& files)
 {
 	for (auto& file : files)
 	{
-		std::vector<char> source = FileUtils::read(file);
+		std::string path = std::string("data/cache/shaders/") + file + ".spv";
+		std::vector<char> source = FileUtils::read(path);
 		VkShaderModule shader_module = createShaderModule(source);
 		shader_modules.push_back(shader_module);
 
 		VkPipelineShaderStageCreateInfo shader_stage_info{};
 		shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		shader_stage_info.stage = EnumInfo::shaderType(getShaderType(file));
+		shader_stage_info.stage = EnumInfo::shaderType(getShaderType(path));
 		shader_stage_info.module = shader_module;
 		shader_stage_info.pName = "main";
 		shader_stage_infos.push_back(shader_stage_info);

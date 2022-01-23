@@ -3,7 +3,7 @@
 #include "gfx/enums.h"
 #include "gfx/devices/logical_device.h"
 
-ImageView::ImageView(VkImage image, VkFormat format, uint32_t mip_levels)
+ImageView::ImageView(VkImage image, VkFormat format, uint32_t mip_levels, size_t layer_count)
 {
 	VkImageViewCreateInfo view_info{};
 	view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -14,7 +14,7 @@ ImageView::ImageView(VkImage image, VkFormat format, uint32_t mip_levels)
 	view_info.subresourceRange.baseMipLevel = 0;
 	view_info.subresourceRange.levelCount = mip_levels;
 	view_info.subresourceRange.baseArrayLayer = 0;
-	view_info.subresourceRange.layerCount = 1;
+	view_info.subresourceRange.layerCount = layer_count;
 
 	Graphics::vulkanAssert(vkCreateImageView(*Graphics::logical_device, &view_info, nullptr, &image_view));
 }

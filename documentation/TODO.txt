@@ -1,5 +1,4 @@
-- Create optimized mesh batcher, which rebatches stuff only when it needs to 
-(when material changes etc.) (maybe use event system of symilar onComponentChange()?)
+- Implement multi texturing, a.k.a array textures
 - Write custom 3D model loader/converter
 - Create system which handles buffer creation for multiple frames 
 (perhaps static function like Graphics::createBuffer())

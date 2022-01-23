@@ -14,7 +14,7 @@ void Resources::init()
     descriptor_set_layout->addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
         .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
         .build();
-    shared<Shader> shader = makeShared<Shader>(std::vector<std::string>{"data/cache/shaders/3D.vert.spv", "data/cache/shaders/3D.frag.spv"}); //1.65ms
+    shared<Shader> shader = makeShared<Shader>(std::vector<std::string>{"3D.vert", "3D.frag"}); //1.65ms
     shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>(); //1.35ms
     graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
         .enable(EnableTag::DEPTH_TEST)
@@ -27,7 +27,7 @@ void Resources::init()
         .build();
 	addMaterial("3D", makeShared<Material>(descriptor_set_layout, graphics_pipeline));
     
-    shader = makeShared<Shader>("data/cache/shaders/cull.comp.spv");
+    shader = makeShared<Shader>("cull.comp");
     descriptor_set_layout = makeShared<DescriptorSetLayout>();
     descriptor_set_layout->addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT)
         .addBinding(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT)

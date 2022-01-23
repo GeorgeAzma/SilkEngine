@@ -261,7 +261,7 @@ Image::TransitionInfo Image::getTransitionInfo(VkImageLayout oldLayout, VkImageL
 {
 	TransitionInfo transition_info{};
 
-	//WARNING: This only supports two cases, add more in future
+	//TODO: This only supports few cases, add more in future
 	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
 	{
 		transition_info.source_access_mask = 0;

@@ -27,7 +27,7 @@ Sampler::Sampler(const SamplerProps& props)
 	sampler_info.unnormalizedCoordinates = VK_FALSE;
 	sampler_info.compareEnable = VK_FALSE;
 	sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
-	sampler_info.mipmapMode = props.linearMipmap ? VK_SAMPLER_MIPMAP_MODE_LINEAR : VK_SAMPLER_MIPMAP_MODE_NEAREST;
+	sampler_info.mipmapMode = props.linear_mipmap ? VK_SAMPLER_MIPMAP_MODE_LINEAR : VK_SAMPLER_MIPMAP_MODE_NEAREST;
 	sampler_info.mipLodBias = 0.0f;
 	sampler_info.minLod = 0.0f;
 	sampler_info.maxLod = props.mip_levels;
