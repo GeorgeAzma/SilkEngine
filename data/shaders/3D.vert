@@ -6,11 +6,12 @@ layout(location = 2) in vec3 in_normal;
 
 //Instanced
 layout(location = 3) in mat4 in_transform;
-layout(location = 7) in uint texture_index;
+layout(location = 7) in uint in_texture_index;
 
 layout(location = 0) out VertexOutput 
 {
     vec2 texture_coordinates;
+    flat uvec2 texture_index;
 } vertex_output;
 
 layout(binding = 0) uniform GlobalUniform
@@ -22,4 +23,5 @@ void main()
 {
     gl_Position = global_uniform.projection_view * in_transform * vec4(in_position, 1.0);
     vertex_output.texture_coordinates = in_texture_coordinates;
+    vertex_output.texture_index.x = in_texture_index;
 }

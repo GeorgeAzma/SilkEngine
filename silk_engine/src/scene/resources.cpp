@@ -7,12 +7,14 @@
 
 void Resources::init()
 {
+    //MESHES
 	addMesh("Circle", makeShared<CircleMesh>());
 	addMesh("Rectangle", makeShared<RectangleMesh>());
 
+    //MATERIALS
     shared<DescriptorSetLayout> descriptor_set_layout = makeShared<DescriptorSetLayout>();
     descriptor_set_layout->addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
-        .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+        .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, Graphics::MAX_TEXTURE_SLOTS)
         .build();
     shared<Shader> shader = makeShared<Shader>(std::vector<std::string>{"3D.vert", "3D.frag"}); //1.65ms
     shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>(); //1.35ms
@@ -27,6 +29,7 @@ void Resources::init()
         .build();
 	addMaterial("3D", makeShared<Material>(descriptor_set_layout, graphics_pipeline));
     
+    //COMPUTE MATERIALS
     shader = makeShared<Shader>("cull.comp");
     descriptor_set_layout = makeShared<DescriptorSetLayout>();
     descriptor_set_layout->addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT)
@@ -38,6 +41,29 @@ void Resources::init()
         .addPushConstant(sizeof(CullData))
         .setShader(shader).build();
     addComputeMaterial("Cull", makeShared<ComputeMaterial>(descriptor_set_layout, compute_pipeline));
+
+    //IMAGES
+    ImageProps white_image_props{};
+    white_image_props.width = 1;
+    white_image_props.height = 1;
+    constexpr glm::u8vec4 white(1);
+    white_image_props.data = &white;
+    //shared<Image> white_image = makeShared<Image>(white_image_props);
+    //addImage("White", white_image);
+    
+    ImageProps null_image_props{};
+    null_image_props.width = 2;
+    null_image_props.height = 2;
+    constexpr glm::u8vec4 null_data[4] = { { 255, 0, 255, 255 }, { 0, 0, 0, 255 }, { 255, 0, 255, 255 }, { 0, 0, 0, 255 } };
+    null_image_props.data = null_data;
+    shared<Image> null_image = makeShared<Image>(null_image_props);
+    addImage("Null", null_image);
+
+    shared<Image> test1_image = makeShared<Image>("test.png");
+    shared<Image> test2_image = makeShared<Image>("test2.png");
+    addImage("Test1", test1_image);
+    addImage("Test2", test2_image);
+
 }
 
 void Resources::cleanup()
@@ -45,6 +71,7 @@ void Resources::cleanup()
 	meshes.clear();
 	materials.clear();
 	compute_materials.clear();
+    images.clear();
 }
 
 shared<Mesh> Resources::getMesh(const std::string& name)
@@ -60,6 +87,11 @@ shared<Material> Resources::getMaterial(const std::string& name)
 shared<ComputeMaterial> Resources::getComputeMaterial(const std::string& name)
 {
     return compute_materials.at(name);
+}
+
+shared<Image> Resources::getImage(const std::string& name)
+{
+    return images.at(name);
 }
 
 void Resources::addMesh(const std::string& name, shared<Mesh> mesh)
@@ -78,4 +110,9 @@ void Resources::addComputeMaterial(const std::string& name, shared<ComputeMateri
 {
     compute_material->name = name;
     compute_materials[name] = compute_material;
+}
+
+void Resources::addImage(const std::string& name, shared<Image> image)
+{
+    images[name] = image;
 }

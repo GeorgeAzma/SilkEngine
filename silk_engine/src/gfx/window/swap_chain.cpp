@@ -135,7 +135,7 @@ void SwapChain::endRenderPass()
 
 void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 {
-	Graphics::physical_device->getSwapChainSupportDetails();
+	Graphics::physical_device->updateSwapChainSupportDetails();
 	chooseSwapChainExtent();
 
 	VkSwapchainCreateInfoKHR create_info{};

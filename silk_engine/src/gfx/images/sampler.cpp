@@ -7,16 +7,15 @@ Sampler::Sampler(const SamplerProps& props)
 {
 	VkSamplerCreateInfo sampler_info{};
 	sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	sampler_info.magFilter = props.filters.size() >= 1 ? props.filters[0] : VK_FILTER_LINEAR;
-	sampler_info.minFilter = props.filters.size() >= 2 ? props.filters[1] : sampler_info.magFilter;
-	sampler_info.addressModeU = props.sampler_address_modes.size() >= 1 ? props.sampler_address_modes[0] : VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	sampler_info.addressModeV = props.sampler_address_modes.size() >= 2 ? props.sampler_address_modes[1] : sampler_info.addressModeU;
-	sampler_info.addressModeW = props.sampler_address_modes.size() >= 3 ? props.sampler_address_modes[2] : sampler_info.addressModeV;
+	sampler_info.magFilter = props.min_filter;
+	sampler_info.minFilter = props.mag_filter;
+	sampler_info.addressModeU = props.u_wrap;
+	sampler_info.addressModeV = props.v_wrap;
+	sampler_info.addressModeW = props.w_wrap;
 	if (props.anisotropy)
 	{
 		sampler_info.anisotropyEnable = VK_TRUE;
-		const VkPhysicalDeviceProperties& properties = Graphics::physical_device->getProperties();
-		sampler_info.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+		sampler_info.maxAnisotropy = Graphics::physical_device->getProperties().limits.maxSamplerAnisotropy;
 	}
 	else
 	{

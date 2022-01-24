@@ -7,17 +7,29 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-Image::Image(const std::string& file)
+Image::Image(const std::string& file, const ImageProps& props)
+	: props(props)
 {
+	std::string path = std::string("data/images/") + file;
 	descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	load(file);
-	create(props);
+	auto load_data = load(path);
+	this->props.width = load_data.width;
+	this->props.height = load_data.height;
+	this->props.format = getDefaultFormatFromChannelCount(load_data.channels);
+	staging_buffer = load_data.staging_buffer;
+	create(this->props);
 }
 
 Image::Image(const ImageProps& props)
+	: props(props)
 {
 	descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	create(props);
+	if (this->props.data)
+	{
+		size_t data_size = this->props.width * this->props.height * EnumInfo::formatSize(this->props.format);
+		staging_buffer = makeShared<StagingBuffer>(this->props.data, data_size);
+	}
+	create(this->props);
 }
 
 Image::~Image()
@@ -28,41 +40,38 @@ Image::~Image()
 	vmaDestroyImage(*Graphics::allocator, image, allocation);
 }
 
-void Image::load(const std::string& file)
+ImageLoadData Image::load(const std::string& file)
 {
 	int width, height, channels;
 	stbi_uc* pixels = stbi_load(file.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 	SK_ASSERT(pixels, "Failed to load image: {0}", file);
-	props.width = width;
-	props.height = height;
-	props.format = getDefaultFormatFromChannelCount(channels);
 
-	size_t size = width * height * channels;
-	staging_buffer = makeUnique<StagingBuffer>(pixels, size);
+	shared<StagingBuffer> staging_buffer = makeShared<StagingBuffer>(pixels, width * height * channels);
 
 	stbi_image_free(pixels);
+
+	return { width, height, channels, staging_buffer };
 }
 
 void Image::create(const ImageProps& props)
 {
-	this->props = props;
-
 	VkImageCreateInfo create_info{};
 	create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 	create_info.imageType = VK_IMAGE_TYPE_2D;
 	create_info.extent.width = props.width;
 	create_info.extent.height = props.height;
 	create_info.extent.depth = 1;
-	if (props.mipmap)
-	{
-		mip_levels = std::floor(std::log2(std::max(props.width, props.height))) + 1;
-	}
-	create_info.mipLevels = mip_levels;
 	create_info.arrayLayers = 1;
 	create_info.format = props.format;
 	create_info.tiling = props.tiling;
 	create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	create_info.usage = props.usage;
+	if (props.mipmap)
+	{
+		mip_levels = std::floor(std::log2(std::max(props.width, props.height))) + 1;
+		//mip_levels = std::min(mip_levels, Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxMipLevels);
+	}
+	create_info.mipLevels = mip_levels;
 	create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	create_info.samples = props.samples;
 
@@ -90,8 +99,9 @@ void Image::create(const ImageProps& props)
 	}
 	if (props.create_sampler)
 	{
-		SamplerProps sampler_props{};
+		SamplerProps sampler_props = props.sampler_props;
 		sampler_props.mip_levels = mip_levels;
+		sampler_props.linear_mipmap = props.mipmap_filter != VK_FILTER_NEAREST; //This is a bit of automation, but is also harmful for control
 		sampler = makeUnique<Sampler>(sampler_props);
 		descriptor_image_info.sampler = *sampler;
 	}
@@ -157,6 +167,9 @@ void Image::copyBufferToImage()
 
 void Image::generateMipmaps()
 {
+	if (mip_levels <= 1)
+		return;
+
 	VkFormatProperties format_properties;
 	vkGetPhysicalDeviceFormatProperties(*Graphics::physical_device, props.format, &format_properties);
 

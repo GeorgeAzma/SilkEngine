@@ -41,6 +41,8 @@ Instance::Instance()
 #ifdef SK_ENABLE_DEBUG_OUTPUT
     debug_messenger->create(instance);
 #endif
+
+    findAvailablePhysicalDevices();
 }
 
 Instance::~Instance()
@@ -133,4 +135,16 @@ bool Instance::checkValidationLayerSupport(const std::vector<const char *> &requ
             return false;
     }
     return true;
+}
+
+void Instance::findAvailablePhysicalDevices()
+{
+    uint32_t device_count = 0;
+    Graphics::vulkanAssert(vkEnumeratePhysicalDevices(instance, &device_count, nullptr));
+
+    SK_ASSERT(device_count > 0,
+        "Vulkan: Couldn't find GPU with vulkan support");
+
+    physical_devices.resize(device_count);
+    Graphics::vulkanAssert(vkEnumeratePhysicalDevices(instance, &device_count, physical_devices.data()));
 }

@@ -19,14 +19,26 @@ struct ImageProps
 	bool mipmap = true;
 	VkFilter mipmap_filter = VK_FILTER_LINEAR;
 
+	SamplerProps sampler_props{};
+
 	bool create_view = true;
 	bool create_sampler = true;
+
+	const void* data = nullptr;
+};
+
+struct ImageLoadData
+{
+	int width;
+	int height;
+	int channels;
+	shared<StagingBuffer> staging_buffer;
 };
 
 class Image : NonCopyable
 {
 public:
-	Image(const std::string& file);
+	Image(const std::string& file, const ImageProps& props = {});
 	Image(const ImageProps& props);
 
 	~Image();
@@ -35,7 +47,10 @@ public:
 	uint32_t getHeight() const { return props.height; }
 	VkFormat getFormat() const { return props.format; }
 	const ImageProps& getProps() const { return props; }
-	const VkDescriptorImageInfo& getDescriptorInfo() const { return descriptor_image_info;  }
+	const VkDescriptorImageInfo& getDescriptorInfo() const { return descriptor_image_info; }
+
+	operator const VkImage& () const { return image; }
+	operator const VkDescriptorImageInfo& () const { return descriptor_image_info; }
 
 private:
 	struct TransitionInfo
@@ -46,7 +61,7 @@ private:
 		VkAccessFlags destination_access_mask;
 	};
 private:
-	void load(const std::string& file);
+	static ImageLoadData load(const std::string& file);
 	void create(const ImageProps& props);
 	void transitionLayout(VkImageLayout newLayout);
 	void copyBufferToImage();
@@ -62,7 +77,7 @@ private:
 	unique<Sampler> sampler;
 	unique<ImageView> view = nullptr;
 	VmaAllocation allocation;
-	unique<StagingBuffer> staging_buffer = nullptr;
+	shared<StagingBuffer> staging_buffer = nullptr;
 	ImageProps props = {};
 	uint32_t mip_levels = 1;
 };

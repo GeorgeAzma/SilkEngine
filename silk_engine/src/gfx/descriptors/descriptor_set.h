@@ -2,22 +2,24 @@
 
 #include "descriptor_set_layout.h"
 #include "gfx/images/image.h"
+#include "gfx/images/image_array.h"
 
 class DescriptorSet : NonCopyable
 {
 public:
-	DescriptorSet(const DescriptorSetLayout& layout, size_t count = 1);
+	DescriptorSet(const DescriptorSetLayout& layout);
 
 	DescriptorSet& addBuffer(uint32_t binding, VkDescriptorBufferInfo buffer_info);
-	DescriptorSet& addImage(uint32_t binding, const Image& image);
+	DescriptorSet& addImage(uint32_t binding, const VkDescriptorImageInfo& descriptor_image_info);
+	DescriptorSet& addImages(uint32_t binding, const std::vector<VkDescriptorImageInfo>& descriptor_image_info);
 	void build();
 
-	void bind(size_t index = 0);
+	void bind();
 
-	const DescriptorSetLayout& getLayout() const { return *layout; }
+	operator const DescriptorSetLayout& () const { return *layout; }
 
 private:
 	const DescriptorSetLayout* layout = nullptr;
-	std::vector<VkDescriptorSet> descriptor_sets;
+	VkDescriptorSet descriptor_set = VK_NULL_HANDLE;
 	std::vector<VkWriteDescriptorSet> descriptor_writes;
 };

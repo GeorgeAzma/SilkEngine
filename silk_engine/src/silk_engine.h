@@ -41,6 +41,7 @@
 
 #include "gfx/images/image.h"
 #include "gfx/images/image_view.h"
+#include "gfx/images/image_array.h"
 #include "gfx/images/sampler.h"
 
 #include "gfx/buffers/buffer.h"

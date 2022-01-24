@@ -8,7 +8,7 @@ ImageView::ImageView(VkImage image, VkFormat format, uint32_t mip_levels, size_t
 	VkImageViewCreateInfo view_info{};
 	view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	view_info.image = image;
-	view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	view_info.viewType = layer_count == 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_2D_ARRAY;
 	view_info.format = format;
 	view_info.subresourceRange.aspectMask = EnumInfo::getAspectFlags(format);
 	view_info.subresourceRange.baseMipLevel = 0;

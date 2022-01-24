@@ -9,11 +9,19 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     camera->addComponent<CameraComponent>();
     camera->addComponent<ScriptComponent>().bind<CameraController>();
 
-    image = makeShared<Image>("data/images/test.png");
+    auto image1 = Resources::getImage("Test1");
+    auto image2 = Resources::getImage("Test2");
 
     shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>(*Resources::getMaterial("3D")->descriptor_set_layout);
     descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE })
-        .addImage(1, *image)
+        .addImages(1, { *image1, *image2, *image1, *image2, 
+            *image1, *image1, *image1, *image1, 
+            *image1, *image1, *image1, *image1, 
+            *image1, *image1, *image1, *image1, 
+            *image1, *image1, *image1, *image1, 
+            *image1, *image1, *image1, *image1, 
+            *image1, *image1, *image1, *image1, 
+            *image1, *image1, *image1, *image1 })
         .build();
     material_data = makeShared<MaterialData>(Resources::getMaterial("3D"), descriptor_set);
 
@@ -27,11 +35,12 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     }
 
     auto rectangle = Resources::getMesh("Rectangle");
-    squares.resize(1);
+    squares.resize(28);
     for (size_t i = 0; i < squares.size(); ++i)
     {
         squares[i] = scene->createEntity();
-        squares[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+        squares[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(i, 0.0f, 1.0f)));
+        squares[i]->addComponent<SpriteComponent>((uint32_t)RNG::Bool());
         squares[i]->addComponent<RenderComponent>(rectangle, material_data);
     }
 

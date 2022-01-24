@@ -81,27 +81,6 @@ void Scene::onUpdate()
 				draw_indexed_indirect_command.vertexOffset = 0;
 				draw_commands.emplace_back(std::move(draw_indexed_indirect_command));
 		}
-
-		
-		//CPU CULL: SLOW
-		//for (size_t i = 0; i < indirect_batches.size(); ++i)
-		//{
-		//	auto& batch = indirect_batches[i];
-		//	std::vector<InstanceData> rendered_instances;
-		//	rendered_instances.reserve(batch.instance_datas.size());
-		//	for (size_t j = 0; j < batch.instance_datas.size(); ++j)
-		//	{
-		//		glm::vec3 min = batch.instance_datas[j].transform * glm::vec4(batch.render_object.mesh->aabb.min, 1);
-		//		glm::vec3 max = batch.instance_datas[j].transform * glm::vec4(batch.render_object.mesh->aabb.max, 1);
-		//		if (main_camera->camera.frustum.isBoxVisible(min, max))
-		//		{
-		//			rendered_instances.emplace_back(batch.instance_datas[j]);
-		//		}
-		//	}
-		//	if(rendered_instances.size())
-		//		indirect_batches[i].render_object.mesh->vertex_array->getVertexBuffer(1)->setData(rendered_instances.data(), rendered_instances.size() * sizeof(InstanceData));
-		//	draw_commands[i].instanceCount = rendered_instances.size();
-		//}
 		
 		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(draw_commands[0]));
 
@@ -153,12 +132,15 @@ void Scene::onWindowResize(const WindowResizeEvent& e)
 void Scene::onComponentCreate(entt::registry& registry, entt::entity entity)
 {
 	auto& render_component = registry.get<RenderComponent>(entity);
+	InstanceData instance_data{};
+
 	if (registry.any_of<TransformComponent>(entity))
-	{
-		InstanceData instance_data{};
-		instance_data.transform = registry.get<TransformComponent>(entity).transform;
-		render_component.render_object.instance_data = std::move(instance_data);
-	}
+		instance_data.transform = registry.get<TransformComponent>(entity).transform;	
+
+	if (registry.any_of<SpriteComponent>(entity))
+		instance_data.texture_index = registry.get<SpriteComponent>(entity).texture_index;
+
+	render_component.render_object.instance_data = std::move(instance_data);
 	addBatchRenderObject(render_component.render_object);
 }
 

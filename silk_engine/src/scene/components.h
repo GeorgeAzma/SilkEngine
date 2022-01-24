@@ -13,6 +13,13 @@ struct TransformComponent
 	operator glm::mat4& () { return transform; }
 };
 
+struct SpriteComponent
+{
+	uint32_t texture_index = 0;
+
+	operator uint32_t () const { return texture_index; }
+};
+
 struct CameraComponent
 {
 	Camera camera;

@@ -7,16 +7,13 @@
 
 PhysicalDevice::PhysicalDevice()
 {
-	auto physical_devices = getAvailablePhysicalDevices();
-	// a.k.a best gpu you have
-	chooseMostSuitablePhysicalDevice(physical_devices);
+	chooseMostSuitablePhysicalDevice(Graphics::instance->getAvailablePhysicalDevices());
 }
 
 PhysicalDevice::~PhysicalDevice()
 {
 }
 
-// Find supported queue families of this device
 QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice physical_device)
 {
 	QueueFamilyIndices queue_family_indices = {};
@@ -45,22 +42,37 @@ QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice physical_d
 	return queue_family_indices;
 }
 
-void PhysicalDevice::getSwapChainSupportDetails()
+VkFormatProperties PhysicalDevice::getFormatProperties(VkFormat format) const
 {
-	getSwapChainSupportDetails(physical_device);
+	VkFormatProperties format_properties;
+	vkGetPhysicalDeviceFormatProperties(physical_device, format, &format_properties);
+
+	return format_properties;
 }
 
-VkFormat PhysicalDevice::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+VkImageFormatProperties PhysicalDevice::getImageFormatProperties(VkFormat format, VkImageType type, VkImageTiling tilling, VkImageUsageFlags usage, VkImageCreateFlags flags) const
+{
+	VkImageFormatProperties image_format_properties;
+	vkGetPhysicalDeviceImageFormatProperties(physical_device, format, type, tilling, usage, flags, &image_format_properties);
+
+	return image_format_properties;
+}
+
+void PhysicalDevice::updateSwapChainSupportDetails()
+{
+	updateSwapChainSupportDetails(physical_device);
+}
+
+VkFormat PhysicalDevice::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const
 {
 	for (VkFormat format : candidates)
 	{
-		VkFormatProperties props;
-		vkGetPhysicalDeviceFormatProperties(physical_device, format, &props);
+		VkFormatProperties props = getFormatProperties(format);
 		if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) 
 		{
 			return format;
 		}
-		else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) 
+		if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) 
 		{
 			return format;
 		}
@@ -70,7 +82,7 @@ VkFormat PhysicalDevice::findSupportedFormat(const std::vector<VkFormat>& candid
 	return VkFormat(0);
 }
 
-VkFormat PhysicalDevice::findDepthFormat()
+VkFormat PhysicalDevice::findDepthFormat() const
 {
 	return findSupportedFormat
 	(
@@ -82,7 +94,7 @@ VkFormat PhysicalDevice::findDepthFormat()
 	);
 }
 
-VkFormat PhysicalDevice::findStencilFormat()
+VkFormat PhysicalDevice::findStencilFormat() const
 {
 	return findSupportedFormat
 	(
@@ -93,7 +105,7 @@ VkFormat PhysicalDevice::findStencilFormat()
 	);
 }
 
-void PhysicalDevice::getSwapChainSupportDetails(VkPhysicalDevice physical_device)
+void PhysicalDevice::updateSwapChainSupportDetails(VkPhysicalDevice physical_device)
 {
 	Graphics::vulkanAssert(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, *Graphics::surface, &surface_capabilities));
 	
@@ -114,20 +126,6 @@ void PhysicalDevice::getSwapChainSupportDetails(VkPhysicalDevice physical_device
 	}
 }
 
-std::vector<VkPhysicalDevice> PhysicalDevice::getAvailablePhysicalDevices() const
-{
-	uint32_t device_count = 0;
-	Graphics::vulkanAssert(vkEnumeratePhysicalDevices(*Graphics::instance, &device_count, nullptr));
-
-	SK_ASSERT(device_count > 0, 
-		"Vulkan: Couldn't find GPU with vulkan support");
-
-	std::vector<VkPhysicalDevice> physical_devices(device_count);
-	Graphics::vulkanAssert(vkEnumeratePhysicalDevices(*Graphics::instance, &device_count, physical_devices.data()));
-
-	return physical_devices;
-}
-
 void PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vector<VkPhysicalDevice>& physical_devices)
 {
 	std::multimap<int, VkPhysicalDevice> candidates;
@@ -142,16 +140,18 @@ void PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vector<VkPhysic
 		"Vulkan: Couldn't find suitable vulkan GPU");
 
 	physical_device = candidates.rbegin()->second;
+
 	vkGetPhysicalDeviceProperties(physical_device, &properties); 
 	vkGetPhysicalDeviceFeatures(physical_device, &features);
+
 	queue_family_indices = findQueueFamilies(physical_device);
-	getSwapChainSupportDetails(physical_device);
+
+	updateSwapChainSupportDetails(physical_device);
+
 	max_usable_sample_count = getMaxUsableSampleCount();
 }
 
-// This function decides which one is 
-// the "best" gpu from all the gpu's user has 
-// (mostly 1, sometimes 2 if it also has an integreted gpu)
+// This function chooses the "best" gpu
 int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
 {
 	int score = 0;
@@ -164,29 +164,81 @@ int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
 	if (!extensions_supported) 
 		return -1;
 
-	getSwapChainSupportDetails(physical_device);
+	updateSwapChainSupportDetails(physical_device);
 	bool is_swap_chain_adequate = !surface_formats.empty() &&
 		!present_modes.empty();
 	if (!is_swap_chain_adequate) 
 		return -1;
 
-	VkPhysicalDeviceProperties physical_device_properties;
-	VkPhysicalDeviceFeatures physical_device_features;
-	vkGetPhysicalDeviceProperties(physical_device, &physical_device_properties);
-	vkGetPhysicalDeviceFeatures(physical_device, &physical_device_features);
+	VkPhysicalDeviceProperties properties;
+	VkPhysicalDeviceFeatures features;
+	vkGetPhysicalDeviceProperties(physical_device, &properties);
+	vkGetPhysicalDeviceFeatures(physical_device, &features);
 
-	if (!physical_device_features.samplerAnisotropy) 
+	//TODO: add critical feature dependencies as engine needs it
+	if (!(
+		features.multiDrawIndirect &&
+		features.samplerAnisotropy
+		))
 		return -1;
 
-	bool is_discrete = physical_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
-
-	score += is_discrete * 800;
-	score += physical_device_features.geometryShader * 250;
-	score += physical_device_features.tessellationShader * 150;
-	score += physical_device_features.multiViewport * 100;
-	score += physical_device_features.wideLines * 50;
-	score += physical_device_features.largePoints * 50;
-	score += physical_device_features.occlusionQueryPrecise * 25;
+	score += (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) * 500;
+	score += features.multiDrawIndirect * 250;
+	score += features.geometryShader * 200;
+	score += features.tessellationShader * 100;
+	score += features.fragmentStoresAndAtomics * 50;
+	score += features.samplerAnisotropy * 50;
+	score += features.vertexPipelineStoresAndAtomics * 30;
+	score += features.shaderSampledImageArrayDynamicIndexing * 25;
+	score += features.shaderStorageBufferArrayDynamicIndexing * 25;
+	score += features.shaderStorageImageArrayDynamicIndexing * 25;
+	score += features.shaderUniformBufferArrayDynamicIndexing * 25;
+	score += features.occlusionQueryPrecise * 25;
+	score += features.multiViewport * 25;
+	score += features.wideLines * 20;
+	score += features.largePoints * 10;
+	score += features.imageCubeArray * 10;
+	score += features.pipelineStatisticsQuery * 5;
+	score += features.shaderFloat64 * 5;
+	score += features.alphaToOne;
+	score += features.depthBiasClamp;
+	score += features.depthBounds;
+	score += features.depthClamp;
+	score += features.drawIndirectFirstInstance;
+	score += features.dualSrcBlend;
+	score += features.fillModeNonSolid;
+	score += features.fullDrawIndexUint32;
+	score += features.independentBlend;
+	score += features.inheritedQueries;
+	score += features.logicOp;
+	score += features.robustBufferAccess;
+	score += features.sampleRateShading;
+	score += features.shaderClipDistance;
+	score += features.shaderCullDistance;
+	score += features.shaderImageGatherExtended;
+	score += features.shaderInt16;
+	score += features.shaderInt64;
+	score += features.shaderResourceMinLod;
+	score += features.shaderResourceResidency;
+	score += features.shaderStorageImageExtendedFormats;
+	score += features.shaderStorageImageMultisample;
+	score += features.shaderStorageImageReadWithoutFormat;
+	score += features.shaderStorageImageWriteWithoutFormat;
+	score += features.shaderTessellationAndGeometryPointSize;
+	score += features.sparseBinding;
+	score += features.sparseResidency16Samples;
+	score += features.sparseResidency2Samples;
+	score += features.sparseResidency4Samples;
+	score += features.sparseResidency8Samples;
+	score += features.sparseResidency16Samples;
+	score += features.sparseResidencyAliased;
+	score += features.sparseResidencyBuffer;
+	score += features.sparseResidencyImage2D;
+	score += features.sparseResidencyImage3D;
+	score += features.textureCompressionASTC_LDR;
+	score += features.textureCompressionBC;
+	score += features.textureCompressionETC2;
+	score += features.variableMultisampleRate;
 
 	return score;
 }

@@ -2,8 +2,11 @@
 
 struct SamplerProps
 {
-	std::vector<VkFilter> filters;
-	std::vector<VkSamplerAddressMode> sampler_address_modes;
+	VkFilter min_filter = VK_FILTER_LINEAR;
+	VkFilter mag_filter = VK_FILTER_LINEAR;
+	VkSamplerAddressMode u_wrap = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	VkSamplerAddressMode v_wrap = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	VkSamplerAddressMode w_wrap = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	bool anisotropy = true;
 	bool linear_mipmap = true;
 	uint32_t mip_levels = 0;
