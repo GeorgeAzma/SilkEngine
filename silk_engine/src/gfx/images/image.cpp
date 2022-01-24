@@ -69,7 +69,7 @@ void Image::create(const ImageProps& props)
 	if (props.mipmap)
 	{
 		mip_levels = std::floor(std::log2(std::max(props.width, props.height))) + 1;
-		//mip_levels = std::min(mip_levels, Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxMipLevels);
+		mip_levels = std::min(mip_levels, Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxMipLevels);
 	}
 	create_info.mipLevels = mip_levels;
 	create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;

@@ -149,7 +149,7 @@ void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_cont
         }
         else
         {
-            clear_value.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+            clear_value.color = { 0.15f, 0.4f, 0.6f, 1.0f };
         }
         clear_values[i] = clear_value;
     }

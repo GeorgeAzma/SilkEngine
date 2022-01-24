@@ -9,19 +9,21 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     camera->addComponent<CameraComponent>();
     camera->addComponent<ScriptComponent>().bind<CameraController>();
 
+    auto white = Resources::getImage("White");
+    auto null = Resources::getImage("Null");
     auto image1 = Resources::getImage("Test1");
     auto image2 = Resources::getImage("Test2");
 
     shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>(*Resources::getMaterial("3D")->descriptor_set_layout);
     descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE })
-        .addImages(1, { *image1, *image2, *image1, *image2, 
-            *image1, *image1, *image1, *image1, 
-            *image1, *image1, *image1, *image1, 
-            *image1, *image1, *image1, *image1, 
-            *image1, *image1, *image1, *image1, 
-            *image1, *image1, *image1, *image1, 
-            *image1, *image1, *image1, *image1, 
-            *image1, *image1, *image1, *image1 })
+        .addImages(1, { *white, *null, *white, *white,
+            *white, *white, *white, *white, 
+            *white, *white, *white, *white, 
+            *white, *white, *white, *white, 
+            *white, *white, *white, *white, 
+            *white, *white, *white, *white, 
+            *white, *white, *white, *white, 
+            *white, *white, *white, *white })
         .build();
     material_data = makeShared<MaterialData>(Resources::getMaterial("3D"), descriptor_set);
 
