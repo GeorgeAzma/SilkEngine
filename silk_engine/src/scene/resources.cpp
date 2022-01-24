@@ -23,7 +23,7 @@ void Resources::init()
         .enable(EnableTag::DEPTH_WRITE)
         .addDescriptorSetLayout(*descriptor_set_layout)
         .setShader(shader)
-        .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::MAT4, 1 }, { Type::UINT, 1 } })
+        .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
         .setSampleCount(Graphics::swap_chain->getSampleCount())
         .setRenderPass(Graphics::swap_chain->getRenderPass())
         .build();

@@ -39,7 +39,7 @@ Image::~Image()
 	sampler = nullptr;
 	vmaDestroyImage(*Graphics::allocator, image, allocation);
 }
-
+#include "utils/debug_timer.h"
 ImageLoadData Image::load(const std::string& file)
 {
 	int width, height, channels;
@@ -83,14 +83,15 @@ void Image::create(const ImageProps& props)
 	if (staging_buffer.get() != nullptr)
 	{
 		transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-		copyBufferToImage();
+		DebugTimer t;
+		copyBufferToImage(); t.stop();
 		if (props.mipmap)
 		{
 			generateMipmaps();
 		}
 	}
 
-	transitionLayout(props.layout);
+	transitionLayout(props.layout); 
 	
 	if (props.create_view)
 	{
@@ -113,7 +114,7 @@ void Image::transitionLayout(VkImageLayout newLayout)
 		return;
 
 	CommandBuffer command_buffer;
-	command_buffer.begin();
+	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
 	VkImageMemoryBarrier barrier{};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -145,7 +146,7 @@ void Image::transitionLayout(VkImageLayout newLayout)
 void Image::copyBufferToImage()
 {
 	CommandBuffer command_buffer;
-	command_buffer.begin();
+	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
 	VkBufferImageCopy region{};
 	region.bufferOffset = 0;
@@ -177,7 +178,7 @@ void Image::generateMipmaps()
 		"Image format does not support linear blitting");
 
 	CommandBuffer command_buffer;
-	command_buffer.begin();
+	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
 	VkImageMemoryBarrier barrier{};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;

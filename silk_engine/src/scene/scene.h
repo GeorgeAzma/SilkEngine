@@ -34,6 +34,7 @@ private:
 	entt::registry registry;
 	std::vector<IndirectBatch> indirect_batches;
 	shared<IndirectBuffer> indirect_buffer;
+	shared<MaterialData> material_data;
 
 	bool stopped = false;
 };

@@ -59,7 +59,6 @@ ImageLoadData ImageArray::load(const std::vector<std::string>& files)
 
 	shared<StagingBuffer> staging_buffer = makeShared<StagingBuffer>(file_pixels.data(), file_pixels.size() * sizeof(stbi_uc));
 
-
 	return { width, height, channels, staging_buffer };
 }
 
@@ -124,7 +123,7 @@ void ImageArray::transitionLayout(VkImageLayout newLayout)
 		return;
 
 	CommandBuffer command_buffer;
-	command_buffer.begin();
+	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
 	VkImageMemoryBarrier barrier{};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -156,10 +155,9 @@ void ImageArray::transitionLayout(VkImageLayout newLayout)
 void ImageArray::copyBufferToImageArray()
 {
 	CommandBuffer command_buffer;
-	command_buffer.begin();
+	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
 	size_t offset = 0;
-
 	std::vector<VkBufferImageCopy> copy_regions(layer_count);
 	for (size_t layer = 0; layer < layer_count; ++layer)
 	{
@@ -179,7 +177,7 @@ void ImageArray::copyBufferToImageArray()
 		copy_regions[layer] = std::move(copy_region);
 	}
 	vkCmdCopyBufferToImage(command_buffer, *staging_buffer, image, descriptor_image_info.imageLayout, copy_regions.size(), copy_regions.data());
-
+	
 	command_buffer.end();
 	command_buffer.submit();
 	command_buffer.wait();
@@ -194,7 +192,7 @@ void ImageArray::generateMipmaps()
 		"ImageArray format does not support linear blitting");
 
 	CommandBuffer command_buffer;
-	command_buffer.begin();
+	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
 	VkImageMemoryBarrier barrier{};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;

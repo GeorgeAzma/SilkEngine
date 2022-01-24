@@ -9,31 +9,13 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     camera->addComponent<CameraComponent>();
     camera->addComponent<ScriptComponent>().bind<CameraController>();
 
-    auto white = Resources::getImage("White");
-    auto null = Resources::getImage("Null");
-    auto image1 = Resources::getImage("Test1");
-    auto image2 = Resources::getImage("Test2");
-
-    shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>(*Resources::getMaterial("3D")->descriptor_set_layout);
-    descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE })
-        .addImages(1, { *white, *null, *white, *white,
-            *white, *white, *white, *white, 
-            *white, *white, *white, *white, 
-            *white, *white, *white, *white, 
-            *white, *white, *white, *white, 
-            *white, *white, *white, *white, 
-            *white, *white, *white, *white, 
-            *white, *white, *white, *white })
-        .build();
-    material_data = makeShared<MaterialData>(Resources::getMaterial("3D"), descriptor_set);
-
     auto circle = Resources::getMesh("Circle");
     circles.resize(0);
     for (size_t i = 0; i < circles.size(); ++i)
     {
         circles[i] = scene->createEntity();
         circles[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float() * 1.5f, RNG::Float(), 0.05f) * 5.0f));
-        circles[i]->addComponent<RenderComponent>(circle, material_data);
+        circles[i]->addComponent<RenderComponent>(circle);
     }
 
     auto rectangle = Resources::getMesh("Rectangle");
@@ -43,7 +25,8 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
         squares[i] = scene->createEntity();
         squares[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(i, 0.0f, 1.0f)));
         squares[i]->addComponent<SpriteComponent>((uint32_t)RNG::Bool());
-        squares[i]->addComponent<RenderComponent>(rectangle, material_data);
+        squares[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+        squares[i]->addComponent<RenderComponent>(rectangle);
     }
 
     scene->onPlay();

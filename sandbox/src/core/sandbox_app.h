@@ -16,5 +16,4 @@ private:
 
     std::vector<shared<Entity>> circles;
     std::vector<shared<Entity>> squares;
-    shared<MaterialData> material_data;
 };

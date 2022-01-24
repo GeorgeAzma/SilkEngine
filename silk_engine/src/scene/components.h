@@ -58,3 +58,8 @@ struct RenderComponent
 {
 	RenderObject render_object;
 };
+
+struct ColorComponent
+{
+	glm::vec4 color;
+};

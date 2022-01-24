@@ -15,6 +15,22 @@ Scene::Scene()
 	registry.on_construct<RenderComponent>().connect<&Scene::onComponentCreate>(this);
 	registry.on_destroy<RenderComponent>().connect<&Scene::onComponentDestroy>(this);
 	indirect_buffer = std::make_shared<IndirectBuffer>(Graphics::MAX_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
+
+	auto white = Resources::getImage("White");
+	auto null = Resources::getImage("Null");
+	shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>(*Resources::getMaterial("3D")->descriptor_set_layout);
+	descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE })
+		.addImages(1, { *white, *white, *white, *white,
+			*white, *white, *white, *white,
+			*white, *white, *white, *white,
+			*white, *white, *white, *white,
+			*white, *white, *white, *white,
+			*white, *white, *white, *white,
+			*white, *white, *white, *white,
+			*white, *white, *white, *white })
+		.build();
+	
+	material_data = makeShared<MaterialData>(Resources::getMaterial("3D"), descriptor_set);
 }
 
 Scene::~Scene()
@@ -140,7 +156,12 @@ void Scene::onComponentCreate(entt::registry& registry, entt::entity entity)
 	if (registry.any_of<SpriteComponent>(entity))
 		instance_data.texture_index = registry.get<SpriteComponent>(entity).texture_index;
 
+
+	if (registry.any_of<ColorComponent>(entity))
+		instance_data.color = registry.get<ColorComponent>(entity).color;
+
 	render_component.render_object.instance_data = std::move(instance_data);
+	render_component.render_object.material_data = material_data;
 	addBatchRenderObject(render_component.render_object);
 }
 
