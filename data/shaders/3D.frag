@@ -10,7 +10,7 @@ layout(location = 0) in VertexOutput
 
 layout(location = 0) out vec4 color;
 
-layout(set = 0, binding = 1) uniform sampler2D texture_sampler[32];
+layout(set = 1, binding = 0) uniform sampler2D texture_sampler[32];
 
 void main()
 {

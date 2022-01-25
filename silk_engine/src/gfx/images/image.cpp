@@ -39,7 +39,7 @@ Image::~Image()
 	sampler = nullptr;
 	vmaDestroyImage(*Graphics::allocator, image, allocation);
 }
-#include "utils/debug_timer.h"
+
 ImageLoadData Image::load(const std::string& file)
 {
 	int width, height, channels;

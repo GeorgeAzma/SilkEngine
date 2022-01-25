@@ -86,7 +86,7 @@ void DescriptorSet::build()
 	vkUpdateDescriptorSets(*Graphics::logical_device, descriptor_writes.size(), descriptor_writes.data(), 0, nullptr);
 }
 
-void DescriptorSet::bind()
+void DescriptorSet::bind(size_t first_set)
 {
-	vkCmdBindDescriptorSets(Graphics::active.command_buffer, Graphics::active.bind_point, Graphics::active.pipeline_layout, 0, 1, &descriptor_set, 0, nullptr);
+	vkCmdBindDescriptorSets(Graphics::active.command_buffer, Graphics::active.bind_point, Graphics::active.pipeline_layout, first_set, 1, &descriptor_set, 0, nullptr);
 }

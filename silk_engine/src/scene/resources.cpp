@@ -52,9 +52,13 @@ void Resources::init()
 
     //MATERIALS
     {
+        shared<DescriptorSetLayout> global_descriptor_set_layout = makeShared<DescriptorSetLayout>();
+        global_descriptor_set_layout->addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+            .build();
+        addDescriptorSetLayout(global_descriptor_set_layout);
+
         shared<DescriptorSetLayout> descriptor_set_layout = makeShared<DescriptorSetLayout>();
-        descriptor_set_layout->addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
-            .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, Graphics::MAX_TEXTURE_SLOTS)
+        descriptor_set_layout->addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, Graphics::MAX_TEXTURE_SLOTS)
             .build();
         addDescriptorSetLayout(descriptor_set_layout);
 
@@ -63,8 +67,8 @@ void Resources::init()
         graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
             .enable(EnableTag::DEPTH_TEST)
             .enable(EnableTag::DEPTH_WRITE)
+            .addDescriptorSetLayout(global_descriptor_set_layout)
             .addDescriptorSetLayout(descriptor_set_layout)
-            //.addDescriptorSetLayout(descriptor_set_layout)
             .setShader(shader)
             .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
             .setSampleCount(Graphics::swap_chain->getSampleCount())

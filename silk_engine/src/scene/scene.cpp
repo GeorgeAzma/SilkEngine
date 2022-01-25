@@ -17,9 +17,13 @@ Scene::Scene()
 	indirect_buffer = std::make_shared<IndirectBuffer>(Graphics::MAX_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
 
 	auto white_image = Resources::getImage("White");
+	
+	shared<DescriptorSet> global_descriptor_set = makeShared<DescriptorSet>();
+	global_descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE }, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+		.build();
+
 	shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>();
-	descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE }, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,VK_SHADER_STAGE_VERTEX_BIT)
-		.addImages(1, {
+	descriptor_set->addImages(0, {
 			*white_image, *white_image, *white_image, *white_image,
 			*white_image, *white_image, *white_image, *white_image,
 			*white_image, *white_image, *white_image, *white_image,
@@ -30,7 +34,7 @@ Scene::Scene()
 			*white_image, *white_image, *white_image, *white_image
 		}, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT).build();
 
-	material_data = makeShared<MaterialData>(Resources::getMaterial("3D"), descriptor_set);
+	material_data = makeShared<MaterialData>(Resources::getMaterial("3D"), std::vector<shared<DescriptorSet>>{ global_descriptor_set, descriptor_set });
 }
 
 Scene::~Scene()
@@ -108,8 +112,16 @@ void Scene::onUpdate()
 
 			indirect_batches[i].render_object.material_data->material->pipeline->bind();
 			indirect_batches[i].render_object.mesh->vertex_array->bind();
-			indirect_batches[i].render_object.material_data->descriptor_set->bind();
-			vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
+			VkDescriptorSetLayoutBinding b{};
+			b.binding = 0;
+			b.descriptorCount = 1;
+			b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+			for (size_t j = 0; j < indirect_batches[i].render_object.material_data->descriptor_sets.size(); ++j)
+				indirect_batches[i].render_object.material_data->descriptor_sets[j]->bind(j);
+			
+			vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand)); //For now indirect drawing is unnecessary
 		}
 		Graphics::swap_chain->endRenderPass();
 		Graphics::swap_chain->endFrame();

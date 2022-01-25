@@ -54,7 +54,7 @@ find_package(Threads REQUIRED)
 #glfw
 set(glfw_build FALSE)
 list(APPEND DEPENDENCIES_TO_ADD glfw_build)
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/glfw)
+#if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/glfw)
 ExternalProject_Add(GLFW
 GIT_REPOSITORY  https://github.com/glfw/glfw
 GIT_TAG         3.3.5
@@ -65,7 +65,7 @@ CMAKE_ARGS   -DGLFW_BUILD_EXAMPLES=OFF
              -DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/vendor/glfw
 )
 set(glfw_build TRUE)
-endif()
+#endif()
 
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glfw/include)
 if(WIN32)
@@ -164,7 +164,7 @@ set(assimp_build TRUE)
 #endif()
 list(APPEND INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/vendor/assimp/include")
 if(MSVC)
-list(APPEND EXTRA_LIBS "assimp" "$<IF:$<CONFIG:Debug>,zlibstaticd,zlibstatic>" "irrXML")
+    list(APPEND EXTRA_LIBS "assimp" "$<IF:$<CONFIG:Debug>,zlibstaticd,zlibstatic>" "irrXML")
 else()
 	list(APPEND EXTRA_LIBS assimp zlibstatic irrXML)
 endif()

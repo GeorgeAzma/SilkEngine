@@ -22,12 +22,11 @@ struct Material
 struct MaterialData
 {
 	shared<Material> material;
-	shared<DescriptorSet> descriptor_set;
+	std::vector<shared<DescriptorSet>> descriptor_sets;
 };
 
 struct ComputeMaterial
 {
-	shared<DescriptorSetLayout> descriptor_set_layout;
 	shared<ComputePipeline> pipeline;
 
 	std::string name;
@@ -41,7 +40,7 @@ struct ComputeMaterial
 struct ComputeMaterialData
 {
 	shared<ComputeMaterial> material;
-	shared<DescriptorSet> descriptor_set;
+	std::vector<shared<DescriptorSet>> descriptor_sets;
 };
 
 struct CullData
