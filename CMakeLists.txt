@@ -119,10 +119,25 @@ FetchContent_MakeAvailable(STB)
 endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/stb)
 
+#FreeType
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/freetype)
+FetchContent_Declare(FREE_TYPE
+GIT_REPOSITORY   https://github.com/freetype/freetype
+GIT_TAG origin/master
+GIT_SHALLOW     ON
+SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/freetype
+BUILD_COMMAND ""
+CONFIGURE_COMMAND ""
+INSTALL_COMMAND ""
+)
+FetchContent_MakeAvailable(FREE_TYPE)
+endif()
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/freetype/include)
+
 #vma
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/vma)
 FetchContent_Declare(VMA
-GIT_REPOSITORY   https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+GIT_REPOSITORY   https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
 GIT_TAG origin/master
 GIT_SHALLOW     ON
 SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/vma
