@@ -47,19 +47,35 @@ struct ScriptComponent
 			script_component->instance = nullptr;
 		};
 	}
+
+	operator const ScriptableEntity* () const { return instance; }
 };
 
 struct MeshComponent
 {
 	shared<Mesh> mesh;
+
+	operator const shared<Mesh>& () const { return mesh; }
 };
 
 struct RenderComponent
 {
 	RenderObject render_object;
+
+	operator const RenderObject& () const { return render_object; }
 };
 
 struct ColorComponent
 {
-	glm::vec4 color;
+	glm::vec4 color = glm::vec4(1);
+
+	operator const glm::vec4& () const { return color; }
+};
+
+struct TextComponent
+{
+	std::string test = "Text";
+
+	size_t size = 32;
+	std::string font = "arial.ttf";
 };

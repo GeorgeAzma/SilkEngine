@@ -83,6 +83,7 @@ void Resources::init()
 
 void Resources::cleanup()
 {
+    fonts.clear();
 	meshes.clear();
 	materials.clear();
 	compute_materials.clear();
@@ -125,6 +126,16 @@ shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<
     return new_layout;
 }
 
+shared<Font> Resources::getFont(const std::string& path)
+{
+    auto font = fonts.find(path);
+    if (font != fonts.end())
+        return font->second;
+
+    shared<Font> new_font = makeShared<Font>(path);
+    return new_font;
+}
+
 void Resources::addMesh(const std::string& name, shared<Mesh> mesh)
 {
 	mesh->name = name;
@@ -151,6 +162,11 @@ void Resources::addImage(const std::string& name, shared<Image> image)
 void Resources::addDescriptorSetLayout(shared<DescriptorSetLayout> descriptor_layout)
 {
     descriptor_set_layouts[DescriptorSetLayoutInfo{descriptor_layout->bindings_vector}] = descriptor_layout;
+}
+
+void Resources::addFont(shared<Font> font)
+{
+    fonts[font->getPath()] = font;
 }
 
 bool Resources::DescriptorSetLayoutInfo::operator==(const DescriptorSetLayoutInfo& other) const

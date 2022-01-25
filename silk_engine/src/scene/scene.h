@@ -23,8 +23,8 @@ public:
 
 private:
 	void onWindowResize(const WindowResizeEvent& e);
-	void onComponentCreate(entt::registry& registry, entt::entity entity);
-	void onComponentDestroy(entt::registry& registry, entt::entity entity);
+	void onRenderComponentCreate(entt::registry& registry, entt::entity entity);
+	void onRenderComponentDestroy(entt::registry& registry, entt::entity entity);
 
 private:
 	void addBatchRenderObject(RenderObject render_object);

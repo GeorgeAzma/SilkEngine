@@ -56,6 +56,8 @@
 #include "gfx/buffers/indirect_buffer.h"
 #include "gfx/buffers/vertex_array.h"
 
+#include "gfx/ui/font.h"
+
 #include "scene/vertex.h"
 #include "scene/entity.h"
 #include "scene/scene.h"

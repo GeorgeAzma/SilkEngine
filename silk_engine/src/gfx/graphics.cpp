@@ -10,6 +10,7 @@
 #include "allocators/allocator.h"
 #include "buffers/uniform_buffer.h"
 #include "descriptors/descriptor_set.h"
+#include "gfx/ui/font.h"
 
 void Graphics::init()
 {
@@ -32,10 +33,13 @@ void Graphics::init()
 	swap_chain = new SwapChain(); //16ms
 
 	global_uniform = new UniformBuffer(sizeof(GlobalUniformData));
+
+	Font::init();
 }
 
 void Graphics::cleanup() //25ms
 {
+	Font::cleanup();
 	delete global_uniform;
 	delete swap_chain;
 	delete descriptor_pool;

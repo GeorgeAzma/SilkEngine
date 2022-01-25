@@ -1,47 +1,7 @@
 #pragma once
 
 #include "meshes/mesh.h"
-#include "gfx/pipeline/graphics_pipeline.h"
-#include "gfx/pipeline/compute_pipeline.h"
-#include "gfx/descriptors/descriptor_set.h"
-#include "gfx/descriptors/descriptor_set_layout.h"
-#include "vertex.h"
-
-struct Material
-{
-	shared<GraphicsPipeline> pipeline;
-
-	std::string name;
-
-	bool operator==(const Material& other) const
-	{
-		return name == other.name;
-	}
-};
-
-struct MaterialData
-{
-	shared<Material> material;
-	std::vector<shared<DescriptorSet>> descriptor_sets;
-};
-
-struct ComputeMaterial
-{
-	shared<ComputePipeline> pipeline;
-
-	std::string name;
-
-	bool operator==(const ComputeMaterial& other) const
-	{
-		return name == other.name;
-	}
-};
-
-struct ComputeMaterialData
-{
-	shared<ComputeMaterial> material;
-	std::vector<shared<DescriptorSet>> descriptor_sets;
-};
+#include "material.h"
 
 struct CullData
 {
@@ -78,4 +38,13 @@ struct IndirectBatch
 	{
 		return this->render_object == render_object;
 	}
+};
+
+struct BatchData
+{
+	glm::vec3 position;
+	glm::vec2 texture_coordinates;
+	glm::vec3 normal;
+	glm::vec4 color;
+	uint32_t texture_index;
 };

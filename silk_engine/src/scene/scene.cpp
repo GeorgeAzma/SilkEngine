@@ -12,19 +12,21 @@
 Scene::Scene()
 {
 	Dispatcher::subscribe(this, &Scene::onWindowResize);
-	registry.on_construct<RenderComponent>().connect<&Scene::onComponentCreate>(this);
-	registry.on_destroy<RenderComponent>().connect<&Scene::onComponentDestroy>(this);
-	indirect_buffer = std::make_shared<IndirectBuffer>(Graphics::MAX_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
 
-	auto white_image = Resources::getImage("White");
+	registry.on_construct<RenderComponent>().connect<&Scene::onRenderComponentCreate>(this);
+	registry.on_destroy<RenderComponent>().connect<&Scene::onRenderComponentDestroy>(this);
+
+	indirect_buffer = std::make_shared<IndirectBuffer>(Graphics::MAX_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
 	
 	shared<DescriptorSet> global_descriptor_set = makeShared<DescriptorSet>();
 	global_descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE }, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
 		.build();
 
+	auto white_image = Resources::getImage("White");
+	auto null_image = Resources::getImage("Null");
 	shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>();
 	descriptor_set->addImages(0, {
-			*white_image, *white_image, *white_image, *white_image,
+			*null_image, * white_image, *white_image, *white_image,
 			*white_image, *white_image, *white_image, *white_image,
 			*white_image, *white_image, *white_image, *white_image,
 			*white_image, *white_image, *white_image, *white_image,
@@ -40,8 +42,8 @@ Scene::Scene()
 Scene::~Scene()
 {
 	Dispatcher::unsubscribe(this, &Scene::onWindowResize);
-	registry.on_construct<RenderComponent>().disconnect<&Scene::onComponentCreate>(this);
-	registry.on_destroy<RenderComponent>().disconnect<&Scene::onComponentDestroy>(this);
+	registry.on_construct<RenderComponent>().disconnect<&Scene::onRenderComponentCreate>(this);
+	registry.on_destroy<RenderComponent>().disconnect<&Scene::onRenderComponentDestroy>(this);
 }
 
 void Scene::onPlay()
@@ -121,7 +123,7 @@ void Scene::onUpdate()
 			for (size_t j = 0; j < indirect_batches[i].render_object.material_data->descriptor_sets.size(); ++j)
 				indirect_batches[i].render_object.material_data->descriptor_sets[j]->bind(j);
 			
-			vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand)); //For now indirect drawing is unnecessary
+			vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
 		}
 		Graphics::swap_chain->endRenderPass();
 		Graphics::swap_chain->endFrame();
@@ -157,7 +159,7 @@ void Scene::onWindowResize(const WindowResizeEvent& e)
 		});
 }
 
-void Scene::onComponentCreate(entt::registry& registry, entt::entity entity)
+void Scene::onRenderComponentCreate(entt::registry& registry, entt::entity entity)
 {
 	auto& render_component = registry.get<RenderComponent>(entity);
 	InstanceData instance_data{};
@@ -168,7 +170,6 @@ void Scene::onComponentCreate(entt::registry& registry, entt::entity entity)
 	if (registry.any_of<SpriteComponent>(entity))
 		instance_data.texture_index = registry.get<SpriteComponent>(entity).texture_index;
 
-
 	if (registry.any_of<ColorComponent>(entity))
 		instance_data.color = registry.get<ColorComponent>(entity).color;
 
@@ -177,7 +178,7 @@ void Scene::onComponentCreate(entt::registry& registry, entt::entity entity)
 	addBatchRenderObject(render_component.render_object);
 }
 
-void Scene::onComponentDestroy(entt::registry& registry, entt::entity entity) //TODO: Fix the error
+void Scene::onRenderComponentDestroy(entt::registry& registry, entt::entity entity) //TODO: Fix the error
 {
 	if (stopped)
 		return;
