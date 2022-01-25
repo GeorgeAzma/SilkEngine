@@ -10,6 +10,7 @@ class CommandPool;
 class SwapChain;
 class DescriptorPool;
 class UniformBuffer;
+class DescriptorSet;
 
 class Graphics
 {
@@ -55,7 +56,6 @@ public:
 		VkPipelineBindPoint bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		VkBuffer vertex_buffer = VK_NULL_HANDLE;
 		VkBuffer index_buffer = VK_NULL_HANDLE;
-		VkDescriptorSet descriptor_set = VK_NULL_HANDLE;
 		VkRenderPass render_pass = VK_NULL_HANDLE;
 		uint32_t subpass = 0;
 	} active;

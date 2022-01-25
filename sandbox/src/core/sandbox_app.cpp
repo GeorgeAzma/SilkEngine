@@ -25,7 +25,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
         squares[i] = scene->createEntity();
         squares[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(i, 0.0f, 1.0f)));
         squares[i]->addComponent<SpriteComponent>((uint32_t)RNG::Bool());
-        squares[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+        squares[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         squares[i]->addComponent<RenderComponent>(rectangle);
     }
 

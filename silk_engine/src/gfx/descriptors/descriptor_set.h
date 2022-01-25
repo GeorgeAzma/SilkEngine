@@ -7,19 +7,19 @@
 class DescriptorSet : NonCopyable
 {
 public:
-	DescriptorSet(const DescriptorSetLayout& layout);
-
-	DescriptorSet& addBuffer(uint32_t binding, VkDescriptorBufferInfo buffer_info);
-	DescriptorSet& addImage(uint32_t binding, const VkDescriptorImageInfo& descriptor_image_info);
-	DescriptorSet& addImages(uint32_t binding, const std::vector<VkDescriptorImageInfo>& descriptor_image_info);
+	DescriptorSet& addBuffer(uint32_t binding, VkDescriptorBufferInfo buffer_info, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
+	DescriptorSet& addImage(uint32_t binding, const VkDescriptorImageInfo& descriptor_image_info, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
+	DescriptorSet& addImages(uint32_t binding, const std::vector<VkDescriptorImageInfo>& descriptor_image_info, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
 	void build();
 
 	void bind();
 
-	operator const DescriptorSetLayout& () const { return *layout; }
+	operator const VkDescriptorSet& () const { return descriptor_set; }
+	const VkDescriptorSetLayout& getLayout() const { return *layout; }
 
 private:
-	const DescriptorSetLayout* layout = nullptr;
+	shared <DescriptorSetLayout> layout;
 	VkDescriptorSet descriptor_set = VK_NULL_HANDLE;
 	std::vector<VkWriteDescriptorSet> descriptor_writes;
+	std::vector<VkDescriptorSetLayoutBinding> descriptor_layout_bindings;
 };

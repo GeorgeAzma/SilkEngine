@@ -4,11 +4,11 @@
 #include "gfx/pipeline/graphics_pipeline.h"
 #include "gfx/pipeline/compute_pipeline.h"
 #include "gfx/descriptors/descriptor_set.h"
+#include "gfx/descriptors/descriptor_set_layout.h"
 #include "vertex.h"
 
 struct Material
 {
-	shared<DescriptorSetLayout> descriptor_set_layout;
 	shared<GraphicsPipeline> pipeline;
 
 	std::string name;

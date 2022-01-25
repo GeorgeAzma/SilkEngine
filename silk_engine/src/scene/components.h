@@ -4,7 +4,7 @@
 #include "core/log.h"
 #include "utils/math.h"
 #include "scene/render_object.h"
-#include "scene/camera.h"
+#include "scene/camera/camera.h"
 
 struct TransformComponent
 {

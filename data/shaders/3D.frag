@@ -1,4 +1,5 @@
 #version 450
+#extension GL_KHR_vulkan_glsl: enable
 
 layout(location = 0) in VertexOutput 
 {
@@ -9,7 +10,7 @@ layout(location = 0) in VertexOutput
 
 layout(location = 0) out vec4 color;
 
-layout(binding = 1) uniform sampler2D texture_sampler[32];
+layout(set = 0, binding = 1) uniform sampler2D texture_sampler[32];
 
 void main()
 {

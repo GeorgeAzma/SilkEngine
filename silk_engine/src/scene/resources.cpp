@@ -4,77 +4,76 @@
 #include "gfx/graphics.h"
 #include "gfx/buffers/uniform_buffer.h"
 #include "gfx/window/swap_chain.h"
+#include "gfx/descriptors/descriptor_set_layout.h"
 
 void Resources::init()
 {
     //MESHES
-	addMesh("Circle", makeShared<CircleMesh>());
-	addMesh("Rectangle", makeShared<RectangleMesh>());
-
-    //MATERIALS
-    shared<DescriptorSetLayout> descriptor_set_layout = makeShared<DescriptorSetLayout>();
-    descriptor_set_layout->addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
-        .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, Graphics::MAX_TEXTURE_SLOTS)
-        .build();
-    shared<Shader> shader = makeShared<Shader>(std::vector<std::string>{"3D.vert", "3D.frag"}); //1.65ms
-    shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>(); //1.35ms
-    graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-        .enable(EnableTag::DEPTH_TEST)
-        .enable(EnableTag::DEPTH_WRITE)
-        .addDescriptorSetLayout(*descriptor_set_layout)
-        .setShader(shader)
-        .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
-        .setSampleCount(Graphics::swap_chain->getSampleCount())
-        .setRenderPass(Graphics::swap_chain->getRenderPass())
-        .build();
-	addMaterial("3D", makeShared<Material>(descriptor_set_layout, graphics_pipeline));
-    
-    //COMPUTE MATERIALS
-    shader = makeShared<Shader>("cull.comp");
-    descriptor_set_layout = makeShared<DescriptorSetLayout>();
-    descriptor_set_layout->addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT)
-        .addBinding(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT)
-        .addBinding(2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT)
-        .build();
-    shared<ComputePipeline> compute_pipeline = makeShared<ComputePipeline>();
-    compute_pipeline->addDescriptorSetLayout(*descriptor_set_layout)
-        .addPushConstant(sizeof(CullData))
-        .setShader(shader).build();
-    addComputeMaterial("Cull", makeShared<ComputeMaterial>(descriptor_set_layout, compute_pipeline));
+    {
+        addMesh("Circle", makeShared<CircleMesh>());
+        addMesh("Rectangle", makeShared<RectangleMesh>());
+    }
 
     //IMAGES
-    ImageProps white_image_props{};
-    white_image_props.width = 1;
-    white_image_props.height = 1;
-    white_image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
-    white_image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
-    white_image_props.sampler_props.linear_mipmap = false;
-    white_image_props.sampler_props.anisotropy = false;
-    white_image_props.mipmap = false;
-    constexpr glm::u8vec4 white(255);
-    white_image_props.data = &white;
-    shared<Image> white_image = makeShared<Image>(white_image_props);
-    addImage("White", white_image);
-    
-    ImageProps null_image_props{};
-    null_image_props.width = 2;
-    null_image_props.height = 2;
-    null_image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
-    null_image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
-    null_image_props.sampler_props.linear_mipmap = false;
-    null_image_props.sampler_props.anisotropy = false;
-    null_image_props.sampler_props.u_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-    null_image_props.sampler_props.v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-    null_image_props.mipmap = false;
-    constexpr glm::u8vec4 null_data[4] = { { 0, 0, 0, 255 }, { 255, 0, 255, 255 }, { 255, 0, 255, 255 }, { 0, 0, 0, 255 } };
-    null_image_props.data = null_data;
-    shared<Image> null_image = makeShared<Image>(null_image_props);
-    addImage("Null", null_image);
+    {
+        ImageProps white_image_props{};
+        white_image_props.width = 1;
+        white_image_props.height = 1;
+        white_image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
+        white_image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
+        white_image_props.sampler_props.linear_mipmap = false;
+        white_image_props.sampler_props.anisotropy = false;
+        white_image_props.mipmap = false;
+        constexpr glm::u8vec4 white(255);
+        white_image_props.data = &white;
+        shared<Image> white_image = makeShared<Image>(white_image_props);
+        addImage("White", white_image);
 
-    shared<Image> test1_image = makeShared<Image>("test.png");
-    shared<Image> test2_image = makeShared<Image>("test2.png");
-    addImage("Test1", test1_image);
-    addImage("Test2", test2_image);
+        ImageProps null_image_props{};
+        null_image_props.width = 2;
+        null_image_props.height = 2;
+        null_image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
+        null_image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
+        null_image_props.sampler_props.linear_mipmap = false;
+        null_image_props.sampler_props.anisotropy = false;
+        null_image_props.sampler_props.u_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        null_image_props.sampler_props.v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        null_image_props.mipmap = false;
+        constexpr glm::u8vec4 null_data[4] = { { 0, 0, 0, 255 }, { 255, 0, 255, 255 }, { 255, 0, 255, 255 }, { 0, 0, 0, 255 } };
+        null_image_props.data = null_data;
+        shared<Image> null_image = makeShared<Image>(null_image_props);
+        addImage("Null", null_image);
+
+        shared<Image> test1_image = makeShared<Image>("test1.png");
+        shared<Image> test2_image = makeShared<Image>("test2.png");
+        addImage("Test1", test1_image);
+        addImage("Test2", test2_image);
+    }
+
+    //MATERIALS
+    {
+        shared<DescriptorSetLayout> descriptor_set_layout = makeShared<DescriptorSetLayout>();
+        descriptor_set_layout->addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+            .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, Graphics::MAX_TEXTURE_SLOTS)
+            .build();
+        addDescriptorSetLayout(descriptor_set_layout);
+
+        shared<Shader> shader = makeShared<Shader>(std::vector<std::string>{"3D.vert", "3D.frag"}); //1.65ms
+        shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>(); //1.35ms
+        graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
+            .enable(EnableTag::DEPTH_TEST)
+            .enable(EnableTag::DEPTH_WRITE)
+            .addDescriptorSetLayout(descriptor_set_layout)
+            //.addDescriptorSetLayout(descriptor_set_layout)
+            .setShader(shader)
+            .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
+            .setSampleCount(Graphics::swap_chain->getSampleCount())
+            .setRenderPass(Graphics::swap_chain->getRenderPass())
+            .build();
+        addMaterial("3D", makeShared<Material>(graphics_pipeline));
+    }
+    
+    //COMPUTE MATERIALS
 
 }
 
@@ -84,6 +83,7 @@ void Resources::cleanup()
 	materials.clear();
 	compute_materials.clear();
     images.clear();
+    descriptor_set_layouts.clear();
 }
 
 shared<Mesh> Resources::getMesh(const std::string& name)
@@ -104,6 +104,21 @@ shared<ComputeMaterial> Resources::getComputeMaterial(const std::string& name)
 shared<Image> Resources::getImage(const std::string& name)
 {
     return images.at(name);
+}
+
+shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+{
+    auto layout = descriptor_set_layouts.find({ bindings });
+    if (layout != descriptor_set_layouts.end())
+        return layout->second;
+
+    shared<DescriptorSetLayout> new_layout = makeShared<DescriptorSetLayout>();
+    for (size_t i = 0; i < bindings.size(); ++i)
+        new_layout->addBinding(bindings[i].binding, bindings[i].descriptorType, bindings[i].stageFlags, bindings[i].descriptorCount);
+    new_layout->build();
+    addDescriptorSetLayout(new_layout);
+
+    return new_layout;
 }
 
 void Resources::addMesh(const std::string& name, shared<Mesh> mesh)
@@ -127,4 +142,39 @@ void Resources::addComputeMaterial(const std::string& name, shared<ComputeMateri
 void Resources::addImage(const std::string& name, shared<Image> image)
 {
     images[name] = image;
+}
+
+void Resources::addDescriptorSetLayout(shared<DescriptorSetLayout> descriptor_layout)
+{
+    descriptor_set_layouts[DescriptorSetLayoutInfo{descriptor_layout->bindings_vector}] = descriptor_layout;
+}
+
+bool Resources::DescriptorSetLayoutInfo::operator==(const DescriptorSetLayoutInfo& other) const
+{
+    if (other.bindings.size() != bindings.size())
+        return false;
+
+   for (size_t i = 0; i < bindings.size(); i++) 
+   {
+       if (other.bindings[i].binding != bindings[i].binding ||
+           other.bindings[i].descriptorType != bindings[i].descriptorType ||
+           other.bindings[i].descriptorCount != bindings[i].descriptorCount ||
+           other.bindings[i].stageFlags != bindings[i].stageFlags)
+           return false;
+   }
+
+   return true;
+}
+
+size_t Resources::DescriptorSetLayoutInfo::hash() const
+{
+    size_t result = std::hash<size_t>()(bindings.size());
+
+    for (const VkDescriptorSetLayoutBinding& b : bindings)
+    {
+        size_t binding_hash = b.binding | b.descriptorType << 8 | b.descriptorCount << 16 | b.stageFlags << 24;
+        result ^= std::hash<size_t>()(binding_hash);
+    }
+
+    return result;
 }

@@ -1,8 +1,5 @@
 #include "graphics.h"
-#include "core/event.h"
 #include "enums.h"
-#include "buffers/buffer_layout.h"
-#include "core/time.h"
 #include "instance.h"
 #include "window/surface.h"
 #include "devices/physical_device.h"
@@ -11,9 +8,8 @@
 #include "allocators/command_pool.h"
 #include "descriptors/descriptor_pool.h"
 #include "allocators/allocator.h"
-#include "pipeline/graphics_pipeline.h"
-#include "pipeline/compute_pipeline.h"
 #include "buffers/uniform_buffer.h"
+#include "descriptors/descriptor_set.h"
 
 void Graphics::init()
 {

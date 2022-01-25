@@ -1,6 +1,6 @@
 #pragma once
 
-#include "entity.h"
+#include "scene/entity.h"
 #include "utils/delta.h"
 
 class CameraController : public ScriptableEntity

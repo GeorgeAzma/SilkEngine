@@ -1,6 +1,6 @@
 #include "camera_controller.h"
 #include "core/input/input.h"
-#include "components.h"
+#include "scene/components.h"
 #include "utils/math.h"
 #include "gfx/window/window.h"
 #include "core/input/keys.h"

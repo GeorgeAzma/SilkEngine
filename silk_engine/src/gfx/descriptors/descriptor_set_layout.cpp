@@ -22,11 +22,9 @@ void DescriptorSetLayout::build()
 	layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 
 	size_t index = 0;
-	std::vector<VkDescriptorSetLayoutBinding> bindings_vector(bindings.size());
-	for (auto binding : bindings) 
-	{
+	bindings_vector.resize(bindings.size());
+	for (const auto& binding : bindings) 
 		bindings_vector[index++] = binding.second;
-	}
 
 	layout_info.bindingCount = bindings_vector.size();
 	layout_info.pBindings = bindings_vector.data();

@@ -16,7 +16,7 @@ public:
 	GraphicsPipeline& setVertexLayout(const BufferLayout& layout);
 	GraphicsPipeline& setSampleCount(VkSampleCountFlagBits sample_count);
 	GraphicsPipeline& setRenderPass(VkRenderPass render_pass);
-	GraphicsPipeline& addDescriptorSetLayout(const DescriptorSetLayout& layout);
+	GraphicsPipeline& addDescriptorSetLayout(shared<DescriptorSetLayout> layout);
 	GraphicsPipeline& addDynamicState(VkDynamicState dynamic_state);
 	GraphicsPipeline& addPushConstant(size_t size, VkShaderStageFlags shader_stages, size_t offset = 0);
 	GraphicsPipeline& enable(EnableTag tag);

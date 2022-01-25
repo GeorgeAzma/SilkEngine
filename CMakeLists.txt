@@ -176,7 +176,7 @@ file(GLOB_RECURSE VULKAN_ENGINE_SOURCES
 "silk_engine/src/*.cpp")
 
 #Create VulkanEngine.lib
-add_library(VulkanEngine STATIC ${VULKAN_ENGINE_SOURCES} "silk_engine/src/utils/math.h" "silk_engine/src/scene/camera.cpp")
+add_library(VulkanEngine STATIC ${VULKAN_ENGINE_SOURCES})
 
 #Include dirs
 target_include_directories(VulkanEngine PUBLIC 
@@ -259,7 +259,7 @@ target_link_libraries(VulkanEngine ${EXTRA_LIBS})
 ############################__SANDBOX__#####################################
 file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp")
 
-add_executable(Sandbox ${SANDBOX_SOURCES} "silk_engine/src/utils/math.h" "silk_engine/src/scene/camera.cpp")
+add_executable(Sandbox ${SANDBOX_SOURCES})
 
 target_link_libraries(Sandbox PRIVATE VulkanEngine)
 

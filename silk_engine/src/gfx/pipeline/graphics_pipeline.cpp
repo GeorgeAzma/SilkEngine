@@ -44,9 +44,9 @@ GraphicsPipeline& GraphicsPipeline::setRenderPass(VkRenderPass render_pass)
 	return *this;
 }
 
-GraphicsPipeline& GraphicsPipeline::addDescriptorSetLayout(const DescriptorSetLayout& layout)
+GraphicsPipeline& GraphicsPipeline::addDescriptorSetLayout(shared<DescriptorSetLayout> layout)
 {
-	descriptor_set_layouts.emplace_back((const VkDescriptorSetLayout&)layout);
+	descriptor_set_layouts.push_back(*layout);
 	return *this;
 }
 

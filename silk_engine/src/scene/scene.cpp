@@ -16,20 +16,20 @@ Scene::Scene()
 	registry.on_destroy<RenderComponent>().connect<&Scene::onComponentDestroy>(this);
 	indirect_buffer = std::make_shared<IndirectBuffer>(Graphics::MAX_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
 
-	auto white = Resources::getImage("White");
-	auto null = Resources::getImage("Null");
-	shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>(*Resources::getMaterial("3D")->descriptor_set_layout);
-	descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE })
-		.addImages(1, { *white, *white, *white, *white,
-			*white, *white, *white, *white,
-			*white, *white, *white, *white,
-			*white, *white, *white, *white,
-			*white, *white, *white, *white,
-			*white, *white, *white, *white,
-			*white, *white, *white, *white,
-			*white, *white, *white, *white })
-		.build();
-	
+	auto white_image = Resources::getImage("White");
+	shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>();
+	descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE }, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,VK_SHADER_STAGE_VERTEX_BIT)
+		.addImages(1, {
+			*white_image, *white_image, *white_image, *white_image,
+			*white_image, *white_image, *white_image, *white_image,
+			*white_image, *white_image, *white_image, *white_image,
+			*white_image, *white_image, *white_image, *white_image,
+			*white_image, *white_image, *white_image, *white_image,
+			*white_image, *white_image, *white_image, *white_image,
+			*white_image, *white_image, *white_image, *white_image,
+			*white_image, *white_image, *white_image, *white_image
+		}, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT).build();
+
 	material_data = makeShared<MaterialData>(Resources::getMaterial("3D"), descriptor_set);
 }
 
@@ -78,7 +78,7 @@ void Scene::onUpdate()
 	{
 		Graphics::global_uniform->setDataChecked(&main_camera->camera.projection_view, sizeof(glm::mat4), 0);
 	}
-	
+
 	if (indirect_batches.size())
 	{
 		std::vector<VkDrawIndexedIndirectCommand> draw_commands;
@@ -89,15 +89,15 @@ void Scene::onUpdate()
 				batch.render_object.mesh->vertex_array->getVertexBuffer(1)->setData(batch.instance_datas.data(), batch.instance_datas.size() * sizeof(InstanceData), 0);
 				batch.needs_update = false;
 			}
-				VkDrawIndexedIndirectCommand draw_indexed_indirect_command{};
-				draw_indexed_indirect_command.firstIndex = 0;
-				draw_indexed_indirect_command.firstInstance = 0;
-				draw_indexed_indirect_command.indexCount = batch.render_object.mesh->indices.size();
-				draw_indexed_indirect_command.instanceCount = batch.instance_datas.size();
-				draw_indexed_indirect_command.vertexOffset = 0;
-				draw_commands.emplace_back(std::move(draw_indexed_indirect_command));
+			VkDrawIndexedIndirectCommand draw_indexed_indirect_command{};
+			draw_indexed_indirect_command.firstIndex = 0;
+			draw_indexed_indirect_command.firstInstance = 0;
+			draw_indexed_indirect_command.indexCount = batch.render_object.mesh->indices.size();
+			draw_indexed_indirect_command.instanceCount = batch.instance_datas.size();
+			draw_indexed_indirect_command.vertexOffset = 0;
+			draw_commands.emplace_back(std::move(draw_indexed_indirect_command));
 		}
-		
+
 		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(draw_commands[0]));
 
 		Graphics::swap_chain->beginRenderPass();
@@ -151,7 +151,7 @@ void Scene::onComponentCreate(entt::registry& registry, entt::entity entity)
 	InstanceData instance_data{};
 
 	if (registry.any_of<TransformComponent>(entity))
-		instance_data.transform = registry.get<TransformComponent>(entity).transform;	
+		instance_data.transform = registry.get<TransformComponent>(entity).transform;
 
 	if (registry.any_of<SpriteComponent>(entity))
 		instance_data.texture_index = registry.get<SpriteComponent>(entity).texture_index;

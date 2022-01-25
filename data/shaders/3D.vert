@@ -16,7 +16,7 @@ layout(location = 0) out VertexOutput
     flat vec4 color;
 } vertex_output;
 
-layout(binding = 0) uniform GlobalUniform
+layout(set = 0, binding = 0) uniform GlobalUniform
 {
     mat4 projection_view;
 } global_uniform;

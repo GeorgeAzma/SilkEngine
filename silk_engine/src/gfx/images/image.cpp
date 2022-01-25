@@ -83,8 +83,7 @@ void Image::create(const ImageProps& props)
 	if (staging_buffer.get() != nullptr)
 	{
 		transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-		DebugTimer t;
-		copyBufferToImage(); t.stop();
+		copyBufferToImage();
 		if (props.mipmap)
 		{
 			generateMipmaps();
