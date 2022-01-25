@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/event.h"
-#include "render_object.h"
+#include "render_objects.h"
 #include "gfx/buffers/indirect_buffer.h"
 #include "gfx/buffers/storage_buffer.h"
 
@@ -27,8 +27,8 @@ private:
 	void onRenderComponentDestroy(entt::registry& registry, entt::entity entity);
 
 private:
-	void addBatchRenderObject(RenderObject render_object);
-	void removeBatchRenderObject(const RenderObject& render_object);
+	void addInstance(const RenderedInstance& instance);
+	void removeInstance(const RenderedInstance& instance);
 
 private:
 	entt::registry registry;
@@ -88,9 +88,9 @@ for (size_t i = 0; i < indirect_batches.size(); ++i)
 {
 	auto& batch = indirect_batches[i];
 	CullData cull_data{};
-	cull_data.min = batch.render_object.mesh->aabb.min;
+	cull_data.min = batch.instance.mesh->aabb.min;
 	cull_data.index = index++;
-	cull_data.max = batch.render_object.mesh->aabb.max;
+	cull_data.max = batch.instance.mesh->aabb.max;
 	cull_data.count = batch.instance_datas.size();
 	memcpy(cull_data.planes.data(), main_camera->camera.frustum.getPlanes().data(), cull_data.planes.size() * sizeof(glm::vec4));
 
@@ -134,7 +134,7 @@ for (size_t i = 0; i < indirect_batches.size(); ++i)
 		}
 	}
 	if (rendered_instances.size())
-		indirect_batches[i].render_object.mesh->vertex_array->getVertexBuffer(1)->setData(rendered_instances.data(), rendered_instances.size() * sizeof(InstanceData));
+		indirect_batches[i].instance.mesh->vertex_array->getVertexBuffer(1)->setData(rendered_instances.data(), rendered_instances.size() * sizeof(InstanceData));
 	SK_INFO(rendered_instances.size());
 }
 */

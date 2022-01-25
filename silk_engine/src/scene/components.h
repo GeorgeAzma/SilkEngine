@@ -60,9 +60,9 @@ struct MeshComponent
 
 struct RenderComponent
 {
-	RenderObject render_object;
+	RenderedInstance instance;
 
-	operator const RenderObject& () const { return render_object; }
+	operator const RenderedInstance& () const { return instance; }
 };
 
 struct ColorComponent

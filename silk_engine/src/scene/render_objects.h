@@ -12,31 +12,30 @@ struct CullData
 	std::array<glm::vec4, 6> planes;
 };
 
-struct RenderObject
+struct RenderedInstance
 {
 	shared<Mesh> mesh;
 	shared<MaterialData> material_data;
 
 	InstanceData instance_data;
 
-	bool operator==(const RenderObject& other) const
+	bool operator==(const RenderedInstance& other) const
 	{
-		return (*mesh == *other.mesh) 
-			&& (*other.material_data->material == *material_data->material);
+		return (*mesh == *other.mesh) && (*other.material_data->material == *material_data->material);
 	}
 };
 
 struct IndirectBatch
 {
-	RenderObject render_object;
+	RenderedInstance instance;
 
 	std::vector<InstanceData> instance_datas;
 
 	bool needs_update = true;
 
-	bool operator==(const RenderObject& render_object) const
+	bool operator==(const RenderedInstance& instance) const
 	{
-		return this->render_object == render_object;
+		return this->instance == instance;
 	}
 };
 
@@ -47,4 +46,11 @@ struct BatchData
 	glm::vec3 normal;
 	glm::vec4 color;
 	uint32_t texture_index;
+};
+
+struct Batch
+{
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
+	shared<VertexArray> vertex_array;
 };

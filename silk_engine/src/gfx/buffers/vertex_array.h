@@ -6,7 +6,6 @@
 class VertexArray
 {
 public:
-	VertexArray();
 	~VertexArray();
 
 	VertexArray& addVertexBuffer(shared<VertexBuffer> vertex_buffer);

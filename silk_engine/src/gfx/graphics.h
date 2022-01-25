@@ -26,9 +26,15 @@ public:
 	} stats;
 public:
 	static void init();
-
 	static void cleanup();
 
+public: //Commands
+	//static void beginBatch();
+	//static void endBatch();
+	//static void drawLastBatch();
+	//static void drawBatch(const std::vector<Batch>& batch);
+
+public:
 	static void vulkanAssert(VkResult result);
 
 public:
@@ -59,6 +65,7 @@ public:
 		VkRenderPass render_pass = VK_NULL_HANDLE;
 		uint32_t subpass = 0;
 	} active;
+
 private:
 	static constexpr std::string stringifyResult(VkResult result);
 };

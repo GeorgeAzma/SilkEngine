@@ -1,10 +1,6 @@
 #include "vertex_array.h"
 #include "gfx/graphics.h"
 
-VertexArray::VertexArray()
-{
-}
-
 VertexArray::~VertexArray()
 {
 	for (auto& vertex_buffer : vertex_buffers)

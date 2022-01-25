@@ -65,6 +65,7 @@ void Scene::onUpdate()
 {
 	Graphics::swap_chain->beginFrame();
 
+	//Update components
 	registry.view<ScriptComponent>().each(
 		[&](auto entity, auto& script_component)
 		{
@@ -78,54 +79,57 @@ void Scene::onUpdate()
 		{
 			main_camera = &camera_component;
 		});
-
 	//TODO: not too scalable
 	if (main_camera)
-	{
 		Graphics::global_uniform->setDataChecked(&main_camera->camera.projection_view, sizeof(glm::mat4), 0);
-	}
 
 	if (indirect_batches.size())
 	{
+		//Create draw commands and set rendered vertex buffer's instance data
 		std::vector<VkDrawIndexedIndirectCommand> draw_commands;
 		for (auto& batch : indirect_batches)
 		{
 			if (batch.needs_update && batch.instance_datas.size())
 			{
-				batch.render_object.mesh->vertex_array->getVertexBuffer(1)->setData(batch.instance_datas.data(), batch.instance_datas.size() * sizeof(InstanceData), 0);
+				batch.instance.mesh->vertex_array->getVertexBuffer(1)->setData(batch.instance_datas.data(), batch.instance_datas.size() * sizeof(InstanceData), 0);
 				batch.needs_update = false;
 			}
 			VkDrawIndexedIndirectCommand draw_indexed_indirect_command{};
 			draw_indexed_indirect_command.firstIndex = 0;
 			draw_indexed_indirect_command.firstInstance = 0;
-			draw_indexed_indirect_command.indexCount = batch.render_object.mesh->indices.size();
+			draw_indexed_indirect_command.indexCount = batch.instance.mesh->indices.size();
 			draw_indexed_indirect_command.instanceCount = batch.instance_datas.size();
 			draw_indexed_indirect_command.vertexOffset = 0;
 			draw_commands.emplace_back(std::move(draw_indexed_indirect_command));
 		}
-
 		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(draw_commands[0]));
 
+		//Drawing
 		Graphics::swap_chain->beginRenderPass();
+		
+		//Draw instances
 		for (size_t i = 0; i < indirect_batches.size(); ++i)
 		{
 			if (!draw_commands[i].instanceCount)
 				continue;
 
-			indirect_batches[i].render_object.material_data->material->pipeline->bind();
-			indirect_batches[i].render_object.mesh->vertex_array->bind();
+			indirect_batches[i].instance.material_data->material->pipeline->bind();
+			indirect_batches[i].instance.mesh->vertex_array->bind();
 			VkDescriptorSetLayoutBinding b{};
 			b.binding = 0;
 			b.descriptorCount = 1;
 			b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-			for (size_t j = 0; j < indirect_batches[i].render_object.material_data->descriptor_sets.size(); ++j)
-				indirect_batches[i].render_object.material_data->descriptor_sets[j]->bind(j);
+			for (size_t j = 0; j < indirect_batches[i].instance.material_data->descriptor_sets.size(); ++j)
+				indirect_batches[i].instance.material_data->descriptor_sets[j]->bind(j);
 			
 			vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
 		}
+		
+		//End draw
 		Graphics::swap_chain->endRenderPass();
+
 		Graphics::swap_chain->endFrame();
 	}
 }
@@ -173,9 +177,9 @@ void Scene::onRenderComponentCreate(entt::registry& registry, entt::entity entit
 	if (registry.any_of<ColorComponent>(entity))
 		instance_data.color = registry.get<ColorComponent>(entity).color;
 
-	render_component.render_object.instance_data = std::move(instance_data);
-	render_component.render_object.material_data = material_data;
-	addBatchRenderObject(render_component.render_object);
+	render_component.instance.instance_data = std::move(instance_data);
+	render_component.instance.material_data = material_data;
+	addInstance(render_component.instance);
 }
 
 void Scene::onRenderComponentDestroy(entt::registry& registry, entt::entity entity) //TODO: Fix the error
@@ -184,34 +188,34 @@ void Scene::onRenderComponentDestroy(entt::registry& registry, entt::entity enti
 		return;
 
 	auto& render_component = registry.get<RenderComponent>(entity);
-	removeBatchRenderObject(render_component.render_object);
+	removeInstance(render_component.instance);
 }
 
-void Scene::addBatchRenderObject(RenderObject render_object)
+void Scene::addInstance(const RenderedInstance& instance)
 {
 	for (size_t i = 0; i < indirect_batches.size(); ++i)
 	{
-		if (indirect_batches[i].render_object == render_object)
+		if (indirect_batches[i].instance == instance)
 		{
-			indirect_batches[i].instance_datas.emplace_back(render_object.instance_data);
+			indirect_batches[i].instance_datas.emplace_back(instance.instance_data);
 			indirect_batches[i].needs_update = true;
 			return;
 		}
 	}
 
-	indirect_batches.emplace_back(render_object, std::vector<InstanceData>{render_object.instance_data});
+	indirect_batches.emplace_back(instance, std::vector<InstanceData>{instance.instance_data});
 }
 
-void Scene::removeBatchRenderObject(const RenderObject& render_object)
+void Scene::removeInstance(const RenderedInstance& instance)
 {
 	for (size_t i = 0; i < indirect_batches.size(); ++i)
 	{
-		if (indirect_batches[i].render_object == render_object)
+		if (indirect_batches[i].instance == instance)
 		{
 			//TODO: This is slow
 			for (size_t j = 0; j < indirect_batches[i].instance_datas.size(); ++j)
 			{
-				if (indirect_batches[i].instance_datas[j] == render_object.instance_data)
+				if (indirect_batches[i].instance_datas[j] == instance.instance_data)
 				{
 					std::swap(indirect_batches[i].instance_datas[j], indirect_batches[i].instance_datas.back());
 					indirect_batches[i].instance_datas.pop_back();
