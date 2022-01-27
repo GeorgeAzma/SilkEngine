@@ -142,6 +142,9 @@ size_t EnumInfo::size(IndexType index_type)
 	case IndexType::UINT32:
 		return 4;
 	}
+
+	SK_ERROR("Unsoppurted index type specified: {0}", index_type);
+	return 0;
 }
 
 size_t EnumInfo::count(Type type)

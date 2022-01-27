@@ -28,18 +28,14 @@ public:
 	static void init();
 	static void cleanup();
 
-public: //Commands
-	//static void beginBatch();
-	//static void endBatch();
-	//static void drawLastBatch();
-	//static void drawBatch(const std::vector<Batch>& batch);
-
 public:
 	static void vulkanAssert(VkResult result);
 
 public:
 	static constexpr size_t MAX_INSTANCES = 1024 * 1024;
 	static constexpr size_t MAX_BATCHES = 1024;
+	static constexpr size_t MAX_BATCH_VERTICES = 1024 * 1024;
+	static constexpr size_t MAX_BATCH_INDICES = 1024 * 1024 * 2;
 	static constexpr size_t MAX_TEXTURE_SLOTS = 32;
 	static constexpr uint32_t API_VERSION = VK_API_VERSION_1_2;
 

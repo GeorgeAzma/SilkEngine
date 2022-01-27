@@ -24,6 +24,7 @@
 #include "utils/thread_pool.h"
 
 #include "gfx/graphics.h"
+#include "gfx/renderer.h"
 #include "gfx/enums.h"
 
 #include "gfx/allocators/command_pool.h"

@@ -62,8 +62,8 @@ void Resources::init()
             .build();
         addDescriptorSetLayout(descriptor_set_layout);
 
-        shared<Shader> shader = makeShared<Shader>(std::vector<std::string>{"3D.vert", "3D.frag"}); //1.65ms
-        shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>(); //1.35ms
+        shared<Shader> shader = makeShared<Shader>(std::vector<std::string>{"3D.vert", "3D.frag"});
+        shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
         graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
             .enable(EnableTag::DEPTH_TEST)
             .enable(EnableTag::DEPTH_WRITE)
@@ -75,6 +75,20 @@ void Resources::init()
             .setRenderPass(Graphics::swap_chain->getRenderPass())
             .build();
         addMaterial("3D", makeShared<Material>(graphics_pipeline));
+        
+        shader = makeShared<Shader>(std::vector<std::string>{"batch3D.vert", "batch3D.frag"});
+        graphics_pipeline = makeShared<GraphicsPipeline>();
+        graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
+            .enable(EnableTag::DEPTH_TEST)
+            .enable(EnableTag::DEPTH_WRITE)
+            .addDescriptorSetLayout(global_descriptor_set_layout)
+            .addDescriptorSetLayout(descriptor_set_layout)
+            .setShader(shader)
+            .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::UINT }, { Type::VEC4 } })
+            .setSampleCount(Graphics::swap_chain->getSampleCount())
+            .setRenderPass(Graphics::swap_chain->getRenderPass())
+            .build();
+        addMaterial("Batch3D", makeShared<Material>(graphics_pipeline));
     }
     
     //COMPUTE MATERIALS
