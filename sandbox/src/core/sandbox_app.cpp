@@ -9,8 +9,9 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     camera->addComponent<CameraComponent>();
     camera->addComponent<ScriptComponent>().bind<CameraController>();
 
+    //Renderer::beginBatch();
     auto circle = Resources::getMesh("Circle");
-    circles.resize(0);
+    circles.resize(20);
     for (size_t i = 0; i < circles.size(); ++i)
     {
         circles[i] = scene->createEntity();
@@ -19,24 +20,29 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     }
 
     auto rectangle = Resources::getMesh("Rectangle");
-    squares.resize(65536);
+    squares.resize(0);
     size_t square_root = std::sqrt(squares.size());
     for (size_t i = 0; i < squares.size(); ++i)
     {
         squares[i] = scene->createEntity();
-        squares[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(i % square_root, (float)i / square_root, 1.0f)));
+        squares[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(i % square_root, i / square_root, 1.0f)));
         squares[i]->addComponent<SpriteComponent>((uint32_t)RNG::Bool());
         squares[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         squares[i]->addComponent<RenderComponent>(rectangle);
     }
 
-    Font font("arial.ttf");
+    //Font font("arial.ttf");
 
     scene->onPlay();
+
+    //Renderer::endBatch();
 }
 
 void SandboxApp::onUpdate()
 {  
+    if (Input::isKeyDown(Keys::X))
+        squares.pop_back();
+
     scene->onUpdate();
 }
 

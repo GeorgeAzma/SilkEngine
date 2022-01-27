@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/event.h"
-#include "render_objects.h"
+#include "instance.h"
 #include "gfx/buffers/indirect_buffer.h"
 #include "gfx/buffers/storage_buffer.h"
 
@@ -27,14 +27,16 @@ private:
 	void onRenderComponentDestroy(entt::registry& registry, entt::entity entity);
 
 private:
+	void addBatchedInstance(const RenderedInstance& instance);
 	void addInstance(const RenderedInstance& instance);
 	void removeInstance(const RenderedInstance& instance);
 
 private:
 	entt::registry registry;
-	std::vector<IndirectBatch> indirect_batches;
+	std::vector<Instances> instances;
 	shared<IndirectBuffer> indirect_buffer;
-	shared<MaterialData> material_data;
+	shared<MaterialData> material_data_3D;
+	shared<MaterialData> material_data_batch3D;
 
 	bool stopped = false;
 };

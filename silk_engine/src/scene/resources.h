@@ -1,7 +1,7 @@
 #pragma once
 
 #include "meshes/mesh.h"
-#include "render_object.h"
+#include "material.h"
 #include "gfx/ui/font.h"
 
 class Resources

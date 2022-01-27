@@ -8,6 +8,7 @@
 #include "gfx/buffers/uniform_buffer.h"
 #include "utils/general_utils.h"
 #include "gfx/window/swap_chain.h"
+#include "gfx/renderer.h"
 
 Scene::Scene()
 {
@@ -26,7 +27,7 @@ Scene::Scene()
 	auto null_image = Resources::getImage("Null");
 	shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>();
 	descriptor_set->addImages(0, {
-			*null_image, * white_image, *white_image, *white_image,
+			*white_image, *null_image, *white_image, *white_image,
 			*white_image, *white_image, *white_image, *white_image,
 			*white_image, *white_image, *white_image, *white_image,
 			*white_image, *white_image, *white_image, *white_image,
@@ -36,7 +37,8 @@ Scene::Scene()
 			*white_image, *white_image, *white_image, *white_image
 		}, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT).build();
 
-	material_data = makeShared<MaterialData>(Resources::getMaterial("3D"), std::vector<shared<DescriptorSet>>{ global_descriptor_set, descriptor_set });
+	material_data_3D = makeShared<MaterialData>(Resources::getMaterial("3D"), std::vector<shared<DescriptorSet>>{ global_descriptor_set, descriptor_set });
+	material_data_batch3D = makeShared<MaterialData>(Resources::getMaterial("Batch3D"), std::vector<shared<DescriptorSet>>{ global_descriptor_set, descriptor_set });
 }
 
 Scene::~Scene()
@@ -82,12 +84,12 @@ void Scene::onUpdate()
 	//TODO: not too scalable
 	if (main_camera)
 		Graphics::global_uniform->setDataChecked(&main_camera->camera.projection_view, sizeof(glm::mat4), 0);
-
-	if (indirect_batches.size())
+	
+	std::vector<VkDrawIndexedIndirectCommand> draw_commands;
+	if (instances.size())
 	{
 		//Create draw commands and set rendered vertex buffer's instance data
-		std::vector<VkDrawIndexedIndirectCommand> draw_commands;
-		for (auto& batch : indirect_batches)
+		for (auto& batch : instances)
 		{
 			if (batch.needs_update && batch.instance_datas.size())
 			{
@@ -103,35 +105,32 @@ void Scene::onUpdate()
 			draw_commands.emplace_back(std::move(draw_indexed_indirect_command));
 		}
 		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(draw_commands[0]));
-
-		//Drawing
-		Graphics::swap_chain->beginRenderPass();
-		
-		//Draw instances
-		for (size_t i = 0; i < indirect_batches.size(); ++i)
-		{
-			if (!draw_commands[i].instanceCount)
-				continue;
-
-			indirect_batches[i].instance.material_data->material->pipeline->bind();
-			indirect_batches[i].instance.mesh->vertex_array->bind();
-			VkDescriptorSetLayoutBinding b{};
-			b.binding = 0;
-			b.descriptorCount = 1;
-			b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-			for (size_t j = 0; j < indirect_batches[i].instance.material_data->descriptor_sets.size(); ++j)
-				indirect_batches[i].instance.material_data->descriptor_sets[j]->bind(j);
-			
-			vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
-		}
-		
-		//End draw
-		Graphics::swap_chain->endRenderPass();
-
-		Graphics::swap_chain->endFrame();
 	}
+
+	//Drawing
+	Graphics::swap_chain->beginRenderPass();
+	
+	//Draw instances
+	for (size_t i = 0; i < instances.size(); ++i)
+	{
+		if (!draw_commands[i].instanceCount)
+			continue;
+
+		instances[i].instance.material_data->material->pipeline->bind();
+		instances[i].instance.mesh->vertex_array->bind();
+		for (size_t j = 0; j < instances[i].instance.material_data->descriptor_sets.size(); ++j)
+			instances[i].instance.material_data->descriptor_sets[j]->bind(j);
+		
+		vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
+	}
+
+	Renderer::drawLastBatch();
+	
+	//End draw
+	Graphics::swap_chain->endRenderPass();
+
+	Graphics::swap_chain->endFrame();
+
 }
 
 void Scene::onStop()
@@ -178,8 +177,16 @@ void Scene::onRenderComponentCreate(entt::registry& registry, entt::entity entit
 		instance_data.color = registry.get<ColorComponent>(entity).color;
 
 	render_component.instance.instance_data = std::move(instance_data);
-	render_component.instance.material_data = material_data;
-	addInstance(render_component.instance);
+	render_component.instance.material_data = Renderer::batcher.active ? material_data_batch3D : material_data_3D;
+
+	if (Renderer::batcher.active)
+	{
+		addBatchedInstance(render_component.instance);
+	}
+	else
+	{
+		addInstance(render_component.instance);
+	}
 }
 
 void Scene::onRenderComponentDestroy(entt::registry& registry, entt::entity entity) //TODO: Fix the error
@@ -191,39 +198,106 @@ void Scene::onRenderComponentDestroy(entt::registry& registry, entt::entity enti
 	removeInstance(render_component.instance);
 }
 
+void Scene::addBatchedInstance(const RenderedInstance& instance)
+{
+	const Mesh& mesh = *instance.mesh;
+	//Add new batch if out of vertices/indices
+	if (Renderer::batcher.batches.empty() || 
+		Renderer::batcher.vertices_index + mesh.vertices.size() >= Renderer::batcher.batches.back().vertices.size() ||
+		Renderer::batcher.indices_index + mesh.indices.size() >= Renderer::batcher.batches.back().indices.size())
+	{
+		Renderer::addBatch();
+	}
+
+	//Add new batch if no current batches maches.
+	Batch& batch = Renderer::batcher.batches.back();
+	bool batch_found = false;
+
+	if (!batch.material_data.get())
+	{
+		batch.material_data = instance.material_data;
+		batch_found = true;
+	}
+
+	if (instance.material_data != batch.material_data)
+	{
+		for (size_t i = 0; i < Renderer::batcher.batches.size(); ++i)
+		{
+			if (Renderer::batcher.batches[i].material_data == instance.material_data)
+			{
+				//TODO: am not sure about this
+				std::swap(Renderer::batcher.batches[i], Renderer::batcher.batches.back());
+				batch = Renderer::batcher.batches.back();
+				batch_found = true;
+				break;
+			}
+		}
+	}
+	else
+	{
+		batch_found = true;
+	}
+
+	if (!batch_found)
+	{
+		Renderer::addBatch();
+		Renderer::batcher.batches.back().material_data = instance.material_data;
+		batch = Renderer::batcher.batches.back();
+	}
+
+	for (size_t i = 0; i < mesh.vertices.size(); ++i)
+	{
+		BatchVertex batch_vertex{};
+		batch_vertex.position = instance.instance_data.transform * glm::vec4(mesh.vertices[i].position, 1);
+		batch_vertex.texture_coordinates = mesh.vertices[i].texture_coordinates;
+		batch_vertex.normal = mesh.vertices[i].normal;
+		batch_vertex.texture_index = instance.instance_data.texture_index;
+		batch_vertex.color = instance.instance_data.color;
+		batch.vertices[Renderer::batcher.vertices_index++] = std::move(batch_vertex);
+	}
+
+	for (size_t i = 0; i < mesh.indices.size(); ++i)
+	{
+		batch.indices[Renderer::batcher.indices_index++] = Renderer::batcher.index_offset + mesh.indices[i];
+	}
+	Renderer::batcher.index_offset += mesh.vertices.size();
+
+	Renderer::batcher.batches.back().needs_update = true;
+}
+
 void Scene::addInstance(const RenderedInstance& instance)
 {
-	for (size_t i = 0; i < indirect_batches.size(); ++i)
+	for (size_t i = 0; i < instances.size(); ++i)
 	{
-		if (indirect_batches[i].instance == instance)
+		if (instances[i].instance == instance)
 		{
-			indirect_batches[i].instance_datas.emplace_back(instance.instance_data);
-			indirect_batches[i].needs_update = true;
+			instances[i].instance_datas.emplace_back(instance.instance_data);
+			instances[i].needs_update = true;
 			return;
 		}
 	}
 
-	indirect_batches.emplace_back(instance, std::vector<InstanceData>{instance.instance_data});
+	instances.emplace_back(instance, std::vector<InstanceData>{instance.instance_data});
 }
 
 void Scene::removeInstance(const RenderedInstance& instance)
 {
-	for (size_t i = 0; i < indirect_batches.size(); ++i)
+	for (size_t i = 0; i < instances.size(); ++i)
 	{
-		if (indirect_batches[i].instance == instance)
+		if (instances[i].instance == instance)
 		{
 			//TODO: This is slow
-			for (size_t j = 0; j < indirect_batches[i].instance_datas.size(); ++j)
+			for (size_t j = 0; j < instances[i].instance_datas.size(); ++j)
 			{
-				if (indirect_batches[i].instance_datas[j] == instance.instance_data)
+				if (instances[i].instance_datas[j] == instance.instance_data)
 				{
-					std::swap(indirect_batches[i].instance_datas[j], indirect_batches[i].instance_datas.back());
-					indirect_batches[i].instance_datas.pop_back();
-					indirect_batches[i].needs_update = true;
-					if (indirect_batches[i].instance_datas.empty())
+					std::swap(instances[i].instance_datas[j], instances[i].instance_datas.back());
+					instances[i].instance_datas.pop_back();
+					instances[i].needs_update = true;
+					if (instances[i].instance_datas.empty())
 					{
-						std::swap(indirect_batches[i], indirect_batches.back());
-						indirect_batches.pop_back();
+						std::swap(instances[i], instances.back());
+						instances.pop_back();
 					}
 					return;
 				}

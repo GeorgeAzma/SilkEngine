@@ -3,7 +3,7 @@
 #include "gfx/window/window.h"
 #include "core/log.h"
 #include "utils/math.h"
-#include "scene/render_object.h"
+#include "scene/instance.h"
 #include "scene/camera/camera.h"
 
 struct TransformComponent
