@@ -25,6 +25,7 @@ Checkout the engine files as an example to see our coding style, read this for q
         Folders
         Variables
         Lambdas
+        Namespaces
 
     -------Kebab-------
 
@@ -59,6 +60,7 @@ Disclaimer: Following these notes isn't neccessary but would be preferable
 - Declarations like "friend class SomeClass;" should go on top 
   of the class, even on top of access specifiers and it should 
   be in implicit private access specifier
+- Don't use std:: on primitive functions like std::sqrt
 
 ---------------- Shaders ----------------
 

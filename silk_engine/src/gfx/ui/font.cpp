@@ -28,7 +28,7 @@ Font::Font(const std::string& file, size_t size)
 	unsigned int row_height = 0;
 	
 	//This is just random assumption to make aspect ratio as tight as possible
-	const unsigned int max_width = size * std::sqrt(MAX_CHARACTER_COUNT); 
+	const unsigned int max_width = size * sqrt(MAX_CHARACTER_COUNT); 
 	SK_ASSERT(max_width > 0, "FreeType: Invalid texture input, it is too small");
 
 	for (size_t i = 0; i < MAX_CHARACTER_COUNT; ++i)

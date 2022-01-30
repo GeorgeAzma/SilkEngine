@@ -3,6 +3,7 @@
 #include "gfx/buffers/indirect_buffer.h"
 #include "gfx/buffers/vertex_array.h"
 #include "material.h"
+#include "instance.h"
 
 struct BatchVertex
 {
@@ -17,17 +18,28 @@ struct Batch
 {
 	std::vector<BatchVertex> vertices;
 	std::vector<uint32_t> indices;
+	size_t vertices_index = 0;
+	size_t indices_index = 0;
 	shared<VertexArray> vertex_array = nullptr;
-	shared<IndirectBuffer> indirect_buffer = nullptr;
 	shared<MaterialData> material_data = nullptr;
 	bool needs_update = true;
+
+	void addVertex(const BatchVertex& vertex)
+	{
+		vertices[vertices_index++] = vertex;
+	}
+
+	void addIndex(uint32_t index)
+	{
+		indices[indices_index++] = index;
+	}
+
+	void addInstance(const RenderedInstance& instance, uint32_t index_offset);
 };
 
 struct Batcher
 {
 	std::vector<Batch> batches;
-	size_t vertices_index = 0;
-	size_t indices_index = 0;
 	size_t index_offset = 0;
 	bool active = false;
 };

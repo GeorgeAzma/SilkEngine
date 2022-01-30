@@ -5,7 +5,7 @@
 #include "gfx/devices/physical_device.h"
 
 Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_usage)
-	: size{size}
+	: size(size)
 {
 	VkBufferCreateInfo buffer_info{};
 	buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

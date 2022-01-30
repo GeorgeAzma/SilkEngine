@@ -17,7 +17,7 @@ Scene::Scene()
 	registry.on_construct<RenderComponent>().connect<&Scene::onRenderComponentCreate>(this);
 	registry.on_destroy<RenderComponent>().connect<&Scene::onRenderComponentDestroy>(this);
 
-	indirect_buffer = std::make_shared<IndirectBuffer>(Graphics::MAX_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
+	indirect_buffer = std::make_shared<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
 	
 	shared<DescriptorSet> global_descriptor_set = makeShared<DescriptorSet>();
 	global_descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE }, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
@@ -201,68 +201,49 @@ void Scene::onRenderComponentDestroy(entt::registry& registry, entt::entity enti
 void Scene::addBatchedInstance(const RenderedInstance& instance)
 {
 	const Mesh& mesh = *instance.mesh;
-	//Add new batch if out of vertices/indices
-	if (Renderer::batcher.batches.empty() || 
-		Renderer::batcher.vertices_index + mesh.vertices.size() >= Renderer::batcher.batches.back().vertices.size() ||
-		Renderer::batcher.indices_index + mesh.indices.size() >= Renderer::batcher.batches.back().indices.size())
+
+	SK_ASSERT(mesh.indices.size() < Graphics::MAX_BATCH_INDICES, 
+		"Batched instance has too much indices. max indices allowed is: {0}, but mesh has {1}", 
+		Graphics::MAX_BATCH_INDICES, mesh.indices.size());
+
+	SK_ASSERT(mesh.vertices.size() < Graphics::MAX_BATCH_VERTICES, 
+		"Batched instance has too much vertices. max verticees allowed is: {0}, but mesh has {1}", 
+		Graphics::MAX_BATCH_VERTICES, mesh.vertices.size());
+
+	bool should_add_batch = false;
+
+	if (Renderer::batcher.batches.empty())
 	{
-		Renderer::addBatch();
+		should_add_batch = true;
 	}
-
-	//Add new batch if no current batches maches.
-	Batch& batch = Renderer::batcher.batches.back();
-	bool batch_found = false;
-
-	if (!batch.material_data.get())
-	{
-		batch.material_data = instance.material_data;
-		batch_found = true;
-	}
-
-	if (instance.material_data != batch.material_data)
+	else if (instance.material_data != Renderer::batcher.batches.back().material_data)
 	{
 		for (size_t i = 0; i < Renderer::batcher.batches.size(); ++i)
 		{
 			if (Renderer::batcher.batches[i].material_data == instance.material_data)
 			{
-				//TODO: am not sure about this
 				std::swap(Renderer::batcher.batches[i], Renderer::batcher.batches.back());
-				batch = Renderer::batcher.batches.back();
-				batch_found = true;
 				break;
 			}
 		}
 	}
-	else
+
+	//If batch had not enough vertices/indices to store the mesh create a new batch
+	if (!Renderer::batcher.batches.empty() && 
+		(Renderer::batcher.batches.back().vertices_index + mesh.vertices.size() >= Renderer::batcher.batches.back().vertices.size() ||
+		Renderer::batcher.batches.back().indices_index + mesh.indices.size() >= Renderer::batcher.batches.back().indices.size()))
 	{
-		batch_found = true;
+		should_add_batch = true;
 	}
 
-	if (!batch_found)
+	if (should_add_batch)
 	{
 		Renderer::addBatch();
 		Renderer::batcher.batches.back().material_data = instance.material_data;
-		batch = Renderer::batcher.batches.back();
 	}
 
-	for (size_t i = 0; i < mesh.vertices.size(); ++i)
-	{
-		BatchVertex batch_vertex{};
-		batch_vertex.position = instance.instance_data.transform * glm::vec4(mesh.vertices[i].position, 1);
-		batch_vertex.texture_coordinates = mesh.vertices[i].texture_coordinates;
-		batch_vertex.normal = mesh.vertices[i].normal;
-		batch_vertex.texture_index = instance.instance_data.texture_index;
-		batch_vertex.color = instance.instance_data.color;
-		batch.vertices[Renderer::batcher.vertices_index++] = std::move(batch_vertex);
-	}
-
-	for (size_t i = 0; i < mesh.indices.size(); ++i)
-	{
-		batch.indices[Renderer::batcher.indices_index++] = Renderer::batcher.index_offset + mesh.indices[i];
-	}
-	Renderer::batcher.index_offset += mesh.vertices.size();
-
-	Renderer::batcher.batches.back().needs_update = true;
+	Renderer::batcher.batches.back().addInstance(instance, Renderer::batcher.index_offset);
+	Renderer::batcher.index_offset += instance.mesh->vertices.size();
 }
 
 void Scene::addInstance(const RenderedInstance& instance)

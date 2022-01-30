@@ -77,9 +77,9 @@ constexpr std::string Graphics::stringifyResult(VkResult result)
 	case VK_INCOMPLETE:
 		return "A return array was too small for the result";
 	case VK_ERROR_OUT_OF_HOST_MEMORY:
-		return "A host memory allocation has failed";
+		return "Out of host memory";
 	case VK_ERROR_OUT_OF_DEVICE_MEMORY:
-		return "A device memory allocation has failed";
+		return "Out of device memory";
 	case VK_ERROR_INITIALIZATION_FAILED:
 		return "Initialization of an object could not be completed for implementation-specific reasons";
 	case VK_ERROR_DEVICE_LOST:
