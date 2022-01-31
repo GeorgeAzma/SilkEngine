@@ -172,18 +172,15 @@ void Scene::onWindowResize(const WindowResizeEvent& e)
 void Scene::onRenderComponentCreate(entt::registry& registry, entt::entity entity)
 {
 	auto& render_component = registry.get<RenderComponent>(entity);
-	InstanceData instance_data{};
 
 	if (registry.any_of<TransformComponent>(entity))
-		instance_data.transform = registry.get<TransformComponent>(entity).transform;
+		render_component.instance.instance_data.transform = registry.get<TransformComponent>(entity).transform;
 
 	if (registry.any_of<SpriteComponent>(entity))
-		instance_data.texture_index = registry.get<SpriteComponent>(entity).texture_index;
+		render_component.instance.instance_data.texture_index = registry.get<SpriteComponent>(entity).texture_index;
 
 	if (registry.any_of<ColorComponent>(entity))
-		instance_data.color = registry.get<ColorComponent>(entity).color;
-
-	render_component.instance.instance_data = std::move(instance_data);
+		render_component.instance.instance_data.color = registry.get<ColorComponent>(entity).color;
 
 	if (Renderer::batcher.active)
 	{
