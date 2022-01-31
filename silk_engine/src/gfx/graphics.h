@@ -19,7 +19,7 @@ public:
 	{
 		glm::mat4 projection_view;
 	};
-	static struct Statistics
+	static inline struct Statistics
 	{
 		size_t batches = 0;
 		size_t instances = 0;

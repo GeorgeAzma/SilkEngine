@@ -9,43 +9,37 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     camera->addComponent<CameraComponent>();
     camera->addComponent<ScriptComponent>().bind<CameraController>();
 
-    Renderer::beginBatch();
-
-    auto circle = Resources::getMesh("Circle");
-    circles.resize(10000);
-    for (size_t i = 0; i < circles.size(); ++i)
-    {
-        circles[i] = scene->createEntity();
-        circles[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float() * 1.5f, RNG::Float(), 0.05f) * 100.0f));
-        circles[i]->addComponent<RenderComponent>(circle);
-    }
-
     auto rectangle = Resources::getMesh("Rectangle");
-    squares.resize(0);
-    size_t square_root = std::sqrt(squares.size());
-    for (size_t i = 0; i < squares.size(); ++i)
+    entities.resize(100000);
+    for (size_t i = 0; i < entities.size(); ++i)
     {
-        squares[i] = scene->createEntity();
-        squares[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(i % square_root, i / square_root, 1.0f)));
-        squares[i]->addComponent<SpriteComponent>((uint32_t)RNG::Bool());
-        squares[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        squares[i]->addComponent<RenderComponent>(rectangle);
+        entities[i] = scene->createEntity();
+        entities[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(i % (size_t)sqrt(entities.size()), i / (size_t)sqrt(entities.size()), 1.0f)));
+        entities[i]->addComponent<SpriteComponent>((uint32_t)RNG::Bool());
+        entities[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        entities[i]->addComponent<RenderComponent>(rectangle);
     }
 
-    //Font font("arial.ttf");
-
+    //entities.emplace_back(scene->createEntity());
+    //entities.back()->addComponent<TextComponent>("Quick brown fox jumped over a lazy dog");
+    //entities.back()->addComponent<RenderComponent>(rectangle);
+    
     scene->onPlay();
-
-    Renderer::endBatch();
 }
-
+ThreadPool pool;
 void SandboxApp::onUpdate()
 {  
     if (Input::isKeyDown(Keys::X))
-        squares.pop_back();
+        entities.pop_back();
+
+    for (size_t i = 0; i < entities.size() / 1; ++i)
+    {
+        auto& transform = entities[i]->getComponent<TransformComponent>().transform;
+        transform = glm::translate(transform, glm::vec3(Time::dt, 0.0f, 0.0f));
+        scene->updateComponent<RenderComponent>(*entities[i]);
+    }
 
     scene->onUpdate();
-
 }
 
 SandboxApp::~SandboxApp()

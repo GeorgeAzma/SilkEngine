@@ -29,25 +29,21 @@ void ThreadPool::waitForTasks() const
     }
 }
 
-bool ThreadPool::popTask(std::function<void()>& task)
-{
-    std::scoped_lock lock(tasks_mutex);
-
-    if (tasks.empty())
-        return false;
-
-    task = std::move(tasks.front());
-    tasks.pop();
-
-    return true;
-}
-
 void ThreadPool::work()
 {
     while (running)
     {
-        std::function<void()> task;
-        if (popTask(task))
+        std::function<void()> task = nullptr;
+        {
+            std::unique_lock lock(queue_mutex);
+            if (tasks.size())
+            {
+                task = std::move(tasks.front());
+                tasks.pop();
+            }
+        }
+
+        if (task)
         {
             task();
             --running_tasks;

@@ -21,6 +21,9 @@ public:
 	shared<Entity> createEntity();
 	void removeEntity(const entt::entity& entity);
 
+	template<typename T>
+	void updateComponent(entt::entity entity);
+
 private:
 	void onWindowResize(const WindowResizeEvent& e);
 	void onRenderComponentCreate(entt::registry& registry, entt::entity entity);
@@ -28,7 +31,7 @@ private:
 
 private:
 	void addBatchedInstance(const RenderedInstance& instance);
-	void addInstance(const RenderedInstance& instance);
+	void addInstance(RenderedInstance& instance);
 	void removeInstance(const RenderedInstance& instance);
 
 private:

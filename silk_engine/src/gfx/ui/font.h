@@ -28,10 +28,10 @@ public:
 
 private:
 	static inline FT_Library free_type_library;
-
 private:
 	FT_Face face;
 	std::string path;
 	std::vector<Character> characters;
-	shared<Image> texture_atlas;
+//TEMP
+public:shared<Image> texture_atlas;
 };

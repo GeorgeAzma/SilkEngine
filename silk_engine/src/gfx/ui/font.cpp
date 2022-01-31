@@ -81,8 +81,10 @@ Font::Font(const std::string& file, size_t size)
 		characters[i].texture_coordinate.x = origin_x / (float)width;
 		characters[i].texture_coordinate.y = origin_y / (float)height;
 
-		std::memcpy(texture_atlas_data.data() + (origin_x + origin_y * width), face->glyph->bitmap.buffer, 
-			face->glyph->bitmap.width * face->glyph->bitmap.rows);
+		for (size_t j = 0; j < face->glyph->bitmap.rows; ++j)
+		{
+			memcpy(texture_atlas_data.data() + (origin_x + (j + origin_y) * width), face->glyph->bitmap.buffer + j * face->glyph->bitmap.width, face->glyph->bitmap.width);
+		}
 
 		row_height = std::max(row_height, face->glyph->bitmap.rows);
 		origin_x += face->glyph->bitmap.width + 1;

@@ -4,17 +4,17 @@ RectangleMesh::RectangleMesh()
 {
 	vertices.resize(4);
 
-	vertices[0].position = { 0.0f, 0.0f, 0.0f };
-	vertices[1].position = { 1.0f, 0.0f, 0.0f };
-	vertices[2].position = { 1.0f, 1.0f, 0.0f };
-	vertices[3].position = { 0.0f, 1.0f, 0.0f };
+	vertices[0].position = { 0, 0, 0 };
+	vertices[1].position = { 0, 1, 0 };
+	vertices[2].position = { 1, 1, 0 };
+	vertices[3].position = { 1, 0, 0 };
 
-	vertices[0].texture_coordinates = { 0.0f, 0.0f };
-	vertices[1].texture_coordinates = { 1.0f, 0.0f };
-	vertices[2].texture_coordinates = { 1.0f, 1.0f };
-	vertices[3].texture_coordinates = { 0.0f, 1.0f };
+	vertices[0].texture_coordinates = { 1, 0 };
+	vertices[1].texture_coordinates = { 1, 1 };
+	vertices[2].texture_coordinates = { 0, 1 };
+	vertices[3].texture_coordinates = { 0, 0 };
 
-	indices = { 0, 1, 2, 2, 3, 0 };
+	indices = { 0, 1, 3, 1, 2, 3 };
 
 	init();
 }

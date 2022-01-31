@@ -36,7 +36,6 @@ public:
 		return scene->registry.get<T>(entity);
 	}
 
-private:
 	operator entt::entity () const { return entity; }
 
 private:

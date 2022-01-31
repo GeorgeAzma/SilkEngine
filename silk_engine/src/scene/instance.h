@@ -43,7 +43,7 @@ struct Instances
 {
 	RenderedInstance instance;
 
-	std::vector<InstanceData> instance_datas;
+	std::vector<RenderedInstance*> rendered_instances;
 
 	bool needs_update = true;
 
