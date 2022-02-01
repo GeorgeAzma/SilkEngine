@@ -32,6 +32,7 @@ struct RenderedInstance
 	shared<MaterialData> material_data;
 
 	InstanceData* instance_data = nullptr;
+	bool batched = false;
 
 	bool operator==(const RenderedInstance& other) const
 	{

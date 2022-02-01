@@ -33,9 +33,8 @@ public:
 
 public:
 	static constexpr size_t MAX_INSTANCES = 1024 * 1024;
-	static constexpr size_t MAX_INSTANCE_BATCHES = 1024;
-	static constexpr size_t MAX_BATCH_VERTICES = 512 * 512;
-	static constexpr size_t MAX_BATCH_INDICES = 512 * 512 * 2;
+	static constexpr size_t MAX_BATCH_VERTICES = 65536;
+	static constexpr size_t MAX_BATCH_INDICES = 65536 * 2;
 	static constexpr size_t MAX_TEXTURE_SLOTS = 32;
 	static constexpr uint32_t API_VERSION = VK_API_VERSION_1_2;
 

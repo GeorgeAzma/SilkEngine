@@ -45,9 +45,7 @@ void Buffer::setDataChecked(const void* data, size_t size, size_t offset)
 		"Vulkan: Can't map memory, it's out of bounds");
 
 	if (!this->data)
-	{
 		this->data = new uint8_t[this->size];
-	}
 
 	if (std::memcmp(data, this->data + offset, size) != 0)
 	{
@@ -76,12 +74,6 @@ uint32_t Buffer::findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags prop
 
 void Buffer::copy(VkBuffer destination, VkBuffer source, size_t size)
 {
-	VkCommandBufferAllocateInfo allocation_info{};
-	allocation_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocation_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocation_info.commandPool = *Graphics::command_pool; //Creating seperate command pool with VK_COMMAND_POOL_CREATE_TRANSIENT_BIT might be more efficient
-	allocation_info.commandBufferCount = 1;
-
 	CommandBuffer command_buffer;
 	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
@@ -90,7 +82,7 @@ void Buffer::copy(VkBuffer destination, VkBuffer source, size_t size)
 	copy_region.dstOffset = 0;
 	copy_region.size = size;
 	vkCmdCopyBuffer(command_buffer, source, destination, 1, &copy_region);
-
+	
 	command_buffer.end();
 	command_buffer.submit();
 	command_buffer.wait();

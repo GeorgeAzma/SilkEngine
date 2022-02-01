@@ -137,10 +137,8 @@ size_t EnumInfo::size(IndexType index_type)
 {
 	switch (index_type)
 	{
-	case IndexType::UINT16:
-		return 2;
-	case IndexType::UINT32:
-		return 4;
+	case IndexType::UINT16: return 2;
+	case IndexType::UINT32: return 4;
 	}
 
 	SK_ERROR("Unsoppurted index type specified: {0}", index_type);

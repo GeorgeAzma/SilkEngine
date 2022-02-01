@@ -8,7 +8,6 @@ void Renderer::cleanup()
 
 void Renderer::beginBatch()
 {
-	batcher.index_offset = 0;
 	batcher.batches.clear();
 	
 	batcher.active = true;
@@ -16,29 +15,45 @@ void Renderer::beginBatch()
 
 void Renderer::endBatch()
 {
-	for (size_t i = 0; i < batcher.batches.size(); ++i)
+	for (auto& batch : batcher.batches)
 	{
-		if (batcher.batches[i].needs_update)
-		{
-			if (!batcher.batches[i].vertices_index || !batcher.batches[i].indices_index) 
-				continue;
+		if (!batch.vertices_index || !batch.indices_index)
+			continue;
 
-			batcher.batches[i].vertex_array = makeShared<VertexArray>();
-			auto vbo = makeShared<VertexBuffer>(batcher.batches[i].vertices.data(), batcher.batches[i].vertices_index * sizeof(BatchVertex), VMA_MEMORY_USAGE_GPU_ONLY);
-			auto ibo = makeShared<IndexBuffer>(batcher.batches[i].indices.data(), batcher.batches[i].indices_index, IndexType::UINT32, VMA_MEMORY_USAGE_GPU_ONLY);
-			batcher.batches[i].vertex_array->addVertexBuffer(vbo).setIndexBuffer(ibo);
-			batcher.batches[i].needs_update = false;
-		}
+		batch.vertex_array = makeShared<VertexArray>();
+		auto vbo = makeShared<VertexBuffer>(batch.vertices.data(), batch.vertices_index * sizeof(BatchVertex), VMA_MEMORY_USAGE_GPU_ONLY);
+		auto ibo = makeShared<IndexBuffer>(batch.indices.data(), batch.indices_index, IndexType::UINT32, VMA_MEMORY_USAGE_GPU_ONLY);
+		batch.vertex_array->addVertexBuffer(vbo).setIndexBuffer(ibo);
 	}
 
 	batcher.active = false;
+}
+
+void Renderer::updateBatch()
+{
+	for (auto& batch : batcher.batches)
+	{
+		if (batch.needs_update)
+		{
+			batch.needs_update = false;
+
+			if (!batch.vertices_index || !batch.indices_index)
+				continue;
+
+			//TODO: Fix error
+			//StagingBuffer staging_buffer_vertex_array(batch.vertices.data(), batch.vertices_index * sizeof(BatchVertex));
+			//staging_buffer_vertex_array.copy(*batch.vertex_array->getVertexBuffer(0));
+			StagingBuffer staging_buffer_index_buffer(batch.indices.data(), batch.indices_index * sizeof(uint32_t));
+			staging_buffer_index_buffer.copy(*batch.vertex_array->getIndexBuffer());
+		}
+	}
 }
 
 void Renderer::drawLastBatch()
 {
 	drawBatch(batcher.batches);
 }
-#include "devices/logical_device.h"
+
 void Renderer::drawBatch(const std::vector<Batch>& batches)
 {
 	for (size_t i = 0; i < batches.size(); ++i)
@@ -58,7 +73,6 @@ void Renderer::drawBatch(const std::vector<Batch>& batches)
 void Renderer::addBatch()
 {
 	batcher.batches.emplace_back();
-	Batch& batch = batcher.batches.back();
-	batch.vertices.resize(Graphics::MAX_BATCH_VERTICES);
-	batch.indices.resize(Graphics::MAX_BATCH_INDICES);
+	batcher.batches.back().vertices.resize(Graphics::MAX_BATCH_VERTICES);
+	batcher.batches.back().indices.resize(Graphics::MAX_BATCH_INDICES);
 }

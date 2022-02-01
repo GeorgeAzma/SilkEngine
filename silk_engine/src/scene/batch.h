@@ -20,9 +20,10 @@ struct Batch
 	std::vector<uint32_t> indices;
 	size_t vertices_index = 0;
 	size_t indices_index = 0;
+	size_t index_offset = 0;
 	shared<VertexArray> vertex_array = nullptr;
 	shared<MaterialData> material_data = nullptr;
-	bool needs_update = true;
+	bool needs_update = false;
 
 	void addVertex(const BatchVertex& vertex)
 	{
@@ -34,12 +35,13 @@ struct Batch
 		indices[indices_index++] = index;
 	}
 
-	void addInstance(const RenderedInstance& instance, uint32_t index_offset);
+	void addInstance(const RenderedInstance& instance);
+
+	bool operator==(const RenderedInstance& instance) const { return material_data == instance.material_data; }
 };
 
 struct Batcher
 {
 	std::vector<Batch> batches;
-	size_t index_offset = 0;
 	bool active = false;
 };

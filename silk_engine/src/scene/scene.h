@@ -35,7 +35,6 @@ private:
 private:
 	entt::registry registry;
 	std::vector<InstanceBatch> instance_batches;
-	shared<IndirectBuffer> indirect_buffer;
 	shared<MaterialData> material_data_3D;
 	shared<MaterialData> material_data_batch3D;
 

@@ -9,6 +9,7 @@ public:
 
 	static void beginBatch();
 	static void endBatch();
+	static void updateBatch();
 	static void drawLastBatch();
 	static void drawBatch(const std::vector<Batch>& batches);
 	static void addBatch();

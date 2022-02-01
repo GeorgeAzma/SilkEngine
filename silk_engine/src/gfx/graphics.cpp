@@ -26,10 +26,10 @@ void Graphics::init()
 	command_pool = new CommandPool(); //0.025ms
 
 	descriptor_pool = new DescriptorPool();
-	descriptor_pool->addSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8)
-		.addSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8)
-		.addSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 8)
-		.setMaxSets(8).build();
+	descriptor_pool->addSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 64)
+		.addSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 64)
+		.addSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 64)
+		.setMaxSets(64).build();
 
 	swap_chain = new SwapChain(); //16ms
 

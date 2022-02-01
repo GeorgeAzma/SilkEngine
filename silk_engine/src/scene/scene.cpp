@@ -19,8 +19,6 @@ Scene::Scene()
 	registry.on_construct<RenderComponent>().connect<&Scene::onRenderComponentCreate>(this);
 	registry.on_destroy<RenderComponent>().connect<&Scene::onRenderComponentDestroy>(this);
 
-	indirect_buffer = std::make_shared<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
-	
 	shared<DescriptorSet> global_descriptor_set = makeShared<DescriptorSet>();
 	global_descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE }, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
 		.build();
@@ -76,58 +74,39 @@ void Scene::onUpdate()
 			script_component.instance->onUpdate();
 		});
 
-	//TODO: determine how to choose main camera
 	CameraComponent* main_camera = nullptr;
 	registry.view<CameraComponent>().each(
 		[&](auto entity, auto& camera_component)
 		{
 			main_camera = &camera_component;
 		});
-	//TODO: not too scalable
 	if (main_camera)
 		Graphics::global_uniform->setDataChecked(&main_camera->camera.projection_view, sizeof(glm::mat4), 0);
-	
-	std::vector<VkDrawIndexedIndirectCommand> draw_commands;
-	if (instance_batches.size())
-	{
-		//Create draw commands and set rendered vertex buffer's instance data
-		for (auto& batch : instance_batches)
-		{
-			if (batch.needs_update && batch.instance_data.size())
-			{
-				batch.instance.mesh->vertex_array->getVertexBuffer(1)->setData(batch.instance_data.data(), batch.instance_data.size() * sizeof(InstanceData));
-				batch.needs_update = false;
-			}
-			VkDrawIndexedIndirectCommand draw_indexed_indirect_command{};
-			draw_indexed_indirect_command.firstIndex = 0;
-			draw_indexed_indirect_command.firstInstance = 0;
-			draw_indexed_indirect_command.indexCount = batch.instance.mesh->indices.size();
-			draw_indexed_indirect_command.instanceCount = batch.instance_data.size();
-			draw_indexed_indirect_command.vertexOffset = 0;
-			draw_commands.emplace_back(std::move(draw_indexed_indirect_command));
-		}
-		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(draw_commands[0]));
-	}
-	Graphics::stats.instances = instance_batches.size();
-	Graphics::stats.batches = Renderer::batcher.batches.size();
 
 	//Drawing
 	Graphics::swap_chain->beginRenderPass();
 	
 	//Draw instances
-	for (size_t i = 0; i < instance_batches.size(); ++i)
+	for (auto& instance_batch : instance_batches)
 	{
-		if (!draw_commands[i].instanceCount)
-			continue;
+		if (instance_batch.needs_update && instance_batch.instance_data.size())
+		{
+			instance_batch.instance.mesh->vertex_array->getVertexBuffer(1)->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size() * sizeof(InstanceData));
+			instance_batch.needs_update = false;
+		}
 
-		instance_batches[i].instance.material_data->material->pipeline->bind();
-		instance_batches[i].instance.mesh->vertex_array->bind();
-		for (size_t j = 0; j < instance_batches[i].instance.material_data->descriptor_sets.size(); ++j)
-			instance_batches[i].instance.material_data->descriptor_sets[j]->bind(j);
+		instance_batch.instance.material_data->material->pipeline->bind();
+		instance_batch.instance.mesh->vertex_array->bind();
+		for (size_t j = 0; j < instance_batch.instance.material_data->descriptor_sets.size(); ++j)
+			instance_batch.instance.material_data->descriptor_sets[j]->bind(j);
 		
-		vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
+		//NOTE: vkCmdDrawIndexedIndirect is bit faster but it limits us by having a fixed instanced batches size and adds clutter
+		vkCmdDrawIndexed(Graphics::active.command_buffer, instance_batch.instance.mesh->indices.size(), instance_batch.instance_data.size(), 0, 0, 0);
 	}
+	Graphics::stats.instances = instance_batches.size();
+	Graphics::stats.batches = Renderer::batcher.batches.size();
 
+	Renderer::updateBatch();
 	Renderer::drawLastBatch();
 	
 	//End draw
@@ -169,27 +148,30 @@ void Scene::onWindowResize(const WindowResizeEvent& e)
 void Scene::onRenderComponentCreate(entt::registry& registry, entt::entity entity)
 {
 	RenderComponent& render_component = registry.get<RenderComponent>(entity);
+	
+	InstanceData instance_data{};
+
+	if (auto transform = registry.try_get<TransformComponent>(entity))
+		instance_data.transform = *transform;
+
+	if (auto sprite = registry.try_get<SpriteComponent>(entity))
+		instance_data.texture_index = *sprite;
+
+	if (auto color = registry.try_get<ColorComponent>(entity))
+		instance_data.color = *color;
 
 	if (Renderer::batcher.active)
 	{
 		render_component.instance.material_data = material_data_batch3D;
+		render_component.instance.batched = true;
+		render_component.instance.instance_data = &instance_data;
 
 		addBatchedInstance(render_component.instance);
 	}
 	else
 	{
 		render_component.instance.material_data = material_data_3D;
-
-		InstanceData instance_data{};
-
-		if (auto transform = registry.try_get<TransformComponent>(entity))
-			instance_data.transform = *transform;
-
-		if (auto sprite = registry.try_get<SpriteComponent>(entity))
-			instance_data.texture_index = *sprite;
-
-		if (auto color = registry.try_get<ColorComponent>(entity))
-			instance_data.color = *color;
+		render_component.instance.batched = false;
 
 		for (auto& instance_batch : instance_batches)
 		{
@@ -203,9 +185,6 @@ void Scene::onRenderComponentCreate(entt::registry& registry, entt::entity entit
 				return;
 			}
 		}
-
-		SK_ASSERT(instance_batches.size() < Graphics::MAX_INSTANCE_BATCHES, 
-			"Too much instance batches created");
 
 		std::vector<InstanceData> new_instance_data;
 		new_instance_data.reserve(Graphics::MAX_INSTANCES);
@@ -260,13 +239,28 @@ void Scene::updateComponent<RenderComponent>(entt::entity entity)
 	
 	*render_component.instance.instance_data = std::move(instance_data);
 
-	//TODO: Find batch and set need update to true
-	for (auto& instance_batch : instance_batches)
+	if (render_component.instance.batched)
 	{
-		if (instance_batch.instance == render_component.instance)
+		for (auto& batch : Renderer::batcher.batches)
 		{
-			instance_batch.needs_update = true;
-			break;
+			if (batch == render_component.instance)
+			{
+				batch.needs_update = true;
+
+				break;
+			}
+		}
+	}
+	else
+	{
+		for (auto& instance_batch : instance_batches)
+		{
+			if (instance_batch.instance == render_component.instance)
+			{
+				instance_batch.needs_update = true;
+
+				break;
+			}
 		}
 	}
 }
@@ -315,6 +309,5 @@ void Scene::addBatchedInstance(const RenderedInstance& instance)
 		Renderer::batcher.batches.back().material_data = instance.material_data;
 	}
 
-	Renderer::batcher.batches.back().addInstance(instance, Renderer::batcher.index_offset);
-	Renderer::batcher.index_offset += instance.mesh->vertices.size();
+	Renderer::batcher.batches.back().addInstance(instance);
 }
