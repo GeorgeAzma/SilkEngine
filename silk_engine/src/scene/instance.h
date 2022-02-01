@@ -31,7 +31,7 @@ struct RenderedInstance
 	shared<Mesh> mesh;
 	shared<MaterialData> material_data;
 
-	InstanceData instance_data;
+	InstanceData* instance_data = nullptr;
 
 	bool operator==(const RenderedInstance& other) const
 	{
@@ -39,11 +39,11 @@ struct RenderedInstance
 	}
 };
 
-struct Instances
+struct InstanceBatch
 {
 	RenderedInstance instance;
 
-	std::vector<RenderedInstance*> rendered_instances;
+	std::vector<InstanceData> instance_data;
 
 	bool needs_update = true;
 

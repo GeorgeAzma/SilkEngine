@@ -43,11 +43,11 @@ public:
 	{
 		RNG::m_seed = seed;
 	}
-	static constexpr const uint64_t max()
+	static constexpr uint64_t max()
 	{
 		return std::numeric_limits<uint64_t>::max();
 	}
-	static constexpr const uint64_t min()
+	static constexpr uint64_t min()
 	{
 		return std::numeric_limits<uint64_t>::min();
 	}

@@ -25,8 +25,16 @@ void ThreadPool::waitForTasks() const
 {
     while (running_tasks)
     {
-        std::this_thread::sleep_for(std::chrono::microseconds(1));
+        wait();
     }
+}
+
+void ThreadPool::wait() const
+{ 
+    if (wait_time) 
+        std::this_thread::sleep_for(std::chrono::microseconds(wait_time)); 
+    else 
+        std::this_thread::yield();
 }
 
 void ThreadPool::work()
@@ -50,7 +58,7 @@ void ThreadPool::work()
         }
         else
         {
-            std::this_thread::sleep_for(std::chrono::microseconds(1));
+            wait();
         }
     }
 }

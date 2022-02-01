@@ -3,20 +3,22 @@
 class ThreadPool
 {
 public:
+    size_t wait_time = 0; //Wait time in microseconds, if set to 0 it calls yield() instead of sleep()
+
     ThreadPool(unsigned int thread_count = std::thread::hardware_concurrency());
     ~ThreadPool();
 
     template<typename T, typename... Args>
     void submit(T&& function, Args&&... args)
     {
+        ++running_tasks;
         {
-            std::scoped_lock lock(queue_mutex);
+            const std::scoped_lock lock(queue_mutex);
             tasks.emplace([function, args...]
                 {
                     function(args...);
                 });
         }
-        ++running_tasks;
     }
 
     template<typename Fn, typename... Args, typename R = std::invoke_result_t<std::decay_t<Fn>, std::decay_t<Args>...>, typename = std::enable_if_t<!std::is_void_v<R>>>
@@ -42,11 +44,11 @@ public:
         size_t index = 0;
         for (size_t i = 0; i < threads.size(); ++i)
         {
-            size_t invocations = count / threads.size();
-            size_t remainder = count % threads.size();
-            invocations += (i < remainder);
+            const size_t invocations = count / threads.size() + (i < (count% threads.size()));
+            //Calling func every invocation has small overhead for lots of small invocations (around 15% performance in the worst case), but I sacrificed it for ease of use
             submit([invocations, index, func] {
-                    func(index, index + invocations);
+                for(size_t i = 0; i < invocations; ++i)
+                    func(index + i);
                 });
             index += invocations;
         }
@@ -58,6 +60,7 @@ public:
     size_t threadCount() const { return threads.size(); }
 
 private:
+    void wait() const;
     void work();
 
 private:

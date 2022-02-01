@@ -88,45 +88,42 @@ void Scene::onUpdate()
 		Graphics::global_uniform->setDataChecked(&main_camera->camera.projection_view, sizeof(glm::mat4), 0);
 	
 	std::vector<VkDrawIndexedIndirectCommand> draw_commands;
-	if (instances.size())
+	if (instance_batches.size())
 	{
 		//Create draw commands and set rendered vertex buffer's instance data
-		for (auto& batch : instances)
+		for (auto& batch : instance_batches)
 		{
-			if (batch.needs_update && batch.rendered_instances.size())
+			if (batch.needs_update && batch.instance_data.size())
 			{
-				std::vector<InstanceData> instance_datas(batch.rendered_instances.size());
-				for (size_t i = 0; i < instance_datas.size(); ++i)
-					instance_datas[i] = batch.rendered_instances[i]->instance_data;
-				batch.instance.mesh->vertex_array->getVertexBuffer(1)->setData(instance_datas.data(), instance_datas.size() * sizeof(InstanceData));
+				batch.instance.mesh->vertex_array->getVertexBuffer(1)->setData(batch.instance_data.data(), batch.instance_data.size() * sizeof(InstanceData));
 				batch.needs_update = false;
 			}
 			VkDrawIndexedIndirectCommand draw_indexed_indirect_command{};
 			draw_indexed_indirect_command.firstIndex = 0;
 			draw_indexed_indirect_command.firstInstance = 0;
 			draw_indexed_indirect_command.indexCount = batch.instance.mesh->indices.size();
-			draw_indexed_indirect_command.instanceCount = batch.rendered_instances.size();
+			draw_indexed_indirect_command.instanceCount = batch.instance_data.size();
 			draw_indexed_indirect_command.vertexOffset = 0;
 			draw_commands.emplace_back(std::move(draw_indexed_indirect_command));
 		}
 		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(draw_commands[0]));
 	}
-	Graphics::stats.instances = instances.size();
+	Graphics::stats.instances = instance_batches.size();
 	Graphics::stats.batches = Renderer::batcher.batches.size();
 
 	//Drawing
 	Graphics::swap_chain->beginRenderPass();
 	
 	//Draw instances
-	for (size_t i = 0; i < instances.size(); ++i)
+	for (size_t i = 0; i < instance_batches.size(); ++i)
 	{
 		if (!draw_commands[i].instanceCount)
 			continue;
 
-		instances[i].instance.material_data->material->pipeline->bind();
-		instances[i].instance.mesh->vertex_array->bind();
-		for (size_t j = 0; j < instances[i].instance.material_data->descriptor_sets.size(); ++j)
-			instances[i].instance.material_data->descriptor_sets[j]->bind(j);
+		instance_batches[i].instance.material_data->material->pipeline->bind();
+		instance_batches[i].instance.mesh->vertex_array->bind();
+		for (size_t j = 0; j < instance_batches[i].instance.material_data->descriptor_sets.size(); ++j)
+			instance_batches[i].instance.material_data->descriptor_sets[j]->bind(j);
 		
 		vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
 	}
@@ -163,7 +160,7 @@ void Scene::removeEntity(const entt::entity& entity)
 void Scene::onWindowResize(const WindowResizeEvent& e)
 {
 	registry.view<CameraComponent>().each(
-		[&](auto entity, auto& camera_component)
+		[](auto entity, auto& camera_component)
 		{
 			camera_component.camera.onViewportResize();
 		});
@@ -171,26 +168,50 @@ void Scene::onWindowResize(const WindowResizeEvent& e)
 
 void Scene::onRenderComponentCreate(entt::registry& registry, entt::entity entity)
 {
-	auto& render_component = registry.get<RenderComponent>(entity);
-
-	if (registry.any_of<TransformComponent>(entity))
-		render_component.instance.instance_data.transform = registry.get<TransformComponent>(entity).transform;
-
-	if (registry.any_of<SpriteComponent>(entity))
-		render_component.instance.instance_data.texture_index = registry.get<SpriteComponent>(entity).texture_index;
-
-	if (registry.any_of<ColorComponent>(entity))
-		render_component.instance.instance_data.color = registry.get<ColorComponent>(entity).color;
+	RenderComponent& render_component = registry.get<RenderComponent>(entity);
 
 	if (Renderer::batcher.active)
 	{
 		render_component.instance.material_data = material_data_batch3D;
+
 		addBatchedInstance(render_component.instance);
 	}
 	else
 	{
 		render_component.instance.material_data = material_data_3D;
-		addInstance(render_component.instance);
+
+		InstanceData instance_data{};
+
+		if (auto transform = registry.try_get<TransformComponent>(entity))
+			instance_data.transform = *transform;
+
+		if (auto sprite = registry.try_get<SpriteComponent>(entity))
+			instance_data.texture_index = *sprite;
+
+		if (auto color = registry.try_get<ColorComponent>(entity))
+			instance_data.color = *color;
+
+		for (auto& instance_batch : instance_batches)
+		{
+			if (instance_batch == render_component.instance)
+			{	
+				instance_batch.needs_update = true;
+				
+				instance_batch.instance_data.emplace_back(std::move(instance_data));
+				render_component.instance.instance_data = &instance_batch.instance_data.back();
+
+				return;
+			}
+		}
+
+		SK_ASSERT(instance_batches.size() < Graphics::MAX_INSTANCE_BATCHES, 
+			"Too much instance batches created");
+
+		std::vector<InstanceData> new_instance_data;
+		new_instance_data.reserve(Graphics::MAX_INSTANCES);
+		new_instance_data.emplace_back(std::move(instance_data));
+		instance_batches.emplace_back(render_component.instance, std::move(new_instance_data));
+		render_component.instance.instance_data = &instance_batches.back().instance_data.back();
 	}
 }
 
@@ -199,32 +220,52 @@ void Scene::onRenderComponentDestroy(entt::registry& registry, entt::entity enti
 	if (stopped)
 		return;
 
-	auto& render_component = registry.get<RenderComponent>(entity);
-	removeInstance(render_component.instance);
+	RenderComponent& render_component = registry.get<RenderComponent>(entity);
+	
+	for (auto& instance_batch : instance_batches)
+	{
+		if (instance_batch.instance == render_component.instance)
+		{
+			instance_batch.needs_update = true;
+
+			registry.view<RenderComponent>().each(
+				[&](entt::entity entity, RenderComponent& rc) 
+				{
+					if (rc.instance.instance_data == &instance_batch.instance_data.back())
+						rc.instance.instance_data = render_component.instance.instance_data;
+				});
+			std::swap(*render_component.instance.instance_data, instance_batch.instance_data.back());
+			instance_batch.instance_data.pop_back();
+
+			return;
+		}
+	}
 }
 
 template<>
 void Scene::updateComponent<RenderComponent>(entt::entity entity)
 {
-	SK_ASSERT(registry.any_of<RenderComponent>(entity),
-		"Entity has no transform component, don't call updateComponent on non existant component");
+	RenderComponent& render_component = registry.get<RenderComponent>(entity);
 	
-	auto& render_component = registry.get<RenderComponent>(entity);
+	InstanceData instance_data{};
 	
-	if(registry.any_of<TransformComponent>(entity))
-		render_component.instance.instance_data.transform = registry.get<TransformComponent>(entity);
+	if (auto transform = registry.try_get<TransformComponent>(entity))
+		instance_data.transform = *transform;
 	
-	if (registry.any_of<SpriteComponent>(entity))
-		render_component.instance.instance_data.texture_index = registry.get<SpriteComponent>(entity);
+	if (auto sprite = registry.try_get<SpriteComponent>(entity))
+		instance_data.texture_index = *sprite;
 	
-	if (registry.any_of<ColorComponent>(entity))
-		render_component.instance.instance_data.color = registry.get<ColorComponent>(entity);
+	if (auto color = registry.try_get<ColorComponent>(entity))
+		instance_data.color = *color;
+	
+	*render_component.instance.instance_data = std::move(instance_data);
 
-	for (size_t i = 0; i < instances.size(); ++i)
+	//TODO: Find batch and set need update to true
+	for (auto& instance_batch : instance_batches)
 	{
-		if (instances[i] == render_component.instance)
+		if (instance_batch.instance == render_component.instance)
 		{
-			instances[i].needs_update = true;
+			instance_batch.needs_update = true;
 			break;
 		}
 	}
@@ -276,46 +317,4 @@ void Scene::addBatchedInstance(const RenderedInstance& instance)
 
 	Renderer::batcher.batches.back().addInstance(instance, Renderer::batcher.index_offset);
 	Renderer::batcher.index_offset += instance.mesh->vertices.size();
-}
-
-void Scene::addInstance(RenderedInstance& instance)
-{
-	for (size_t i = 0; i < instances.size(); ++i)
-	{
-		if (instances[i].instance == instance)
-		{
-			instances[i].rendered_instances.emplace_back(&instance);
-			instances[i].needs_update = true;
-			return;
-		}
-	}
-
-	instances.emplace_back(instance, std::vector<RenderedInstance*>{&instance});
-}
-
-void Scene::removeInstance(const RenderedInstance& instance)
-{
-	for (size_t i = 0; i < instances.size(); ++i)
-	{
-		if (instances[i].instance == instance)
-		{
-			//TODO: This is bit slow
-			for (size_t j = 0; j < instances[i].rendered_instances.size(); ++j)
-			{
-				if (instances[i].rendered_instances[j] == &instance)
-				{
-					std::swap(instances[i].rendered_instances[j], instances[i].rendered_instances.back());
-					instances[i].rendered_instances.pop_back();
-					instances[i].needs_update = true;
-					if (instances[i].rendered_instances.empty())
-					{
-						std::swap(instances[i], instances.back());
-						instances.pop_back();
-					}
-					return;
-				}
-			}
-			return;
-		}
-	}
 }
