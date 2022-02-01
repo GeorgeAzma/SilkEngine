@@ -30,13 +30,7 @@ class Timers
         friend class Timers;
 
     public:
-        FrameTimer(unsigned int frame_interval, int repeat, std::function<void()>&& on_tick)
-            : frame_interval(frame_interval),
-            next_frame(Time::frames + frame_interval), 
-            repeat(repeat), 
-            on_tick(on_tick)
-        {
-        }
+        FrameTimer(unsigned int frame_interval, int repeat, std::function<void()>&& on_tick);
 
         operator unsigned int() const { return next_frame; }
 
@@ -66,36 +60,12 @@ public:
         timers.emplace_back(interval, repeat, std::forward<std::function<void()>>(function));
     }
 
-    static void frameOnce(unsigned int frame_delay, std::function<void()>&& function)
-    {
-        frame_timers.emplace_back(frame_delay, 1, std::forward<std::function<void()>>(function));
-    }
-
-    static void frameEvery(unsigned int frame_interval, std::function<void()>&& function)
-    {
-        frame_timers.emplace_back(frame_interval, -1, std::forward<std::function<void()>>(function));
-    }
-
-    static void frameRepeat(unsigned int frame_interval, uint32_t repeat, std::function<void()>&& function)
-    {
-        frame_timers.emplace_back(frame_interval, repeat, std::forward<std::function<void()>>(function));
-    }
-
-    static void resetFrameTimers()
-    {
-        frame_timers.clear();
-    }
-    
-    static void resetTimers()
-    {
-        timers.clear();
-    }
-
-    static void reset()
-    {
-        resetTimers();
-        resetFrameTimers();
-    }
+    static void frameOnce(unsigned int frame_delay, std::function<void()>&& function);
+    static void frameEvery(unsigned int frame_interval, std::function<void()>&& function);
+    static void frameRepeat(unsigned int frame_interval, uint32_t repeat, std::function<void()>&& function);
+    static void resetFrameTimers();  
+    static void resetTimers();
+    static void reset();
 
     static void update();
 

@@ -30,7 +30,7 @@ void CameraController::onUpdate()
 	glm::vec3 front2D(glm::normalize(glm::vec3(camera.direction.x, 0, camera.direction.z)));
 
 	auto old_position = camera.position;
-	float speed = 25.0f * Time::dt;
+	float speed = 2.0f * Time::dt * (1 + Input::isKeyDown(Keys::LEFT_SHIFT) * 20);
 	if (Input::isKeyDown(Keys::W))
 	{
 		camera.position += front2D * speed;
@@ -49,11 +49,11 @@ void CameraController::onUpdate()
 	}
 	if (Input::isKeyDown(Keys::SPACE))
 	{
-		camera.position.y -= speed;
+		camera.position.y += speed;
 	}
 	if (Input::isKeyDown(Keys::LEFT_CONTROL))
 	{
-		camera.position.y += speed;
+		camera.position.y -= speed;
 	}
 
 	bool needs_update = (old_position != camera.position) || rotated;

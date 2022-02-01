@@ -18,6 +18,13 @@ public:
 	struct GlobalUniformData
 	{
 		glm::mat4 projection_view;
+		glm::vec3 camera_position;
+		float time;
+		glm::vec3 camera_direction;
+		float delta_time;
+		glm::uvec2 resolution;
+		uint32_t frame;
+		uint32_t flags;
 	};
 	static inline struct Statistics
 	{
@@ -32,7 +39,7 @@ public:
 	static void vulkanAssert(VkResult result);
 
 public:
-	static constexpr size_t MAX_INSTANCES = 1024 * 1024;
+	static constexpr size_t MAX_INSTANCES = 65536;
 	static constexpr size_t MAX_BATCH_VERTICES = 65536;
 	static constexpr size_t MAX_BATCH_INDICES = 65536 * 2;
 	static constexpr size_t MAX_TEXTURE_SLOTS = 32;

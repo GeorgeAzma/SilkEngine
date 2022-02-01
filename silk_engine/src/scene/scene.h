@@ -26,8 +26,13 @@ public:
 
 private:
 	void onWindowResize(const WindowResizeEvent& e);
-	void onRenderComponentCreate(entt::registry& registry, entt::entity entity);
-	void onRenderComponentDestroy(entt::registry& registry, entt::entity entity);
+	void onMeshComponentCreate(entt::registry& registry, entt::entity entity);
+	void onMeshComponentDestroy(entt::registry& registry, entt::entity entity);
+	void onModelComponentCreate(entt::registry& registry, entt::entity entity);
+	void onModelComponentDestroy(entt::registry& registry, entt::entity entity);
+
+	void createMeshInstance(shared<RenderedInstance> instance);
+	void destroyMeshInstance(shared<RenderedInstance> instance);
 
 private:
 	void addBatchedInstance(const RenderedInstance& instance);

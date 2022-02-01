@@ -4,11 +4,12 @@
 #include "gfx/enums.h"
 #include "gfx/buffers/command_buffer.h"
 #include "gfx/devices/physical_device.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 Image::Image(const std::string& file, const ImageProps& props)
-	: props(props)
+	: path(file), props(props)
 {
 	std::string path = std::string("data/images/") + file;
 	descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -46,9 +47,26 @@ ImageLoadData Image::load(const std::string& file)
 	stbi_uc* pixels = stbi_load(file.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 	SK_ASSERT(pixels, "Failed to load image: {0}", file);
 
-	shared<StagingBuffer> staging_buffer = makeShared<StagingBuffer>(pixels, width * height * channels);
+	SK_INFO("Image Loaded: {0}", file);
+
+	stbi_uc* aligned_pixels = pixels;
+
+	if (channels == 3)
+	{
+		aligned_pixels = new stbi_uc[width * height * 4];
+		//for (size_t i = 0; i < width * height; ++i)
+		//{
+		//	std::memcpy(aligned_pixels + i * 4, pixels + i * 3, 3);
+		//	aligned_pixels[i * 4 + 3] = 255;
+		//}
+		channels = 4;
+	}
+
+	shared<StagingBuffer> staging_buffer = makeShared<StagingBuffer>(aligned_pixels, width * height * channels);
 
 	stbi_image_free(pixels);
+	if(aligned_pixels && pixels != aligned_pixels)
+		delete[] aligned_pixels;
 
 	return { width, height, channels, staging_buffer };
 }
@@ -69,7 +87,7 @@ void Image::create(const ImageProps& props)
 	if (props.mipmap)
 	{
 		mip_levels = std::floor(std::log2(std::max(props.width, props.height))) + 1;
-		mip_levels = std::min(mip_levels, Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxMipLevels);
+		mip_levels = std::max(std::min(mip_levels, Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxMipLevels), 1u);
 	}
 	create_info.mipLevels = mip_levels;
 	create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;

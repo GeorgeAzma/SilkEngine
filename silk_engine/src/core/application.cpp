@@ -54,7 +54,7 @@ void Application::run()
             if (!Window::isMinimized())
             {
                 Time::dt = app_update.getDeltaTime();
-                Time::frames = app_update.getFramesPassed();
+                Time::frame = app_update.getFramesPassed();
                 Time::runtime = app_update.getRuntime();
 
 

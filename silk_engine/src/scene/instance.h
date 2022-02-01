@@ -29,7 +29,7 @@ struct InstanceData
 struct RenderedInstance
 {
 	shared<Mesh> mesh;
-	shared<MaterialData> material_data;
+	shared<MaterialData> material_data = nullptr;
 
 	InstanceData* instance_data = nullptr;
 	bool batched = false;
@@ -42,7 +42,7 @@ struct RenderedInstance
 
 struct InstanceBatch
 {
-	RenderedInstance instance;
+	shared<RenderedInstance> instance;
 
 	std::vector<InstanceData> instance_data;
 
@@ -50,6 +50,6 @@ struct InstanceBatch
 
 	bool operator==(const RenderedInstance& instance) const
 	{
-		return this->instance == instance;
+		return *this->instance == instance;
 	}
 };

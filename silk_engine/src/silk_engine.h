@@ -16,7 +16,7 @@
 #include "utils/debug_timer.h"
 #include "utils/fixed_update.h"
 #include "utils/delta.h"
-#include "utils/file_utils.h"
+#include "io/file.h"
 #include "utils/math.h"
 #include "utils/RNG.h"
 #include "utils/timers.h"

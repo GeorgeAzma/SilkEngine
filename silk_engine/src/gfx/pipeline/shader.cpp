@@ -1,5 +1,5 @@
 #include "shader.h"
-#include "utils/file_utils.h"
+#include "io/file.h"
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
 
@@ -8,7 +8,7 @@ Shader::Shader(const std::vector<std::string>& files)
 	for (auto& file : files)
 	{
 		std::string path = std::string("data/cache/shaders/") + file + ".spv";
-		std::vector<char> source = FileUtils::read(path);
+		std::vector<char> source = File::read(path);
 		VkShaderModule shader_module = createShaderModule(source);
 		shader_modules.push_back(shader_module);
 

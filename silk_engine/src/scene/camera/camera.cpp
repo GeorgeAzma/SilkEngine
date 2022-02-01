@@ -26,16 +26,7 @@ void Camera::onViewportResize()
 void Camera::setFOV(float fov)
 {
 	this->fov = fov;
-	switch (type)
-	{
-	case CameraType::PERSPECTIVE:
-		projection = glm::perspective(glm::radians(fov), Window::getAspectRatio(), near, far);
-		break;
-	case CameraType::ORTHOGRAPHIC:
-		projection = glm::ortho(0.0f, (float)Window::getWidth(), 0.0f, (float)Window::getHeight(), 0.0f, 1.0f);
-		break;
-	}
-	updateProjectionView();
+	onViewportResize();
 }
 
 void Camera::setNear(float near)

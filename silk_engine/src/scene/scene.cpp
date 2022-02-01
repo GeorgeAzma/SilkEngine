@@ -7,24 +7,24 @@
 #include "gfx/devices/physical_device.h"
 #include "gfx/buffers/uniform_buffer.h"
 #include "utils/general_utils.h"
+#include "core/time.h"
 #include "gfx/window/swap_chain.h"
 #include "gfx/renderer.h"
-
-//shared<Font> font;
 
 Scene::Scene()
 {
 	Dispatcher::subscribe(this, &Scene::onWindowResize);
 	
-	registry.on_construct<RenderComponent>().connect<&Scene::onRenderComponentCreate>(this);
-	registry.on_destroy<RenderComponent>().connect<&Scene::onRenderComponentDestroy>(this);
+	registry.on_construct<MeshComponent>().connect<&Scene::onMeshComponentCreate>(this);
+	registry.on_construct<ModelComponent>().connect<&Scene::onModelComponentCreate>(this);
+	registry.on_destroy<MeshComponent>().connect<&Scene::onMeshComponentDestroy>(this);
+	registry.on_destroy<ModelComponent>().connect<&Scene::onModelComponentDestroy>(this);
 
 	shared<DescriptorSet> global_descriptor_set = makeShared<DescriptorSet>();
 	global_descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE }, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
 		.build();
 
-	//font = makeShared<Font>("arial.ttf");
-	auto white_image = Resources::getImage("White");
+	auto white_image = Resources::getImage("Test1");
 	shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>();
 	descriptor_set->addImages(0, {
 			*white_image, *white_image, *white_image, *white_image,
@@ -35,7 +35,8 @@ Scene::Scene()
 			*white_image, *white_image, *white_image, *white_image,
 			*white_image, *white_image, *white_image, *white_image,
 			*white_image, *white_image, *white_image, *white_image
-		}, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT).build();
+		}, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+		.build();
 
 	material_data_3D = makeShared<MaterialData>(Resources::getMaterial("3D"), std::vector<shared<DescriptorSet>>{ global_descriptor_set, descriptor_set });
 	material_data_batch3D = makeShared<MaterialData>(Resources::getMaterial("Batch3D"), std::vector<shared<DescriptorSet>>{ global_descriptor_set, descriptor_set });
@@ -44,8 +45,10 @@ Scene::Scene()
 Scene::~Scene()
 {
 	Dispatcher::unsubscribe(this, &Scene::onWindowResize);
-	registry.on_construct<RenderComponent>().disconnect<&Scene::onRenderComponentCreate>(this);
-	registry.on_destroy<RenderComponent>().disconnect<&Scene::onRenderComponentDestroy>(this);
+	registry.on_construct<MeshComponent>().disconnect<&Scene::onMeshComponentCreate>(this);
+	registry.on_construct<ModelComponent>().disconnect<&Scene::onModelComponentCreate>(this);
+	registry.on_destroy<MeshComponent>().disconnect<&Scene::onMeshComponentDestroy>(this);
+	registry.on_destroy<ModelComponent>().disconnect<&Scene::onModelComponentDestroy>(this);
 }
 
 void Scene::onPlay()
@@ -80,8 +83,21 @@ void Scene::onUpdate()
 		{
 			main_camera = &camera_component;
 		});
+
+	Graphics::GlobalUniformData global_uniform_data{};
 	if (main_camera)
-		Graphics::global_uniform->setDataChecked(&main_camera->camera.projection_view, sizeof(glm::mat4), 0);
+	{
+		global_uniform_data.projection_view = main_camera->camera.projection_view;
+		global_uniform_data.camera_position = main_camera->camera.position;
+		global_uniform_data.camera_direction = main_camera->camera.direction;
+	}
+	global_uniform_data.delta_time = Time::dt;
+	global_uniform_data.time = Time::runtime;
+	global_uniform_data.frame = Time::frame;
+	global_uniform_data.resolution = glm::uvec2(Window::getWidth(), Window::getHeight());
+	global_uniform_data.flags = 0;
+
+	Graphics::global_uniform->setDataChecked(&global_uniform_data, sizeof(Graphics::GlobalUniformData));
 
 	//Drawing
 	Graphics::swap_chain->beginRenderPass();
@@ -91,17 +107,17 @@ void Scene::onUpdate()
 	{
 		if (instance_batch.needs_update && instance_batch.instance_data.size())
 		{
-			instance_batch.instance.mesh->vertex_array->getVertexBuffer(1)->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size() * sizeof(InstanceData));
+			instance_batch.instance->mesh->vertex_array->getVertexBuffer(1)->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size() * sizeof(InstanceData));
 			instance_batch.needs_update = false;
 		}
 
-		instance_batch.instance.material_data->material->pipeline->bind();
-		instance_batch.instance.mesh->vertex_array->bind();
-		for (size_t j = 0; j < instance_batch.instance.material_data->descriptor_sets.size(); ++j)
-			instance_batch.instance.material_data->descriptor_sets[j]->bind(j);
+		instance_batch.instance->material_data->material->pipeline->bind();
+		instance_batch.instance->mesh->vertex_array->bind();
+		for (size_t j = 0; j < instance_batch.instance->material_data->descriptor_sets.size(); ++j)
+			instance_batch.instance->material_data->descriptor_sets[j]->bind(j);
 		
 		//NOTE: vkCmdDrawIndexedIndirect is bit faster but it limits us by having a fixed instanced batches size and adds clutter
-		vkCmdDrawIndexed(Graphics::active.command_buffer, instance_batch.instance.mesh->indices.size(), instance_batch.instance_data.size(), 0, 0, 0);
+		vkCmdDrawIndexed(Graphics::active.command_buffer, instance_batch.instance->mesh->indices.size(), instance_batch.instance_data.size(), 0, 0, 0);
 	}
 	Graphics::stats.instances = instance_batches.size();
 	Graphics::stats.batches = Renderer::batcher.batches.size();
@@ -145,9 +161,9 @@ void Scene::onWindowResize(const WindowResizeEvent& e)
 		});
 }
 
-void Scene::onRenderComponentCreate(entt::registry& registry, entt::entity entity)
+void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
 {
-	RenderComponent& render_component = registry.get<RenderComponent>(entity);
+	MeshComponent& mesh_component = registry.get<MeshComponent>(entity);
 	
 	InstanceData instance_data{};
 
@@ -160,60 +176,100 @@ void Scene::onRenderComponentCreate(entt::registry& registry, entt::entity entit
 	if (auto color = registry.try_get<ColorComponent>(entity))
 		instance_data.color = *color;
 
+	mesh_component.instance->instance_data = &instance_data; //NOTE: This becomes unusable when scope ends
+
+	createMeshInstance(mesh_component.instance);
+}
+
+void Scene::onMeshComponentDestroy(entt::registry& registry, entt::entity entity)
+{
+	if (stopped)
+		return;
+
+	MeshComponent& mesh_component = registry.get<MeshComponent>(entity);
+	
+	destroyMeshInstance(mesh_component.instance);
+}
+
+void Scene::onModelComponentCreate(entt::registry& registry, entt::entity entity)
+{
+	//TODO: Fix material hardcode IMPORTANT
+	ModelComponent& model_component = registry.get<ModelComponent>(entity);
+
+	InstanceData instance_data{};
+
+	if (auto transform = registry.try_get<TransformComponent>(entity))
+		instance_data.transform = *transform;
+
+	if (auto sprite = registry.try_get<SpriteComponent>(entity))
+		instance_data.texture_index = *sprite;
+
+	if (auto color = registry.try_get<ColorComponent>(entity))
+		instance_data.color = *color;
+	
+	for (auto& mesh : model_component.model->meshes)
+	{
+		mesh->instance_data = &instance_data;
+		createMeshInstance(mesh);
+	}
+}
+
+void Scene::onModelComponentDestroy(entt::registry& registry, entt::entity entity)
+{
+	ModelComponent& model_component = registry.get<ModelComponent>(entity);
+	for (auto& mesh : model_component.model->meshes)
+	{
+		destroyMeshInstance(mesh);
+	}
+}
+
+void Scene::createMeshInstance(shared<RenderedInstance> instance)
+{
 	if (Renderer::batcher.active)
 	{
-		render_component.instance.material_data = material_data_batch3D;
-		render_component.instance.batched = true;
-		render_component.instance.instance_data = &instance_data;
+		instance->material_data = material_data_batch3D;
+		instance->batched = true;
 
-		addBatchedInstance(render_component.instance);
+		addBatchedInstance(*instance);
 	}
 	else
 	{
-		render_component.instance.material_data = material_data_3D;
-		render_component.instance.batched = false;
+		instance->material_data = material_data_3D;
+		instance->batched = false;
 
 		for (auto& instance_batch : instance_batches)
 		{
-			if (instance_batch == render_component.instance)
-			{	
+			if (instance_batch == *instance)
+			{
 				instance_batch.needs_update = true;
-				
-				instance_batch.instance_data.emplace_back(std::move(instance_data));
-				render_component.instance.instance_data = &instance_batch.instance_data.back();
-
+				instance_batch.instance_data.emplace_back(*instance->instance_data);			
 				return;
 			}
 		}
 
 		std::vector<InstanceData> new_instance_data;
 		new_instance_data.reserve(Graphics::MAX_INSTANCES);
-		new_instance_data.emplace_back(std::move(instance_data));
-		instance_batches.emplace_back(render_component.instance, std::move(new_instance_data));
-		render_component.instance.instance_data = &instance_batches.back().instance_data.back();
+		new_instance_data.emplace_back(*instance->instance_data);
+		instance_batches.emplace_back(instance, std::move(new_instance_data));
+		instance->instance_data = &instance_batches.back().instance_data.back();
 	}
 }
 
-void Scene::onRenderComponentDestroy(entt::registry& registry, entt::entity entity)
+void Scene::destroyMeshInstance(shared<RenderedInstance> instance)
 {
-	if (stopped)
-		return;
-
-	RenderComponent& render_component = registry.get<RenderComponent>(entity);
-	
 	for (auto& instance_batch : instance_batches)
 	{
-		if (instance_batch.instance == render_component.instance)
+		if (*instance_batch.instance == *instance)
 		{
 			instance_batch.needs_update = true;
 
-			registry.view<RenderComponent>().each(
-				[&](entt::entity entity, RenderComponent& rc) 
+			registry.view<MeshComponent>().each(
+				[&](entt::entity entity, MeshComponent& rc)
 				{
-					if (rc.instance.instance_data == &instance_batch.instance_data.back())
-						rc.instance.instance_data = render_component.instance.instance_data;
+					if (rc.instance->instance_data == &instance_batch.instance_data.back())
+						rc.instance->instance_data = instance->instance_data;
 				});
-			std::swap(*render_component.instance.instance_data, instance_batch.instance_data.back());
+			std::swap(*instance->instance_data, instance_batch.instance_data.back());
 			instance_batch.instance_data.pop_back();
 
 			return;
@@ -222,9 +278,9 @@ void Scene::onRenderComponentDestroy(entt::registry& registry, entt::entity enti
 }
 
 template<>
-void Scene::updateComponent<RenderComponent>(entt::entity entity)
+void Scene::updateComponent<MeshComponent>(entt::entity entity)
 {
-	RenderComponent& render_component = registry.get<RenderComponent>(entity);
+	MeshComponent& mesh_component = registry.get<MeshComponent>(entity);
 	
 	InstanceData instance_data{};
 	
@@ -237,16 +293,15 @@ void Scene::updateComponent<RenderComponent>(entt::entity entity)
 	if (auto color = registry.try_get<ColorComponent>(entity))
 		instance_data.color = *color;
 	
-	*render_component.instance.instance_data = std::move(instance_data);
+	*mesh_component.instance->instance_data = std::move(instance_data);
 
-	if (render_component.instance.batched)
+	if (mesh_component.instance->batched)
 	{
 		for (auto& batch : Renderer::batcher.batches)
 		{
-			if (batch == render_component.instance)
+			if (batch == *mesh_component.instance)
 			{
 				batch.needs_update = true;
-
 				break;
 			}
 		}
@@ -255,10 +310,9 @@ void Scene::updateComponent<RenderComponent>(entt::entity entity)
 	{
 		for (auto& instance_batch : instance_batches)
 		{
-			if (instance_batch.instance == render_component.instance)
+			if (*instance_batch.instance == *mesh_component.instance)
 			{
 				instance_batch.needs_update = true;
-
 				break;
 			}
 		}

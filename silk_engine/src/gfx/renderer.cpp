@@ -43,8 +43,8 @@ void Renderer::updateBatch()
 			//TODO: Fix error
 			//StagingBuffer staging_buffer_vertex_array(batch.vertices.data(), batch.vertices_index * sizeof(BatchVertex));
 			//staging_buffer_vertex_array.copy(*batch.vertex_array->getVertexBuffer(0));
-			StagingBuffer staging_buffer_index_buffer(batch.indices.data(), batch.indices_index * sizeof(uint32_t));
-			staging_buffer_index_buffer.copy(*batch.vertex_array->getIndexBuffer());
+			//StagingBuffer staging_buffer_index_buffer(batch.indices.data(), batch.indices_index * sizeof(uint32_t));
+			//staging_buffer_index_buffer.copy(*batch.vertex_array->getIndexBuffer());
 		}
 	}
 }

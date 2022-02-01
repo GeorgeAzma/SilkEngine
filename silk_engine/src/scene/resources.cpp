@@ -14,6 +14,11 @@ void Resources::init()
         addMesh("Rectangle", makeShared<RectangleMesh>());
     }
 
+    //MODELS
+    {
+        addModel("Backpack", makeShared<Model>("backpack/backpack.obj"));
+    }
+
     //IMAGES
     {
         ImageProps white_image_props{};
@@ -48,6 +53,11 @@ void Resources::init()
         shared<Image> test2_image = makeShared<Image>("test2.png");
         addImage("Test1", test1_image);
         addImage("Test2", test2_image);
+    }
+
+    //FONTS
+    {
+        addFont("Arial", makeShared<Font>("arial.ttf"));
     }
 
     //MATERIALS
@@ -99,6 +109,7 @@ void Resources::cleanup()
 {
     fonts.clear();
 	meshes.clear();
+	models.clear();
 	materials.clear();
 	compute_materials.clear();
     images.clear();
@@ -108,6 +119,11 @@ void Resources::cleanup()
 shared<Mesh> Resources::getMesh(const std::string& name)
 {
 	return meshes.at(name);
+}
+
+shared<Model> Resources::getModel(const std::string& name)
+{
+    return models.at(name);
 }
 
 shared<Material> Resources::getMaterial(const std::string& name)
@@ -140,20 +156,20 @@ shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<
     return new_layout;
 }
 
-shared<Font> Resources::getFont(const std::string& path)
+shared<Font> Resources::getFont(const std::string& name)
 {
-    auto font = fonts.find(path);
-    if (font != fonts.end())
-        return font->second;
-
-    shared<Font> new_font = makeShared<Font>(path);
-    return new_font;
+    return fonts.at(name);
 }
 
 void Resources::addMesh(const std::string& name, shared<Mesh> mesh)
 {
 	mesh->name = name;
 	meshes[name] = mesh;
+}
+
+void Resources::addModel(const std::string& name, shared<Model> model)
+{
+    models[name] = model;
 }
 
 void Resources::addMaterial(const std::string& name, shared<Material> material)
@@ -178,9 +194,9 @@ void Resources::addDescriptorSetLayout(shared<DescriptorSetLayout> descriptor_la
     descriptor_set_layouts[DescriptorSetLayoutInfo{descriptor_layout->bindings_vector}] = descriptor_layout;
 }
 
-void Resources::addFont(shared<Font> font)
+void Resources::addFont(const std::string& name, shared<Font> font)
 {
-    fonts[font->getPath()] = font;
+    fonts[name] = font;
 }
 
 bool Resources::DescriptorSetLayoutInfo::operator==(const DescriptorSetLayoutInfo& other) const

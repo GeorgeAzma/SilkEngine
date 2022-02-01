@@ -16,6 +16,13 @@ layout(location = 0) out VertexOutput
 layout(set = 0, binding = 0) uniform GlobalUniform
 {
     mat4 projection_view;
+    vec3 camera_position;
+    float time;
+    vec3 camera_direction;
+    float delta_time;
+    uvec2 resolution;
+    uint frame;
+    uint flags;
 } global_uniform;
 
 void main()

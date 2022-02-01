@@ -15,7 +15,7 @@ void Mesh::init()
 	aabb.min = glm::vec3(std::numeric_limits<float>::max());
 
 	auto vbo = makeShared<VertexBuffer>(this->vertices.data(), this->vertices.size() * sizeof(Vertex));
-	auto ibo = makeShared<IndexBuffer>(this->indices.data(), this->indices.size() * sizeof(uint32_t));
+	auto ibo = makeShared<IndexBuffer>(this->indices.data(), this->indices.size());
 	std::vector<InstanceData> data(Graphics::MAX_INSTANCES, InstanceData{});
 	auto instance_vbo = makeShared<VertexBuffer>(data.data(), sizeof(InstanceData) * data.size(), VMA_MEMORY_USAGE_CPU_TO_GPU);
 	vertex_array = shared<VertexArray>(new VertexArray());

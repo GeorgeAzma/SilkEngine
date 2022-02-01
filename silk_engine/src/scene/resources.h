@@ -1,6 +1,7 @@
 #pragma once
 
 #include "meshes/mesh.h"
+#include "model.h"
 #include "material.h"
 #include "gfx/ui/font.h"
 
@@ -11,6 +12,7 @@ public:
 	static void cleanup();
 
 	static shared<Mesh> getMesh(const std::string& name);
+	static shared<Model> getModel(const std::string& name);
 	static shared<Material> getMaterial(const std::string& name);
 	static shared<ComputeMaterial> getComputeMaterial(const std::string& name);
 	static shared<Image> getImage(const std::string& name);
@@ -18,25 +20,19 @@ public:
 	* @return descriptor layout from the cache, if it doesn't exist creates new one
 	*/
 	static shared<DescriptorSetLayout> getDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
-	/**
-	* @return font from the cache, if it doesn't exist creates new one
-	*/
 	static shared<Font> getFont(const std::string& path);
 
 	static void addMesh(const std::string& name, shared<Mesh> mesh);
+	static void addModel(const std::string& name, shared<Model> model);
 	static void addMaterial(const std::string& name, shared<Material> material);
 	static void addComputeMaterial(const std::string& name, shared<ComputeMaterial> compute_material);
 	static void addImage(const std::string& name, shared<Image> image);
 	static void addDescriptorSetLayout(shared<DescriptorSetLayout> descriptor_layout);
-	/**
-	* Adds font to font cache, so when you call getFont() it won't create new one
-	* 
-	* @note You can always use getFont() on non existant fonts and it will do the same thing as this function.
-	*/
-	static void addFont(shared<Font> font);
+	static void addFont(const std::string& name, shared<Font> font);
 
 private:
 	static inline std::unordered_map<std::string, shared<Mesh>> meshes;
+	static inline std::unordered_map<std::string, shared<Model>> models;
 	static inline std::unordered_map<std::string, shared<Material>> materials;
 	static inline std::unordered_map<std::string, shared<ComputeMaterial>> compute_materials;
 	static inline std::unordered_map<std::string, shared<Image>> images;

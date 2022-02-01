@@ -46,6 +46,7 @@ public:
 	uint32_t getWidth() const { return props.width; }
 	uint32_t getHeight() const { return props.height; }
 	VkFormat getFormat() const { return props.format; }
+	std::string getPath() const { return path; }
 	const ImageProps& getProps() const { return props; }
 	const VkDescriptorImageInfo& getDescriptorInfo() const { return descriptor_image_info; }
 
@@ -80,4 +81,5 @@ private:
 	shared<StagingBuffer> staging_buffer = nullptr;
 	ImageProps props = {};
 	uint32_t mip_levels = 1;
+	std::string path;
 };

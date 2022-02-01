@@ -7,7 +7,7 @@ struct Time
 public:
     static inline double dt = 0.0;
     static inline double runtime = 0.0;
-    static inline unsigned int frames = 0;
+    static inline unsigned int frame = 0;
 
 public:
     static double getTime()

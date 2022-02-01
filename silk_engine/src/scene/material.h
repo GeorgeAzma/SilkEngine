@@ -8,7 +8,7 @@ struct Material
 {
 	shared<GraphicsPipeline> pipeline;
 
-	std::string name;
+	std::string name = "";
 
 	bool operator==(const Material& other) const
 	{
@@ -26,7 +26,7 @@ struct ComputeMaterial
 {
 	shared<ComputePipeline> pipeline;
 
-	std::string name;
+	std::string name = "";
 
 	bool operator==(const ComputeMaterial& other) const
 	{

@@ -13,3 +13,5 @@ that would make making ping pong shaders 10x easier
 
 Even tho we are developing in vulkan, we are still using openGL coordinate system 
 (except that depth goes from 0 to 1(vulkan), instead of -1 to 1(opengl))
+
+Batching is always slower than instancing, so it's kinda useless for now, might be removed :(

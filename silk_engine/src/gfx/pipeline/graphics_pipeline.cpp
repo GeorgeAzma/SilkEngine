@@ -133,7 +133,7 @@ void GraphicsPipeline::build()
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
 	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-	rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
 	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 
@@ -191,9 +191,9 @@ void GraphicsPipeline::create()
 
 	VkViewport viewport = {};
 	viewport.x = 0;
-	viewport.y = 0;
+	viewport.y = Graphics::swap_chain->getExtent().height;
 	viewport.width = Graphics::swap_chain->getExtent().width;
-	viewport.height = Graphics::swap_chain->getExtent().height;
+	viewport.height = -(float)Graphics::swap_chain->getExtent().height;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 	viewport_info.pViewports = &viewport;

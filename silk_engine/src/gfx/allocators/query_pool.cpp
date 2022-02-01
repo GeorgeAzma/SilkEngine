@@ -1,6 +1,6 @@
 #include "query_pool.h"
 #include "gfx/graphics.h"
-#include "utils/bit_utils.h"
+#include "utils/math.h"
 #include "gfx/devices/logical_device.h"
 
 QueryPool::QueryPool(VkQueryType query_type, VkQueryPipelineStatisticFlags pipeline_statistic_flags)
@@ -41,7 +41,7 @@ std::vector<uint64_t> QueryPool::getResults()
 		data_count = 1;
 		break;
 	case VK_QUERY_TYPE_PIPELINE_STATISTICS:
-		data_count = BitUtils::getEnabledFlagsCount(pipeline_statistic_flags);		
+		data_count = math::getEnabledFlagsCount(pipeline_statistic_flags);		
 		break;
 	case VK_QUERY_TYPE_TIMESTAMP:
 		data_count = 1;

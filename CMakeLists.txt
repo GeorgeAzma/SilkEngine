@@ -16,6 +16,7 @@ GLEW_STATIC
 _USE_MATH_DEFINES
 GLM_FORCE_RADIANS
 GLM_FORCE_DEPTH_ZERO_TO_ONE
+#GLM_FORCE_LEFT_HANDED
 )
 
 #|-----Vendor-----|#
@@ -156,11 +157,8 @@ CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_SOURCE_DIR}/vendor/assimp/lib
                 -DCMAKE_POLICY_DEFAULT_CMP0091:STRING=NEW
 )
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/assimp/include)
-if(MSVC)
-    list(APPEND EXTRA_LIBS "assimp" "$<IF:$<CONFIG:Debug>,zlibstaticd,zlibstatic>" "irrXML")
-else()
-	list(APPEND EXTRA_LIBS assimp zlibstatic irrXML)
-endif()
+list(APPEND EXTRA_LIBS "assimp" "$<IF:$<CONFIG:Debug>,zlibstaticd,zlibstatic>" "irrXML")
+
 link_directories("${PROJECT_SOURCE_DIR}/vendor/assimp/lib")
 
 #Sub dirs

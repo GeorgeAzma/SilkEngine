@@ -3,6 +3,7 @@
 #include "gfx/window/window.h"
 #include "core/log.h"
 #include "utils/math.h"
+#include "scene/model.h"
 #include "scene/instance.h"
 #include "scene/camera/camera.h"
 
@@ -53,16 +54,14 @@ struct ScriptComponent
 
 struct MeshComponent
 {
-	shared<Mesh> mesh;
+	shared<RenderedInstance> instance;
 
-	operator const shared<Mesh>& () const { return mesh; }
+	operator const RenderedInstance& () const { return *instance; }
 };
 
-struct RenderComponent
+struct ModelComponent
 {
-	RenderedInstance instance;
-
-	operator const RenderedInstance& () const { return instance; }
+	shared<Model> model;
 };
 
 struct ColorComponent

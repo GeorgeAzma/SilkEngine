@@ -14,8 +14,6 @@ public:
 	static void drawBatch(const std::vector<Batch>& batches);
 	static void addBatch();
 
-	static std::vector<Batch>& getLastBatch() { return batcher.batches; }
-
 public:
 	static inline Batcher batcher;
 };

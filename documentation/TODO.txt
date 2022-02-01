@@ -1,12 +1,19 @@
-- Implement multi texturing, a.k.a array textures
+- Implement dynamic multi texturing
 - Write custom 3D model loader/converter
+- Fix coordinate system
+- Better material system
+- Font rendering
+- Descriptor allocator
+- Caching (Graphics Pipeline etc.)
+- Editable shader defines
+- 4 component image converter shader
+- OpenAL and audio streaming
+- Video (mp4 etc.)
 - Create system which handles buffer creation for multiple frames 
 (perhaps static function like Graphics::createBuffer())
 - Sort meshes and materials and render with minimal binds
 - Multiple render passes
 - Fix dirty swap chain code and render pass code
-- Support array textures
-- Batch all the draw commands in single mesh.draw() function
 - Support more instances, by making vertex buffer resizable
 - Seperate dispatchers for related events and create getters for them
 - Configurable graphics settings (preferably in file format like yaml) 

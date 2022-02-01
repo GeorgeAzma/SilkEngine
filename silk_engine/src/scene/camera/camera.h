@@ -29,7 +29,7 @@ public:
 	glm::mat4 view = glm::mat4(1);
 
 	glm::vec3 position = glm::vec3(0);
-	glm::vec3 rotation = glm::vec3(0);
+	glm::vec3 rotation = glm::vec3(glm::half_pi<float>(), 0.0f, 0.0f);
 	glm::vec3 direction = glm::vec3(0);
 	Frustum frustum;
 

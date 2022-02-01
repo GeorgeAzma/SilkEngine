@@ -26,9 +26,10 @@ protected:
 	void calculateTangents();
 
 private:
-	std::string name;
+	std::string name = "";
 	AABB aabb;
 
 	friend class Resources;
+	friend class Model;
 	friend class Scene;
 };
