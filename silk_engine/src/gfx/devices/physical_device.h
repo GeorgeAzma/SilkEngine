@@ -7,11 +7,16 @@
 struct QueueFamilyIndices
 {
 	std::optional<uint32_t> graphics;
+	std::optional<uint32_t> transfer;
 	std::optional<uint32_t> present;
+	std::optional<uint32_t> compute;
 
 	bool isSuitable() const
 	{
-		return graphics.has_value() && present.has_value();
+		return graphics.has_value() 
+			&& transfer.has_value()
+			&& present.has_value() 
+			&& compute.has_value();
 	}
 
 	std::vector<uint32_t> getIndices() const 
@@ -19,7 +24,7 @@ struct QueueFamilyIndices
 		if (!isSuitable()) 
 			return {};
 
-		return { *graphics, *present };
+		return { *graphics, *transfer, *present, *compute };
 	};
 };
 

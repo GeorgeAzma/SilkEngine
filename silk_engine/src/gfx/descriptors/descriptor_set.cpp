@@ -83,7 +83,17 @@ void DescriptorSet::build()
 	for (auto& write : descriptor_writes)
 		write.dstSet = descriptor_set;
 
+	update();
+}
+
+void DescriptorSet::update()
+{
 	vkUpdateDescriptorSets(*Graphics::logical_device, descriptor_writes.size(), descriptor_writes.data(), 0, nullptr);
+}
+
+void DescriptorSet::update(const VkWriteDescriptorSet& descriptor_write)
+{
+	vkUpdateDescriptorSets(*Graphics::logical_device, 1, &descriptor_write, 0, nullptr);
 }
 
 void DescriptorSet::bind(size_t first_set)

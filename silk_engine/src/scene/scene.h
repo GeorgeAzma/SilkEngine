@@ -2,8 +2,10 @@
 
 #include "core/event.h"
 #include "instance.h"
+#include "light.h"
 #include "gfx/buffers/indirect_buffer.h"
 #include "gfx/buffers/storage_buffer.h"
+#include "gfx/graphics.h"
 
 class Entity;
 
@@ -26,11 +28,16 @@ public:
 
 private:
 	void onWindowResize(const WindowResizeEvent& e);
+	
 	void onMeshComponentCreate(entt::registry& registry, entt::entity entity);
 	void onMeshComponentDestroy(entt::registry& registry, entt::entity entity);
+	
 	void onModelComponentCreate(entt::registry& registry, entt::entity entity);
 	void onModelComponentDestroy(entt::registry& registry, entt::entity entity);
-
+	
+	void onLightComponentCreate(entt::registry& registry, entt::entity entity);
+	void onLightComponentDestroy(entt::registry& registry, entt::entity entity);
+	
 	void createMeshInstance(shared<RenderedInstance> instance);
 	void destroyMeshInstance(shared<RenderedInstance> instance);
 
@@ -42,6 +49,9 @@ private:
 	std::vector<InstanceBatch> instance_batches;
 	shared<MaterialData> material_data_3D;
 	shared<MaterialData> material_data_batch3D;
+	std::array<Light, Graphics::MAX_LIGHTS> lights;
+	size_t light_index = 0;
+	bool lights_updated = false;
 
 	bool stopped = false;
 };

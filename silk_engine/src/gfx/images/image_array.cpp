@@ -147,7 +147,7 @@ void ImageArray::transitionLayout(VkImageLayout newLayout)
 
 	command_buffer.end();
 	command_buffer.submit();
-	command_buffer.wait();
+	command_buffer.submitIdle();
 
 	descriptor_image_info.imageLayout = newLayout;
 }
@@ -179,8 +179,7 @@ void ImageArray::copyBufferToImageArray()
 	vkCmdCopyBufferToImage(command_buffer, *staging_buffer, image, descriptor_image_info.imageLayout, copy_regions.size(), copy_regions.data());
 	
 	command_buffer.end();
-	command_buffer.submit();
-	command_buffer.wait();
+	command_buffer.submitIdle();
 }
 
 void ImageArray::generateMipmaps()
@@ -281,8 +280,7 @@ void ImageArray::generateMipmaps()
 		1, &barrier);
 
 	command_buffer.end();
-	command_buffer.submit();
-	command_buffer.wait();
+	command_buffer.submitIdle();
 }
 
 ImageArray::TransitionInfo ImageArray::getTransitionInfo(VkImageLayout oldLayout, VkImageLayout newLayout)

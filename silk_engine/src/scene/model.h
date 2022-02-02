@@ -21,7 +21,6 @@ private:
 private:
 	std::vector<shared<RenderedInstance>> meshes; //TODO: Rendered Instance kinda weird? (name: meshes doesn't apply??)
 	std::vector<shared<Image>> images;
-	std::vector<shared<Image>> images_loaded;
 	std::string directory; 
 	std::string path;
 	friend class Scene;

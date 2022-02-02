@@ -75,7 +75,7 @@ void SwapChain::createFramebuffers()
 
 void SwapChain::acquireNextImage()
 {
-	command_buffer->wait(); 
+	vkQueueWaitIdle(Graphics::logical_device->getGraphicsQueue());
 	Graphics::vulkanAssert(vkAcquireNextImageKHR(*Graphics::logical_device, swap_chain, UINT64_MAX, image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index));
 }
 
@@ -92,7 +92,7 @@ void SwapChain::present()
 	const std::vector<VkSemaphore> signal_semaphores = { render_finished_semaphores[current_frame] };
 	VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
-	command_buffer->submit({ image_index, in_flight_fences[current_frame], { image_available_semaphores[current_frame] }, signal_semaphores, wait_stages });
+	command_buffers[image_index]->submit({ in_flight_fences[current_frame], {image_available_semaphores[current_frame]}, signal_semaphores, wait_stages});
 
 	VkPresentInfoKHR present_info{};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -114,7 +114,7 @@ void SwapChain::present()
 void SwapChain::beginFrame()
 {
 	acquireNextImage(); 
-	command_buffer->begin({}, image_index);
+	command_buffers[image_index]->begin(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
 }
 
 void SwapChain::beginRenderPass()
@@ -124,7 +124,7 @@ void SwapChain::beginRenderPass()
 
 void SwapChain::endFrame()
 {
-	command_buffer->end(image_index);
+	command_buffers[image_index]->end();
 	present();
 }
 
@@ -207,12 +207,18 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	msaa_image = new Image(props);
 
 	createFramebuffers();
-	command_buffer = new CommandBuffer(image_views.size());
+	command_buffers.resize(image_views.size());
+	for(auto& command_buffer : command_buffers)
+		command_buffer = new CommandBuffer();
 }
 
 void SwapChain::destroy()
 {
-	delete command_buffer;
+	for (auto& command_buffer : command_buffers)
+	{
+		delete command_buffer;
+		command_buffer = nullptr;
+	}
 	delete depth;
 	delete msaa_image;
 	for (auto& framebuffer : framebuffers)

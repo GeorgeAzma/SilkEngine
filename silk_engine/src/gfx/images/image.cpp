@@ -41,24 +41,42 @@ Image::~Image()
 	vmaDestroyImage(*Graphics::allocator, image, allocation);
 }
 
+BitmapLoadData Image::loadAsBitmap(const std::string& file)
+{
+	std::string path = std::string("data/images/") + file;
+
+	int width, height, channels;
+	stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, 0);
+	SK_ASSERT(pixels, "Failed to load image: {0}", path);
+
+	SK_TRACE("Image Loaded: {0}", path);
+
+	std::vector<uint8_t> pixels_vec(width * height * channels);
+	std::memcpy(pixels_vec.data(), pixels, pixels_vec.size());
+
+	stbi_image_free(pixels);
+
+	return { width, height, channels, pixels_vec };
+}
+
 ImageLoadData Image::load(const std::string& file)
 {
 	int width, height, channels;
-	stbi_uc* pixels = stbi_load(file.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+	stbi_uc* pixels = stbi_load(file.c_str(), &width, &height, &channels, 0);
 	SK_ASSERT(pixels, "Failed to load image: {0}", file);
 
-	SK_INFO("Image Loaded: {0}", file);
+	SK_TRACE("Image Loaded: {0}", file);
 
 	stbi_uc* aligned_pixels = pixels;
 
 	if (channels == 3)
 	{
 		aligned_pixels = new stbi_uc[width * height * 4];
-		//for (size_t i = 0; i < width * height; ++i)
-		//{
-		//	std::memcpy(aligned_pixels + i * 4, pixels + i * 3, 3);
-		//	aligned_pixels[i * 4 + 3] = 255;
-		//}
+		for (size_t i = 0; i < width * height; ++i)
+		{
+			std::memcpy(aligned_pixels + i * 4, pixels + i * 3, 3);
+			aligned_pixels[i * 4 + 3] = 255;
+		}
 		channels = 4;
 	}
 
@@ -154,8 +172,7 @@ void Image::transitionLayout(VkImageLayout newLayout)
 		transition_info.destination_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
 	command_buffer.end();
-	command_buffer.submit();
-	command_buffer.wait();
+	command_buffer.submitIdle();
 
 	descriptor_image_info.imageLayout = newLayout;
 }
@@ -179,8 +196,7 @@ void Image::copyBufferToImage()
 	vkCmdCopyBufferToImage(command_buffer, *staging_buffer, image, descriptor_image_info.imageLayout, 1, &region);
 
 	command_buffer.end();
-	command_buffer.submit();
-	command_buffer.wait();
+	command_buffer.submitIdle();
 }
 
 void Image::generateMipmaps()
@@ -284,8 +300,7 @@ void Image::generateMipmaps()
 		1, &barrier);
 
 	command_buffer.end();
-	command_buffer.submit();
-	command_buffer.wait();
+	command_buffer.submitIdle();
 }
 
 Image::TransitionInfo Image::getTransitionInfo(VkImageLayout oldLayout, VkImageLayout newLayout)

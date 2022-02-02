@@ -6,6 +6,7 @@
 #include "gfx/graphics.h"
 #include "utils/timers.h"
 #include "scene/resources.h"
+#include "gfx/window/swap_chain.h"
 
 Application::Application(const char* name, ApplicationCommandLineArgs args)
     : command_line_args(args), app_update(0.0)
@@ -57,8 +58,9 @@ void Application::run()
                 Time::frame = app_update.getFramesPassed();
                 Time::runtime = app_update.getRuntime();
 
-
+                Graphics::swap_chain->beginFrame();
                 onUpdate();
+                Graphics::swap_chain->endFrame();
 
                 for (Layer *layer : layer_stack)
                     layer->onUpdate();

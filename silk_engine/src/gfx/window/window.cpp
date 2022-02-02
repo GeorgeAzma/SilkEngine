@@ -1,6 +1,7 @@
 #include "window.h"
 #include "core/input/keys.h"
 #include "core/event.h"
+#include "gfx/images/image.h"
 
 static bool GLFW_initialized = false;
 
@@ -133,6 +134,12 @@ void Window::init()
         [](GLFWwindow* window, unsigned int codepoint, int mods)
         {
             Dispatcher::post(CharacterWriteEvent(codepoint));
+        });
+
+    glfwSetJoystickCallback(
+        [](int id, int event)
+        {
+            Dispatcher::post(JoystickEvent(id, event == GLFW_CONNECTED));
         });
 }
 
@@ -268,13 +275,18 @@ void Window::align(WindowAlignment a)
     glfwSetWindowPos(window, x, y);
 }
 
-// void Window::setIcon(shared<Texture> icon)
-// {
-//     GLFWimage images[1];
-//     images[0].width = icon->getWidth();
-//     images[0].height = icon->getHeight();
-//     images[0].pixels = new unsigned char[images[0].width * images[0].height * 4];
-//     icon->getData(images[0].pixels);
-//     glfwSetWindowIcon(m_window, 1, images);
-//     delete[] images[0].pixels;
-// }
+void Window::setIcon(const std::string& file)
+{
+    std::string path = std::string("icons/") + file;
+    auto bitmap_data = Image::loadAsBitmap(path);
+    std::vector<GLFWimage> icons(1);
+    icons[0].height = bitmap_data.height;
+    icons[0].width = bitmap_data.width;
+    icons[0].pixels = bitmap_data.data.data();
+    glfwSetWindowIcon(window, icons.size(), icons.data());
+}
+
+void Window::focus()
+{
+    glfwFocusWindow(window);
+}

@@ -35,6 +35,14 @@ struct ImageLoadData
 	shared<StagingBuffer> staging_buffer;
 };
 
+struct BitmapLoadData
+{
+	int width;
+	int height;
+	int channels;
+	std::vector<uint8_t> data;
+};
+
 class Image : NonCopyable
 {
 public:
@@ -49,6 +57,8 @@ public:
 	std::string getPath() const { return path; }
 	const ImageProps& getProps() const { return props; }
 	const VkDescriptorImageInfo& getDescriptorInfo() const { return descriptor_image_info; }
+
+	static BitmapLoadData loadAsBitmap(const std::string& file);
 
 	operator const VkImage& () const { return image; }
 	operator const VkDescriptorImageInfo& () const { return descriptor_image_info; }

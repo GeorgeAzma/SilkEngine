@@ -1,7 +1,6 @@
 #include "scene.h"
 #include "entity.h"
 #include "components.h"
-#include "gfx/graphics.h"
 #include "scene/resources.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/devices/physical_device.h"
@@ -17,14 +16,17 @@ Scene::Scene()
 	
 	registry.on_construct<MeshComponent>().connect<&Scene::onMeshComponentCreate>(this);
 	registry.on_construct<ModelComponent>().connect<&Scene::onModelComponentCreate>(this);
+	registry.on_construct<LightComponent>().connect<&Scene::onLightComponentCreate>(this);
+	
 	registry.on_destroy<MeshComponent>().connect<&Scene::onMeshComponentDestroy>(this);
 	registry.on_destroy<ModelComponent>().connect<&Scene::onModelComponentDestroy>(this);
+	registry.on_destroy<LightComponent>().connect<&Scene::onLightComponentDestroy>(this);
 
 	shared<DescriptorSet> global_descriptor_set = makeShared<DescriptorSet>();
-	global_descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE }, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+	global_descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE }, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
 		.build();
 
-	auto white_image = Resources::getImage("Test1");
+	auto white_image = Resources::getImage("backpack/diffuse.jpg");
 	shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>();
 	descriptor_set->addImages(0, {
 			*white_image, *white_image, *white_image, *white_image,
@@ -47,8 +49,11 @@ Scene::~Scene()
 	Dispatcher::unsubscribe(this, &Scene::onWindowResize);
 	registry.on_construct<MeshComponent>().disconnect<&Scene::onMeshComponentCreate>(this);
 	registry.on_construct<ModelComponent>().disconnect<&Scene::onModelComponentCreate>(this);
+	registry.on_construct<LightComponent>().disconnect<&Scene::onLightComponentCreate>(this);
+
 	registry.on_destroy<MeshComponent>().disconnect<&Scene::onMeshComponentDestroy>(this);
 	registry.on_destroy<ModelComponent>().disconnect<&Scene::onModelComponentDestroy>(this);
+	registry.on_destroy<LightComponent>().disconnect<&Scene::onLightComponentDestroy>(this);
 }
 
 void Scene::onPlay()
@@ -68,8 +73,6 @@ void Scene::onPlay()
 
 void Scene::onUpdate()
 {
-	Graphics::swap_chain->beginFrame();
-
 	//Update components
 	registry.view<ScriptComponent>().each(
 		[&](auto entity, auto& script_component)
@@ -95,7 +98,8 @@ void Scene::onUpdate()
 	global_uniform_data.time = Time::runtime;
 	global_uniform_data.frame = Time::frame;
 	global_uniform_data.resolution = glm::uvec2(Window::getWidth(), Window::getHeight());
-	global_uniform_data.flags = 0;
+	global_uniform_data.light_count = light_index;
+	global_uniform_data.lights = lights;
 
 	Graphics::global_uniform->setDataChecked(&global_uniform_data, sizeof(Graphics::GlobalUniformData));
 
@@ -117,19 +121,20 @@ void Scene::onUpdate()
 			instance_batch.instance->material_data->descriptor_sets[j]->bind(j);
 		
 		//NOTE: vkCmdDrawIndexedIndirect is bit faster but it limits us by having a fixed instanced batches size and adds clutter
-		vkCmdDrawIndexed(Graphics::active.command_buffer, instance_batch.instance->mesh->indices.size(), instance_batch.instance_data.size(), 0, 0, 0);
+		if(instance_batch.instance->mesh->vertex_array->hasIndexBuffer())
+			vkCmdDrawIndexed(Graphics::active.command_buffer, instance_batch.instance->mesh->indices.size(), instance_batch.instance_data.size(), 0, 0, 0);
+		else
+			vkCmdDraw(Graphics::active.command_buffer, instance_batch.instance->mesh->vertices.size(), instance_batch.instance_data.size(), 0, 0);
 	}
 	Graphics::stats.instances = instance_batches.size();
 	Graphics::stats.batches = Renderer::batcher.batches.size();
+	SK_INFO(Graphics::stats.instances);
 
 	Renderer::updateBatch();
 	Renderer::drawLastBatch();
 	
 	//End draw
 	Graphics::swap_chain->endRenderPass();
-
-	Graphics::swap_chain->endFrame();
-
 }
 
 void Scene::onStop()
@@ -220,6 +225,31 @@ void Scene::onModelComponentDestroy(entt::registry& registry, entt::entity entit
 	for (auto& mesh : model_component.model->meshes)
 	{
 		destroyMeshInstance(mesh);
+	}
+}
+
+void Scene::onLightComponentCreate(entt::registry& registry, entt::entity entity)
+{
+	LightComponent& light_component = registry.get<LightComponent>(entity);
+	lights[light_index] = light_component;
+	if(auto transform = registry.try_get<TransformComponent>(entity))
+		lights[light_index].position = transform->transform * glm::vec4(light_component.light.position, 1);
+	light_index = (light_index + 1) % Graphics::MAX_LIGHTS;
+}
+
+void Scene::onLightComponentDestroy(entt::registry& registry, entt::entity entity)
+{
+	LightComponent& light_component = registry.get<LightComponent>(entity);
+	
+	for (size_t i = 0; i < light_index; ++i)
+	{
+		if (light_component == lights[i])
+		{
+			lights[i] = Light{}; //if color is black, light is inactive and shader skips it
+			std::swap(lights[i], lights[light_index - 1]);
+			--light_index;
+			break;
+		}
 	}
 }
 

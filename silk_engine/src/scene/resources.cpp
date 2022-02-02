@@ -63,7 +63,7 @@ void Resources::init()
     //MATERIALS
     {
         shared<DescriptorSetLayout> global_descriptor_set_layout = makeShared<DescriptorSetLayout>();
-        global_descriptor_set_layout->addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+        global_descriptor_set_layout->addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
             .build();
         addDescriptorSetLayout(global_descriptor_set_layout);
 
@@ -118,27 +118,32 @@ void Resources::cleanup()
 
 shared<Mesh> Resources::getMesh(const std::string& name)
 {
-	return meshes.at(name);
+    auto it = meshes.find(name);
+    return it == meshes.end() ? nullptr : it->second;
 }
 
 shared<Model> Resources::getModel(const std::string& name)
 {
-    return models.at(name);
+    auto it = models.find(name);
+    return it == models.end() ? nullptr : it->second;
 }
 
 shared<Material> Resources::getMaterial(const std::string& name)
 {
-    return materials.at(name);
+    auto it = materials.find(name);
+    return it == materials.end() ? nullptr : it->second;
 }
 
 shared<ComputeMaterial> Resources::getComputeMaterial(const std::string& name)
 {
-    return compute_materials.at(name);
+    auto it = compute_materials.find(name);
+    return it == compute_materials.end() ? nullptr : it->second;
 }
 
 shared<Image> Resources::getImage(const std::string& name)
 {
-    return images.at(name);
+    auto it = images.find(name);
+    return it == images.end() ? nullptr : it->second;
 }
 
 shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
@@ -158,7 +163,8 @@ shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<
 
 shared<Font> Resources::getFont(const std::string& name)
 {
-    return fonts.at(name);
+    auto it = fonts.find(name);
+    return it == fonts.end() ? nullptr : it->second;
 }
 
 void Resources::addMesh(const std::string& name, shared<Mesh> mesh)

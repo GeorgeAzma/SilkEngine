@@ -74,9 +74,7 @@ RenderPass& RenderPass::addSubpass()
     subpasses.emplace_back();
 
     if (subpasses.size() > 1)
-    {
         subpasses.back().input_attachments = subpasses[subpasses.size() - 2].attachment_references;
-    }
 
     return *this;
 }
@@ -130,7 +128,6 @@ void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_cont
 {
     if (Graphics::active.render_pass == render_pass)
         return;
-
     VkRenderPassBeginInfo render_pass_begin_info{};
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     render_pass_begin_info.renderPass = render_pass;
@@ -158,17 +155,18 @@ void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_cont
     render_pass_begin_info.pClearValues = clear_values.data();
 
     vkCmdBeginRenderPass(Graphics::active.command_buffer, &render_pass_begin_info, subpass_contents);
-
     Graphics::active.render_pass = render_pass;
-    Graphics::active.subpass = 0;
 }
 
 void RenderPass::end()
 {
     if (Graphics::active.render_pass != render_pass)
         return;
-
     vkCmdEndRenderPass(Graphics::active.command_buffer);
-
     Graphics::active.render_pass = VK_NULL_HANDLE;
+    if (Graphics::active.bind_point == VK_PIPELINE_BIND_POINT_GRAPHICS)
+    {
+        Graphics::active.pipeline = VK_NULL_HANDLE;
+        Graphics::active.bind_point = VK_PIPELINE_BIND_POINT_MAX_ENUM;
+    }
 }

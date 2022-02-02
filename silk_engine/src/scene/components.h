@@ -11,14 +11,14 @@ struct TransformComponent
 {
 	glm::mat4 transform{1.0f};
 
-	operator glm::mat4& () { return transform; }
+	operator const glm::mat4& () const { return transform; }
 };
 
 struct SpriteComponent
 {
 	uint32_t texture_index = 0;
 
-	operator uint32_t () const { return texture_index; }
+	operator uint32_t& () { return texture_index; }
 };
 
 struct CameraComponent
@@ -49,32 +49,43 @@ struct ScriptComponent
 		};
 	}
 
-	operator const ScriptableEntity* () const { return instance; }
+	operator ScriptableEntity* () { return instance; }
 };
 
 struct MeshComponent
 {
 	shared<RenderedInstance> instance;
 
-	operator const RenderedInstance& () const { return *instance; }
+	operator RenderedInstance& () { return *instance; }
 };
 
 struct ModelComponent
 {
 	shared<Model> model;
+
+	operator Model& () { return *model; }
 };
 
 struct ColorComponent
 {
 	glm::vec4 color = glm::vec4(1);
 
-	operator const glm::vec4& () const { return color; }
+	operator glm::vec4& () { return color; }
 };
 
 struct TextComponent
 {
-	std::string test = "Text";
+	std::string text = "Text";
 
 	size_t size = 32;
 	std::string font = "arial.ttf";
+
+	operator std::string& () { return text; }
+};
+
+struct LightComponent
+{
+	Light light;
+
+	operator Light& () { return light; };
 };

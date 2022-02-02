@@ -172,6 +172,8 @@ void GraphicsPipeline::build()
 
 void GraphicsPipeline::bind()
 {
+	if (Graphics::active.pipeline == pipeline)
+		return;
 	vkCmdBindPipeline(Graphics::active.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 	Graphics::active.pipeline = pipeline;
 	Graphics::active.pipeline_layout = pipeline_layout;

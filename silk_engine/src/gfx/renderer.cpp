@@ -1,5 +1,6 @@
 #include "renderer.h"
 #include "scene/resources.h"
+#include "gfx/graphics.h"
 
 void Renderer::cleanup()
 {

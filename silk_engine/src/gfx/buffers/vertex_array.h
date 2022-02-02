@@ -14,6 +14,8 @@ public:
 	shared<VertexBuffer> getVertexBuffer(size_t index) const { return vertex_buffers[index]; }
 	shared<IndexBuffer> getIndexBuffer() const { return index_buffer; }
 
+	bool hasIndexBuffer() const { return index_buffer != nullptr; }
+
 	void bind();
 
 private:

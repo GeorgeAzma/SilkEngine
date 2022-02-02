@@ -132,6 +132,15 @@ public:
     const char character;
 };
 
+class JoystickEvent : public Event
+{
+public:
+    JoystickEvent(int id, bool connected)
+        : id(id), connected(connected) {}
+
+    const int id;
+    const bool connected;
+};
 
 
 // Dispatching and such code

@@ -6,6 +6,8 @@
 - Descriptor allocator
 - Caching (Graphics Pipeline etc.)
 - Editable shader defines
+- Shader includes
+- PBR
 - 4 component image converter shader
 - OpenAL and audio streaming
 - Video (mp4 etc.)

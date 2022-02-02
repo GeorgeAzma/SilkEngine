@@ -3,63 +3,42 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/allocators/command_pool.h"
 
-CommandBuffer::CommandBuffer(size_t count, VkCommandBufferLevel level)
-	: level(level)
+CommandBuffer::CommandBuffer(VkCommandBufferLevel level, VkQueueFlagBits queue_type)
+	: level(level), queue_type(queue_type)
 {
-	command_buffers.resize(count);
-	recorded.resize(count, false);
-
 	VkCommandBufferAllocateInfo allocation_info{};
 	allocation_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocation_info.level = level;
 	allocation_info.commandPool = *Graphics::command_pool; //Creating seperate command pool with VK_COMMAND_POOL_CREATE_TRANSIENT_BIT might be more efficient
-	allocation_info.commandBufferCount = command_buffers.size();
+	allocation_info.commandBufferCount = 1;
 
-	Graphics::vulkanAssert(vkAllocateCommandBuffers(*Graphics::logical_device, &allocation_info, command_buffers.data()));
+	Graphics::vulkanAssert(vkAllocateCommandBuffers(*Graphics::logical_device, &allocation_info, &command_buffer));
 }
 
 CommandBuffer::~CommandBuffer()
 {
-	vkFreeCommandBuffers(*Graphics::logical_device, *Graphics::command_pool, command_buffers.size(), command_buffers.data());
+	vkFreeCommandBuffers(*Graphics::logical_device, *Graphics::command_pool, 1, &command_buffer);
 }
 
-void CommandBuffer::begin(VkCommandBufferUsageFlagBits usage, size_t index)
+void CommandBuffer::begin(VkCommandBufferUsageFlagBits usage)
 {
-	if (Graphics::active.command_buffer == command_buffers[index])
+	if (Graphics::active.command_buffer == command_buffer)
 		return;
-
 	VkCommandBufferBeginInfo begin_info{};
 	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	begin_info.flags = usage;
 
-	if (level == VK_COMMAND_BUFFER_LEVEL_SECONDARY)
-	{
-		VkCommandBufferInheritanceInfo inheritance_info{};
-		inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-		
-		if ((usage & VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT) == VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT)
-		{
-			inheritance_info.renderPass = Graphics::active.render_pass;
-			inheritance_info.subpass = Graphics::active.subpass;
-		}
-
-		begin_info.pInheritanceInfo = &inheritance_info;
-	}
-
-	Graphics::vulkanAssert(vkBeginCommandBuffer(command_buffers[index], &begin_info));
-
-	Graphics::active.command_buffer = command_buffers[index];
+	Graphics::vulkanAssert(vkBeginCommandBuffer(command_buffer, &begin_info));
+	Graphics::active.command_buffer = command_buffer;
 }
 
-void CommandBuffer::end(size_t index)
+void CommandBuffer::end()
 {
-	if (Graphics::active.command_buffer != command_buffers[index])
+	if (Graphics::active.command_buffer != command_buffer)
 		return;
 
-	Graphics::vulkanAssert(vkEndCommandBuffer(command_buffers[index]));
-	
-	recorded[index] = true;
-	Graphics::active.command_buffer = nullptr;
+	Graphics::vulkanAssert(vkEndCommandBuffer(command_buffer)); 
+	Graphics::active.command_buffer = VK_NULL_HANDLE;
 }
 
 void CommandBuffer::submit(const CommandBufferSubmitInfo& command_buffer_submit_info)
@@ -68,36 +47,55 @@ void CommandBuffer::submit(const CommandBufferSubmitInfo& command_buffer_submit_
 
 	VkSubmitInfo submit_info{};
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-	submit_info.waitSemaphoreCount = command_buffer_submit_info.wait_semaphores.size();
-	submit_info.pWaitSemaphores = command_buffer_submit_info.wait_semaphores.data();
+	submit_info.commandBufferCount = 1;
+	submit_info.pCommandBuffers = &command_buffer;
 
 	submit_info.pWaitDstStageMask = command_buffer_submit_info.wait_stages;
-
-	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &command_buffers[command_buffer_submit_info.index];
+	submit_info.waitSemaphoreCount = command_buffer_submit_info.wait_semaphores.size();
+	submit_info.pWaitSemaphores = command_buffer_submit_info.wait_semaphores.data();
 
 	submit_info.signalSemaphoreCount = command_buffer_submit_info.signal_semaphores.size();
 	submit_info.pSignalSemaphores = command_buffer_submit_info.signal_semaphores.data();
 
-	fence = command_buffer_submit_info.fence;
-
-	if (fence != VK_NULL_HANDLE)
-	{
-		Graphics::vulkanAssert(vkResetFences(*Graphics::logical_device, 1, &fence));
-	}
-
-	Graphics::vulkanAssert(vkQueueSubmit(command_buffer_submit_info.queue != VK_NULL_HANDLE ? command_buffer_submit_info.queue : Graphics::logical_device->getGraphicsQueue(), 1, &submit_info, fence));
+	if (command_buffer_submit_info.fence != VK_NULL_HANDLE)
+		Graphics::vulkanAssert(vkResetFences(*Graphics::logical_device, 1, &command_buffer_submit_info.fence));
+	
+	Graphics::vulkanAssert(vkQueueSubmit(getQueue(), 1, &submit_info, command_buffer_submit_info.fence));
 }
 
-void CommandBuffer::wait()
+void CommandBuffer::submitIdle()
 {
-	if (fence != VK_NULL_HANDLE)
+	end();
+
+	VkSubmitInfo submit_info{};
+	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submit_info.commandBufferCount = 1;
+	submit_info.pCommandBuffers = &command_buffer;
+
+	VkFenceCreateInfo fence_info = {};
+	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+
+	VkFence fence;
+	Graphics::vulkanAssert(vkCreateFence(*Graphics::logical_device, &fence_info, nullptr, &fence));
+	Graphics::vulkanAssert(vkResetFences(*Graphics::logical_device, 1, &fence));
+
+	Graphics::vulkanAssert(vkQueueSubmit(getQueue(), 1, &submit_info, fence));
+	Graphics::vulkanAssert(vkWaitForFences(*Graphics::logical_device, 1, &fence, VK_TRUE, std::numeric_limits<uint64_t>::max()));
+
+	vkDestroyFence(*Graphics::logical_device, fence, nullptr);
+}
+
+VkQueue CommandBuffer::getQueue() const
+{
+	switch (queue_type) 
 	{
-		Graphics::vulkanAssert(vkWaitForFences(*Graphics::logical_device, 1, &fence, VK_TRUE, UINT64_MAX));
-	}
-	else
-	{
-		Graphics::vulkanAssert(vkQueueWaitIdle(queue != VK_NULL_HANDLE ? queue : Graphics::logical_device->getGraphicsQueue()));
+	case VK_QUEUE_GRAPHICS_BIT:
+		return Graphics::logical_device->getGraphicsQueue(); 
+	case VK_QUEUE_TRANSFER_BIT:
+		return Graphics::logical_device->getTransferQueue();
+	case VK_QUEUE_COMPUTE_BIT:
+		return Graphics::logical_device->getComputeQueue();
+	default:
+		return Graphics::logical_device->getGraphicsQueue(); //Or nullptr
 	}
 }

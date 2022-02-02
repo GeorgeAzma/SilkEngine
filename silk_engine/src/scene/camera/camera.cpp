@@ -20,6 +20,7 @@ void Camera::onViewportResize()
 		projection = glm::ortho(0.0f, (float)Window::getWidth(), 0.0f, (float)Window::getHeight(), 0.0f, 1.0f);
 		break;
 	}
+
 	updateProjectionView();
 }
 

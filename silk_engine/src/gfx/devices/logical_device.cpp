@@ -48,7 +48,9 @@ LogicalDevice::LogicalDevice()
 
 	//Get handles of the requried queues
 	vkGetDeviceQueue(logical_device, *queue_family_indices.graphics, 0, &graphics_queue);
+	vkGetDeviceQueue(logical_device, *queue_family_indices.transfer, 0, &transfer_queue);
 	vkGetDeviceQueue(logical_device, *queue_family_indices.present, 0, &present_queue);
+	vkGetDeviceQueue(logical_device, *queue_family_indices.compute, 0, &compute_queue);
 }
 
 LogicalDevice::~LogicalDevice()

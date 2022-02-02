@@ -1,8 +1,6 @@
 #pragma once
 
-#include <GLM/glm.hpp>
 #include <GLFW/glfw3.h>
-#include <string>
 
 enum class WindowAlignment
 {
@@ -43,7 +41,8 @@ public:
     static void setSize(const glm::uvec2 &size);
     static void setTitle(const char* title);
     static void align(WindowAlignment a = WindowAlignment::CENTER);
-    //static void setIcon(shared<Texture> icon);
+    static void setIcon(const std::string& file);
+    static void focus();
 
 private:
     static inline GLFWwindow *window = nullptr;

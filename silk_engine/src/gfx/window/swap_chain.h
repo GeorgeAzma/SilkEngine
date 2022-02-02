@@ -62,7 +62,7 @@ private:
     std::vector<VkSemaphore> image_available_semaphores = std::vector<VkSemaphore>(MAX_FRAMES_IN_FLIGHT);
     std::vector<VkSemaphore> render_finished_semaphores = std::vector<VkSemaphore>(MAX_FRAMES_IN_FLIGHT);
     uint32_t current_frame = 0;
-    CommandBuffer* command_buffer = nullptr;
+    std::vector<CommandBuffer*> command_buffers;
     std::vector<VkFence> images_in_flight = {};
     uint32_t image_index = 0;
     Image* msaa_image = nullptr;

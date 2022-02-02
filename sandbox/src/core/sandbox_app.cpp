@@ -11,25 +11,27 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
     auto rectangle = Resources::getMesh("Rectangle");
     auto circle = Resources::getMesh("Circle");
-    entities.resize(100);
+    Renderer::beginBatch();
+    entities.resize(1000);
     for (size_t i = 0; i < entities.size(); ++i)
     {
         entities[i] = scene->createEntity();
-        entities[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(i % (size_t)sqrt(entities.size()), i / (size_t)sqrt(entities.size()), RNG::Float() * 10 + 1.0f)));
+        entities[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(i % (size_t)sqrt(entities.size()), i / (size_t)sqrt(entities.size()), RNG::Float() * cbrt(entities.size()) + 1.0f)));
         entities[i]->addComponent<SpriteComponent>((uint32_t)RNG::Bool());
-        entities[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
-        entities[i]->addComponent<MeshComponent>(makeShared<RenderedInstance>(circle));
+        entities[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        entities[i]->addComponent<ModelComponent>(Resources::getModel("Backpack"));
+        //entities[i]->addComponent<MeshComponent>(makeShared<RenderedInstance>(circle));
     }
+    Renderer::endBatch();
 
     entities.emplace_back(scene->createEntity());
-    entities.back()->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(-2.5f, -2.5f, 3)));
+    entities.back()->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 1)));
     entities.back()->addComponent<TextComponent>("Quick brown fox jumped over a lazy dog");
+    Light light{};
+    light.color = glm::vec3(12);
+    entities.back()->addComponent<LightComponent>(light);
     entities.back()->addComponent<MeshComponent>(makeShared<RenderedInstance>(rectangle));
-    
-    entities.emplace_back(scene->createEntity());
-    entities.back()->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2)));
-    entities.back()->addComponent<ModelComponent>(Resources::getModel("Backpack"));
-    
+
     scene->onPlay();
 }
 
@@ -37,7 +39,6 @@ void SandboxApp::onUpdate()
 {  
     if (Input::isKeyDown(Keys::X) && entities.size())
         entities.pop_back();
-
 //   for (size_t i = 0; i < entities.size(); ++i)
 //   {
 //       glm::mat4& transform = entities[i]->getComponent<TransformComponent>();

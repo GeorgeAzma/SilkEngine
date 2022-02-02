@@ -29,6 +29,12 @@ QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice physical_d
 		const auto& queue_family = queue_families[i];
 		if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 			queue_family_indices.graphics = i;
+		
+		if (queue_family.queueFlags & VK_QUEUE_COMPUTE_BIT)
+			queue_family_indices.compute = i;
+
+		if (queue_family.queueFlags & VK_QUEUE_TRANSFER_BIT)
+			queue_family_indices.transfer = i;
 
 		VkBool32 present_support = false;
 		Graphics::vulkanAssert(vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, i, *Graphics::surface, &present_support));

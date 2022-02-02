@@ -17,6 +17,7 @@ void CameraController::onUpdate()
 
 	float sensitivity = 0.003f;
 	glm::vec2 dm = delta_mouse(Input::getMouse()) * sensitivity;
+	dm.x *= -1;
 	bool rotated = glm::length2(dm) > 0.0f;
 	if (rotated)
 	{
@@ -37,7 +38,7 @@ void CameraController::onUpdate()
 	}
 	if (Input::isKeyDown(Keys::A))
 	{
-		camera.position -= glm::cross(front2D, math::UP) * speed;
+		camera.position -= -glm::cross(front2D, math::UP) * speed;
 	}
 	if (Input::isKeyDown(Keys::S))
 	{
@@ -45,7 +46,7 @@ void CameraController::onUpdate()
 	}
 	if (Input::isKeyDown(Keys::D))
 	{
-		camera.position += glm::cross(front2D, math::UP) * speed;
+		camera.position += -glm::cross(front2D, math::UP) * speed;
 	}
 	if (Input::isKeyDown(Keys::SPACE))
 	{

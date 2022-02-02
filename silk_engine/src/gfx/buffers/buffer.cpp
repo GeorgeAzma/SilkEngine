@@ -3,6 +3,7 @@
 #include "gfx/allocators/command_pool.h"
 #include "gfx/buffers/command_buffer.h"
 #include "gfx/devices/physical_device.h"
+#include "gfx/graphics.h"
 
 Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_usage)
 	: size(size)
@@ -54,6 +55,14 @@ void Buffer::setDataChecked(const void* data, size_t size, size_t offset)
 	}
 }
 
+void Buffer::getData(void* data, size_t size) const
+{
+	void* buffer_data;
+	vmaMapMemory(*Graphics::allocator, allocation, &buffer_data);
+	std::memcpy(data, buffer_data, size ? size : this->size);
+	vmaUnmapMemory(*Graphics::allocator, allocation);
+}
+
 uint32_t Buffer::findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags properties)
 {
 	VkPhysicalDeviceMemoryProperties memory_properties;
@@ -84,6 +93,5 @@ void Buffer::copy(VkBuffer destination, VkBuffer source, size_t size)
 	vkCmdCopyBuffer(command_buffer, source, destination, 1, &copy_region);
 	
 	command_buffer.end();
-	command_buffer.submit();
-	command_buffer.wait();
+	command_buffer.submitIdle();
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "scene/light.h"
+
 class WindowResizeEvent;
 class Instance;
 class Surface;
@@ -14,6 +16,16 @@ class DescriptorSet;
 
 class Graphics
 {
+
+public:
+	static constexpr size_t MAX_INSTANCES = 65536 * 10;
+	static constexpr size_t MAX_BATCH_VERTICES = 65536;
+	static constexpr size_t MAX_BATCH_INDICES = 65536 * 2;
+	static constexpr size_t MAX_TEXTURE_SLOTS = 32;
+	static constexpr size_t MAX_LIGHTS = 64;
+	static constexpr size_t MAX_VERTEX_BUFFER_BINDINGS = 8;
+	static constexpr uint32_t API_VERSION = VK_API_VERSION_1_2;
+
 public:
 	struct GlobalUniformData
 	{
@@ -24,7 +36,8 @@ public:
 		float delta_time;
 		glm::uvec2 resolution;
 		uint32_t frame;
-		uint32_t flags;
+		uint32_t light_count;
+		std::array<Light, MAX_LIGHTS> lights;
 	};
 	static inline struct Statistics
 	{
@@ -39,12 +52,6 @@ public:
 	static void vulkanAssert(VkResult result);
 
 public:
-	static constexpr size_t MAX_INSTANCES = 65536;
-	static constexpr size_t MAX_BATCH_VERTICES = 65536;
-	static constexpr size_t MAX_BATCH_INDICES = 65536 * 2;
-	static constexpr size_t MAX_TEXTURE_SLOTS = 32;
-	static constexpr uint32_t API_VERSION = VK_API_VERSION_1_2;
-
 	static inline Instance* instance = nullptr;
 	static inline Surface* surface = nullptr;
 	static inline PhysicalDevice* physical_device = nullptr;
@@ -54,18 +61,14 @@ public:
 	static inline SwapChain* swap_chain = nullptr;
 	static inline DescriptorPool* descriptor_pool = nullptr;
 	static inline UniformBuffer* global_uniform = nullptr;
-
 	static inline struct Active
 	{
 	public:
-		VkCommandBuffer command_buffer = VK_NULL_HANDLE;
 		VkPipeline pipeline = VK_NULL_HANDLE;
 		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
-		VkPipelineBindPoint bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		VkBuffer vertex_buffer = VK_NULL_HANDLE;
-		VkBuffer index_buffer = VK_NULL_HANDLE;
+		VkPipelineBindPoint bind_point = VK_PIPELINE_BIND_POINT_MAX_ENUM;
+		VkCommandBuffer command_buffer = VK_NULL_HANDLE;
 		VkRenderPass render_pass = VK_NULL_HANDLE;
-		uint32_t subpass = 0;
 	} active;
 
 private:

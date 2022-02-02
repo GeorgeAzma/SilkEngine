@@ -4,7 +4,7 @@ layout(location = 0) in VertexOutput
 {
     vec2 texture_coordinate;
     flat uint texture_index;
-    flat vec4 color;
+    vec4 color;
 } fragment_input;
 
 layout(location = 0) out vec4 color;
