@@ -1,4 +1,5 @@
 #pragma once
+
 #include "platform.h"
 
 #ifndef SK_DIST

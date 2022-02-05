@@ -18,6 +18,7 @@ class Graphics
 {
 
 public:
+	static constexpr size_t MAX_INSTANCE_BATCHES = 65536;
 	static constexpr size_t MAX_INSTANCES = 65536;
 	static constexpr size_t MAX_TEXTURE_SLOTS = 32;
 	static constexpr size_t MAX_LIGHTS = 64;

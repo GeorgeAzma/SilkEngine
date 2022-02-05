@@ -21,17 +21,13 @@ Model::Model(const std::string& file)
 void Model::processNode(aiNode* node, const aiScene* scene)
 {
     for (size_t i = 0; i < node->mNumMeshes; ++i)
-    {
-        meshes.emplace_back(processMesh(scene->mMeshes[node->mMeshes[i]], scene));
-        if(meshes.back()->mesh->name == "") 
-            meshes.back()->mesh->name = path + std::to_string(meshes.size());
-    }
+       processMesh(scene->mMeshes[node->mMeshes[i]], scene);
 
     for (size_t i = 0; i < node->mNumChildren; ++i)
         processNode(node->mChildren[i], scene);
 }
 
-shared<RenderedInstance> Model::processMesh(aiMesh *mesh, const aiScene *scene)
+void Model::processMesh(aiMesh *mesh, const aiScene *scene)
 {
     std::vector<Vertex> vertices(mesh->mNumVertices, Vertex{});
     std::vector<uint32_t> indices;
@@ -60,7 +56,7 @@ shared<RenderedInstance> Model::processMesh(aiMesh *mesh, const aiScene *scene)
             indices.emplace_back(mesh->mFaces[i].mIndices[j]);
     }
 
-    shared<Material> material_data = nullptr;
+    shared<Material> new_material = nullptr;
     if(mesh->mMaterialIndex >= 0)
     {
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
@@ -74,7 +70,11 @@ shared<RenderedInstance> Model::processMesh(aiMesh *mesh, const aiScene *scene)
         //TODO: Create mesh material
     }
       
-    return makeShared<RenderedInstance>(makeShared<Mesh>(vertices, indices), material_data);
+    auto new_mesh = makeShared<Mesh>(vertices, indices);
+    new_mesh->name = path + std::to_string(meshes.size());
+
+    meshes.emplace_back(new_mesh);
+    materials.emplace_back(new_material);
 }  
 
 std::vector<shared<Image>> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type)

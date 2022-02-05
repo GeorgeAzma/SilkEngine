@@ -11,11 +11,11 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
     auto rectangle = Resources::getMesh("Rectangle");
     auto circle = Resources::getMesh("Circle");
-    entities.resize(10);
+    entities.resize(100);
     for (size_t i = 0; i < entities.size(); ++i)
     {
         entities[i] = scene->createEntity();
-        entities[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(i % (size_t)sqrt(entities.size()), i / (size_t)sqrt(entities.size()), RNG::Float() * cbrt(entities.size()) + 1.0f)));
+        entities[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(i % (size_t)sqrt(entities.size()), i / (size_t)sqrt(entities.size()), RNG::Float() * sqrt(entities.size()) + 1.0f)));
         entities[i]->addComponent<SpriteComponent>((uint32_t)RNG::Bool());
         entities[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         entities[i]->addComponent<ModelComponent>(Resources::getModel("Backpack"));
@@ -26,7 +26,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     entities.back()->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 1)));
     entities.back()->addComponent<TextComponent>("Quick brown fox jumped over a lazy dog");
     Light light{};
-    light.color = glm::vec3(12);
+    light.color = glm::vec3(4);
     entities.back()->addComponent<LightComponent>(light);
     entities.back()->addComponent<MeshComponent>(makeShared<RenderedInstance>(rectangle));
 
@@ -37,12 +37,15 @@ void SandboxApp::onUpdate()
 {  
     if (Input::isKeyDown(Keys::X) && entities.size())
         entities.pop_back();
-//   for (size_t i = 0; i < entities.size(); ++i)
-//   {
-//       glm::mat4& transform = entities[i]->getComponent<TransformComponent>();
-//       transform = std::move(glm::translate(transform, glm::vec3(Time::dt * (RNG::Float() - 0.5f) * 10, Time::dt * (RNG::Float() - 0.5f) * 10, Time::dt * (RNG::Float() - 0.5f) * 10)));
-//       scene->updateComponent<RenderComponent>(*entities[i]);
-//   }
+    for (size_t i = 0; i < entities.size(); ++i)
+    {
+        glm::mat4& transform = entities[i]->getComponent<TransformComponent>();
+        transform = glm::translate(transform, glm::vec3(Time::dt * (RNG::Float() - 0.5f) * 10, Time::dt * (RNG::Float() - 0.5f) * 10, Time::dt * (RNG::Float() - 0.5f) * 10));
+        if (entities[i]->hasComponent<ModelComponent>())
+            scene->updateComponent<ModelComponent>(*entities[i]);
+        else if (entities[i]->hasComponent<MeshComponent>())
+            scene->updateComponent<MeshComponent>(*entities[i]);
+    }
     scene->onUpdate();
 }
 

@@ -11,7 +11,7 @@ struct TransformComponent
 {
 	glm::mat4 transform{1.0f};
 
-	operator const glm::mat4& () const { return transform; }
+	operator glm::mat4& () { return transform; }
 };
 
 struct SpriteComponent
@@ -62,6 +62,8 @@ struct MeshComponent
 struct ModelComponent
 {
 	shared<Model> model;
+
+	std::vector<InstanceData*> instance_data;
 
 	operator Model& () { return *model; }
 };

@@ -58,8 +58,8 @@ void Window::init()
             {
                 data.x = x;
                 data.y = y;
+                Dispatcher::post(WindowMoveEvent(x, y));
             }
-            Dispatcher::post(WindowMoveEvent(x, y));
         });
 
     glfwSetWindowCloseCallback(window,
@@ -161,7 +161,23 @@ void Window::setFullscreen(bool fullscreen)
     if (data.fullscreen == fullscreen)
         return;
     data.fullscreen = fullscreen;
-    glfwSetWindowMonitor(window, fullscreen ? glfwGetPrimaryMonitor() : nullptr, data.x, data.y, data.width, data.height, GLFW_DONT_CARE);
+    if (fullscreen)
+    {
+        const GLFWvidmode* video_mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        int last_width = data.width;
+        int last_height = data.height;
+        glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, video_mode->width, video_mode->height, GLFW_DONT_CARE);
+        Dispatcher::post(WindowMoveEvent(0, 0));
+        Dispatcher::post(WindowResizeEvent(video_mode->width, video_mode->height));
+        data.width = last_width;
+        data.height = last_height;
+    }
+    else
+    {
+        glfwSetWindowMonitor(window, nullptr, data.x, data.y, data.width, data.height, GLFW_DONT_CARE);
+        Dispatcher::post(WindowMoveEvent(data.x, data.y));
+        Dispatcher::post(WindowResizeEvent(data.width, data.height));
+    }
     Dispatcher::post(WindowFullscreenEvent(fullscreen));
 }
 

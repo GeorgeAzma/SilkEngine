@@ -15,12 +15,12 @@ public:
 
 private:
 	void processNode(aiNode* node, const aiScene* scene);
-	shared<RenderedInstance> processMesh(aiMesh* mesh, const aiScene* scene);
+	void processMesh(aiMesh* mesh, const aiScene* scene);
 	std::vector<shared<Image>> loadMaterialTextures(aiMaterial* mat, aiTextureType type);
 
 private:
-	std::vector<shared<RenderedInstance>> meshes; //TODO: Rendered Instance kinda weird? (name: meshes doesn't apply??)
-	std::vector<shared<Image>> images;
+	std::vector<shared<Mesh>> meshes;
+	std::vector<shared<Material>> materials;
 	std::string directory; 
 	std::string path;
 	friend class Scene;

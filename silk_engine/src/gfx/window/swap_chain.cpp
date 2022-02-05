@@ -8,14 +8,9 @@
 SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 {
 	Dispatcher::subscribe(this, &SwapChain::onWindowResize);
-	Dispatcher::subscribe(this, &SwapChain::onWindowFullscreen);
 
 	chooseSwapChainSurfaceFormat();
 	chooseSwapChainPresentMode();
-	
-	image_count = Graphics::physical_device->getSurfaceCapabilities().minImageCount + 1;
-	if (Graphics::physical_device->getSurfaceCapabilities().maxImageCount > 0)
-		image_count = std::min(image_count, Graphics::physical_device->getSurfaceCapabilities().maxImageCount);
 
 	depth_format = Graphics::physical_device->findDepthFormat();
 
@@ -90,7 +85,7 @@ void SwapChain::present()
 	const std::vector<VkSemaphore> signal_semaphores = { render_finished_semaphores[current_frame] };
 	VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
-	command_buffers[image_index]->submit({ in_flight_fences[current_frame], {image_available_semaphores[current_frame]}, signal_semaphores, wait_stages});
+	command_buffers[image_index]->submit({ in_flight_fences[current_frame], { image_available_semaphores[current_frame] }, signal_semaphores, wait_stages });
 
 	VkPresentInfoKHR present_info{};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -112,7 +107,7 @@ void SwapChain::present()
 void SwapChain::beginFrame()
 {
 	acquireNextImage(); 
-	command_buffers[image_index]->begin(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
+	command_buffers[image_index]->begin({});
 }
 
 void SwapChain::beginRenderPass()
@@ -135,6 +130,10 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 {
 	Graphics::physical_device->updateSwapChainSupportDetails();
 	chooseSwapChainExtent();
+	
+	uint32_t image_count = Graphics::physical_device->getSurfaceCapabilities().minImageCount + 1;
+	if (Graphics::physical_device->getSurfaceCapabilities().maxImageCount > 0)
+		image_count = std::min(image_count, Graphics::physical_device->getSurfaceCapabilities().maxImageCount);
 
 	VkSwapchainCreateInfoKHR create_info{};
 	create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -174,9 +173,7 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	framebuffers.resize(image_views.size());
 
 	for (size_t i = 0; i < image_views.size(); ++i)
-	{
 		image_views[i] = new ImageView(images[i], surface_format.format);
-	}
 
 	///////////////////
 
@@ -196,8 +193,7 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	props.width = extent.width;
 	props.height = extent.height;
 	props.format = surface_format.format;
-	props.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT
-		| VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	props.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	props.create_sampler = false;
 	props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
 	props.mipmap = false;
@@ -234,7 +230,6 @@ void SwapChain::destroy()
 SwapChain::~SwapChain()
 {
 	Dispatcher::unsubscribe(this, &SwapChain::onWindowResize);
-	Dispatcher::unsubscribe(this, &SwapChain::onWindowFullscreen);
 
 	delete render_pass;
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
@@ -281,18 +276,28 @@ void SwapChain::onWindowResize(const WindowResizeEvent& e)
 	recreate();
 }
 
-void SwapChain::onWindowFullscreen(const WindowFullscreenEvent& e)
-{
-	recreate();
-}
-
 void SwapChain::chooseSwapChainPresentMode()
 {
-	std::multimap<int, VkPresentModeKHR> present_modes;
+	std::map<int, VkPresentModeKHR> present_modes;
 
 	for (const auto& available_present_mode : Graphics::physical_device->getPresentModes())
 	{
-		int score = rateSwapChainPresentMode(available_present_mode);
+		int score = 0;
+		switch (available_present_mode)
+		{
+		case VK_PRESENT_MODE_MAILBOX_KHR:
+			score = 4;
+			break;
+		case VK_PRESENT_MODE_FIFO_KHR:
+			score = 3;
+			break;
+		case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
+			score = 2;
+			break;
+		case VK_PRESENT_MODE_IMMEDIATE_KHR:
+			score = 1;
+			break;
+		}
 		if (score >= 0)
 		{
 			present_modes.insert(std::make_pair(score, available_present_mode));
@@ -315,43 +320,13 @@ void SwapChain::chooseSwapChainExtent()
 
 	int width, height;
 	glfwGetFramebufferSize(Window::getGLFWWindow(), &width, &height);
-	VkExtent2D extent =
+	this->extent = 
 	{
-		(uint32_t)width,
-		(uint32_t)height
+		std::clamp((uint32_t)width,
+			Graphics::physical_device->getSurfaceCapabilities().minImageExtent.width,
+			Graphics::physical_device->getSurfaceCapabilities().maxImageExtent.width),
+		std::clamp((uint32_t)height,
+			Graphics::physical_device->getSurfaceCapabilities().minImageExtent.height,
+			Graphics::physical_device->getSurfaceCapabilities().maxImageExtent.height)
 	};
-
-	extent.width = std::clamp(extent.width, 
-		Graphics::physical_device->getSurfaceCapabilities().minImageExtent.width,
-		Graphics::physical_device->getSurfaceCapabilities().maxImageExtent.width);
-	extent.height = std::clamp(extent.height,
-		Graphics::physical_device->getSurfaceCapabilities().minImageExtent.height,
-		Graphics::physical_device->getSurfaceCapabilities().maxImageExtent.height);
-
-	this->extent = extent;
-}
-
-int SwapChain::rateSwapChainPresentMode(VkPresentModeKHR present_mode) const
-{
-	switch (present_mode)
-	{
-	//Less power consumption, more latency, guaranteed supportability
-	case VK_PRESENT_MODE_FIFO_KHR:
-		return 1000;
-		break;
-	//More power consumption, less latency
-	case VK_PRESENT_MODE_MAILBOX_KHR:
-		return 1500; 
-		break;
-	//Less power consumption, less latency, more tearing
-	case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
-		return 500;
-		break;
-	//Less power consumption, less latency, much more tearing
-	case VK_PRESENT_MODE_IMMEDIATE_KHR:
-		return 250;
-		break;
-	}
-
-	return -1;
 }

@@ -44,11 +44,9 @@ private:
     void chooseSwapChainSurfaceFormat();
     void chooseSwapChainPresentMode();
     void chooseSwapChainExtent();
-    int rateSwapChainPresentMode(VkPresentModeKHR present_mode) const;
     int rateSwapChainSurfaceFormat(VkSurfaceFormatKHR format) const;
 
     void onWindowResize(const WindowResizeEvent& e);
-    void onWindowFullscreen(const WindowFullscreenEvent& e);
 
 private:
     VkSwapchainKHR swap_chain;
@@ -59,16 +57,15 @@ private:
     std::vector<ImageView*> image_views;
     std::vector<Framebuffer*> framebuffers;
     std::vector<VkFence> in_flight_fences = std::vector<VkFence>(MAX_FRAMES_IN_FLIGHT);
+    std::vector<VkFence> images_in_flight;
     std::vector<VkSemaphore> image_available_semaphores = std::vector<VkSemaphore>(MAX_FRAMES_IN_FLIGHT);
     std::vector<VkSemaphore> render_finished_semaphores = std::vector<VkSemaphore>(MAX_FRAMES_IN_FLIGHT);
     uint32_t current_frame = 0;
     std::vector<CommandBuffer*> command_buffers;
-    std::vector<VkFence> images_in_flight = {};
     uint32_t image_index = 0;
     Image* msaa_image = nullptr;
     Image* depth = nullptr;
     VkFormat depth_format;
-    uint32_t image_count = 0;
     RenderPass* render_pass = nullptr;
     VkSampleCountFlagBits sample_count;
 };

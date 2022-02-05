@@ -20,7 +20,7 @@ Scene::Scene()
 	registry.on_destroy<MeshComponent>().connect<&Scene::onMeshComponentDestroy>(this);
 	registry.on_destroy<ModelComponent>().connect<&Scene::onModelComponentDestroy>(this);
 	registry.on_destroy<LightComponent>().connect<&Scene::onLightComponentDestroy>(this);
-
+	instance_batches.reserve(Graphics::MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
 	material_data_3D = makeShared<Material>(Resources::getShaderEffect("3D"), std::vector<shared<DescriptorSet>>{ Resources::getDescriptorSet("Global"), Resources::getDescriptorSet("Images") });
 }
 
@@ -155,7 +155,7 @@ void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
 	if (auto color = registry.try_get<ColorComponent>(entity))
 		instance_data.color = *color;
 
-	mesh_component.instance->instance_data = &instance_data; //NOTE: This becomes unusable when scope ends
+	mesh_component.instance->instance_data = &instance_data;
 
 	createMeshInstance(mesh_component.instance);
 }
@@ -186,22 +186,28 @@ void Scene::onModelComponentCreate(entt::registry& registry, entt::entity entity
 	if (auto color = registry.try_get<ColorComponent>(entity))
 		instance_data.color = *color;
 	
-	for (auto& mesh : model_component.model->meshes)
+	model_component.instance_data.resize(model_component.model->meshes.size());
+	for (size_t i = 0; i < model_component.model->meshes.size(); ++i)
 	{
-		mesh->instance_data = &instance_data;
-		createMeshInstance(mesh);
+		shared<RenderedInstance> rendered_instance = makeShared<RenderedInstance>(model_component.model->meshes[i], model_component.model->materials[i], &instance_data);
+		createMeshInstance(rendered_instance);
+		model_component.instance_data[i] = rendered_instance->instance_data;
+		model_component.model->materials[i] = rendered_instance->material;
 	}
 }
 
+//TODO: Fix error
 void Scene::onModelComponentDestroy(entt::registry& registry, entt::entity entity)
 {
 	if (stopped)
 		return;
 
 	ModelComponent& model_component = registry.get<ModelComponent>(entity);
-	for (auto& mesh : model_component.model->meshes)
+
+	for (size_t i = 0; i < model_component.model->meshes.size(); ++i)
 	{
-		destroyMeshInstance(mesh);
+		shared<RenderedInstance> rendered_instance = makeShared<RenderedInstance>(model_component.model->meshes[i], model_component.model->materials[i], model_component.instance_data[i]);
+		destroyMeshInstance(rendered_instance);
 	}
 }
 
@@ -238,16 +244,19 @@ void Scene::createMeshInstance(shared<RenderedInstance> instance)
 	{
 		if (instance_batch == *instance)
 		{
+			if (instance_batch.instance_data.size() >= Graphics::MAX_INSTANCES)
+				break;
+
 			instance_batch.needs_update = true;
-			instance_batch.instance_data.emplace_back(*instance->instance_data);			
+			instance_batch.instance_data.emplace_back(*instance->instance_data);
+			instance->instance_data = &instance_batch.instance_data.back();
 			return;
 		}
 	}
 
-	std::vector<InstanceData> new_instance_data;
-	new_instance_data.reserve(Graphics::MAX_INSTANCES);
-	new_instance_data.emplace_back(*instance->instance_data);
-	instance_batches.emplace_back(instance, std::move(new_instance_data));
+	instance_batches.emplace_back(instance);
+	instance_batches.back().instance_data.reserve(Graphics::MAX_INSTANCES);
+	instance_batches.back().instance_data.emplace_back(*instance->instance_data);
 	instance->instance_data = &instance_batches.back().instance_data.back();
 }
 
@@ -258,16 +267,13 @@ void Scene::destroyMeshInstance(shared<RenderedInstance> instance)
 		if (*instance_batch.instance == *instance)
 		{
 			instance_batch.needs_update = true;
-
-			registry.view<MeshComponent>().each(
-				[&](entt::entity entity, MeshComponent& rc)
-				{
-					if (rc.instance->instance_data == &instance_batch.instance_data.back())
-						rc.instance->instance_data = instance->instance_data;
-				});
 			std::swap(*instance->instance_data, instance_batch.instance_data.back());
 			instance_batch.instance_data.pop_back();
-
+			if (instance_batch.instance_data.empty())
+			{
+				std::swap(instance_batch, instance_batches.back());
+				instance_batches.pop_back();
+			}
 			return;
 		}
 	}
@@ -291,12 +297,44 @@ void Scene::updateComponent<MeshComponent>(entt::entity entity)
 	
 	*mesh_component.instance->instance_data = std::move(instance_data);
 
+	//TODO: get rid of these lookups somehow
 	for (auto& instance_batch : instance_batches)
 	{
-		if (*instance_batch.instance == *mesh_component.instance)
+		if (!instance_batch.needs_update && (*instance_batch.instance == *mesh_component.instance))
 		{
 			instance_batch.needs_update = true;
 			break;
+		}
+	}
+}
+
+template<>
+void Scene::updateComponent<ModelComponent>(entt::entity entity)
+{
+	ModelComponent& model_component = registry.get<ModelComponent>(entity);
+
+	InstanceData instance_data{};
+
+	if (auto transform = registry.try_get<TransformComponent>(entity))
+		instance_data.transform = *transform;
+
+	if (auto sprite = registry.try_get<SpriteComponent>(entity))
+		instance_data.texture_index = *sprite;
+
+	if (auto color = registry.try_get<ColorComponent>(entity))
+		instance_data.color = *color;
+
+	for (size_t i = 0; i < model_component.instance_data.size(); ++i)
+	{
+		*model_component.instance_data[i] = instance_data;
+
+		for (auto& instance_batch : instance_batches)
+		{
+			if (!instance_batch.needs_update && (*instance_batch.instance->mesh == *model_component.model->meshes[i]) && (instance_batch.instance->material->shader_effect.get() == model_component.model->materials[i]->shader_effect.get()))
+			{
+				instance_batch.needs_update = true;
+				break;
+			}
 		}
 	}
 }

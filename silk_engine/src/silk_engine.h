@@ -65,6 +65,7 @@
 #include "scene/resources.h"
 
 #include "scene/camera/camera_controller.h"
+#include "scene/camera/camera_controller_2D.h"
 #include "scene/camera/camera.h"
 
 #include "scene/meshes/mesh.h"

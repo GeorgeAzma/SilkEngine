@@ -83,44 +83,40 @@ RenderPass& RenderPass::addSubpass()
 void RenderPass::build()
 {
     std::vector<VkAttachmentDescription> attachments;
-    std::vector<VkSubpassDescription> subpasses;
-    subpasses.reserve(this->subpasses.size());
-    for (const auto& subpass : this->subpasses)
+    std::vector<VkSubpassDescription> subpass_descriptions(subpasses.size());
+    std::vector<VkSubpassDependency> subpass_dependencies(subpasses.size());
+    for (size_t i = 0; i < subpasses.size(); ++i)
     {
-        attachments.insert(attachments.end(), subpass.attachments.begin(), subpass.attachments.end());
+        attachments.insert(attachments.end(), subpasses[i].attachments.begin(), subpasses[i].attachments.end());
         
         VkSubpassDescription subpass_description{};
         subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass_description.inputAttachmentCount = subpass.input_attachment_references.size();
-        subpass_description.pInputAttachments = subpass.input_attachment_references.data();
-        subpass_description.colorAttachmentCount = subpass.color_attachment_references.size();
-        subpass_description.pColorAttachments = subpass.color_attachment_references.data();
-        subpass_description.pDepthStencilAttachment = &subpass.depth_stencil_attachment_reference;
-        subpass_description.pResolveAttachments = &subpass.resolve_attachment_reference;
+        subpass_description.inputAttachmentCount = subpasses[i].input_attachment_references.size();
+        subpass_description.pInputAttachments = subpasses[i].input_attachment_references.data();
+        subpass_description.colorAttachmentCount = subpasses[i].color_attachment_references.size();
+        subpass_description.pColorAttachments = subpasses[i].color_attachment_references.data();
+        subpass_description.pDepthStencilAttachment = &subpasses[i].depth_stencil_attachment_reference;
+        subpass_description.pResolveAttachments = &subpasses[i].resolve_attachment_reference;     
+        subpass_descriptions[i] = std::move(subpass_description);
 
-        subpasses.emplace_back(subpass_description);
+        VkSubpassDependency dependency{};
+        dependency.srcSubpass = i ? (i - 1) : VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass = i;
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependency.srcAccessMask = 0;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[i] = std::move(dependency);
     }
-    
-    //TODO: This doesn't belong here, create subpass system which will manage all the dependencies
-    VkSubpassDependency dependency{};
-    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependency.dstSubpass = 0;
-    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-        | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    dependency.srcAccessMask = 0;
-    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-        | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
-        | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
     
     VkRenderPassCreateInfo create_info{};
     create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     create_info.attachmentCount = attachments.size();
     create_info.pAttachments = attachments.data();
-    create_info.subpassCount = subpasses.size();
-    create_info.pSubpasses = subpasses.data();
-    create_info.dependencyCount = 1;
-    create_info.pDependencies = &dependency;
+    create_info.subpassCount = subpass_descriptions.size();
+    create_info.pSubpasses = subpass_descriptions.data();
+    create_info.dependencyCount = subpass_dependencies.size();
+    create_info.pDependencies = subpass_dependencies.data();
     
     Graphics::vulkanAssert(vkCreateRenderPass(*Graphics::logical_device, &create_info, nullptr, &render_pass));
 }
