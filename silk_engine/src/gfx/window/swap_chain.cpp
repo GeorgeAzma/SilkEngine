@@ -75,7 +75,7 @@ void SwapChain::createFramebuffers()
 
 void SwapChain::acquireNextImage()
 {
-	vkQueueWaitIdle(Graphics::logical_device->getGraphicsQueue());
+	vkWaitForFences(*Graphics::logical_device, 1, &in_flight_fences[current_frame], VK_TRUE, UINT64_MAX);
 	Graphics::vulkanAssert(vkAcquireNextImageKHR(*Graphics::logical_device, swap_chain, UINT64_MAX, image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index));
 }
 
@@ -83,9 +83,7 @@ void SwapChain::present()
 {
 	//Check if previous frame is using this image
 	if (images_in_flight[image_index] != VK_NULL_HANDLE)
-	{
 		Graphics::vulkanAssert(vkWaitForFences(*Graphics::logical_device, 1, &images_in_flight[image_index], VK_TRUE, UINT64_MAX));
-	}
 	images_in_flight[image_index] = in_flight_fences[current_frame];
 
 	//Submit the command buffer

@@ -64,7 +64,7 @@ Disclaimer: Following these notes isn't neccessary but would be preferable
 
 ---------------- Shaders ----------------
 
-- Allowed shader file extensions: .vert, .frag, .tes, .tcs, .geom 
+- Allowed shader file extensions: .vert, .frag, .tese, .tesc, .geom 
   and .glsl (used only for #include files)
 - Always use glsl for vulkan shading language
 - Use this style for passing data between shaders:

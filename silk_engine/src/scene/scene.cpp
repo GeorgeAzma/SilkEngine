@@ -8,7 +8,6 @@
 #include "utils/general_utils.h"
 #include "core/time.h"
 #include "gfx/window/swap_chain.h"
-#include "gfx/renderer.h"
 
 Scene::Scene()
 {
@@ -22,26 +21,7 @@ Scene::Scene()
 	registry.on_destroy<ModelComponent>().connect<&Scene::onModelComponentDestroy>(this);
 	registry.on_destroy<LightComponent>().connect<&Scene::onLightComponentDestroy>(this);
 
-	shared<DescriptorSet> global_descriptor_set = makeShared<DescriptorSet>();
-	global_descriptor_set->addBuffer(0, { *Graphics::global_uniform, 0, VK_WHOLE_SIZE }, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
-		.build();
-
-	auto white_image = Resources::getImage("backpack/diffuse.jpg");
-	shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>();
-	descriptor_set->addImages(0, {
-			*white_image, *white_image, *white_image, *white_image,
-			*white_image, *white_image, *white_image, *white_image,
-			*white_image, *white_image, *white_image, *white_image,
-			*white_image, *white_image, *white_image, *white_image,
-			*white_image, *white_image, *white_image, *white_image,
-			*white_image, *white_image, *white_image, *white_image,
-			*white_image, *white_image, *white_image, *white_image,
-			*white_image, *white_image, *white_image, *white_image
-		}, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-		.build();
-
-	material_data_3D = makeShared<MaterialData>(Resources::getMaterial("3D"), std::vector<shared<DescriptorSet>>{ global_descriptor_set, descriptor_set });
-	material_data_batch3D = makeShared<MaterialData>(Resources::getMaterial("Batch3D"), std::vector<shared<DescriptorSet>>{ global_descriptor_set, descriptor_set });
+	material_data_3D = makeShared<Material>(Resources::getShaderEffect("3D"), std::vector<shared<DescriptorSet>>{ Resources::getDescriptorSet("Global"), Resources::getDescriptorSet("Images") });
 }
 
 Scene::~Scene()
@@ -115,10 +95,9 @@ void Scene::onUpdate()
 			instance_batch.needs_update = false;
 		}
 
-		instance_batch.instance->material_data->material->pipeline->bind();
+		instance_batch.instance->material->shader_effect->pipeline->bind();
 		instance_batch.instance->mesh->vertex_array->bind();
-		for (size_t j = 0; j < instance_batch.instance->material_data->descriptor_sets.size(); ++j)
-			instance_batch.instance->material_data->descriptor_sets[j]->bind(j);
+		instance_batch.instance->material->bind();
 		
 		//NOTE: vkCmdDrawIndexedIndirect is bit faster but it limits us by having a fixed instanced batches size and adds clutter
 		if(instance_batch.instance->mesh->vertex_array->hasIndexBuffer())
@@ -127,11 +106,6 @@ void Scene::onUpdate()
 			vkCmdDraw(Graphics::active.command_buffer, instance_batch.instance->mesh->vertices.size(), instance_batch.instance_data.size(), 0, 0);
 	}
 	Graphics::stats.instances = instance_batches.size();
-	Graphics::stats.batches = Renderer::batcher.batches.size();
-	SK_INFO(Graphics::stats.instances);
-
-	Renderer::updateBatch();
-	Renderer::drawLastBatch();
 	
 	//End draw
 	Graphics::swap_chain->endRenderPass();
@@ -206,7 +180,7 @@ void Scene::onModelComponentCreate(entt::registry& registry, entt::entity entity
 	if (auto transform = registry.try_get<TransformComponent>(entity))
 		instance_data.transform = *transform;
 
-	if (auto sprite = registry.try_get<SpriteComponent>(entity))
+	if (auto sprite = registry.try_get<SpriteComponent>(entity)) //TODO:
 		instance_data.texture_index = *sprite;
 
 	if (auto color = registry.try_get<ColorComponent>(entity))
@@ -221,6 +195,9 @@ void Scene::onModelComponentCreate(entt::registry& registry, entt::entity entity
 
 void Scene::onModelComponentDestroy(entt::registry& registry, entt::entity entity)
 {
+	if (stopped)
+		return;
+
 	ModelComponent& model_component = registry.get<ModelComponent>(entity);
 	for (auto& mesh : model_component.model->meshes)
 	{
@@ -255,34 +232,23 @@ void Scene::onLightComponentDestroy(entt::registry& registry, entt::entity entit
 
 void Scene::createMeshInstance(shared<RenderedInstance> instance)
 {
-	if (Renderer::batcher.active)
-	{
-		instance->material_data = material_data_batch3D;
-		instance->batched = true;
+	instance->material = instance->material.get() ? instance->material : material_data_3D;
 
-		addBatchedInstance(*instance);
-	}
-	else
+	for (auto& instance_batch : instance_batches)
 	{
-		instance->material_data = material_data_3D;
-		instance->batched = false;
-
-		for (auto& instance_batch : instance_batches)
+		if (instance_batch == *instance)
 		{
-			if (instance_batch == *instance)
-			{
-				instance_batch.needs_update = true;
-				instance_batch.instance_data.emplace_back(*instance->instance_data);			
-				return;
-			}
+			instance_batch.needs_update = true;
+			instance_batch.instance_data.emplace_back(*instance->instance_data);			
+			return;
 		}
-
-		std::vector<InstanceData> new_instance_data;
-		new_instance_data.reserve(Graphics::MAX_INSTANCES);
-		new_instance_data.emplace_back(*instance->instance_data);
-		instance_batches.emplace_back(instance, std::move(new_instance_data));
-		instance->instance_data = &instance_batches.back().instance_data.back();
 	}
+
+	std::vector<InstanceData> new_instance_data;
+	new_instance_data.reserve(Graphics::MAX_INSTANCES);
+	new_instance_data.emplace_back(*instance->instance_data);
+	instance_batches.emplace_back(instance, std::move(new_instance_data));
+	instance->instance_data = &instance_batches.back().instance_data.back();
 }
 
 void Scene::destroyMeshInstance(shared<RenderedInstance> instance)
@@ -325,73 +291,12 @@ void Scene::updateComponent<MeshComponent>(entt::entity entity)
 	
 	*mesh_component.instance->instance_data = std::move(instance_data);
 
-	if (mesh_component.instance->batched)
+	for (auto& instance_batch : instance_batches)
 	{
-		for (auto& batch : Renderer::batcher.batches)
+		if (*instance_batch.instance == *mesh_component.instance)
 		{
-			if (batch == *mesh_component.instance)
-			{
-				batch.needs_update = true;
-				break;
-			}
+			instance_batch.needs_update = true;
+			break;
 		}
 	}
-	else
-	{
-		for (auto& instance_batch : instance_batches)
-		{
-			if (*instance_batch.instance == *mesh_component.instance)
-			{
-				instance_batch.needs_update = true;
-				break;
-			}
-		}
-	}
-}
-
-void Scene::addBatchedInstance(const RenderedInstance& instance)
-{
-	const Mesh& mesh = *instance.mesh;
-
-	SK_ASSERT(mesh.indices.size() < Graphics::MAX_BATCH_INDICES, 
-		"Batched instance has too much indices. max indices allowed is: {0}, but mesh has {1}", 
-		Graphics::MAX_BATCH_INDICES, mesh.indices.size());
-
-	SK_ASSERT(mesh.vertices.size() < Graphics::MAX_BATCH_VERTICES, 
-		"Batched instance has too much vertices. max verticees allowed is: {0}, but mesh has {1}", 
-		Graphics::MAX_BATCH_VERTICES, mesh.vertices.size());
-
-	bool should_add_batch = false;
-
-	if (Renderer::batcher.batches.empty())
-	{
-		should_add_batch = true;
-	}
-	else if (instance.material_data != Renderer::batcher.batches.back().material_data)
-	{
-		for (size_t i = 0; i < Renderer::batcher.batches.size(); ++i)
-		{
-			if (Renderer::batcher.batches[i].material_data == instance.material_data)
-			{
-				std::swap(Renderer::batcher.batches[i], Renderer::batcher.batches.back());
-				break;
-			}
-		}
-	}
-
-	//If batch had not enough vertices/indices to store the mesh create a new batch
-	if (!Renderer::batcher.batches.empty() && 
-		(Renderer::batcher.batches.back().vertices_index + mesh.vertices.size() >= Renderer::batcher.batches.back().vertices.size() ||
-		Renderer::batcher.batches.back().indices_index + mesh.indices.size() >= Renderer::batcher.batches.back().indices.size()))
-	{
-		should_add_batch = true;
-	}
-
-	if (should_add_batch)
-	{
-		Renderer::addBatch();
-		Renderer::batcher.batches.back().material_data = instance.material_data;
-	}
-
-	Renderer::batcher.batches.back().addInstance(instance);
 }

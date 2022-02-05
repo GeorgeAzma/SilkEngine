@@ -65,8 +65,6 @@ void main()
     if(!visible)
     {
         atomicAdd(draw[index].instance_count, -1);
-        //draw[index].instance_count--;
-        //draw[index].instance_count = 4;
         rendered[ID] = false;
     }
     else

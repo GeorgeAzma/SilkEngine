@@ -11,6 +11,7 @@ GraphicsPipeline::GraphicsPipeline()
 GraphicsPipeline::~GraphicsPipeline()
 {
 	Dispatcher::unsubscribe(this, &GraphicsPipeline::onWindowResize);
+	vkDestroyPipelineLayout(*Graphics::logical_device, pipeline_layout, nullptr);
 	destroy();
 }
 
@@ -44,9 +45,15 @@ GraphicsPipeline& GraphicsPipeline::setRenderPass(VkRenderPass render_pass)
 	return *this;
 }
 
-GraphicsPipeline& GraphicsPipeline::addDescriptorSetLayout(shared<DescriptorSetLayout> layout)
+GraphicsPipeline& GraphicsPipeline::setSubpass(uint32_t subpass)
 {
-	descriptor_set_layouts.push_back(*layout);
+	this->subpass = subpass;
+	return *this;
+}
+
+GraphicsPipeline& GraphicsPipeline::addDescriptorSetLayout(VkDescriptorSetLayout layout)
+{
+	descriptor_set_layouts.push_back(layout);
 	return *this;
 }
 
@@ -118,28 +125,31 @@ void GraphicsPipeline::build()
 	pipeline_layout_info.setLayoutCount = descriptor_set_layouts.size();
 	pipeline_layout_info.pSetLayouts = descriptor_set_layouts.data();
 	pipeline_layout_info.pushConstantRangeCount = push_constant_ranges.size();
-	pipeline_layout_info.pPushConstantRanges = push_constant_ranges.data();
+	pipeline_layout_info.pPushConstantRanges = push_constant_ranges.data(); 
+	
+	Graphics::vulkanAssert(vkCreatePipelineLayout(*Graphics::logical_device, &pipeline_layout_info, nullptr, &pipeline_layout));
 
 	vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
 	input_assembly_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	input_assembly_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	input_assembly_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; //This will ALWAYS be triangles
 
 	viewport_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 	viewport_info.viewportCount = 1;
 	viewport_info.scissorCount = 1;
 
 	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-	rasterizer.lineWidth = 1.0f;
+	rasterizer.polygonMode = VK_POLYGON_MODE_FILL; //This might change only for debugging porpuses
+	rasterizer.lineWidth = 1.0f; //We won't ever use lines
 	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
 	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
-	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO; //Might change for deferred rendering and some custom renderers
 
 	depth_stencil_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-	depth_stencil_info.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+	depth_stencil_info.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL; //Default value was less, but we find this more useful
 
+	//Default blend settings for now
 	color_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 	color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
 	color_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
@@ -164,7 +174,8 @@ void GraphicsPipeline::build()
 	create_info.pColorBlendState = &color_blending;
 	create_info.pDynamicState = &dynamic_state;
 	create_info.renderPass = render_pass;
-	create_info.subpass = 0;
+	create_info.layout = pipeline_layout; 
+	create_info.subpass = subpass;
 	create_info.pDepthStencilState = &depth_stencil_info;
 
 	create();
@@ -182,15 +193,11 @@ void GraphicsPipeline::bind()
 
 void GraphicsPipeline::destroy()
 {
-	//vkDestroyPipelineCache(*Graphics::logical_device, cache, nullptr);
 	vkDestroyPipeline(*Graphics::logical_device, pipeline, nullptr);
-	vkDestroyPipelineLayout(*Graphics::logical_device, pipeline_layout, nullptr);
 }
 
 void GraphicsPipeline::create()
 {
-	Graphics::vulkanAssert(vkCreatePipelineLayout(*Graphics::logical_device, &pipeline_layout_info, nullptr, &pipeline_layout));
-
 	VkViewport viewport = {};
 	viewport.x = 0;
 	viewport.y = Graphics::swap_chain->getExtent().height;
@@ -205,14 +212,8 @@ void GraphicsPipeline::create()
 	scissor.extent = Graphics::swap_chain->getExtent();
 	viewport_info.pScissors = &scissor;
 	create_info.pViewportState = &viewport_info;
-	create_info.layout = pipeline_layout;
 
 	Graphics::vulkanAssert(vkCreateGraphicsPipelines(*Graphics::logical_device, VK_NULL_HANDLE, 1, &create_info, nullptr, &pipeline));
-
-	//Create cache
-	//VkPipelineCacheCreateInfo pipeline_cache_info = {};
-	//pipeline_cache_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-	//Graphics::vulkanAssert(vkCreatePipelineCache(*Graphics::logical_device, &pipeline_cache_info, nullptr, &cache));
 }
 
 void GraphicsPipeline::onWindowResize(const WindowResizeEvent& e)

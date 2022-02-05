@@ -25,21 +25,15 @@ RenderPass& RenderPass::addAttachment(VkFormat format, VkImageLayout image_layou
     
     VkAttachmentReference attachment_reference{};
     attachment_reference.attachment = subpasses.back().attachments.size() - 1;
-    attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    if (EnumInfo::hasDepth(attachment_description.format))
+    if (EnumInfo::hasDepth(attachment_description.format) || EnumInfo::hasStencil(attachment_description.format))
     {
         attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        subpasses.back().depth_stencil_attachment_reference = attachment_reference;
     }
-    
-    if (attachment_reference.layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+    else
     {
+        attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         subpasses.back().color_attachment_references.emplace_back(attachment_reference);
-    }
-    else if(attachment_reference.layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-        || attachment_reference.layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL
-        || attachment_reference.layout == VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL)
-    {
-        subpasses.back().depth_attachment_reference = attachment_reference;
     }
     subpasses.back().attachment_references.emplace_back(attachment_reference);
    
@@ -74,7 +68,14 @@ RenderPass& RenderPass::addSubpass()
     subpasses.emplace_back();
 
     if (subpasses.size() > 1)
-        subpasses.back().input_attachments = subpasses[subpasses.size() - 2].attachment_references;
+    {
+        subpasses.back().input_attachment_references = subpasses[subpasses.size() - 2].attachment_references;
+        for (size_t i = 0; i < subpasses.back().input_attachment_references.size(); ++i)
+        {
+            VkAttachmentReference& input_attachment_reference = subpasses.back().input_attachment_references[i];
+            input_attachment_reference.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; //bit hardcoded
+        }
+    }
 
     return *this;
 }
@@ -90,17 +91,17 @@ void RenderPass::build()
         
         VkSubpassDescription subpass_description{};
         subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass_description.inputAttachmentCount = subpass.input_attachments.size();
-        subpass_description.pInputAttachments = subpass.input_attachments.data();
+        subpass_description.inputAttachmentCount = subpass.input_attachment_references.size();
+        subpass_description.pInputAttachments = subpass.input_attachment_references.data();
         subpass_description.colorAttachmentCount = subpass.color_attachment_references.size();
         subpass_description.pColorAttachments = subpass.color_attachment_references.data();
-        subpass_description.pDepthStencilAttachment = &subpass.depth_attachment_reference;
+        subpass_description.pDepthStencilAttachment = &subpass.depth_stencil_attachment_reference;
         subpass_description.pResolveAttachments = &subpass.resolve_attachment_reference;
 
         subpasses.emplace_back(subpass_description);
     }
     
-    //TODO: IDK but this doesn't belong here
+    //TODO: This doesn't belong here, create subpass system which will manage all the dependencies
     VkSubpassDependency dependency{};
     dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
     dependency.dstSubpass = 0;
@@ -146,7 +147,7 @@ void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_cont
         }
         else
         {
-            clear_value.color = { 0.15f, 0.4f, 0.6f, 1.0f };
+            clear_value.color = { 0.15f, 0.4f, 0.6f, 1.0f }; //TEMP sky color (should be 0.0 normally)
         }
         clear_values[i] = clear_value;
     }
@@ -158,11 +159,18 @@ void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_cont
     Graphics::active.render_pass = render_pass;
 }
 
+void RenderPass::nextSubpass()
+{
+    vkCmdNextSubpass(Graphics::active.command_buffer, VK_SUBPASS_CONTENTS_INLINE);
+}
+
 void RenderPass::end()
 {
     if (Graphics::active.render_pass != render_pass)
         return;
+
     vkCmdEndRenderPass(Graphics::active.command_buffer);
+
     Graphics::active.render_pass = VK_NULL_HANDLE;
     if (Graphics::active.bind_point == VK_PIPELINE_BIND_POINT_GRAPHICS)
     {

@@ -18,12 +18,9 @@ class Graphics
 {
 
 public:
-	static constexpr size_t MAX_INSTANCES = 65536 * 10;
-	static constexpr size_t MAX_BATCH_VERTICES = 65536;
-	static constexpr size_t MAX_BATCH_INDICES = 65536 * 2;
+	static constexpr size_t MAX_INSTANCES = 65536;
 	static constexpr size_t MAX_TEXTURE_SLOTS = 32;
 	static constexpr size_t MAX_LIGHTS = 64;
-	static constexpr size_t MAX_VERTEX_BUFFER_BINDINGS = 8;
 	static constexpr uint32_t API_VERSION = VK_API_VERSION_1_2;
 
 public:
@@ -41,7 +38,6 @@ public:
 	};
 	static inline struct Statistics
 	{
-		size_t batches = 0;
 		size_t instances = 0;
 	} stats;
 public:

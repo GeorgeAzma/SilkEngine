@@ -29,14 +29,13 @@ struct InstanceData
 struct RenderedInstance
 {
 	shared<Mesh> mesh;
-	shared<MaterialData> material_data = nullptr;
+	shared<Material> material = nullptr;
 
 	InstanceData* instance_data = nullptr;
-	bool batched = false;
 
 	bool operator==(const RenderedInstance& other) const
 	{
-		return (*mesh == *other.mesh) && (*other.material_data->material == *material_data->material);
+		return (*mesh == *other.mesh) && (other.material->shader_effect.get() == material->shader_effect.get());
 	}
 };
 

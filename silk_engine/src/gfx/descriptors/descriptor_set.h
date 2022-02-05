@@ -3,27 +3,27 @@
 #include "descriptor_set_layout.h"
 #include "gfx/images/image.h"
 #include "gfx/images/image_array.h"
+#include "gfx/descriptors/write_descriptor_set.h"
 
 class DescriptorSet : NonCopyable
 {
 public:
-	DescriptorSet& addBuffer(uint32_t binding, VkDescriptorBufferInfo buffer_info, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
-	DescriptorSet& addImage(uint32_t binding, const VkDescriptorImageInfo& descriptor_image_info, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
-	DescriptorSet& addImages(uint32_t binding, const std::vector<VkDescriptorImageInfo>& descriptor_image_info, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
+	DescriptorSet& addBuffers(uint32_t binding, const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
+	DescriptorSet& addImages(uint32_t binding, const std::vector<VkDescriptorImageInfo>& descriptor_image_infos, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
 	void build();
 
-	std::vector<VkWriteDescriptorSet>& getWrites() { return descriptor_writes; }
 	void update();
-	void update(const VkWriteDescriptorSet& descriptor_write);
+	void update(const std::vector<shared<WriteDescriptorSet>>& write_descriptor_sets);
 
 	void bind(size_t first_set = 0);
 
 	operator const VkDescriptorSet& () const { return descriptor_set; }
 	const VkDescriptorSetLayout& getLayout() const { return *layout; }
+	std::vector<shared<WriteDescriptorSet>>& getWrites() { return write_descriptor_sets; }
 
 private:
-	shared <DescriptorSetLayout> layout;
-	VkDescriptorSet descriptor_set = VK_NULL_HANDLE;
-	std::vector<VkWriteDescriptorSet> descriptor_writes;
+	VkDescriptorSet descriptor_set;
+	shared<DescriptorSetLayout> layout;
+	std::vector<shared<WriteDescriptorSet>> write_descriptor_sets;
 	std::vector<VkDescriptorSetLayoutBinding> descriptor_layout_bindings;
 };

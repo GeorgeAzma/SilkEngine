@@ -60,6 +60,7 @@ shared<RenderedInstance> Model::processMesh(aiMesh *mesh, const aiScene *scene)
             indices.emplace_back(mesh->mFaces[i].mIndices[j]);
     }
 
+    shared<Material> material_data = nullptr;
     if(mesh->mMaterialIndex >= 0)
     {
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
@@ -69,9 +70,11 @@ shared<RenderedInstance> Model::processMesh(aiMesh *mesh, const aiScene *scene)
         
         std::vector<shared<Image>> specular_maps = loadMaterialTextures(material, aiTextureType_SPECULAR);
         images.insert(images.end(), specular_maps.begin(), specular_maps.end());
-    }
 
-    return makeShared<RenderedInstance>(makeShared<Mesh>(vertices, indices/*, textures*/));
+        //TODO: Create mesh material
+    }
+      
+    return makeShared<RenderedInstance>(makeShared<Mesh>(vertices, indices), material_data);
 }  
 
 std::vector<shared<Image>> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type)

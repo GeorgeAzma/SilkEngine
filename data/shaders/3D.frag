@@ -1,7 +1,7 @@
 #version 450
 
 //TODO: Remove hardcoded materials and copy pbr in batch3D
-#define AMBIENT 0.03
+#define AMBIENT 0.01
 #define METALLIC 0.0
 #define ROUGHNESS 0.3
 #define MAX_LIGHTS 64

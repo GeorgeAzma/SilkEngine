@@ -11,7 +11,6 @@
 #include "buffers/uniform_buffer.h"
 #include "descriptors/descriptor_set.h"
 #include "gfx/ui/font.h"
-#include "renderer.h"
 
 void Graphics::init()
 {
@@ -40,7 +39,6 @@ void Graphics::init()
 
 void Graphics::cleanup() //25ms
 {
-	Renderer::cleanup();
 	Font::cleanup();
 	delete global_uniform;
 	delete swap_chain;

@@ -42,13 +42,9 @@ private:
 	void destroyMeshInstance(shared<RenderedInstance> instance);
 
 private:
-	void addBatchedInstance(const RenderedInstance& instance);
-
-private:
 	entt::registry registry;
 	std::vector<InstanceBatch> instance_batches;
-	shared<MaterialData> material_data_3D;
-	shared<MaterialData> material_data_batch3D;
+	shared<Material> material_data_3D;
 	std::array<Light, Graphics::MAX_LIGHTS> lights;
 	size_t light_index = 0;
 	bool lights_updated = false;

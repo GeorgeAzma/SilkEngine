@@ -16,7 +16,8 @@ public:
 	GraphicsPipeline& setVertexLayout(const BufferLayout& layout);
 	GraphicsPipeline& setSampleCount(VkSampleCountFlagBits sample_count);
 	GraphicsPipeline& setRenderPass(VkRenderPass render_pass);
-	GraphicsPipeline& addDescriptorSetLayout(shared<DescriptorSetLayout> layout);
+	GraphicsPipeline& setSubpass(uint32_t subpass);
+	GraphicsPipeline& addDescriptorSetLayout(VkDescriptorSetLayout layout);
 	GraphicsPipeline& addDynamicState(VkDynamicState dynamic_state);
 	GraphicsPipeline& addPushConstant(size_t size, VkShaderStageFlags shader_stages, size_t offset = 0);
 	GraphicsPipeline& enable(EnableTag tag);
@@ -57,6 +58,7 @@ private:
 	std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
 	VkPipelineDynamicStateCreateInfo dynamic_state{};
 	VkRenderPass render_pass = VK_NULL_HANDLE;
+	uint32_t subpass = 0;
 	BufferLayout layout = {}; 
 	shared<Shader> shader;
 };

@@ -14,11 +14,6 @@ void Resources::init()
         addMesh("Rectangle", makeShared<RectangleMesh>());
     }
 
-    //MODELS
-    {
-        addModel("Backpack", makeShared<Model>("backpack/backpack.obj"));
-    }
-
     //IMAGES
     {
         ImageProps white_image_props{};
@@ -62,47 +57,45 @@ void Resources::init()
 
     //MATERIALS
     {
-        shared<DescriptorSetLayout> global_descriptor_set_layout = makeShared<DescriptorSetLayout>();
-        global_descriptor_set_layout->addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
+        shared<DescriptorSet> global_descriptor_set = makeShared<DescriptorSet>();
+        global_descriptor_set->addBuffers(0, { { *Graphics::global_uniform, 0, VK_WHOLE_SIZE } }, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
             .build();
-        addDescriptorSetLayout(global_descriptor_set_layout);
+        addDescriptorSet("Global", global_descriptor_set);
 
-        shared<DescriptorSetLayout> descriptor_set_layout = makeShared<DescriptorSetLayout>();
-        descriptor_set_layout->addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, Graphics::MAX_TEXTURE_SLOTS)
+        auto white_image = Resources::getImage("White");
+        shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>();
+        descriptor_set->addImages(0, {
+                *white_image, *white_image, *white_image, *white_image,
+                *white_image, *white_image, *white_image, *white_image,
+                *white_image, *white_image, *white_image, *white_image,
+                *white_image, *white_image, *white_image, *white_image,
+                *white_image, *white_image, *white_image, *white_image,
+                *white_image, *white_image, *white_image, *white_image,
+                *white_image, *white_image, *white_image, *white_image,
+                *white_image, *white_image, *white_image, *white_image
+            }, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
             .build();
-        addDescriptorSetLayout(descriptor_set_layout);
+        addDescriptorSet("Images", descriptor_set);
 
         shared<Shader> shader = makeShared<Shader>(std::vector<std::string>{"3D.vert", "3D.frag"});
         shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
         graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
             .enable(EnableTag::DEPTH_TEST)
             .enable(EnableTag::DEPTH_WRITE)
-            .addDescriptorSetLayout(global_descriptor_set_layout)
-            .addDescriptorSetLayout(descriptor_set_layout)
+            .addDescriptorSetLayout(global_descriptor_set->getLayout())
+            .addDescriptorSetLayout(descriptor_set->getLayout())
             .setShader(shader)
             .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
             .setSampleCount(Graphics::swap_chain->getSampleCount())
             .setRenderPass(Graphics::swap_chain->getRenderPass())
             .build();
-        addMaterial("3D", makeShared<Material>(graphics_pipeline));
-        
-        shader = makeShared<Shader>(std::vector<std::string>{"batch3D.vert", "batch3D.frag"});
-        graphics_pipeline = makeShared<GraphicsPipeline>();
-        graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-            .enable(EnableTag::DEPTH_TEST)
-            .enable(EnableTag::DEPTH_WRITE)
-            .addDescriptorSetLayout(global_descriptor_set_layout)
-            .addDescriptorSetLayout(descriptor_set_layout)
-            .setShader(shader)
-            .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::UINT }, { Type::VEC4 } })
-            .setSampleCount(Graphics::swap_chain->getSampleCount())
-            .setRenderPass(Graphics::swap_chain->getRenderPass())
-            .build();
-        addMaterial("Batch3D", makeShared<Material>(graphics_pipeline));
+        addShaderEffect("3D", makeShared<ShaderEffect>(graphics_pipeline));
     }
-    
-    //COMPUTE MATERIALS
 
+    //MODELS
+    {
+        addModel("Backpack", makeShared<Model>("backpack/backpack.obj"));
+    }
 }
 
 void Resources::cleanup()
@@ -110,10 +103,11 @@ void Resources::cleanup()
     fonts.clear();
 	meshes.clear();
 	models.clear();
-	materials.clear();
-	compute_materials.clear();
+    shader_effects.clear();
+    compute_shader_effects.clear();
     images.clear();
     descriptor_set_layouts.clear();
+    descriptor_sets.clear();
 }
 
 shared<Mesh> Resources::getMesh(const std::string& name)
@@ -128,16 +122,16 @@ shared<Model> Resources::getModel(const std::string& name)
     return it == models.end() ? nullptr : it->second;
 }
 
-shared<Material> Resources::getMaterial(const std::string& name)
+shared<ShaderEffect> Resources::getShaderEffect(const std::string& name)
 {
-    auto it = materials.find(name);
-    return it == materials.end() ? nullptr : it->second;
+    auto it = shader_effects.find(name);
+    return it == shader_effects.end() ? nullptr : it->second;
 }
 
-shared<ComputeMaterial> Resources::getComputeMaterial(const std::string& name)
+shared<ComputeShaderEffect> Resources::getComputeShaderEffect(const std::string& name)
 {
-    auto it = compute_materials.find(name);
-    return it == compute_materials.end() ? nullptr : it->second;
+    auto it = compute_shader_effects.find(name);
+    return it == compute_shader_effects.end() ? nullptr : it->second;
 }
 
 shared<Image> Resources::getImage(const std::string& name)
@@ -161,6 +155,12 @@ shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<
     return new_layout;
 }
 
+shared<DescriptorSet> Resources::getDescriptorSet(const std::string& name)
+{
+    auto it = descriptor_sets.find(name);
+    return it == descriptor_sets.end() ? nullptr : it->second;
+}
+
 shared<Font> Resources::getFont(const std::string& name)
 {
     auto it = fonts.find(name);
@@ -178,16 +178,14 @@ void Resources::addModel(const std::string& name, shared<Model> model)
     models[name] = model;
 }
 
-void Resources::addMaterial(const std::string& name, shared<Material> material)
+void Resources::addShaderEffect(const std::string& name, shared<ShaderEffect> shader_effect)
 {
-    material->name = name;
-	materials[name] = material;
+    shader_effects[name] = shader_effect;
 }
 
-void Resources::addComputeMaterial(const std::string& name, shared<ComputeMaterial> compute_material)
+void Resources::addComputeShaderEffect(const std::string& name, shared<ComputeShaderEffect> compute_shader_effect)
 {
-    compute_material->name = name;
-    compute_materials[name] = compute_material;
+    compute_shader_effects[name] = compute_shader_effect;
 }
 
 void Resources::addImage(const std::string& name, shared<Image> image)
@@ -198,6 +196,11 @@ void Resources::addImage(const std::string& name, shared<Image> image)
 void Resources::addDescriptorSetLayout(shared<DescriptorSetLayout> descriptor_layout)
 {
     descriptor_set_layouts[DescriptorSetLayoutInfo{descriptor_layout->bindings_vector}] = descriptor_layout;
+}
+
+void Resources::addDescriptorSet(const std::string& name, shared<DescriptorSet> descriptor_set)
+{
+    descriptor_sets[name] = descriptor_set;
 }
 
 void Resources::addFont(const std::string& name, shared<Font> font)

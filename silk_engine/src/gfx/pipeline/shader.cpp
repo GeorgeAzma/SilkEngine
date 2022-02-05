@@ -54,15 +54,18 @@ ShaderType Shader::getShaderType(const std::string& file)
 	if (file.find(".frag") != std::string::npos)
 		return ShaderType::FRAGMENT;
 
-	if (file.find(".tcs") != std::string::npos)
-		return ShaderType::TESSELATION_CONTROL;
-
-	if (file.find(".tes") != std::string::npos)
-		return ShaderType::TESSELATION_EVALUATION;
+	if (file.find(".geom") != std::string::npos)
+		return ShaderType::GEOMETRY;
 
 	if (file.find(".comp") != std::string::npos)
 		return ShaderType::COMPUTE;
 
-	SK_ERROR("Couldn't determine shader type from file extension, try using these extensions: .vert .frag .tcs .tes .comp");
+	if (file.find(".tesc") != std::string::npos)
+		return ShaderType::TESSELATION_CONTROL;
+
+	if (file.find(".tese") != std::string::npos)
+		return ShaderType::TESSELATION_EVALUATION;
+
+	SK_ERROR("Couldn't determine shader type from file extension, try using these extensions: .vert .frag .tesc .tese .comp .geom");
 	return ShaderType::NONE;
 }

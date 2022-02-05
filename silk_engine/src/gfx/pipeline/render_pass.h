@@ -9,11 +9,11 @@ struct AttachmentProps
 
 struct Subpass
 {
-	std::vector<VkAttachmentReference> input_attachments;
+	std::vector<VkAttachmentReference> input_attachment_references;
 	std::vector<VkAttachmentDescription> attachments;
 	std::vector<VkAttachmentReference> attachment_references;
 	std::vector<VkAttachmentReference> color_attachment_references;
-	VkAttachmentReference depth_attachment_reference;
+	VkAttachmentReference depth_stencil_attachment_reference;
 	VkAttachmentReference resolve_attachment_reference;
 };
 
@@ -29,13 +29,11 @@ public:
 	void build();
 
 	void begin(VkFramebuffer framebuffer, VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
+	void nextSubpass();
 	void end();
-
 
 	operator const VkRenderPass& () const { return render_pass; }
 
-private:
-	
 private:
 	VkRenderPass render_pass;
 	std::vector<Subpass> subpasses;

@@ -4,38 +4,43 @@
 #include "gfx/pipeline/compute_pipeline.h"
 #include "gfx/descriptors/descriptor_set.h"
 
-struct Material
+struct ShaderEffect
 {
 	shared<GraphicsPipeline> pipeline;
 
-	std::string name = "";
-
-	bool operator==(const Material& other) const
+	bool operator==(const ShaderEffect& other) const
 	{
-		return name == other.name;
+		return pipeline.get() == other.pipeline.get();
 	}
 };
 
-struct MaterialData
-{
-	shared<Material> material;
-	std::vector<shared<DescriptorSet>> descriptor_sets;
-};
-
-struct ComputeMaterial
+struct ComputeShaderEffect
 {
 	shared<ComputePipeline> pipeline;
 
-	std::string name = "";
-
-	bool operator==(const ComputeMaterial& other) const
+	bool operator==(const ComputeShaderEffect& other) const
 	{
-		return name == other.name;
+		return pipeline.get() == other.pipeline.get();
+	}
+};
+
+//TODO:
+struct Material
+{
+	shared<ShaderEffect> shader_effect;
+	std::vector<shared<DescriptorSet>> descriptor_sets;
+
+	void bind(size_t first_set = 0)
+	{
+		for (size_t i = 0; i < descriptor_sets.size(); ++i)
+		{
+			descriptor_sets[i]->bind(i + first_set);
+		}
 	}
 };
 
 struct ComputeMaterialData
 {
-	shared<ComputeMaterial> material;
+	shared<ComputeShaderEffect> material;
 	std::vector<shared<DescriptorSet>> descriptor_sets;
 };

@@ -48,13 +48,13 @@ template<typename T>
 using unique = std::unique_ptr<T>;
 
 template<typename T, typename... Args>
-static constexpr std::shared_ptr<T> makeShared(Args&&... args)
+static constexpr auto makeShared(Args&&... args)
 {
     return std::make_shared<T>(std::forward<Args>(args)...);
 }
 
 template<typename T, typename... Args>
-static constexpr std::unique_ptr<T> makeUnique(Args&&... args)
+static constexpr auto makeUnique(Args&&... args)
 {
     return std::make_unique<T>(std::forward<Args>(args)...);
 }
