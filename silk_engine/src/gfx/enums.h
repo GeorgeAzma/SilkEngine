@@ -1,6 +1,6 @@
 #pragma once
 
-#include <shaderc/shaderc.hpp>
+#include <shaderc/shaderc.h>
 
 enum class Type
 {
@@ -45,7 +45,7 @@ enum class IndexType
 	UINT32
 };
 
-enum class ShaderType
+enum class ShaderType : uint32_t
 {
 	NONE = 0,
 	VERTEX = 1,

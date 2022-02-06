@@ -2,7 +2,7 @@
 #include "io/file.h"
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
-#include <shaderc/shaderc.h>
+#include <shaderc/shaderc.hpp>
 
 Shader::Shader(const std::string& file)
 {
@@ -42,11 +42,12 @@ Shader::Shader(const std::string& file)
 			std::ofstream out(file_cache_path, std::ios::binary);
 			SK_ASSERT(out.is_open(), "Couldn't create shader cache file: {0}", file_cache_path);
 			out.write((char*)shader_binaries[(uint32_t)type].data(), shader_binaries[(uint32_t)type].size() * sizeof(uint32_t));
+			
 			out.flush();
 			out.close();
 		}
 
-		VkShaderModule shader_module = createShaderModule(source);
+		VkShaderModule shader_module = createShaderModule(shader_binaries[type]);
 		shader_modules.push_back(shader_module);
 
 		VkPipelineShaderStageCreateInfo shader_stage_info{};
@@ -64,7 +65,7 @@ Shader::~Shader()
 		vkDestroyShaderModule(*Graphics::logical_device, shader_module, nullptr);//I think cleanup should be much further than this
 }
 
-std::unordered_map<uint32_t, std::string> parse(const std::string& file)
+std::unordered_map<uint32_t, std::string> Shader::parse(const std::string& file)
 {
 	std::unordered_map<uint32_t, std::string> shader_sources;
 
@@ -91,12 +92,12 @@ std::unordered_map<uint32_t, std::string> parse(const std::string& file)
 	return shader_sources;
 }
 
-VkShaderModule Shader::createShaderModule(const std::string& source) const
+VkShaderModule Shader::createShaderModule(const std::vector<uint32_t>& source) const
 {
 	VkShaderModuleCreateInfo create_info{};
 	create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	create_info.codeSize = source.size() / sizeof(uint32_t);
-	create_info.pCode = (const uint32_t*)source.data();
+	create_info.codeSize = source.size() * sizeof(uint32_t);
+	create_info.pCode = source.data();
 
 	VkShaderModule shader_module;
 	Graphics::vulkanAssert(vkCreateShaderModule(*Graphics::logical_device, &create_info, nullptr, &shader_module));

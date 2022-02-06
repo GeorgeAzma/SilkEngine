@@ -1,4 +1,5 @@
 #pragma once
+
 #include "gfx/enums.h"
 
 class Shader : NonCopyable
@@ -14,7 +15,7 @@ public:
 
 private:
 	std::unordered_map<uint32_t, std::string> parse(const std::string& file);
-	VkShaderModule createShaderModule(const std::string& source) const;
+	VkShaderModule createShaderModule(const std::vector<uint32_t>& source) const;
 
 private:
 	std::vector<VkPipelineShaderStageCreateInfo> shader_stage_infos;
