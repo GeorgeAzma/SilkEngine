@@ -250,7 +250,11 @@ silk_engine/src/core/base.h
 <semaphore>
 <thread>
 <concepts>
-silk_engine/src/core/log.h)
+silk_engine/src/core/log.h
+silk_engine/src/io/file.h
+silk_engine/src/utils/math.h
+silk_engine/src/utils/RNG.h
+silk_engine/src/utils/thread_pool.h)
 
 #Link
 target_link_directories(SilkEngine PUBLIC ${EXTRA_LIB_DIRS})
@@ -262,40 +266,6 @@ file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp")
 add_executable(Sandbox ${SANDBOX_SOURCES})
 
 target_link_libraries(Sandbox PRIVATE SilkEngine)
-
-#Shader compilation
-#find_program(GLSL_VALIDATOR glslangValidator HINTS 
-#  ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} 
-#  /usr/bin 
-#  /usr/local/bin 
-#  ${VULKAN_SDK_PATH}/Bin
-#  ${VULKAN_SDK_PATH}/Bin32
-#  $ENV{VULKAN_SDK}/Bin
-#  $ENV{VULKAN_SDK}/Bin32
-#)
-# 
-#file(GLOB_RECURSE GLSL_SOURCE_FILES
-#    "${PROJECT_SOURCE_DIR}/data/shaders/*.vert"
-#    "${PROJECT_SOURCE_DIR}/data/shaders/*.frag"
-#    "${PROJECT_SOURCE_DIR}/data/shaders/*.comp"
-#    "${PROJECT_SOURCE_DIR}/data/shaders/*.geom"
-#    "${PROJECT_SOURCE_DIR}/data/shaders/*.tesc"
-#    "${PROJECT_SOURCE_DIR}/data/shaders/*.tese"
-#)
-# 
-#foreach(GLSL ${GLSL_SOURCE_FILES})
-#    get_filename_component(FILE_NAME ${GLSL} NAME)
-#    set(SPIRV "${PROJECT_SOURCE_DIR}/data/cache/shaders/${FILE_NAME}.spv")
-#    add_custom_command(
-#        OUTPUT ${SPIRV}
-#        COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
-#        DEPENDS ${GLSL})
-#    list(APPEND SPIRV_BINARY_FILES ${SPIRV})
-#endforeach(GLSL)
-#
-#add_custom_target(Shaders DEPENDS ${SPIRV_BINARY_FILES})
-#
-#add_dependencies(Sandbox Shaders)
 
 #Copy data folder where exe file is
 add_custom_command(TARGET Sandbox POST_BUILD

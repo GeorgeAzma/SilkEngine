@@ -23,7 +23,7 @@ Shader::Shader(const std::string& file)
 
 	for (auto&& [type, source] : shader_sources)
 	{
-		std::string file_cache_path = cache_path + EnumInfo::shaderTypeFileExtension((ShaderType)type);
+		std::string file_cache_path = cache_path + EnumInfo::shaderTypeFileExtension((ShaderType)type) + ".spv";
 		std::ifstream in(file_cache_path, std::ios::ate | std::ios::binary);
 		if (in.is_open())
 		{
@@ -31,20 +31,22 @@ Shader::Shader(const std::string& file)
 			in.seekg(0);
 			shader_binaries[(uint32_t)type].resize(size / sizeof(uint32_t));
 			in.read((char*)shader_binaries[(uint32_t)type].data(), size);
+
+			SK_TRACE("Shader cache loaded: {0}", file_cache_path);
 		}
 		else
 		{
 			shaderc::SpvCompilationResult compiled_shader = compiler.CompileGlslToSpv(source, EnumInfo::shadercType((ShaderType)type), path.c_str(), options);
 			SK_ASSERT(compiled_shader.GetCompilationStatus() == shaderc_compilation_status_success, compiled_shader.GetErrorMessage());
 
-			shader_binaries[type] = std::vector<uint32_t>(compiled_shader.cbegin(), compiled_shader.cend());
+			auto& shader_binary = shader_binaries[type];
+			shader_binary = std::vector<uint32_t>(compiled_shader.cbegin(), compiled_shader.cend());
 
 			std::ofstream out(file_cache_path, std::ios::binary);
 			SK_ASSERT(out.is_open(), "Couldn't create shader cache file: {0}", file_cache_path);
-			out.write((char*)shader_binaries[(uint32_t)type].data(), shader_binaries[(uint32_t)type].size() * sizeof(uint32_t));
-			
-			out.flush();
-			out.close();
+			out.write((char*)shader_binary.data(), shader_binary.size() * sizeof(uint32_t));
+
+			SK_TRACE("Shader cache created: {0}", file_cache_path);
 		}
 
 		VkShaderModule shader_module = createShaderModule(shader_binaries[type]);
@@ -57,6 +59,8 @@ Shader::Shader(const std::string& file)
 		shader_stage_info.pName = "main";
 		shader_stage_infos.push_back(shader_stage_info);
 	}
+
+	SK_TRACE("Shader loaded: {0}", path);
 }
 
 Shader::~Shader()

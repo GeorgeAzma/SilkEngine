@@ -16,12 +16,13 @@
 #include "utils/debug_timer.h"
 #include "utils/fixed_update.h"
 #include "utils/delta.h"
-#include "io/file.h"
 #include "utils/math.h"
 #include "utils/RNG.h"
 #include "utils/timers.h"
 #include "utils/detected.h"
 #include "utils/thread_pool.h"
+
+#include "io/file.h"
 
 #include "gfx/graphics.h"
 #include "gfx/enums.h"

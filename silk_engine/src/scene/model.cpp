@@ -18,7 +18,6 @@ Model::Model(const std::string& file)
 
     processNode(scene->mRootNode, scene);
     SK_TRACE("Model loaded: {0}", file);
-    SK_INFO(meshes.size());
 }
 
 void Model::processNode(aiNode* node, const aiScene* scene)
