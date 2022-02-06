@@ -9,13 +9,29 @@ Shader::Shader(const std::vector<std::string>& files)
 	shaderc::Compiler compiler;
 	shaderc::CompileOptions options;
 	options.SetTargetEnvironment(shaderc_target_env_vulkan, EnumInfo::shadercApiVersion(Graphics::API_VERSION));
+	options.SetForcedVersionProfile(450, shaderc_profile_core);
+	options.SetWarningsAsErrors();
+	options.SetOptimizationLevel(shaderc_optimization_level_performance);
+#ifdef SK_ENABLE_DEBUG_OUTPUT
+	options.SetGenerateDebugInfo();
+#endif
 
 	for (auto& file : files)
 	{
+		std::string source = "";
 		std::string path = std::string("data/shaders/") + file;
-		std::string source = File::read(path);
-	
-		shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, EnumInfo::shadercType(getShaderType(path)), path.c_str(), options);
+
+		if (File::exists(std::string("data/shaders/") + file + ".spv"))
+		{
+
+		}
+		else
+		{
+			source = File::read(path);
+
+			shaderc::SpvCompilationResult compiled_shader = compiler.CompileGlslToSpv(source, EnumInfo::shadercType(getShaderType(path)), path.c_str(), options);
+			SK_ASSERT(compiled_shader.GetCompilationStatus() == shaderc_compilation_status_success, compiled_shader.GetErrorMessage());
+		}
 
 		VkShaderModule shader_module = createShaderModule(source);
 		shader_modules.push_back(shader_module);

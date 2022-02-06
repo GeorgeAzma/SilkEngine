@@ -26,3 +26,9 @@ void File::write(const std::string& file, const char* data, size_t size)
 	else
 		os << data;
 }
+
+bool File::exists(const std::string& file)
+{
+	struct stat buff;
+	return (stat(file.c_str(), &buff) == 0);
+}

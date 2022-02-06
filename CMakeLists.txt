@@ -25,10 +25,15 @@ GLM_FORCE_LEFT_HANDED
 find_package(Vulkan REQUIRED FATAL_ERROR)
 list(APPEND INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 list(APPEND EXTRA_LIBS ${Vulkan_LIBRARIES})
-foreach(item ${Vulkan_LIBRARIES})
-    list(APPEND EXTRA_LIBS ${item})
-    message(${Vulkan_GLSLC_EXECUTABLE})
-endforeach()
+string(FIND ${Vulkan_LIBRARIES} "/Lib" Vulkan_PATH_POS)
+string(SUBSTRING ${Vulkan_LIBRARIES} 0 ${Vulkan_PATH_POS} VULKAN_PATH)
+list(APPEND EXTRA_LIBS 
+    ${VULKAN_PATH}/Lib/shaderc.lib
+    ${VULKAN_PATH}/Lib/spirv-cross-cpp.lib
+    ${VULKAN_PATH}/Lib/spirv-cross-glsl.lib
+    ${VULKAN_PATH}/Lib/spirv-cross-reflect.lib
+    ${VULKAN_PATH}/Lib/spirv-cross-util.lib
+)
 
 #thread_pool
 FetchContent_Declare(THREAD_POOL
@@ -259,38 +264,38 @@ add_executable(Sandbox ${SANDBOX_SOURCES})
 target_link_libraries(Sandbox PRIVATE SilkEngine)
 
 #Shader compilation
-find_program(GLSL_VALIDATOR glslangValidator HINTS 
-  ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} 
-  /usr/bin 
-  /usr/local/bin 
-  ${VULKAN_SDK_PATH}/Bin
-  ${VULKAN_SDK_PATH}/Bin32
-  $ENV{VULKAN_SDK}/Bin
-  $ENV{VULKAN_SDK}/Bin32
-)
- 
-file(GLOB_RECURSE GLSL_SOURCE_FILES
-    "${PROJECT_SOURCE_DIR}/data/shaders/*.vert"
-    "${PROJECT_SOURCE_DIR}/data/shaders/*.frag"
-    "${PROJECT_SOURCE_DIR}/data/shaders/*.comp"
-    "${PROJECT_SOURCE_DIR}/data/shaders/*.geom"
-    "${PROJECT_SOURCE_DIR}/data/shaders/*.tesc"
-    "${PROJECT_SOURCE_DIR}/data/shaders/*.tese"
-)
- 
-foreach(GLSL ${GLSL_SOURCE_FILES})
-    get_filename_component(FILE_NAME ${GLSL} NAME)
-    set(SPIRV "${PROJECT_SOURCE_DIR}/data/cache/shaders/${FILE_NAME}.spv")
-    add_custom_command(
-        OUTPUT ${SPIRV}
-        COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
-        DEPENDS ${GLSL})
-    list(APPEND SPIRV_BINARY_FILES ${SPIRV})
-endforeach(GLSL)
-
-add_custom_target(Shaders DEPENDS ${SPIRV_BINARY_FILES})
-
-add_dependencies(Sandbox Shaders)
+#find_program(GLSL_VALIDATOR glslangValidator HINTS 
+#  ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} 
+#  /usr/bin 
+#  /usr/local/bin 
+#  ${VULKAN_SDK_PATH}/Bin
+#  ${VULKAN_SDK_PATH}/Bin32
+#  $ENV{VULKAN_SDK}/Bin
+#  $ENV{VULKAN_SDK}/Bin32
+#)
+# 
+#file(GLOB_RECURSE GLSL_SOURCE_FILES
+#    "${PROJECT_SOURCE_DIR}/data/shaders/*.vert"
+#    "${PROJECT_SOURCE_DIR}/data/shaders/*.frag"
+#    "${PROJECT_SOURCE_DIR}/data/shaders/*.comp"
+#    "${PROJECT_SOURCE_DIR}/data/shaders/*.geom"
+#    "${PROJECT_SOURCE_DIR}/data/shaders/*.tesc"
+#    "${PROJECT_SOURCE_DIR}/data/shaders/*.tese"
+#)
+# 
+#foreach(GLSL ${GLSL_SOURCE_FILES})
+#    get_filename_component(FILE_NAME ${GLSL} NAME)
+#    set(SPIRV "${PROJECT_SOURCE_DIR}/data/cache/shaders/${FILE_NAME}.spv")
+#    add_custom_command(
+#        OUTPUT ${SPIRV}
+#        COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
+#        DEPENDS ${GLSL})
+#    list(APPEND SPIRV_BINARY_FILES ${SPIRV})
+#endforeach(GLSL)
+#
+#add_custom_target(Shaders DEPENDS ${SPIRV_BINARY_FILES})
+#
+#add_dependencies(Sandbox Shaders)
 
 #Copy data folder where exe file is
 add_custom_command(TARGET Sandbox POST_BUILD
