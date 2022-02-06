@@ -4,7 +4,6 @@
 class Shader : NonCopyable
 {
 public:
-	Shader(const std::vector<std::string>& files);
 	Shader(const std::string& file); //Handy for compute shader
 	~Shader();
 
@@ -14,9 +13,8 @@ public:
 	const std::vector<VkShaderModule>& getShaderModules() const { return shader_modules; }
 
 private:
-	std::vector<std::string> preProcess(const std::string& file);
+	std::unordered_map<uint32_t, std::string> parse(const std::string& file);
 	VkShaderModule createShaderModule(const std::string& source) const;
-	static ShaderType getShaderType(const std::string& file);
 
 private:
 	std::vector<VkPipelineShaderStageCreateInfo> shader_stage_infos;

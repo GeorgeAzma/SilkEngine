@@ -84,7 +84,9 @@ public:
 	static Type formatToType(VkFormat format);
 	static VkIndexType indexType(IndexType index_type);
 	static VkShaderStageFlagBits shaderType(ShaderType shader_type);
+	static std::string shaderTypeFileExtension(ShaderType shader_type);
 	static shaderc_shader_kind shadercType(ShaderType shader_type);
+	static ShaderType shaderString(const std::string& shader_string);
 	static uint32_t apiVersion(APIVersion api_version);
 	static shaderc_env_version shadercApiVersion(APIVersion api_version);
 	static size_t size(Type type);

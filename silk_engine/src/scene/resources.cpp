@@ -77,7 +77,7 @@ void Resources::init()
             .build();
         addDescriptorSet("Images", descriptor_set);
 
-        shared<Shader> shader = makeShared<Shader>(std::vector<std::string>{"3D.vert", "3D.frag"});
+        shared<Shader> shader = makeShared<Shader>("3D");
         shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
         graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
             .enable(EnableTag::DEPTH_TEST)

@@ -28,11 +28,11 @@ list(APPEND EXTRA_LIBS ${Vulkan_LIBRARIES})
 string(FIND ${Vulkan_LIBRARIES} "/Lib" Vulkan_PATH_POS)
 string(SUBSTRING ${Vulkan_LIBRARIES} 0 ${Vulkan_PATH_POS} VULKAN_PATH)
 list(APPEND EXTRA_LIBS 
-    ${VULKAN_PATH}/Lib/shaderc.lib
-    ${VULKAN_PATH}/Lib/spirv-cross-cpp.lib
-    ${VULKAN_PATH}/Lib/spirv-cross-glsl.lib
-    ${VULKAN_PATH}/Lib/spirv-cross-reflect.lib
-    ${VULKAN_PATH}/Lib/spirv-cross-util.lib
+    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}shaderc${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-cpp${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-glsl${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-reflect${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-util${CMAKE_STATIC_LIBRARY_SUFFIX}
 )
 
 #thread_pool
