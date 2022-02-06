@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene/light.h"
+#include "enums.h"
 
 class WindowResizeEvent;
 class Instance;
@@ -22,7 +23,7 @@ public:
 	static constexpr size_t MAX_INSTANCES = 65536;
 	static constexpr size_t MAX_TEXTURE_SLOTS = 32;
 	static constexpr size_t MAX_LIGHTS = 64;
-	static constexpr uint32_t API_VERSION = VK_API_VERSION_1_2;
+	static constexpr APIVersion API_VERSION = APIVersion::VULKAN_1_2;
 
 public:
 	struct GlobalUniformData

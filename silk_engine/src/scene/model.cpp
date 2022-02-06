@@ -8,7 +8,8 @@ Model::Model(const std::string& file)
     this->path = path;
 
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenNormals);
+    // | aiProcess_MakeLeftHanded | aiProcess_CalcTangentSpace | aiProcess_GenBoundingBoxes
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_OptimizeGraph | aiProcess_OptimizeMeshes);
 	
 	SK_ASSERT(scene && (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) != AI_SCENE_FLAGS_INCOMPLETE && scene->mRootNode,
 		"Assimp: Couldn't load model at path: {0}", path);
@@ -16,6 +17,8 @@ Model::Model(const std::string& file)
 	directory = file.substr(0, file.find_last_of('/'));
 
     processNode(scene->mRootNode, scene);
+    SK_TRACE("Model loaded: {0}", file);
+    SK_INFO(meshes.size());
 }
 
 void Model::processNode(aiNode* node, const aiScene* scene)

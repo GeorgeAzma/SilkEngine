@@ -32,34 +32,12 @@ void CameraController::onUpdate()
 
 	auto old_position = camera.position;
 	float speed = 2.0f * Time::dt * (1 + Input::isKeyDown(Keys::LEFT_SHIFT) * 20);
-	if (Input::isKeyDown(Keys::W))
-	{
-		camera.position += front2D * speed;
-	}
-	if (Input::isKeyDown(Keys::A))
-	{
-		camera.position -= -glm::cross(front2D, math::UP) * speed;
-	}
-	if (Input::isKeyDown(Keys::S))
-	{
-		camera.position -= front2D * speed;
-	}
-	if (Input::isKeyDown(Keys::D))
-	{
-		camera.position += -glm::cross(front2D, math::UP) * speed;
-	}
-	if (Input::isKeyDown(Keys::SPACE))
-	{
-		camera.position.y += speed;
-	}
-	if (Input::isKeyDown(Keys::LEFT_CONTROL))
-	{
-		camera.position.y -= speed;
-	}
+	
+	camera.position += float(Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S)) * front2D * speed;
+	camera.position += float(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D)) * glm::cross(front2D, math::UP) * speed;
+	camera.position.y += (Input::isKeyDown(Keys::SPACE) - Input::isKeyDown(Keys::LEFT_CONTROL)) * speed;
 
-	bool needs_update = (old_position != camera.position) || rotated;
-
-	if (needs_update)
+	if (old_position != camera.position || rotated)
 	{
 		camera.view = glm::lookAt(camera.position, camera.position + camera.direction, math::UP);
 		camera.updateProjectionView();

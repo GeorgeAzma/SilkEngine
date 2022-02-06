@@ -14,7 +14,7 @@ public:
 	const std::vector<VkShaderModule>& getShaderModules() const { return shader_modules; }
 
 private:
-	VkShaderModule createShaderModule(const std::vector<char>& source) const;
+	VkShaderModule createShaderModule(const std::string& source) const;
 	static ShaderType getShaderType(const std::string& file);
 
 private:

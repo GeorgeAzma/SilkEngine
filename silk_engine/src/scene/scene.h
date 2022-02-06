@@ -48,8 +48,6 @@ private:
 	std::array<Light, Graphics::MAX_LIGHTS> lights;
 	size_t light_index = 0;
 	bool lights_updated = false;
-
-	bool stopped = false;
 };
 
 

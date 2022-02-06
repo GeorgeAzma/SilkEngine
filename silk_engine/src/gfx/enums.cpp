@@ -39,7 +39,7 @@ VkFormat EnumInfo::type(Type type)
 	case Type::MAT4D: return VK_FORMAT_R64G64B64A64_SFLOAT;
 	}
 
-	SK_ERROR("Unsupported type specified: {0}", type);
+	SK_ERROR("Unsupported type specified: {0}.", type);
 	return VkFormat(0);
 }
 
@@ -86,7 +86,7 @@ Type EnumInfo::formatToType(VkFormat format)
 	case VK_FORMAT_B8G8R8A8_UNORM: return Type::VEC4;
 	}
 
-	SK_ERROR("Unsupported format specified: {0}", format);
+	SK_ERROR("Unsupported format specified: {0}.", format);
 	return Type(0);
 }
 
@@ -129,7 +129,7 @@ size_t EnumInfo::size(Type type)
 	case Type::MAT4D: return 128;
 	}
 
-	SK_ERROR("Unsupported type specified: {0}", type);
+	SK_ERROR("Unsupported type specified: {0}.", type);
 	return 0;
 }
 
@@ -141,7 +141,7 @@ size_t EnumInfo::size(IndexType index_type)
 	case IndexType::UINT32: return 4;
 	}
 
-	SK_ERROR("Unsoppurted index type specified: {0}", index_type);
+	SK_ERROR("Unsoppurted index type specified: {0}.", index_type);
 	return 0;
 }
 
@@ -184,7 +184,7 @@ size_t EnumInfo::count(Type type)
 	case Type::MAT4D: return 16;
 	}	
 	
-	SK_ERROR("Unsupported type specified: {0}", type);
+	SK_ERROR("Unsupported type specified: {0}.", type);
 	return 0;
 }
 
@@ -227,7 +227,7 @@ size_t EnumInfo::rows(Type type)
 	case Type::MAT4D: return 4;
 	}
 	
-	SK_ERROR("Unsupported type specified: {0}", type);
+	SK_ERROR("Unsupported type specified: {0}.", type);
 	return 0;
 }
 
@@ -287,7 +287,7 @@ size_t EnumInfo::channelCount(VkFormat format)
 	case VK_FORMAT_B8G8R8A8_UNORM: return 4;
 	}
 
-	SK_ERROR("Unsupported format specified: {0}", format);
+	SK_ERROR("Unsupported format specified: {0}.", format);
 	return 0;
 }
 
@@ -334,7 +334,7 @@ size_t EnumInfo::formatSize(VkFormat format)
 	case VK_FORMAT_B8G8R8A8_UNORM: return 4;
 	}
 
-	SK_ERROR("Unsupported format specified: {0}", format);
+	SK_ERROR("Unsupported format specified: {0}.", format);
 	return 0;
 }
 
@@ -363,7 +363,7 @@ VkIndexType EnumInfo::indexType(IndexType index_type)
 	case IndexType::UINT32: return VK_INDEX_TYPE_UINT32;
 	}
 
-	SK_ERROR("Unsupported index type specified: {0}", index_type);
+	SK_ERROR("Unsupported index type specified: {0}.", index_type);
 	return VkIndexType(0);
 }
 
@@ -379,6 +379,48 @@ VkShaderStageFlagBits EnumInfo::shaderType(ShaderType shader_type)
 	case ShaderType::TESSELATION_EVALUATION: return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
 	}
 
-	SK_ERROR("Unsupported shader type specified: {0}. try renaming shader file extensions to: .vert .frag .geom .tcs .tes", shader_type);
+	SK_ERROR("Unsupported shader type specified: {0}.", shader_type);
 	return VkShaderStageFlagBits(0);
+}
+
+shaderc_shader_kind EnumInfo::shadercType(ShaderType shader_type)
+{
+	switch (shader_type)
+	{
+	case ShaderType::VERTEX: return shaderc_glsl_vertex_shader;
+	case ShaderType::FRAGMENT: return shaderc_glsl_fragment_shader;
+	case ShaderType::GEOMETRY: return shaderc_glsl_geometry_shader;
+	case ShaderType::COMPUTE: return shaderc_glsl_compute_shader;
+	case ShaderType::TESSELATION_CONTROL: return shaderc_glsl_tess_control_shader;
+	case ShaderType::TESSELATION_EVALUATION: return shaderc_glsl_tess_evaluation_shader;
+	}
+
+	SK_ERROR("Unsupported shader type specified: {0}.", shader_type);
+	return shaderc_shader_kind(0);
+}
+
+uint32_t EnumInfo::apiVersion(APIVersion api_version)
+{
+	switch (api_version)
+	{
+	case APIVersion::VULKAN_1_0: return VK_API_VERSION_1_0;
+	case APIVersion::VULKAN_1_1: return VK_API_VERSION_1_1;
+	case APIVersion::VULKAN_1_2: return VK_API_VERSION_1_2;
+	}
+
+	SK_ERROR("Unsupported api version specified: {0}.", api_version);
+	return uint32_t(0);
+}
+
+shaderc_env_version EnumInfo::shadercApiVersion(APIVersion api_version)
+{
+	switch (api_version)
+	{
+	case APIVersion::VULKAN_1_0: return shaderc_env_version_vulkan_1_0;
+	case APIVersion::VULKAN_1_1: return shaderc_env_version_vulkan_1_1;
+	case APIVersion::VULKAN_1_2: return shaderc_env_version_vulkan_1_2;
+	}
+
+	SK_ERROR("Unsupported api version specified: {0}.", api_version);
+	return shaderc_env_version(0);
 }

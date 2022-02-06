@@ -25,6 +25,10 @@ GLM_FORCE_LEFT_HANDED
 find_package(Vulkan REQUIRED FATAL_ERROR)
 list(APPEND INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 list(APPEND EXTRA_LIBS ${Vulkan_LIBRARIES})
+foreach(item ${Vulkan_LIBRARIES})
+    list(APPEND EXTRA_LIBS ${item})
+    message(${Vulkan_GLSLC_EXECUTABLE})
+endforeach()
 
 #thread_pool
 FetchContent_Declare(THREAD_POOL
@@ -139,7 +143,7 @@ GIT_REPOSITORY  https://github.com/assimp/assimp
 GIT_TAG         v5.0.0
 GIT_SHALLOW     ON
 UPDATE_COMMAND  ""
-CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_SOURCE_DIR}/vendor/assimp/lib
+CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_BINARY_DIR}/vendor/assimp/lib
                 -DASSIMP_INCLUDE_INSTALL_DIR=${PROJECT_SOURCE_DIR}/vendor/assimp/include
                 -DASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT:BOOL=OFF
                 -DASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT:BOOL=OFF
@@ -159,18 +163,18 @@ CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_SOURCE_DIR}/vendor/assimp/lib
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/assimp/include)
 list(APPEND EXTRA_LIBS "assimp" "$<IF:$<CONFIG:Debug>,zlibstaticd,zlibstatic>" "irrXML")
 
-link_directories("${PROJECT_SOURCE_DIR}/vendor/assimp/lib")
+link_directories("${PROJECT_BINARY_DIR}/vendor/assimp/lib")
 
 #Sub dirs
-############################__VULKAN ENGINE__#####################################
-file(GLOB_RECURSE VULKAN_ENGINE_SOURCES 
+############################__SILK ENGINE__#####################################
+file(GLOB_RECURSE SILK_ENGINE_SOURCES 
 "silk_engine/src/*.cpp")
 
-#Create VulkanEngine.lib
-add_library(VulkanEngine STATIC ${VULKAN_ENGINE_SOURCES})
+#Create SilkEngine.lib
+add_library(SilkEngine STATIC ${SILK_ENGINE_SOURCES})
 
 #Include dirs
-target_include_directories(VulkanEngine PUBLIC 
+target_include_directories(SilkEngine PUBLIC 
 "${PROJECT_SOURCE_DIR}/vendor" 
 "${PROJECT_SOURCE_DIR}/silk_engine/src"
 ${INCLUDE_DIRS}
@@ -189,16 +193,16 @@ foreach(item IN LISTS DEPENDENCIES_TO_ADD)
 endforeach()
 
 #Defines
-target_compile_definitions(VulkanEngine PUBLIC 
+target_compile_definitions(SilkEngine PUBLIC 
 "$<$<CONFIG:DEBUG>:SK_DEBUG>"
 "$<$<CONFIG:RELEASE>:SK_DIST>"
 )
-target_compile_definitions(VulkanEngine PRIVATE 
+target_compile_definitions(SilkEngine PRIVATE 
 "SK_CORE"
 )
 
 #Precompile headers
-target_precompile_headers(VulkanEngine PUBLIC 
+target_precompile_headers(SilkEngine PUBLIC 
 silk_engine/src/core/base.h
 <iostream>
 <string>
@@ -244,15 +248,15 @@ silk_engine/src/core/base.h
 silk_engine/src/core/log.h)
 
 #Link
-target_link_directories(VulkanEngine PUBLIC ${EXTRA_LIB_DIRS})
-target_link_libraries(VulkanEngine ${EXTRA_LIBS})
+target_link_directories(SilkEngine PUBLIC ${EXTRA_LIB_DIRS})
+target_link_libraries(SilkEngine ${EXTRA_LIBS})
 
 ############################__SANDBOX__#####################################
 file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp")
 
 add_executable(Sandbox ${SANDBOX_SOURCES})
 
-target_link_libraries(Sandbox PRIVATE VulkanEngine)
+target_link_libraries(Sandbox PRIVATE SilkEngine)
 
 #Shader compilation
 find_program(GLSL_VALIDATOR glslangValidator HINTS 
@@ -270,8 +274,8 @@ file(GLOB_RECURSE GLSL_SOURCE_FILES
     "${PROJECT_SOURCE_DIR}/data/shaders/*.frag"
     "${PROJECT_SOURCE_DIR}/data/shaders/*.comp"
     "${PROJECT_SOURCE_DIR}/data/shaders/*.geom"
-    "${PROJECT_SOURCE_DIR}/data/shaders/*.tcs"
-    "${PROJECT_SOURCE_DIR}/data/shaders/*.tes"
+    "${PROJECT_SOURCE_DIR}/data/shaders/*.tesc"
+    "${PROJECT_SOURCE_DIR}/data/shaders/*.tese"
 )
  
 foreach(GLSL ${GLSL_SOURCE_FILES})

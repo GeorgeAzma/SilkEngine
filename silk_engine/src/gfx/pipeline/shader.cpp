@@ -2,13 +2,21 @@
 #include "io/file.h"
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
+#include <shaderc/shaderc.h>
 
 Shader::Shader(const std::vector<std::string>& files)
 {
+	shaderc::Compiler compiler;
+	shaderc::CompileOptions options;
+	options.SetTargetEnvironment(shaderc_target_env_vulkan, EnumInfo::shadercApiVersion(Graphics::API_VERSION));
+
 	for (auto& file : files)
 	{
-		std::string path = std::string("data/cache/shaders/") + file + ".spv";
-		std::vector<char> source = File::read(path);
+		std::string path = std::string("data/shaders/") + file;
+		std::string source = File::read(path);
+	
+		shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, EnumInfo::shadercType(getShaderType(path)), path.c_str(), options);
+
 		VkShaderModule shader_module = createShaderModule(source);
 		shader_modules.push_back(shader_module);
 
@@ -32,11 +40,11 @@ Shader::~Shader()
 		vkDestroyShaderModule(*Graphics::logical_device, shader_module, nullptr);//I think cleanup should be much further than this
 }
 
-VkShaderModule Shader::createShaderModule(const std::vector<char>& source) const
+VkShaderModule Shader::createShaderModule(const std::string& source) const
 {
 	VkShaderModuleCreateInfo create_info{};
 	create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	create_info.codeSize = source.size();
+	create_info.codeSize = source.size() / sizeof(uint32_t);
 	create_info.pCode = (const uint32_t*)source.data();
 
 	VkShaderModule shader_module;

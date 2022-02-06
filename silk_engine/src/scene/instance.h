@@ -26,12 +26,15 @@ struct InstanceData
 	}
 };
 
+struct InstanceBatch;
+
 struct RenderedInstance
 {
 	shared<Mesh> mesh;
 	shared<Material> material = nullptr;
 
 	InstanceData* instance_data = nullptr;
+	InstanceBatch* instance_batch = nullptr;
 
 	bool operator==(const RenderedInstance& other) const
 	{
@@ -44,6 +47,7 @@ struct InstanceBatch
 	shared<RenderedInstance> instance;
 
 	std::vector<InstanceData> instance_data;
+	std::vector<shared<RenderedInstance>> instances;
 
 	bool needs_update = true;
 

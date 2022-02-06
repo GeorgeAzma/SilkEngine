@@ -9,7 +9,7 @@ Instance::Instance()
     application_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     application_info.pEngineName = "Silk Engine";
     application_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    application_info.apiVersion = Graphics::API_VERSION;
+    application_info.apiVersion = EnumInfo::apiVersion(Graphics::API_VERSION);
 
     VkInstanceCreateInfo create_info{};
     create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;

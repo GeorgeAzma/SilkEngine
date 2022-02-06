@@ -63,7 +63,7 @@ struct ModelComponent
 {
 	shared<Model> model;
 
-	std::vector<InstanceData*> instance_data;
+	std::vector<shared<RenderedInstance>> instances;
 
 	operator Model& () { return *model; }
 };
