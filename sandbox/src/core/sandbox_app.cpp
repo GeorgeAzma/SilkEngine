@@ -11,15 +11,15 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
     auto rectangle = Resources::getMesh("Rectangle");
     auto circle = Resources::getMesh("Circle");
-    entities.resize(0);
+    entities.resize(10000);
     for (size_t i = 0; i < entities.size(); ++i)
     {
         entities[i] = scene->createEntity();
         entities[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(i % (size_t)sqrt(entities.size()), i / (size_t)sqrt(entities.size()), RNG::Float() * sqrt(entities.size()) + 1.0f)));
         entities[i]->addComponent<SpriteComponent>((uint32_t)RNG::Bool());
         entities[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        //entities[i]->addComponent<ModelComponent>(Resources::getModel("Backpack"));
-        entities[i]->addComponent<MeshComponent>(makeShared<RenderedInstance>(circle));
+        entities[i]->addComponent<ModelComponent>(Resources::getModel("Backpack"));
+        //entities[i]->addComponent<MeshComponent>(makeShared<RenderedInstance>(circle));
     }
 
     entities.emplace_back(scene->createEntity());

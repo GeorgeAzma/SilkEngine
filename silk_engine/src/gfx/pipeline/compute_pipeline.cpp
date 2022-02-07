@@ -62,7 +62,7 @@ void ComputePipeline::build()
 
 void ComputePipeline::bind()
 {
-	if (Graphics::active.pipeline == pipeline)
+	if (Graphics::active.pipeline == pipeline && Graphics::active.bind_point == VK_PIPELINE_BIND_POINT_COMPUTE)
 		return;
 	vkCmdBindPipeline(Graphics::active.command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 	Graphics::active.pipeline = pipeline;

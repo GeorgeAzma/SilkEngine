@@ -17,7 +17,6 @@ class DescriptorSet;
 
 class Graphics
 {
-
 public:
 	static constexpr size_t MAX_INSTANCE_BATCHES = 65536;
 	static constexpr size_t MAX_INSTANCES = 65536;
@@ -41,7 +40,15 @@ public:
 	static inline struct Statistics
 	{
 		size_t instances = 0;
-	} stats;
+	} stats{};
+	static inline struct Active
+	{
+		VkPipeline pipeline = VK_NULL_HANDLE;
+		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
+		VkPipelineBindPoint bind_point = VK_PIPELINE_BIND_POINT_MAX_ENUM;
+		VkCommandBuffer command_buffer = VK_NULL_HANDLE;
+		VkRenderPass render_pass = VK_NULL_HANDLE;
+	} active{};
 public:
 	static void init();
 	static void cleanup();
@@ -59,15 +66,6 @@ public:
 	static inline SwapChain* swap_chain = nullptr;
 	static inline DescriptorPool* descriptor_pool = nullptr;
 	static inline UniformBuffer* global_uniform = nullptr;
-	static inline struct Active
-	{
-	public:
-		VkPipeline pipeline = VK_NULL_HANDLE;
-		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
-		VkPipelineBindPoint bind_point = VK_PIPELINE_BIND_POINT_MAX_ENUM;
-		VkCommandBuffer command_buffer = VK_NULL_HANDLE;
-		VkRenderPass render_pass = VK_NULL_HANDLE;
-	} active;
 
 private:
 	static constexpr std::string stringifyResult(VkResult result);

@@ -80,7 +80,6 @@ void Scene::onUpdate()
 	Graphics::global_uniform->setDataChecked(&global_uniform_data, sizeof(Graphics::GlobalUniformData));
 
 	//Drawing
-	Graphics::swap_chain->beginRenderPass();
 
 	std::vector<VkDrawIndexedIndirectCommand> indexed_draw_commands;
 	std::vector<VkDrawIndirectCommand> draw_commands;
@@ -106,6 +105,8 @@ void Scene::onUpdate()
 	indirect_buffer->setDataChecked(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndirectCommand));
 
 	//Draw instances
+	Graphics::swap_chain->beginRenderPass();
+
 	size_t indexed_draw_index = 0;
 	size_t draw_index = 0;
 	for (auto& instance_batch : instance_batches)
