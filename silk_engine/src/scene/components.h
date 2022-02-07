@@ -54,9 +54,10 @@ struct ScriptComponent
 
 struct MeshComponent
 {
-	shared<RenderedInstance> instance;
+	shared<Mesh> mesh;
+	shared<RenderedInstance> instance = nullptr;
 
-	operator RenderedInstance& () { return *instance; }
+	operator Mesh& () { return *mesh; }
 };
 
 struct ModelComponent
@@ -87,7 +88,8 @@ struct TextComponent
 
 struct LightComponent
 {
-	Light light;
+	Light light = {};
+	Light* light_ptr = nullptr;
 
 	operator Light& () { return light; };
 };

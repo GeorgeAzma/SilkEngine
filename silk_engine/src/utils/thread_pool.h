@@ -52,15 +52,15 @@ public:
                 });
             index += invocations;
         }
-        waitForTasks();
+        wait();
     }
 
-    void waitForTasks() const;
+    void wait() const;
     size_t runningTasks() const { return running_tasks; }
-    size_t threadCount() const { return threads.size(); }
+    size_t size() const { return threads.size(); }
 
 private:
-    void wait() const;
+    void sleep() const;
     void work();
 
 private:

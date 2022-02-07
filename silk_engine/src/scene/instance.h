@@ -31,14 +31,13 @@ struct InstanceBatch;
 struct RenderedInstance
 {
 	shared<Mesh> mesh;
-	shared<Material> material = nullptr;
 
-	InstanceData* instance_data = nullptr;
-	InstanceBatch* instance_batch = nullptr;
+	size_t instance_data_index = -1;
+	size_t instance_batch_index = -1;
 
 	bool operator==(const RenderedInstance& other) const
 	{
-		return (*mesh == *other.mesh) && (other.material->shader_effect.get() == material->shader_effect.get());
+		return (*mesh == *other.mesh);
 	}
 };
 

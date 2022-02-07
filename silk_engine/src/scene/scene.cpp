@@ -121,9 +121,9 @@ void Scene::onUpdate()
 			instance_batch.needs_update = false;
 		}
 
-		instance_batch.instance->material->shader_effect->pipeline->bind();
+		instance_batch.instance->mesh->material->shader_effect->pipeline->bind();
 		instance_batch.instance->mesh->vertex_array->bind();
-		instance_batch.instance->material->bind();
+		instance_batch.instance->mesh->material->bind();
 		
 		if (instance_batch.instance->mesh->vertex_array->hasIndexBuffer())
 		{
@@ -193,9 +193,8 @@ void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
 	if (auto color = registry.try_get<ColorComponent>(entity))
 		instance_data.color = *color;
 
-	mesh_component.instance->instance_data = &instance_data;
-
-	createMeshInstance(mesh_component.instance);
+	mesh_component.instance = makeShared<RenderedInstance>(mesh_component.mesh);
+	createMeshInstance(mesh_component.instance, instance_data);
 }
 
 void Scene::onMeshComponentDestroy(entt::registry& registry, entt::entity entity)
@@ -219,12 +218,11 @@ void Scene::onModelComponentCreate(entt::registry& registry, entt::entity entity
 	if (auto color = registry.try_get<ColorComponent>(entity))
 		instance_data.color = *color;
 	
-	model_component.instances.resize(model_component.model->meshes.size());
-	for (size_t i = 0; i < model_component.model->meshes.size(); ++i)
+	model_component.instances.resize(model_component.model->getMeshes().size());
+	for (size_t i = 0; i < model_component.model->getMeshes().size(); ++i)
 	{
-		model_component.instances[i] = makeShared<RenderedInstance>(model_component.model->meshes[i], model_component.model->materials[i], &instance_data);
-		createMeshInstance(model_component.instances[i]);
-		model_component.model->materials[i] = model_component.instances[i]->material; //This assigns default material if no material present
+		model_component.instances[i] = makeShared<RenderedInstance>(model_component.model->getMeshes()[i]);
+		createMeshInstance(model_component.instances[i], instance_data);
 	}
 }
 
@@ -232,7 +230,7 @@ void Scene::onModelComponentDestroy(entt::registry& registry, entt::entity entit
 {
 	ModelComponent& model_component = registry.get<ModelComponent>(entity);
 
-	for (size_t i = 0; i < model_component.model->meshes.size(); ++i)
+	for (size_t i = 0; i < model_component.model->getMeshes().size(); ++i)
 	{
 		destroyMeshInstance(model_component.instances[i]);
 	}
@@ -240,11 +238,15 @@ void Scene::onModelComponentDestroy(entt::registry& registry, entt::entity entit
 
 void Scene::onLightComponentCreate(entt::registry& registry, entt::entity entity)
 {
+	if (light_index >= lights.size())
+		return;
+
 	LightComponent& light_component = registry.get<LightComponent>(entity);
+	light_component.light_ptr = &lights[light_index];
 	lights[light_index] = light_component;
 	if(auto transform = registry.try_get<TransformComponent>(entity))
 		lights[light_index].position = transform->transform * glm::vec4(light_component.light.position, 1);
-	light_index = (light_index + 1) % Graphics::MAX_LIGHTS;
+	++light_index;
 }
 
 void Scene::onLightComponentDestroy(entt::registry& registry, entt::entity entity)
@@ -263,22 +265,26 @@ void Scene::onLightComponentDestroy(entt::registry& registry, entt::entity entit
 	}
 }
 
-void Scene::createMeshInstance(shared<RenderedInstance> instance)
+void Scene::createMeshInstance(shared<RenderedInstance> instance, const InstanceData& instance_data)
 {
-	instance->material = instance->material.get() ? instance->material : material_data_3D;
+	if (!instance->mesh->vertex_array.get()) instance->mesh->createVertexArray();
+	if (!instance->mesh->material.get()) instance->mesh->material = material_data_3D;
 
-	for (auto& instance_batch : instance_batches)
+	for (size_t i = 0; i < instance_batches.size(); ++ i)
 	{
+		auto& instance_batch = instance_batches[i];
 		if (instance_batch == *instance)
 		{
 			if (instance_batch.instance_data.size() >= Graphics::MAX_INSTANCES)
 				break;
 
 			instance_batch.needs_update = true;
-			instance_batch.instance_data.emplace_back(*instance->instance_data); 
+			instance_batch.instance_data.emplace_back(std::move(instance_data));
 			instance_batch.instances.emplace_back(instance);
-			instance->instance_batch = &instance_batch;
-			instance->instance_data = &instance_batch.instance_data.back();
+
+			instance->instance_batch_index = i;
+			instance->instance_data_index = instance_batch.instance_data.size() - 1;
+
 			return;
 		}
 	}
@@ -286,36 +292,38 @@ void Scene::createMeshInstance(shared<RenderedInstance> instance)
 	instance_batches.emplace_back(instance);
 	instance_batches.back().instance_data.reserve(Graphics::MAX_INSTANCES);
 	instance_batches.back().instances.reserve(Graphics::MAX_INSTANCES);
-	instance_batches.back().instance_data.emplace_back(*instance->instance_data);
+
+	instance_batches.back().instance_data.emplace_back(std::move(instance_data));
 	instance_batches.back().instances.emplace_back(instance);
-	instance->instance_batch = &instance_batches.back();
-	instance->instance_data = &instance_batches.back().instance_data.back();
+
+	instance->instance_batch_index = instance_batches.size() - 1;
+	instance->instance_data_index = instance_batches.back().instance_data.size() - 1;
 }
 
 void Scene::destroyMeshInstance(shared<RenderedInstance> instance)
 {
-	//TODO: get rid of slow look up
-	for (auto& instance_batch : instance_batches)
+	auto& instance_batch = instance_batches[instance->instance_batch_index];
+	instance_batch.needs_update = true;
+	
+	std::swap(instance_batch.instance_data[instance->instance_data_index], instance_batch.instance_data.back());
+	instance_batch.instance_data.pop_back();
+	
+	std::swap(instance_batch.instances[instance->instance_data_index], instance_batch.instances.back());
+	instance_batch.instances[instance->instance_data_index]->instance_data_index = instance->instance_data_index;
+	instance_batch.instances.pop_back();
+	
+	if (instance_batch.instance_data.empty())
 	{
-		if (*instance_batch.instance == *instance)
+		if (instance->instance_batch_index != instance_batches.size() - 1)
 		{
-			instance_batch.needs_update = true;
-			
-			std::swap(*instance->instance_data, instance_batch.instance_data.back());
-			instance_batch.instance_data.pop_back();
-			
-			instance_batch.instances.back()->instance_data = instance->instance_data;
-			instance_batch.instances.pop_back();
-
-			if (instance_batch.instance_data.empty())
+			InstanceBatch* last_batch = &instance_batch;
+			std::swap(instance_batch, instance_batches.back());
+			for (size_t j = 0; j < last_batch->instances.size(); ++j)
 			{
-				std::swap(instance_batch, instance_batches.back());
-				//SK_INFO(int64_t(&instance_batches.back() - &instance_batch));
-				instance_batches.pop_back();
+				last_batch->instances[j]->instance_batch_index = instance_batches.back().instance->instance_batch_index; //TODO: This might be incorrect??
 			}
-
-			return;
 		}
+		instance_batches.pop_back();
 	}
 }
 
@@ -328,17 +336,8 @@ void Scene::updateComponent<TransformComponent>(entt::entity entity)
 	{
 		MeshComponent& mesh_component = registry.get<MeshComponent>(entity);
 		
-		mesh_component.instance->instance_data->transform = transform;
-
-		//TODO: get rid of these lookups somehow
-		for (auto& instance_batch : instance_batches)
-		{
-			if (!instance_batch.needs_update && (*instance_batch.instance == *mesh_component.instance))
-			{
-				instance_batch.needs_update = true;
-				break;
-			}
-		}
+		instance_batches[mesh_component.instance->instance_batch_index].instance_data[mesh_component.instance->instance_data_index].transform = transform;
+		instance_batches[mesh_component.instance->instance_batch_index].needs_update = true;
 	}
 	else if (registry.any_of<ModelComponent>(entity))
 	{
@@ -346,22 +345,13 @@ void Scene::updateComponent<TransformComponent>(entt::entity entity)
 
 		for (size_t i = 0; i < model_component.instances.size(); ++i)
 		{
-			model_component.instances[i]->instance_data->transform = transform;
-
-			for (auto& instance_batch : instance_batches)
-			{
-				if (!instance_batch.needs_update && (*instance_batch.instance->mesh == *model_component.model->meshes[i]) && (instance_batch.instance->material->shader_effect.get() == model_component.model->materials[i]->shader_effect.get()))
-				{
-					instance_batch.needs_update = true;
-					break;
-				}
-			}
+			instance_batches[model_component.instances[i]->instance_batch_index].instance_data[model_component.instances[i]->instance_data_index].transform = transform;
+			instance_batches[model_component.instances[i]->instance_batch_index].needs_update = true;
 		}
 	}
 	if (registry.any_of<LightComponent>(entity))
 	{
-		//TODO: Light tranformation
 		LightComponent& light_component = registry.get<LightComponent>(entity);
-		//light_component.light.position = ;
+		light_component.light_ptr->position = transform.transform * glm::vec4(light_component.light.position, 1);
 	}
 }

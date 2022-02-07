@@ -3,15 +3,12 @@
 #include "gfx/devices/physical_device.h"
 #include "gfx/devices/logical_device.h"
 
-CommandPool::CommandPool()
+CommandPool::CommandPool(VkCommandPoolCreateFlags flags)
 {
-	auto queue_family_indices = Graphics::physical_device->getQueueFamilyIndices();
 	VkCommandPoolCreateInfo create_info{};
 	create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	create_info.queueFamilyIndex = *queue_family_indices.graphics;
-	create_info.flags =
-		VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | 
-		VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	create_info.queueFamilyIndex = *Graphics::physical_device->getQueueFamilyIndices().graphics;
+	create_info.flags = flags;
 
 	Graphics::vulkanAssert(vkCreateCommandPool(*Graphics::logical_device, &create_info, nullptr, &command_pool));
 }
@@ -19,4 +16,9 @@ CommandPool::CommandPool()
 CommandPool::~CommandPool()
 {
 	vkDestroyCommandPool(*Graphics::logical_device, command_pool, nullptr);
+}
+
+void CommandPool::bind() const
+{
+	Graphics::active.command_pool = command_pool;
 }

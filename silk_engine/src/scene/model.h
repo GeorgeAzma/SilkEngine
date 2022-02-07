@@ -13,15 +13,21 @@ class Model
 public:
 	Model(const std::string& file);
 
+	static void load(const std::string& file);
+
+	const std::vector<shared<Mesh>>& getMeshes() const { return meshes; }
+	void setMaterial(size_t index, shared<Material> material) { meshes[index]->material = material; }
+	const std::string& getPath() const { return path; }
+
 private:
 	void processNode(aiNode* node, const aiScene* scene);
 	void processMesh(aiMesh* mesh, const aiScene* scene);
-	std::vector<shared<Image>> loadMaterialTextures(aiMaterial* mat, aiTextureType type);
+	std::vector<ImageData> loadMaterialTextures(aiMaterial* mat, aiTextureType type);
 
 private:
 	std::vector<shared<Mesh>> meshes;
-	std::vector<shared<Material>> materials;
 	std::string directory; 
 	std::string path;
-	friend class Scene;
+
+	std::unordered_map<std::string, ImageData> image_cache;
 };

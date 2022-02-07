@@ -38,7 +38,7 @@ private:
 	void onLightComponentCreate(entt::registry& registry, entt::entity entity);
 	void onLightComponentDestroy(entt::registry& registry, entt::entity entity);
 	
-	void createMeshInstance(shared<RenderedInstance> instance);
+	void createMeshInstance(shared<RenderedInstance> instance, const InstanceData& instance_data);
 	void destroyMeshInstance(shared<RenderedInstance> instance);
 
 private:

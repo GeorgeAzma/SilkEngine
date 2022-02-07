@@ -15,6 +15,4 @@ RectangleMesh::RectangleMesh()
 	vertices[3].texture_coordinates = { 1, 1 };
 
 	indices = { 2, 1, 0, 0, 3, 2 };
-
-	init();
 }

@@ -23,6 +23,7 @@ void Graphics::init()
 	logical_device = new LogicalDevice(); //80ms
 	allocator = new Allocator();
 	command_pool = new CommandPool(); //0.025ms
+	active.command_pool = *command_pool;
 
 	descriptor_pool = new DescriptorPool();
 	descriptor_pool->addSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 64)

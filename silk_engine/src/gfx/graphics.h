@@ -47,6 +47,7 @@ public:
 		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
 		VkPipelineBindPoint bind_point = VK_PIPELINE_BIND_POINT_MAX_ENUM;
 		VkCommandBuffer command_buffer = VK_NULL_HANDLE;
+		VkCommandPool command_pool = VK_NULL_HANDLE;
 		VkRenderPass render_pass = VK_NULL_HANDLE;
 	} active{};
 public:

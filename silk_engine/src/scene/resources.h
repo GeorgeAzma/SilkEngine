@@ -4,6 +4,7 @@
 #include "model.h"
 #include "material.h"
 #include "gfx/ui/font.h"
+#include "gfx/allocators/command_pool.h"
 
 class Resources
 {
@@ -29,6 +30,9 @@ public:
 	static void addDescriptorSetLayout(shared<DescriptorSetLayout> descriptor_layout);
 	static void addDescriptorSet(const std::string& name, shared<DescriptorSet> descriptor_set);
 	static void addFont(const std::string& name, shared<Font> font);
+
+public:
+	static inline ThreadPool pool;
 
 private:
 	static inline std::unordered_map<std::string, shared<Mesh>> meshes;

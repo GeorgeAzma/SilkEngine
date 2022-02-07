@@ -9,7 +9,7 @@ CommandBuffer::CommandBuffer(VkCommandBufferLevel level, VkQueueFlagBits queue_t
 	VkCommandBufferAllocateInfo allocation_info{};
 	allocation_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocation_info.level = level;
-	allocation_info.commandPool = *Graphics::command_pool; //Creating seperate command pool with VK_COMMAND_POOL_CREATE_TRANSIENT_BIT might be more efficient
+	allocation_info.commandPool = Graphics::active.command_pool; //Creating seperate command pool with VK_COMMAND_POOL_CREATE_TRANSIENT_BIT might be more efficient
 	allocation_info.commandBufferCount = 1;
 
 	Graphics::vulkanAssert(vkAllocateCommandBuffers(*Graphics::logical_device, &allocation_info, &command_buffer));
@@ -17,7 +17,7 @@ CommandBuffer::CommandBuffer(VkCommandBufferLevel level, VkQueueFlagBits queue_t
 
 CommandBuffer::~CommandBuffer()
 {
-	vkFreeCommandBuffers(*Graphics::logical_device, *Graphics::command_pool, 1, &command_buffer);
+	vkFreeCommandBuffers(*Graphics::logical_device, Graphics::active.command_pool, 1, &command_buffer);
 }
 
 void CommandBuffer::begin(VkCommandBufferUsageFlagBits usage)

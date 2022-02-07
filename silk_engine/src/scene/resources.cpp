@@ -8,7 +8,8 @@
 
 void Resources::init()
 {
-    //CREATE NEEDED DIRECTORIES
+    DebugTimer t("Resource loading");
+    //CREATE NEEDED DIRECTORIES AND INIT STUFF
     {
         if (!std::filesystem::exists("data/cache/shaders"))
             std::filesystem::create_directories("data/cache/shaders");
@@ -32,8 +33,7 @@ void Resources::init()
         white_image_props.mipmap = false;
         constexpr glm::u8vec4 white(255);
         white_image_props.data = &white;
-        shared<Image> white_image = makeShared<Image>(white_image_props);
-        addImage("White", white_image);
+        addImage("White", makeShared<Image>(white_image_props));
 
         ImageProps null_image_props{};
         null_image_props.width = 2;
@@ -44,16 +44,13 @@ void Resources::init()
         null_image_props.sampler_props.anisotropy = false;
         null_image_props.sampler_props.u_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         null_image_props.sampler_props.v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        null_image_props.mipmap = false;
+        null_image_props.mipmap = false;       
         constexpr glm::u8vec4 null_data[4] = { { 0, 0, 0, 255 }, { 255, 0, 255, 255 }, { 255, 0, 255, 255 }, { 0, 0, 0, 255 } };
         null_image_props.data = null_data;
-        shared<Image> null_image = makeShared<Image>(null_image_props);
-        addImage("Null", null_image);
+        addImage("Null", makeShared<Image>(null_image_props));
 
-        shared<Image> test1_image = makeShared<Image>("test1.png");
-        shared<Image> test2_image = makeShared<Image>("test2.png");
-        addImage("Test1", test1_image);
-        addImage("Test2", test2_image);
+        addImage("Test1", makeShared<Image>("test1.png"));
+        addImage("Test2", makeShared<Image>("test2.png"));
     }
 
     //FONTS
@@ -71,7 +68,7 @@ void Resources::init()
         auto white_image = Resources::getImage("White");
         shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>();
         descriptor_set->addImages(0, {
-                *Resources::getImage("Test1"), *white_image, *white_image, *white_image,
+                *white_image, *white_image, *white_image, *white_image,
                 *white_image, *white_image, *white_image, *white_image,
                 *white_image, *white_image, *white_image, *white_image,
                 *white_image, *white_image, *white_image, *white_image,
@@ -102,6 +99,8 @@ void Resources::init()
     {
         addModel("Backpack", makeShared<Model>("backpack/backpack.obj"));
     }
+
+    Graphics::command_pool->bind();
 }
 
 void Resources::cleanup()

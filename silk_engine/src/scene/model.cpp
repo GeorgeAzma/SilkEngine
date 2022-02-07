@@ -8,8 +8,8 @@ Model::Model(const std::string& file)
     this->path = path;
 
 	Assimp::Importer importer;
-    // | aiProcess_MakeLeftHanded | aiProcess_CalcTangentSpace | aiProcess_GenBoundingBoxes
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_OptimizeGraph | aiProcess_OptimizeMeshes);
+    // | aiProcess_MakeLeftHanded
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_OptimizeGraph | aiProcess_OptimizeMeshes/* | aiProcess_CalcTangentSpace*/);
 	
 	SK_ASSERT(scene && (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) != AI_SCENE_FLAGS_INCOMPLETE && scene->mRootNode,
 		"Assimp: Couldn't load model at path: {0}", path);
@@ -23,7 +23,7 @@ Model::Model(const std::string& file)
 void Model::processNode(aiNode* node, const aiScene* scene)
 {
     for (size_t i = 0; i < node->mNumMeshes; ++i)
-       processMesh(scene->mMeshes[node->mMeshes[i]], scene);
+        processMesh(scene->mMeshes[node->mMeshes[i]], scene);
 
     for (size_t i = 0; i < node->mNumChildren; ++i)
         processNode(node->mChildren[i], scene);
@@ -33,7 +33,7 @@ void Model::processMesh(aiMesh *mesh, const aiScene *scene)
 {
     std::vector<Vertex> vertices(mesh->mNumVertices, Vertex{});
     std::vector<uint32_t> indices;
-    std::vector<shared<Image>> images;
+    std::vector<ImageData> images;
 
     for(size_t i = 0; i < mesh->mNumVertices; ++i)
     {
@@ -58,15 +58,14 @@ void Model::processMesh(aiMesh *mesh, const aiScene *scene)
             indices.emplace_back(mesh->mFaces[i].mIndices[j]);
     }
 
-    shared<Material> new_material = nullptr;
     if(mesh->mMaterialIndex >= 0)
     {
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
         
-        std::vector<shared<Image>> diffuse_maps = loadMaterialTextures(material, aiTextureType_DIFFUSE);
+        std::vector<ImageData> diffuse_maps = loadMaterialTextures(material, aiTextureType_DIFFUSE);
         images.insert(images.end(), diffuse_maps.begin(), diffuse_maps.end());
         
-        std::vector<shared<Image>> specular_maps = loadMaterialTextures(material, aiTextureType_SPECULAR);
+        std::vector<ImageData> specular_maps = loadMaterialTextures(material, aiTextureType_SPECULAR);
         images.insert(images.end(), specular_maps.begin(), specular_maps.end());
 
         //TODO: Create mesh material
@@ -76,26 +75,29 @@ void Model::processMesh(aiMesh *mesh, const aiScene *scene)
     new_mesh->name = path + std::to_string(meshes.size());
 
     meshes.emplace_back(new_mesh);
-    materials.emplace_back(new_material);
 }  
 
-std::vector<shared<Image>> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type)
+std::vector<ImageData> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type)
 {
-    std::vector<shared<Image>> images;
+    std::vector<ImageData> images;
 
     for (size_t i = 0; i < mat->GetTextureCount(type); ++i)
     {
         aiString str;
-        mat->GetTexture(type, i, &str);
-        if (shared<Image> image = Resources::getImage(directory + '/' + str.C_Str()))
+        mat->GetTexture(type, i, &str); 
+
+        auto cached_image = image_cache.find(str.C_Str());
+        if (cached_image != image_cache.end())
         {
-            images.emplace_back(image);
+            images.emplace_back(cached_image->second);
         }
         else
         {
-            image = makeShared<Image>(directory + '/' + str.C_Str());
-            Resources::addImage(image->getPath(), image);
-            images.emplace_back(image);
+            ImageData image_data = Image::load(directory + '/' + str.C_Str());
+            if (image_data.channels == 3)
+                Image::align4(image_data);
+            image_cache.emplace(str.C_Str(), image_data);
+            images.emplace_back(std::move(image_data));
         }
     }
 

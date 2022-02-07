@@ -1,7 +1,7 @@
 #include "debug_timer.h"
 
-DebugTimer::DebugTimer(const char *name, bool showMilliseconds)
-    : name{name}, show_millis(showMilliseconds),
+DebugTimer::DebugTimer(const std::string& name, bool showMilliseconds)
+    : name(name), show_millis(showMilliseconds),
       start_point(std::chrono::high_resolution_clock::now())
 {
 }
@@ -21,13 +21,14 @@ long long DebugTimer::stop(bool print)
 
     if (print)
     {
-        std::cout << name << ": " << duration << "us";
+        std::string output = std::string(name) + ": " + std::to_string(duration) + "us";
         if (show_millis)
         {
-            const float ms = (float)duration * 0.001f;
-            std::cout << " (" << ms << "ms)";
+            output += " (";
+            output += std::to_string((float)duration * 0.001f) + "ms)";
         }
-        std::cout << '\n';
+        output += '\n';
+        SK_TRACE(output);
     }
 
     stopped = true;

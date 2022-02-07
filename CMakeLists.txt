@@ -33,17 +33,6 @@ list(APPEND EXTRA_LIBS
     ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-cpp${CMAKE_STATIC_LIBRARY_SUFFIX}
 )
 
-#thread_pool
-FetchContent_Declare(THREAD_POOL
-GIT_REPOSITORY  https://github.com/bshoshany/thread-pool
-GIT_TAG         v2.0.0
-GIT_SHALLOW     ON
-SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/thread_pool
-UPDATE_COMMAND ""
-)
-FetchContent_MakeAvailable(THREAD_POOL)
-list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/thread_pool)
-
 #spdlog
 FetchContent_Declare(SPDLOG
 GIT_REPOSITORY  https://github.com/gabime/spdlog

@@ -51,17 +51,17 @@ ImageData Image::load(const std::string& file)
 {
 	std::string path = std::string("data/images/") + file;
 
-	int width, height, channels;
-	stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, 0);
+	ImageData image_data{};
+	stbi_uc* pixels = stbi_load(path.c_str(), &image_data.width, &image_data.height, &image_data.channels, 0);
 	SK_ASSERT(pixels, "Failed to load image: {0}", path);
 
-	std::vector<uint8_t> pixels_vec(width * height * channels);
-	std::memcpy(pixels_vec.data(), pixels, pixels_vec.size());
+	image_data.data.resize(image_data.width * image_data.height * image_data.channels);
+	std::memcpy(image_data.data.data(), pixels, image_data.data.size() * sizeof(uint8_t));
 
 	stbi_image_free(pixels);
 
 	SK_TRACE("Image Loaded: {0}", path);
-	return { width, height, channels, pixels_vec };
+	return image_data;
 }
 
 void Image::align4(ImageData& image)

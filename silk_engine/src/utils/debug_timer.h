@@ -5,7 +5,7 @@
 class DebugTimer
 {
 public:
-    DebugTimer(const char *name = "Timer", bool showMilliseconds = true);
+    DebugTimer(const std::string& name = "Timer", bool showMilliseconds = true);
 
     ~DebugTimer();
 
@@ -14,7 +14,7 @@ public:
 
 private:
     std::chrono::time_point<std::chrono::steady_clock> start_point;
-    const char *name = "Timer";
+    std::string name = "Timer";
     bool stopped = false;
     bool show_millis = true;
 };

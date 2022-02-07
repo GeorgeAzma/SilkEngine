@@ -11,7 +11,7 @@ ThreadPool::ThreadPool(unsigned int thread_count)
 
 ThreadPool::~ThreadPool()
 {
-    waitForTasks();
+    wait();
 
     running = false;
     for (auto& t : threads)
@@ -21,15 +21,15 @@ ThreadPool::~ThreadPool()
     }
 }
 
-void ThreadPool::waitForTasks() const
+void ThreadPool::wait() const
 {
     while (running_tasks)
     {
-        wait();
+        sleep();
     }
 }
 
-void ThreadPool::wait() const
+void ThreadPool::sleep() const
 { 
     if (wait_time) 
         std::this_thread::sleep_for(std::chrono::microseconds(wait_time)); 
@@ -58,7 +58,7 @@ void ThreadPool::work()
         }
         else
         {
-            wait();
+            sleep();
         }
     }
 }
