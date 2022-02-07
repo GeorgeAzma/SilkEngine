@@ -46,10 +46,8 @@ private:
     void chooseSwapChainExtent();
     int rateSwapChainSurfaceFormat(VkSurfaceFormatKHR format) const;
 
-    void onWindowResize(const WindowResizeEvent& e);
-
 private:
-    VkSwapchainKHR swap_chain;
+    VkSwapchainKHR swap_chain = VK_NULL_HANDLE;
     std::vector<VkImage> images;
     VkSurfaceFormatKHR surface_format;
     VkPresentModeKHR present_mode;

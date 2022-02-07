@@ -38,8 +38,8 @@ private:
 	void onWindowResize(const WindowResizeEvent& e);
 
 private:
-	VkPipelineCache cache;
 	VkPipeline pipeline;
+	VkPipelineCache cache;
 	VkPipelineLayout pipeline_layout;
 
 private:

@@ -1,7 +1,9 @@
 #include "surface.h"
+#include "core/event.h"
 #include "gfx/graphics.h"
 #include "gfx/window/window.h"
 #include "gfx/instance.h"
+#include "gfx/devices/physical_device.h"
 
 Surface::Surface()
 {

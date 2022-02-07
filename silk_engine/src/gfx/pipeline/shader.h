@@ -15,6 +15,8 @@ public:
 
 private:
 	std::unordered_map<uint32_t, std::string> parse(const std::string& file);
+	void preProcess(std::string& source);
+	void reflect(const std::vector<uint32_t>& source);
 	VkShaderModule createShaderModule(const std::vector<uint32_t>& source) const;
 
 private:

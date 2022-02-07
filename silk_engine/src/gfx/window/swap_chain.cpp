@@ -7,8 +7,6 @@
 
 SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 {
-	Dispatcher::subscribe(this, &SwapChain::onWindowResize);
-
 	chooseSwapChainSurfaceFormat();
 	chooseSwapChainPresentMode();
 
@@ -49,6 +47,7 @@ void SwapChain::recreate()
 {
 	Graphics::vulkanAssert(vkDeviceWaitIdle(*Graphics::logical_device));
 
+	VkSwapchainKHR old_swapchain = swap_chain;
 	destroy();
 	create();
 }
@@ -57,13 +56,13 @@ void SwapChain::createFramebuffers()
 {
 	for (size_t i = 0; i < image_views.size(); ++i)
 	{
-		const std::vector<VkImageView> attachments = 
-		{ 
-			msaa_image->getDescriptorInfo().imageView, 
+		const std::vector<VkImageView> attachments =
+		{
+			msaa_image->getDescriptorInfo().imageView,
 			depth->getDescriptorInfo().imageView,
-		    *image_views[i] 
+			*image_views[i]
 		};
-	
+
 		framebuffers[i] = new Framebuffer(*render_pass, attachments, extent.width, extent.height);
 	}
 }
@@ -106,7 +105,7 @@ void SwapChain::present()
 
 void SwapChain::beginFrame()
 {
-	acquireNextImage(); 
+	acquireNextImage();
 	command_buffers[image_index]->begin({});
 }
 
@@ -128,9 +127,8 @@ void SwapChain::endRenderPass()
 
 void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 {
-	Graphics::physical_device->updateSwapChainSupportDetails();
 	chooseSwapChainExtent();
-	
+
 	uint32_t image_count = Graphics::physical_device->getSurfaceCapabilities().minImageCount + 1;
 	if (Graphics::physical_device->getSurfaceCapabilities().maxImageCount > 0)
 		image_count = std::min(image_count, Graphics::physical_device->getSurfaceCapabilities().maxImageCount);
@@ -151,14 +149,14 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	create_info.oldSwapchain = old_swap_chain ? *old_swap_chain : VK_NULL_HANDLE; //Necessary for resizing and such
 
 	const auto& indices = Graphics::physical_device->getQueueFamilyIndices();
-	if (indices.graphics != indices.present) 
+	if (indices.graphics != indices.present)
 	{
 		create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 		auto queue_family_indices = indices.getIndices();
 		create_info.queueFamilyIndexCount = queue_family_indices.size();
 		create_info.pQueueFamilyIndices = queue_family_indices.data();
 	}
-	else 
+	else
 	{
 		create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	}
@@ -168,7 +166,7 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	vkGetSwapchainImagesKHR(*Graphics::logical_device, swap_chain, &image_count, nullptr);
 	images.resize(image_count);
 	vkGetSwapchainImagesKHR(*Graphics::logical_device, swap_chain, &image_count, images.data());
-	
+
 	image_views.resize(images.size());
 	framebuffers.resize(image_views.size());
 
@@ -202,7 +200,7 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 
 	createFramebuffers();
 	command_buffers.resize(image_views.size());
-	for(auto& command_buffer : command_buffers)
+	for (auto& command_buffer : command_buffers)
 		command_buffer = new CommandBuffer();
 }
 
@@ -229,8 +227,6 @@ void SwapChain::destroy()
 
 SwapChain::~SwapChain()
 {
-	Dispatcher::unsubscribe(this, &SwapChain::onWindowResize);
-
 	delete render_pass;
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
@@ -255,9 +251,9 @@ void SwapChain::chooseSwapChainSurfaceFormat()
 		}
 	}
 
-	SK_ASSERT(formats.rbegin()->first >= 0, 
+	SK_ASSERT(formats.rbegin()->first >= 0,
 		"Vulkan: Couldn't find supported formats to choose from");
-	
+
 	this->surface_format = formats.rbegin()->second;
 }
 
@@ -269,11 +265,6 @@ int SwapChain::rateSwapChainSurfaceFormat(VkSurfaceFormatKHR format) const
 	score += (format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) * 400;
 
 	return score;
-}
-
-void SwapChain::onWindowResize(const WindowResizeEvent& e)
-{
-	recreate();
 }
 
 void SwapChain::chooseSwapChainPresentMode()
@@ -320,7 +311,7 @@ void SwapChain::chooseSwapChainExtent()
 
 	int width, height;
 	glfwGetFramebufferSize(Window::getGLFWWindow(), &width, &height);
-	this->extent = 
+	this->extent =
 	{
 		std::clamp((uint32_t)width,
 			Graphics::physical_device->getSurfaceCapabilities().minImageExtent.width,

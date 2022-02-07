@@ -76,12 +76,14 @@ void CommandBuffer::submitIdle()
 	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 
 	VkFence fence;
+
 	Graphics::vulkanAssert(vkCreateFence(*Graphics::logical_device, &fence_info, nullptr, &fence));
 	Graphics::vulkanAssert(vkResetFences(*Graphics::logical_device, 1, &fence));
 
 	Graphics::vulkanAssert(vkQueueSubmit(getQueue(), 1, &submit_info, fence));
+	
 	Graphics::vulkanAssert(vkWaitForFences(*Graphics::logical_device, 1, &fence, VK_TRUE, std::numeric_limits<uint64_t>::max()));
-
+	
 	vkDestroyFence(*Graphics::logical_device, fence, nullptr);
 }
 

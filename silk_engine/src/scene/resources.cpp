@@ -10,10 +10,10 @@ void Resources::init()
 {
     //CREATE NEEDED DIRECTORIES
     {
-        DebugTimer t;
         if (!std::filesystem::exists("data/cache/shaders"))
             std::filesystem::create_directories("data/cache/shaders");
     }
+
     //MESHES
     {
         addMesh("Circle", makeShared<CircleMesh>());

@@ -83,8 +83,6 @@ DebugMessenger::DebugMessenger()
     create_info.pfnUserCallback = debugCallback;
 }
 
-//This doesn't happen in constructor for weird 
-//reason don't worry about it :)
 void DebugMessenger::create(VkInstance instance)
 {
     this->instance = instance;

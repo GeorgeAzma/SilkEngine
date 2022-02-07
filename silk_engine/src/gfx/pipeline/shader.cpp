@@ -2,6 +2,7 @@
 #include "io/file.h"
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
+#include <spirv_cross/spirv_cross.hpp>
 #include <shaderc/shaderc.hpp>
 
 Shader::Shader(const std::string& file)
@@ -25,6 +26,7 @@ Shader::Shader(const std::string& file)
 	{
 		std::string file_cache_path = cache_path + EnumInfo::shaderTypeFileExtension((ShaderType)type) + ".spv";
 		std::ifstream in(file_cache_path, std::ios::ate | std::ios::binary);
+#ifndef SK_ENABLE_DEBUG_OUTPUT
 		if (in.is_open())
 		{
 			size_t size = in.tellg();
@@ -35,29 +37,34 @@ Shader::Shader(const std::string& file)
 			SK_TRACE("Shader cache loaded: {0}", file_cache_path);
 		}
 		else
+#endif
 		{
+			preProcess(source);
+		
 			shaderc::SpvCompilationResult compiled_shader = compiler.CompileGlslToSpv(source, EnumInfo::shadercType((ShaderType)type), path.c_str(), options);
 			SK_ASSERT(compiled_shader.GetCompilationStatus() == shaderc_compilation_status_success, compiled_shader.GetErrorMessage());
-
+		
 			auto& shader_binary = shader_binaries[type];
 			shader_binary = std::vector<uint32_t>(compiled_shader.cbegin(), compiled_shader.cend());
-
+		
 			std::ofstream out(file_cache_path, std::ios::binary);
 			SK_ASSERT(out.is_open(), "Couldn't create shader cache file: {0}", file_cache_path);
 			out.write((char*)shader_binary.data(), shader_binary.size() * sizeof(uint32_t));
-
+		
 			SK_TRACE("Shader cache created: {0}", file_cache_path);
 		}
-
+		
 		VkShaderModule shader_module = createShaderModule(shader_binaries[type]);
 		shader_modules.push_back(shader_module);
-
+		
 		VkPipelineShaderStageCreateInfo shader_stage_info{};
 		shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		shader_stage_info.stage = EnumInfo::shaderType((ShaderType)type);
 		shader_stage_info.module = shader_module;
 		shader_stage_info.pName = "main";
 		shader_stage_infos.push_back(shader_stage_info);
+		
+		reflect(shader_binaries[type]);
 	}
 
 	SK_TRACE("Shader loaded: {0}", path);
@@ -77,23 +84,71 @@ std::unordered_map<uint32_t, std::string> Shader::parse(const std::string& file)
 
 	const char* type_token = "#type";
 	size_t type_token_length = strlen(type_token);
-	size_t pos = source.find(type_token, 0); //Start of shader type declaration line
+	size_t pos = source.find(type_token, 0);
 	while (pos != std::string::npos)
 	{
-		size_t eol = source.find_first_of("\r\n", pos); //End of shader type declaration line
+		size_t eol = source.find_first_of("\r\n", pos);
 		SK_ASSERT(eol != std::string::npos, "Syntax error");
-		size_t begin = pos + type_token_length + 1; //Start of shader type name (after "#type " keyword)
+		size_t begin = pos + type_token_length + 1;
 		std::string type_string = source.substr(begin, eol - begin);
 		SK_ASSERT(EnumInfo::shaderString(type_string) != ShaderType::NONE, "Invalid shader type specified");
 
-		size_t next_line_pos = source.find_first_not_of("\r\n", eol); //Start of shader code after shader type declaration line
+		size_t next_line_pos = source.find_first_not_of("\r\n", eol);
 		SK_ASSERT(next_line_pos != std::string::npos, "Syntax error");
-		pos = source.find(type_token, next_line_pos); //Start of next shader type declaration line
+		pos = source.find(type_token, next_line_pos);
 
 		shader_sources[(uint32_t)EnumInfo::shaderString(type_string)] = (pos == std::string::npos) ? source.substr(next_line_pos) : source.substr(next_line_pos, pos - next_line_pos);
 	}
 
 	return shader_sources;
+}
+
+void Shader::preProcess(std::string& source)
+{
+	const char* include_token = "#include";
+	size_t include_token_length = strlen(include_token);
+	size_t pos = source.find(include_token, 0);
+	while (pos != std::string::npos)
+	{
+		size_t eol = source.find_first_of("\r\n", pos);
+		SK_ASSERT(eol != std::string::npos, "Syntax error");
+		size_t begin = pos + include_token_length + 1;
+		std::string include_string = source.substr(begin, eol - begin);		
+
+		std::string path = std::string("data/shaders/") + include_string + ".glsl";
+		std::string before_source = source.substr(0, pos);
+		std::string after_source = source.substr(eol);
+		
+		size_t next_line_pos = source.find_first_not_of("\r\n", eol);
+		SK_ASSERT(next_line_pos != std::string::npos, "Syntax error");
+		pos = source.find(include_token, next_line_pos);
+
+		source = before_source + File::read(path) + after_source;
+	}
+}
+
+void Shader::reflect(const std::vector<uint32_t>& source)
+{
+//	spirv_cross::Compiler compiler(source.data(), source.size());
+//	spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+//	
+//	SK_TRACE("VulkanShader::Reflect: ");
+//	SK_TRACE("	{0} uniform buffers", resources.uniform_buffers.size());
+//	SK_TRACE("	{0} resources", resources.sampled_images.size());
+
+//	SK_TRACE("Uniform buffers:");
+//	for (const auto& resource : resources.uniform_buffers)
+//	{
+//		const auto& buffer_type = compiler.get_type(resource.base_type_id);
+//		uint32_t buffer_size = compiler.get_declared_struct_size(buffer_type);
+//		uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+//		int member_count = buffer_type.member_types.size();
+//
+//		SK_TRACE("  {0}", resource.name);
+//		SK_TRACE("    Size = {0}", buffer_size);
+//		SK_TRACE("    Binding = {0}", binding);
+//		SK_TRACE("    Members = {0}", member_count);
+//	}
 }
 
 VkShaderModule Shader::createShaderModule(const std::vector<uint32_t>& source) const

@@ -46,12 +46,12 @@ void SandboxApp::onUpdate()
         entities.back()->addComponent<ModelComponent>(Resources::getModel("Backpack"));
         //entities.back()->addComponent<MeshComponent>(makeShared<RenderedInstance>(Resources::getMesh("Circle")));
     }
-    //for (size_t i = 0; i < entities.size(); ++i)
-    //{
-    //    glm::mat4& transform = entities[i]->getComponent<TransformComponent>();
-    //    transform = glm::translate(transform, (glm::vec3(RNG::Float(), RNG::Float(), RNG::Float()) - 0.5f) * 100.0f * (float)Time::dt);
-    //    scene->updateComponent<TransformComponent>(*entities[i]);
-    //}
+    for (size_t i = 0; i < entities.size(); ++i)
+    {
+        glm::mat4& transform = entities[i]->getComponent<TransformComponent>();
+        transform = glm::translate(transform, (glm::vec3(RNG::Float(), RNG::Float(), RNG::Float()) - 0.5f) * 100.0f * (float)Time::dt);
+        scene->updateComponent<TransformComponent>(*entities[i]);
+    }
     scene->onUpdate();
 }
 

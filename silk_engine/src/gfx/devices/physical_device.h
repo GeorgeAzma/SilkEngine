@@ -44,7 +44,8 @@ public:
 	std::vector<VkPresentModeKHR> getPresentModes() const { return present_modes; }
 	VkFormatProperties getFormatProperties(VkFormat format) const; 
 	VkImageFormatProperties getImageFormatProperties(VkFormat format, VkImageType type, VkImageTiling tilling, VkImageUsageFlags usage, VkImageCreateFlags flags) const;
-	void updateSwapChainSupportDetails();
+	void updateSurfaceDetails();
+	void updateSurfaceCapabilities();
 
 	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const;
 	VkFormat findDepthFormat() const;
@@ -57,7 +58,7 @@ private:
 	std::vector<VkExtensionProperties> getAvailablePhysicalDeviceExtensions(VkPhysicalDevice physical_device) const;
 	bool checkPhysicalDeviceExtensionSupport(const std::vector<const char*>& required_extensions, VkPhysicalDevice physical_device) const;
 	VkSampleCountFlagBits getMaxUsableSampleCount() const;
-    void updateSwapChainSupportDetails(VkPhysicalDevice physical_device);
+    void updateSurfaceDetails(VkPhysicalDevice physical_device);
 
 private:
 	VkPhysicalDevice physical_device = VK_NULL_HANDLE;

@@ -1,5 +1,7 @@
 #pragma once
 
+class WindowResizeEvent;
+
 class Surface : NonCopyable
 {
 public:

@@ -35,7 +35,9 @@ protected:
 
 private:
     void run();
+    void update();
     void onWindowClose(const WindowCloseEvent &e);
+    void onWindowResize(const WindowResizeEvent &e);
     void onKeyPress(const KeyPressEvent &e);
 
 protected:

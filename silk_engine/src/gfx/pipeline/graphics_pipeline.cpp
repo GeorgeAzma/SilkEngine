@@ -193,6 +193,7 @@ void GraphicsPipeline::bind()
 
 void GraphicsPipeline::destroy()
 {
+	vkDestroyPipelineCache(*Graphics::logical_device, cache, nullptr);
 	vkDestroyPipeline(*Graphics::logical_device, pipeline, nullptr);
 }
 
@@ -214,9 +215,23 @@ void GraphicsPipeline::create()
 	create_info.pViewportState = &viewport_info;
 
 	Graphics::vulkanAssert(vkCreateGraphicsPipelines(*Graphics::logical_device, VK_NULL_HANDLE, 1, &create_info, nullptr, &pipeline));
+	
+	VkPipelineCacheCreateInfo cache_info{};
+	cache_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+	cache_info.initialDataSize = 0;
+	cache_info.pInitialData = nullptr;
+	Graphics::vulkanAssert(vkCreatePipelineCache(*Graphics::logical_device, &cache_info, nullptr, &cache));
+	
+	size_t cache_data_size = 0;
+	vkGetPipelineCacheData(*Graphics::logical_device, cache, &cache_data_size, nullptr);
+	char* cache_data = new char[cache_data_size];
+	vkGetPipelineCacheData(*Graphics::logical_device, cache, &cache_data_size, nullptr);
+
+	delete cache_data;
 }
 
 void GraphicsPipeline::onWindowResize(const WindowResizeEvent& e)
 {
+	vkDeviceWaitIdle(*Graphics::logical_device);
 	recreate();
 }

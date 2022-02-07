@@ -64,9 +64,14 @@ VkImageFormatProperties PhysicalDevice::getImageFormatProperties(VkFormat format
 	return image_format_properties;
 }
 
-void PhysicalDevice::updateSwapChainSupportDetails()
+void PhysicalDevice::updateSurfaceCapabilities()
 {
-	updateSwapChainSupportDetails(physical_device);
+	Graphics::vulkanAssert(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, *Graphics::surface, &surface_capabilities));
+}
+
+void PhysicalDevice::updateSurfaceDetails()
+{
+	updateSurfaceDetails(physical_device);
 }
 
 VkFormat PhysicalDevice::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const
@@ -111,10 +116,10 @@ VkFormat PhysicalDevice::findStencilFormat() const
 	);
 }
 
-void PhysicalDevice::updateSwapChainSupportDetails(VkPhysicalDevice physical_device)
+void PhysicalDevice::updateSurfaceDetails(VkPhysicalDevice physical_device)
 {
 	Graphics::vulkanAssert(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, *Graphics::surface, &surface_capabilities));
-	
+
 	uint32_t format_count = 0;
 	Graphics::vulkanAssert(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, *Graphics::surface, &format_count, nullptr));
 	if (format_count)
@@ -152,7 +157,7 @@ void PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vector<VkPhysic
 
 	queue_family_indices = findQueueFamilies(physical_device);
 
-	updateSwapChainSupportDetails(physical_device);
+	updateSurfaceDetails(physical_device);
 
 	max_usable_sample_count = getMaxUsableSampleCount();
 }
@@ -170,7 +175,7 @@ int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
 	if (!extensions_supported) 
 		return -1;
 
-	updateSwapChainSupportDetails(physical_device);
+	updateSurfaceDetails(physical_device);
 	bool is_swap_chain_adequate = !surface_formats.empty() &&
 		!present_modes.empty();
 	if (!is_swap_chain_adequate) 

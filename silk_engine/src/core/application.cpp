@@ -4,6 +4,7 @@
 #include "time.h"
 #include "input/keys.h"
 #include "gfx/graphics.h"
+#include "gfx/devices/physical_device.h"
 #include "utils/timers.h"
 #include "scene/resources.h"
 #include "gfx/window/swap_chain.h"
@@ -15,6 +16,7 @@ Application::Application(const char* name, ApplicationCommandLineArgs args)
     SK_INFO("Started");
     Window::init();
     Dispatcher::subscribe(this, &Application::onWindowClose);
+    Dispatcher::subscribe(this, &Application::onWindowResize);
     Dispatcher::subscribe(this, &Application::onKeyPress);
     Input::init();
     Graphics::init();
@@ -24,6 +26,7 @@ Application::Application(const char* name, ApplicationCommandLineArgs args)
 Application::~Application()
 {
     Dispatcher::unsubscribe(this, &Application::onWindowClose);
+    Dispatcher::unsubscribe(this, &Application::onWindowResize);
     Dispatcher::unsubscribe(this, &Application::onKeyPress);
     Window::cleanup();
     Resources::cleanup();
@@ -50,31 +53,35 @@ void Application::run()
 
     while (running)
     {
-        if (app_update.update())
+        update();
+    }
+}
+
+void Application::update()
+{
+    if (app_update.update())
+    {
+        if (!Window::isMinimized())
         {
-            if (!Window::isMinimized())
-            {
-                Time::dt = app_update.getDeltaTime();
-                Time::frame = app_update.getFramesPassed();
-                Time::runtime = app_update.getRuntime();
+            Time::dt = app_update.getDeltaTime();
+            Time::frame = app_update.getFramesPassed();
+            Time::runtime = app_update.getRuntime();
 
-                Graphics::swap_chain->beginFrame();
-                onUpdate();
-                Graphics::swap_chain->endFrame();
+            Graphics::swap_chain->beginFrame();
+            onUpdate();
+            Graphics::swap_chain->endFrame();
 
-                for (Layer *layer : layer_stack)
-                    layer->onUpdate();
+            for (Layer* layer : layer_stack)
+                layer->onUpdate();
 
-                Timers::update();
-                Input::update();
-            }
-            else
-            {
-                glfwWaitEvents();
-            }
-
-            glfwPollEvents();
+            Timers::update();
+            Input::update();
         }
+        else
+        {
+            glfwWaitEvents();
+        }
+        glfwPollEvents();
     }
 }
 
@@ -82,6 +89,13 @@ void Application::onWindowClose(const WindowCloseEvent &e)
 {
     SK_INFO("Window closed");
     running = false;
+}
+
+void Application::onWindowResize(const WindowResizeEvent& e)
+{
+    Graphics::physical_device->updateSurfaceCapabilities();
+    Graphics::swap_chain->recreate();
+    update();
 }
 
 void Application::onKeyPress(const KeyPressEvent& e)
