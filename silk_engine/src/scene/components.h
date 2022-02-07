@@ -69,6 +69,13 @@ struct ModelComponent
 	operator Model& () { return *model; }
 };
 
+struct MaterialComponent
+{
+	shared<Material> material;
+
+	operator const Material& () const { return *material; }
+};
+
 struct ColorComponent
 {
 	glm::vec4 color = glm::vec4(1);

@@ -117,7 +117,6 @@ void Scene::onUpdate()
 		if (instance_batch.needs_update)
 		{
 			instance_batch.instance->mesh->vertex_array->getVertexBuffer(1)->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size() * sizeof(InstanceData));
-			
 			instance_batch.needs_update = false;
 		}
 
@@ -192,6 +191,10 @@ void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
 
 	if (auto color = registry.try_get<ColorComponent>(entity))
 		instance_data.color = *color;
+
+	if (!mesh_component.mesh->material.get())
+		if (auto material = registry.try_get<MaterialComponent>(entity))
+			mesh_component.mesh->material = material->material;
 
 	mesh_component.instance = makeShared<RenderedInstance>(mesh_component.mesh);
 	createMeshInstance(mesh_component.instance, instance_data);
@@ -270,22 +273,22 @@ void Scene::createMeshInstance(shared<RenderedInstance> instance, const Instance
 	if (!instance->mesh->vertex_array.get()) instance->mesh->createVertexArray();
 	if (!instance->mesh->material.get()) instance->mesh->material = material_data_3D;
 
-	for (size_t i = 0; i < instance_batches.size(); ++ i)
+	for (size_t i = 0; i < instance_batches.size(); ++i)
 	{
 		auto& instance_batch = instance_batches[i];
 		if (instance_batch == *instance)
 		{
-			if (instance_batch.instance_data.size() >= Graphics::MAX_INSTANCES)
-				break;
+			if (instance_batch.instance_data.size() < Graphics::MAX_INSTANCES)
+			{
+				instance_batch.needs_update = true;
+				instance_batch.instance_data.emplace_back(std::move(instance_data));
+				instance_batch.instances.emplace_back(instance);
 
-			instance_batch.needs_update = true;
-			instance_batch.instance_data.emplace_back(std::move(instance_data));
-			instance_batch.instances.emplace_back(instance);
+				instance->instance_batch_index = i;
+				instance->instance_data_index = instance_batch.instance_data.size() - 1;
 
-			instance->instance_batch_index = i;
-			instance->instance_data_index = instance_batch.instance_data.size() - 1;
-
-			return;
+				return;
+			}
 		}
 	}
 
