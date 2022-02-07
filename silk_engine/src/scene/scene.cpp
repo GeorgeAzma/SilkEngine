@@ -22,6 +22,9 @@ Scene::Scene()
 	registry.on_destroy<LightComponent>().connect<&Scene::onLightComponentDestroy>(this);
 	instance_batches.reserve(Graphics::MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
 	material_data_3D = makeShared<Material>(Resources::getShaderEffect("3D"), std::vector<shared<DescriptorSet>>{ Resources::getDescriptorSet("Global"), Resources::getDescriptorSet("Images") });
+
+	indexed_indirect_buffer = makeShared<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
+	indirect_buffer = makeShared<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(VkDrawIndirectCommand));
 }
 
 Scene::~Scene()
@@ -78,13 +81,42 @@ void Scene::onUpdate()
 
 	//Drawing
 	Graphics::swap_chain->beginRenderPass();
+
+	std::vector<VkDrawIndexedIndirectCommand> indexed_draw_commands;
+	std::vector<VkDrawIndirectCommand> draw_commands;
 	
-	//Draw instances
 	for (auto& instance_batch : instance_batches)
 	{
-		if (instance_batch.needs_update && instance_batch.instance_data.size())
+		if (instance_batch.instance->mesh->vertex_array->hasIndexBuffer())
+		{
+			VkDrawIndexedIndirectCommand indexed_draw_command{};
+			indexed_draw_command.instanceCount = instance_batch.instance_data.size();
+			indexed_draw_command.indexCount = instance_batch.instance->mesh->indices.size();
+			indexed_draw_commands.emplace_back(indexed_draw_command);
+		}
+		else
+		{
+			VkDrawIndirectCommand draw_command{};
+			draw_command.instanceCount = instance_batch.instance_data.size();
+			draw_command.vertexCount = instance_batch.instance->mesh->indices.size();
+			draw_commands.emplace_back(draw_command);
+		}
+	}
+	indexed_indirect_buffer->setDataChecked(indexed_draw_commands.data(), indexed_draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand));
+	indirect_buffer->setDataChecked(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndirectCommand));
+
+	//Draw instances
+	size_t indexed_draw_index = 0;
+	size_t draw_index = 0;
+	for (auto& instance_batch : instance_batches)
+	{
+		if (instance_batch.instance_data.empty())
+			continue;
+
+		if (instance_batch.needs_update)
 		{
 			instance_batch.instance->mesh->vertex_array->getVertexBuffer(1)->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size() * sizeof(InstanceData));
+			
 			instance_batch.needs_update = false;
 		}
 
@@ -92,11 +124,16 @@ void Scene::onUpdate()
 		instance_batch.instance->mesh->vertex_array->bind();
 		instance_batch.instance->material->bind();
 		
-		//NOTE: vkCmdDrawIndexedIndirect is bit faster but it limits us by having a fixed instanced batches size and adds clutter
-		if(instance_batch.instance->mesh->vertex_array->hasIndexBuffer())
-			vkCmdDrawIndexed(Graphics::active.command_buffer, instance_batch.instance->mesh->indices.size(), instance_batch.instance_data.size(), 0, 0, 0);
+		if (instance_batch.instance->mesh->vertex_array->hasIndexBuffer())
+		{
+			vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indexed_indirect_buffer, indexed_draw_index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
+			++indexed_draw_index;
+		}
 		else
-			vkCmdDraw(Graphics::active.command_buffer, instance_batch.instance->mesh->vertices.size(), instance_batch.instance_data.size(), 0, 0);
+		{
+			vkCmdDrawIndirect(Graphics::active.command_buffer, *indirect_buffer, draw_index * sizeof(VkDrawIndirectCommand), 1, sizeof(VkDrawIndirectCommand));
+			++draw_index;
+		}
 	}
 	Graphics::stats.instances = instance_batches.size();
 	

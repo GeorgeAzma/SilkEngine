@@ -8,29 +8,21 @@
 #include <stb_image.h>
 
 ImageArray::ImageArray(const std::vector<std::string>& files, const ImageProps& props)
+	: props(props), layer_count(files.size())
 {
-	std::vector<std::string> paths(files.size());
-	for(size_t i = 0; i < files.size(); ++i)
-		paths[i] = std::string("data/images/") + files[i];
-	descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	auto load_data = load(paths);
+	ImageData load_data = load(files);
 	this->props.width = load_data.width;
 	this->props.height = load_data.height;
 	this->props.format = Image::getDefaultFormatFromChannelCount(load_data.channels);
-	staging_buffer = load_data.staging_buffer;
-	layer_count = paths.size();
+	staging_buffer = makeShared<StagingBuffer>(load_data.data.data(), load_data.data.size() * sizeof(uint8_t));
 	create(props);
 }
 
 ImageArray::ImageArray(const ImageProps& props, size_t layer_count)
-	: layer_count(layer_count)
+	: props(props), layer_count(layer_count)
 {
-	descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	if (props.data)
-	{
-		size_t data_size = props.width * props.height * EnumInfo::formatSize(props.format) * layer_count;
-		staging_buffer = makeShared<StagingBuffer>(props.data, data_size);
-	}
+		staging_buffer = makeShared<StagingBuffer>(props.data, props.width * props.height * EnumInfo::formatSize(props.format) * layer_count);
 	create(props);
 }
 
@@ -42,24 +34,45 @@ ImageArray::~ImageArray()
 	vmaDestroyImage(*Graphics::allocator, image, allocation);
 }
 
-ImageLoadData ImageArray::load(const std::vector<std::string>& files)
+ImageData ImageArray::load(const std::vector<std::string>& files)
 {
-	int width, height, channels;
-	std::vector<stbi_uc> file_pixels;
+	std::vector<std::string> paths(files.size());
 	for (size_t i = 0; i < files.size(); ++i)
+		paths[i] = std::string("data/images/") + files[i];
+
+	ImageData load_data;
+
+	ImageData data = Image::load(paths[0]);
+
+	if (data.channels == 3)
+		Image::align4(data);
+
+	load_data.width = data.width;
+	load_data.height = data.height;
+	load_data.channels = data.channels;
+
+	size_t size = load_data.width * load_data.height * load_data.channels;
+
+	load_data.data.resize(size * paths.size());
+
+	std::memcpy(load_data.data.data(), data.data.data(), size * sizeof(uint8_t));
+
+	for (size_t i = 1; i < paths.size(); ++i)
 	{
-		stbi_uc* pixels = stbi_load(files[i].c_str(), &width, &height, &channels, STBI_rgb_alpha);
-		SK_ASSERT(pixels, "Failed to load image: {0}", files[i]);
-		size_t size = width * height * channels;
-		if (file_pixels.empty())
-			file_pixels.resize(size * files.size());
-		memcpy(file_pixels.data() + size * i, pixels, size * sizeof(stbi_uc));
-		stbi_image_free(pixels);
+		data = Image::load(paths[i]);
+
+		if (data.channels == 3)
+			Image::align4(data);
+
+		SK_ASSERT(data.width == load_data.width
+			&& data.height == load_data.height
+			&& data.channels == load_data.channels,
+			"Error while loading image array, couldn't load image at {0}. width, height or channel count should match in all the images of image array", paths[i]);
+
+		std::memcpy(load_data.data.data() + i * size, data.data.data(), size * sizeof(uint8_t));
 	}
 
-	shared<StagingBuffer> staging_buffer = makeShared<StagingBuffer>(file_pixels.data(), file_pixels.size() * sizeof(stbi_uc));
-
-	return { width, height, channels, staging_buffer };
+	return load_data;
 }
 
 void ImageArray::create(const ImageProps& props)

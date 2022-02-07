@@ -20,6 +20,11 @@ RenderPass& RenderPass::addAttachment(VkFormat format, VkImageLayout image_layou
     attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     attachment_description.finalLayout = image_layout;
+
+    if (samples != VK_SAMPLE_COUNT_1_BIT)
+    {
+        subpasses.back().multisampled = true;
+    }
     
     subpasses.back().attachments.emplace_back(attachment_description);
     
@@ -30,36 +35,19 @@ RenderPass& RenderPass::addAttachment(VkFormat format, VkImageLayout image_layou
         attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         subpasses.back().depth_stencil_attachment_reference = attachment_reference;
     }
+    else if (subpasses.back().multisampled && image_layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+    {
+        attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        subpasses.back().resolve_attachment_reference = attachment_reference;
+    }
     else
     {
         attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         subpasses.back().color_attachment_references.emplace_back(attachment_reference);
     }
+    
     subpasses.back().attachment_references.emplace_back(attachment_reference);
    
-    return *this;
-}
-
-RenderPass& RenderPass::addResolveAttachment(VkFormat format)
-{
-    VkAttachmentDescription attachment_description{};
-    attachment_description.format = format;
-    attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
-    attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    attachment_description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-    subpasses.back().attachments.emplace_back(attachment_description);
-
-    VkAttachmentReference attachment_reference{};
-    attachment_reference.attachment = subpasses.back().attachments.size() - 1;
-    attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-    subpasses.back().resolve_attachment_reference = attachment_reference;
-
     return *this;
 }
 

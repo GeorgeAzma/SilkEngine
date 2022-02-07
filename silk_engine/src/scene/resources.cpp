@@ -71,7 +71,7 @@ void Resources::init()
         auto white_image = Resources::getImage("White");
         shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>();
         descriptor_set->addImages(0, {
-                *white_image, *white_image, *white_image, *white_image,
+                *Resources::getImage("Test1"), *white_image, *white_image, *white_image,
                 *white_image, *white_image, *white_image, *white_image,
                 *white_image, *white_image, *white_image, *white_image,
                 *white_image, *white_image, *white_image, *white_image,

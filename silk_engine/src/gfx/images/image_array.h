@@ -20,6 +20,8 @@ public:
 	const ImageProps& getProps() const { return props; }
 	const VkDescriptorImageInfo& getDescriptorInfo() const { return descriptor_image_info;  }
 
+	static ImageData load(const std::vector<std::string>& files);
+
 	operator const VkImage& () const { return image; }
 	operator const VkDescriptorImageInfo& () const { return descriptor_image_info; }
 
@@ -32,7 +34,6 @@ private:
 		VkAccessFlags destination_access_mask;
 	};
 private:
-	static ImageLoadData load(const std::vector<std::string>& files);
 	void create(const ImageProps& props);
 	void transitionLayout(VkImageLayout newLayout);
 	void copyBufferToImageArray();
@@ -40,11 +41,11 @@ private:
 	TransitionInfo getTransitionInfo(VkImageLayout oldLayout, VkImageLayout newLayout);
 
 private:
-	VkImage image;
-	VkDescriptorImageInfo descriptor_image_info = {};
+	VkImage image = VK_NULL_HANDLE;
+	VkDescriptorImageInfo descriptor_image_info = { VK_NULL_HANDLE, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED };
 	unique<Sampler> sampler;
 	unique<ImageView> view = nullptr;
-	VmaAllocation allocation;
+	VmaAllocation allocation = VK_NULL_HANDLE;
 	shared<StagingBuffer> staging_buffer = nullptr;
 	ImageProps props = {};
 	uint32_t mip_levels = 1;

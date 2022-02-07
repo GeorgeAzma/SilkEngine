@@ -1,3 +1,5 @@
+#include math
+
 vec3 fresnelSchlick(float cos_theta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cos_theta, 0.0, 1.0), 5.0);
@@ -22,16 +24,16 @@ float geometrySmith(vec3 normal, vec3 to_camera, vec3 to_light, float roughness)
          * geometrySchlickGGX(max(dot(normal, to_light), 0.0), roughness);
 }
 
-vec3 PBR(Light light, vec3 normal, vec3 to_camera, vec3 albedo, float metallic, float roughness, vec3 F0)
+vec3 PBR(Light light, vec3 normal, vec3 to_camera, vec3 albedo, float metallic, float roughness, vec3 F0, vec3 world_position)
 {
    vec3 lighting = vec3(0);
 
-   vec3 to_light = normalize(light.position - fragment_input.world_position.xyz); //wi
+   vec3 to_light = normalize(light.position - world_position.xyz); //wi
    vec3 halfway = normalize(to_camera + to_light);
    float attenuation = 1.0;
    if(light.linear != 0 || light.quadratic != 0)
    {
-       float distance_to_light = distance(light.position, fragment_input.world_position.xyz);
+       float distance_to_light = distance(light.position, world_position.xyz);
        attenuation = 1.0 / (1.0 + light.linear * distance_to_light + light.quadratic * (distance_to_light * distance_to_light));
    }
 

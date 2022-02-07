@@ -18,7 +18,7 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	render_pass->addSubpass()
 		.addAttachment(surface_format.format, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, sample_count)
 		.addAttachment(depth_format, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, sample_count)
-		.addResolveAttachment(surface_format.format)
+		.addAttachment(surface_format.format, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
 		.build();
 
 	create(old_swap_chain);
@@ -54,16 +54,30 @@ void SwapChain::recreate()
 
 void SwapChain::createFramebuffers()
 {
-	for (size_t i = 0; i < image_views.size(); ++i)
-	{
-		const std::vector<VkImageView> attachments =
-		{
-			msaa_image->getDescriptorInfo().imageView,
-			depth->getDescriptorInfo().imageView,
-			*image_views[i]
-		};
+	ImageProps props{};
+	props.width = extent.width;
+	props.height = extent.height;
+	props.format = Graphics::physical_device->findDepthFormat();
+	props.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	props.create_sampler = false;
+	props.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	props.mipmap = false;
+	props.samples = sample_count;
+	depth = makeShared<Image>(props);
 
-		framebuffers[i] = new Framebuffer(*render_pass, attachments, extent.width, extent.height);
+	props.width = extent.width;
+	props.height = extent.height;
+	props.format = surface_format.format;
+	props.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	props.create_sampler = false;
+	props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
+	props.mipmap = false;
+	props.samples = sample_count;
+	msaa_image = makeShared<Image>(props);
+
+	for (size_t i = 0; i < images.size(); ++i)
+	{
+		framebuffers[i] = makeShared<Framebuffer>(*render_pass, std::vector<shared<Image>>{ msaa_image, depth, images[i] }, extent.width, extent.height);
 	}
 }
 
@@ -164,64 +178,31 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	Graphics::vulkanAssert(vkCreateSwapchainKHR(*Graphics::logical_device, &create_info, nullptr, &swap_chain));
 
 	vkGetSwapchainImagesKHR(*Graphics::logical_device, swap_chain, &image_count, nullptr);
-	images.resize(image_count);
+	std::vector<VkImage> images(image_count);
+	this->images.resize(image_count);
 	vkGetSwapchainImagesKHR(*Graphics::logical_device, swap_chain, &image_count, images.data());
 
-	image_views.resize(images.size());
-	framebuffers.resize(image_views.size());
+	for (size_t i = 0; i < images.size(); ++i)
+	{
+		ImageProps props{};
+		props.create_sampler = false;
+		props.mipmap = false;
+		props.format = surface_format.format;
+		props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
+		this->images[i] = makeShared<Image>(images[i], props);
+	}
 
-	for (size_t i = 0; i < image_views.size(); ++i)
-		image_views[i] = new ImageView(images[i], surface_format.format);
-
-	///////////////////
-
-	VkFormat depth_format = Graphics::physical_device->findDepthFormat();
-	ImageProps props{};
-	props.width = extent.width;
-	props.height = extent.height;
-	props.format = depth_format;
-	props.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-	props.create_sampler = false;
-	props.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-	props.mipmap = false;
-	props.samples = Graphics::physical_device->getMaxSampleCount();
-	depth = new Image(props);
-
-	ImageProps msaa_props{};
-	props.width = extent.width;
-	props.height = extent.height;
-	props.format = surface_format.format;
-	props.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	props.create_sampler = false;
-	props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
-	props.mipmap = false;
-	props.samples = sample_count;
-	msaa_image = new Image(props);
+	framebuffers.resize(images.size());
 
 	createFramebuffers();
-	command_buffers.resize(image_views.size());
+
+	command_buffers.resize(images.size());
 	for (auto& command_buffer : command_buffers)
-		command_buffer = new CommandBuffer();
+		command_buffer = makeShared<CommandBuffer>();
 }
 
 void SwapChain::destroy()
 {
-	for (auto& command_buffer : command_buffers)
-	{
-		delete command_buffer;
-		command_buffer = nullptr;
-	}
-	delete depth;
-	delete msaa_image;
-	for (auto& framebuffer : framebuffers)
-	{
-		delete framebuffer;
-		framebuffer = nullptr;
-	}
-	for (auto& image_view : image_views)
-	{
-		delete image_view;
-	}
 	vkDestroySwapchainKHR(*Graphics::logical_device, swap_chain, nullptr);
 }
 

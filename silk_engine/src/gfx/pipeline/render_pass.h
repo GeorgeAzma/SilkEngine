@@ -1,12 +1,5 @@
 #pragma once
 
-struct AttachmentProps
-{
-	VkFormat format;
-	VkImageLayout image_layout;
-	VkSampleCountFlagBits samples;
-};
-
 struct Subpass
 {
 	std::vector<VkAttachmentReference> input_attachment_references;
@@ -15,6 +8,7 @@ struct Subpass
 	std::vector<VkAttachmentReference> color_attachment_references;
 	VkAttachmentReference depth_stencil_attachment_reference;
 	VkAttachmentReference resolve_attachment_reference;
+	bool multisampled = false;
 };
 
 class RenderPass : NonCopyable
@@ -23,7 +17,6 @@ public:
 	~RenderPass();
 
 	RenderPass& addAttachment(VkFormat format, VkImageLayout image_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
-	RenderPass& addResolveAttachment(VkFormat format);
 	RenderPass& addSubpass();
 
 	void build();

@@ -27,7 +27,7 @@ struct ImageProps
 	const void* data = nullptr;
 };
 
-struct ImageLoadData
+struct StagedImageData
 {
 	int width;
 	int height;
@@ -35,7 +35,7 @@ struct ImageLoadData
 	shared<StagingBuffer> staging_buffer;
 };
 
-struct BitmapLoadData
+struct ImageData
 {
 	int width;
 	int height;
@@ -48,46 +48,39 @@ class Image : NonCopyable
 public:
 	Image(const std::string& file, const ImageProps& props = {});
 	Image(const ImageProps& props);
+	Image(VkImage image, const ImageProps& props);
 
 	~Image();
 
 	uint32_t getWidth() const { return props.width; }
 	uint32_t getHeight() const { return props.height; }
 	VkFormat getFormat() const { return props.format; }
+	uint32_t mipLevels() const { return mip_levels; }
 	std::string getPath() const { return path; }
 	const ImageProps& getProps() const { return props; }
 	const VkDescriptorImageInfo& getDescriptorInfo() const { return descriptor_image_info; }
 
-	static BitmapLoadData loadAsBitmap(const std::string& file);
-
+	static ImageData load(const std::string& file);
+	static void align4(ImageData& image);
+	
 	operator const VkImage& () const { return image; }
 	operator const VkDescriptorImageInfo& () const { return descriptor_image_info; }
 
 private:
-	struct TransitionInfo
-	{
-		VkPipelineStageFlags source_stage;
-		VkPipelineStageFlags destination_stage;
-		VkAccessFlags source_access_mask;
-		VkAccessFlags destination_access_mask;
-	};
-private:
-	static ImageLoadData load(const std::string& file);
 	void create(const ImageProps& props);
-	void transitionLayout(VkImageLayout newLayout);
+	void transitionLayout(VkImageLayout new_layout);
 	void copyBufferToImage();
 	void generateMipmaps();
-	TransitionInfo getTransitionInfo(VkImageLayout oldLayout, VkImageLayout newLayout);
 
 public:
 	static VkFormat getDefaultFormatFromChannelCount(int channels);
 
 private:
-	VkImage image;
-	VkDescriptorImageInfo descriptor_image_info = {};
+	VkImage image = VK_NULL_HANDLE;
+	VkDescriptorImageInfo descriptor_image_info = { VK_NULL_HANDLE, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED };
 	unique<Sampler> sampler;
 	unique<ImageView> view = nullptr;
-	VmaAllocation allocation;
+	VmaAllocation allocation = VK_NULL_HANDLE;
 	shared<StagingBuffer> staging_buffer = nullptr;
 	ImageProps props = {};
 	uint32_t mip_levels = 1;

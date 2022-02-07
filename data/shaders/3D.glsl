@@ -48,7 +48,6 @@ void main()
 #define METALLIC 0.0
 #define ROUGHNESS 0.3
 #define MAX_LIGHTS 64
-#define PI 3.14159265359
 
 layout(location = 0) in VertexOutput 
 {
@@ -113,23 +112,20 @@ void main()
     color.a = albedo.a;
     if(color.a <= 0.01)
         discard;
-
+    
     //TODO: textures mapping (normal, roughness, metallic)
     vec3 normal = fragment_input.normal;
-
-    if(normal == vec3(0))
+    
+    if (normal == vec3(0) || albedo.rgb == vec3(0))
     {
-        color = albedo;
+        color.rgb = albedo.rgb;
         return;
     }
-
-    if(albedo.rgb == vec3(0))
-        return;
     
     normal = normalize(normal);
-
+    
     float metallic = METALLIC;
-
+    
     vec3 to_camera = normalize(global_uniform.camera_position - fragment_input.world_position.xyz); //V
     vec3 F0 = mix(vec3(0.04), albedo.rgb, metallic);
     
@@ -139,12 +135,10 @@ void main()
     for(uint i = 0; i < global_uniform.light_count; ++i)
     {
         Light light = global_uniform.lights[i];
-        if(light.color == vec3(0))
+        if (light.color == vec3(0))
             continue;
     
-        total_light += PBR(light, normal, to_camera, albedo.rgb, metallic, ROUGHNESS, F0);
+        total_light += PBR(light, normal, to_camera, albedo.rgb, metallic, ROUGHNESS, F0, fragment_input.world_position.xyz);
     }
-    color = vec4(total_light + ambient.rgb, albedo.a);
-    color.rgb = aces(color.rgb);
-    //color.rgb = pow(color.rgb, vec3(1.0 / 2.2));
+    color.rgb = aces(total_light + ambient.rgb);
 }

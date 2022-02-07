@@ -82,7 +82,7 @@ std::unordered_map<uint32_t, std::string> Shader::parse(const std::string& file)
 
 	std::string source = File::read(file);
 
-	const char* type_token = "#type";
+	constexpr char type_token[] = "#type";
 	size_t type_token_length = strlen(type_token);
 	size_t pos = source.find(type_token, 0);
 	while (pos != std::string::npos)
@@ -105,8 +105,8 @@ std::unordered_map<uint32_t, std::string> Shader::parse(const std::string& file)
 
 void Shader::preProcess(std::string& source)
 {
-	const char* include_token = "#include";
-	size_t include_token_length = strlen(include_token);
+	constexpr char include_token[] = "#include";
+	constexpr size_t include_token_length = sizeof(include_token) - 1;
 	size_t pos = source.find(include_token, 0);
 	while (pos != std::string::npos)
 	{
@@ -123,7 +123,9 @@ void Shader::preProcess(std::string& source)
 		SK_ASSERT(next_line_pos != std::string::npos, "Syntax error");
 		pos = source.find(include_token, next_line_pos);
 
-		source = before_source + File::read(path) + after_source;
+		std::string include = File::read(path);
+		preProcess(include);
+		source = before_source + include + after_source;
 	}
 }
 
