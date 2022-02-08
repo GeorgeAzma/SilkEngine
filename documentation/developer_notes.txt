@@ -1,7 +1,11 @@
 Renderer only supports single gpu
 
-Shader sources also get copied in the bin folder, which is not neccessary 
-(but some developer/modder can change them and recompile so that's kinda nice)
-
 There can be a single shader file which contains all the shaders (#type FRAGMENT)
 and graphics pipeline options (like #option cull_mode BACK)
+
+Command buffer manager:
+Supports multiple queues
+Submits at the correct time
+Supports secondary command buffers
+Supports threading
+Each thread contains a command pool and records shit in it

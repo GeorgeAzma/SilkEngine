@@ -29,9 +29,8 @@ string(FIND ${Vulkan_LIBRARIES} "/Lib" Vulkan_PATH_POS)
 string(SUBSTRING ${Vulkan_LIBRARIES} 0 ${Vulkan_PATH_POS} VULKAN_PATH)
 list(APPEND EXTRA_LIBS 
     ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}shaderc_combined${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}shaderc_util${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-core${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-cpp${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-glsl${CMAKE_STATIC_LIBRARY_SUFFIX}
 )
 
 #spdlog
@@ -136,7 +135,7 @@ GIT_REPOSITORY  https://github.com/assimp/assimp
 GIT_TAG         v5.0.0
 GIT_SHALLOW     ON
 UPDATE_COMMAND  ""
-CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_BINARY_DIR}/vendor/assimp/lib
+CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_SOURCE_DIR}/vendor/assimp/lib
                 -DASSIMP_INCLUDE_INSTALL_DIR=${PROJECT_SOURCE_DIR}/vendor/assimp/include
                 -DASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT:BOOL=OFF
                 -DASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT:BOOL=OFF
@@ -154,9 +153,8 @@ CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_BINARY_DIR}/vendor/assimp/lib
                 -DCMAKE_POLICY_DEFAULT_CMP0091:STRING=NEW
 )
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/assimp/include)
+link_directories("${PROJECT_SOURCE_DIR}/vendor/assimp/lib")
 list(APPEND EXTRA_LIBS "assimp" "$<IF:$<CONFIG:Debug>,zlibstaticd,zlibstatic>" "irrXML")
-
-link_directories("${PROJECT_BINARY_DIR}/vendor/assimp/lib")
 
 #Sub dirs
 ############################__SILK ENGINE__#####################################

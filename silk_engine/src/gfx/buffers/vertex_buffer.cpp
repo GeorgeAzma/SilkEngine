@@ -7,15 +7,7 @@ VertexBuffer::VertexBuffer(const void* data, VkDeviceSize size, VmaMemoryUsage m
 		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 		memory_usage)
 {
-	if (memory_usage == VMA_MEMORY_USAGE_GPU_ONLY)
-	{
-		StagingBuffer staging_buffer(data, size);
-		staging_buffer.copy(buffer);
-	}
-	else
-	{
-		setData(data, size);
-	}
+	setData(data, size);
 }
 
 void VertexBuffer::bind(size_t binding)

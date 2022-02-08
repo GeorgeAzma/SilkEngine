@@ -7,10 +7,10 @@ StagingBuffer::StagingBuffer(const void* data, VkDeviceSize size)
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VMA_MEMORY_USAGE_CPU_ONLY)
 {
-    setData(data);
+    setData(data, size);
 }
 
-void StagingBuffer::copy(VkBuffer destination) const //~0.8ms
+void StagingBuffer::copy(VkBuffer destination, VkDeviceSize offset) const
 {
-    Buffer::copy(destination, buffer, size);
+    Buffer::copy(destination, buffer, size, offset);
 }

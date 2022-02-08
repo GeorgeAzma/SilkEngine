@@ -23,8 +23,7 @@ public:
 	shared<Entity> createEntity();
 	void removeEntity(const entt::entity& entity);
 
-	template<typename T>
-	void updateComponent(entt::entity entity);
+	void onTransformComponentUpdate(entt::registry& registry, entt::entity entity);
 
 private:
 	void onWindowResize(const WindowResizeEvent& e);

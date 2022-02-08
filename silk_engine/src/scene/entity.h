@@ -2,9 +2,10 @@
 
 #include "scene.h"
 
-class Entity : NonCopyable
+class Entity
 {
 public:
+	Entity() = default;
 	Entity(entt::entity handle, Scene* scene);
 
 	~Entity();
@@ -34,6 +35,18 @@ public:
 	{
 		SK_ASSERT(hasComponent<T>(), "Entity doesn't have specified component");
 		return scene->registry.get<T>(entity);
+	}
+
+	template<typename T, typename... Fn>
+	void updateComponent(Fn&&... func)
+	{
+		scene->registry.patch<T>(entity, std::forward<Fn>(func)...);
+	}
+
+	template<typename T, typename... Args>
+	void replaceComponent(Args&&... args)
+	{
+		scene->registry.replace<T>(entity, std::forward<Args>(args)...);
 	}
 
 	operator entt::entity () const { return entity; }

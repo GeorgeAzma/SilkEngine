@@ -155,7 +155,7 @@ void ImageArray::transitionLayout(VkImageLayout newLayout)
 	barrier.srcAccessMask = transition_info.source_access_mask;
 	barrier.dstAccessMask = transition_info.destination_access_mask;
 
-	vkCmdPipelineBarrier(command_buffer, transition_info.source_stage,
+	vkCmdPipelineBarrier(Graphics::active.command_buffer, transition_info.source_stage,
 		transition_info.destination_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
 	command_buffer.end();
@@ -229,7 +229,7 @@ void ImageArray::generateMipmaps()
 		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
-		vkCmdPipelineBarrier(command_buffer,
+		vkCmdPipelineBarrier(Graphics::active.command_buffer,
 			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 			0, nullptr,
 			0, nullptr,
@@ -265,7 +265,7 @@ void ImageArray::generateMipmaps()
 		barrier.srcAccessMask = transition_info.source_access_mask;
 		barrier.dstAccessMask = transition_info.destination_access_mask;
 
-		vkCmdPipelineBarrier(command_buffer,
+		vkCmdPipelineBarrier(Graphics::active.command_buffer,
 			transition_info.source_stage, 
 			transition_info.destination_stage, 0,
 			0, nullptr,
@@ -286,7 +286,7 @@ void ImageArray::generateMipmaps()
 	barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
 	const TransitionInfo transition_info_dst = getTransitionInfo(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, props.layout);
-	vkCmdPipelineBarrier(command_buffer,
+	vkCmdPipelineBarrier(Graphics::active.command_buffer,
 		transition_info_dst.source_stage, transition_info_dst.destination_stage, 0,
 		0, nullptr,
 		0, nullptr,

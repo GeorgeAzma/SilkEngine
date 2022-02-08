@@ -42,6 +42,8 @@ public:
     NonCopyable& operator=(const NonCopyable&) = delete;
 };
 
+#include <memory>
+
 struct Descriptor
 {
     void* ptr;
@@ -53,8 +55,6 @@ struct Descriptor
     void move(void* dst) const { std::memmove(dst, ptr, size); }
     void set(int val) const { std::memset(ptr, val, size); }
 };
-
-#include <memory>
 
 template<typename T>
 using shared = std::shared_ptr<T>;

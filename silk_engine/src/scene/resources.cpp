@@ -8,7 +8,6 @@
 
 void Resources::init()
 {
-    DebugTimer t("Resource loading");
     //CREATE NEEDED DIRECTORIES AND INIT STUFF
     {
         if (!std::filesystem::exists("data/cache/shaders"))

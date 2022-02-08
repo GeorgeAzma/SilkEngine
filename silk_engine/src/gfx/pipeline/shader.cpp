@@ -3,6 +3,7 @@
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
 #include <spirv_cross/spirv_cross.hpp>
+#include <spirv_cross/spirv_glsl.hpp>
 
 Shader::Shader(const std::string& file)
 {
@@ -65,9 +66,10 @@ Shader::Shader(const std::string& file)
 		shader_stage_info.module = shader_module;
 		shader_stage_info.pName = "main";
 		shader_stage_infos.push_back(shader_stage_info);
-		
-		reflect(shader_binaries[type]);
 	}
+
+	for(auto&& [type, data] : shader_binaries)
+		reflect(shader_binaries[type]);
 
 	SK_TRACE("Shader loaded: {0}", path);
 }
@@ -107,13 +109,15 @@ std::unordered_map<uint32_t, std::string> Shader::parse(const std::string& file)
 
 void Shader::reflect(const std::vector<uint32_t>& source)
 {
-//	spirv_cross::Compiler compiler(source.data(), source.size());
+//	std::vector<uint32_t> s = source;
+//	spirv_cross::Compiler compiler(std::move(s));
+//	
 //	spirv_cross::ShaderResources resources = compiler.get_shader_resources();
 //	
 //	SK_TRACE("VulkanShader::Reflect: ");
 //	SK_TRACE("	{0} uniform buffers", resources.uniform_buffers.size());
 //	SK_TRACE("	{0} resources", resources.sampled_images.size());
-
+//
 //	SK_TRACE("Uniform buffers:");
 //	for (const auto& resource : resources.uniform_buffers)
 //	{

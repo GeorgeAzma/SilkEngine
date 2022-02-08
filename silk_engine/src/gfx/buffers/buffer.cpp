@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "staging_buffer.h"
 #include "gfx/allocators/allocator.h"
 #include "gfx/allocators/command_pool.h"
 #include "gfx/buffers/command_buffer.h"
@@ -6,7 +7,7 @@
 #include "gfx/graphics.h"
 
 Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_usage)
-	: size(size)
+	: size(size), needs_staging(vma_usage == VMA_MEMORY_USAGE_GPU_ONLY)
 {
 	VkBufferCreateInfo buffer_info{};
 	buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -16,7 +17,7 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_u
 
 	VmaAllocationCreateInfo allocation_create_info = {};
 	allocation_create_info.usage = vma_usage;
-
+	
 	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &buffer_info, &allocation_create_info, &buffer, &allocation, nullptr));
 }
 
@@ -34,10 +35,18 @@ void Buffer::setData(const void* data, size_t size, size_t offset)
 	SK_ASSERT(((size ? size : this->size) + offset) <= this->size, 
 		"Vulkan: Can't map memory, it's out of bounds");
 
-	void* buffer_data;
-	vmaMapMemory(*Graphics::allocator, allocation, &buffer_data);
-	std::memcpy((uint8_t*)buffer_data + offset, data, size ? size : this->size);
-	vmaUnmapMemory(*Graphics::allocator, allocation);
+	if (needs_staging)
+	{
+		StagingBuffer sb(data, size);
+		sb.copy(buffer, offset);
+	}
+	else
+	{
+		void* buffer_data;
+		vmaMapMemory(*Graphics::allocator, allocation, &buffer_data);
+		std::memcpy((uint8_t*)buffer_data + offset, data, size ? size : this->size);
+		vmaUnmapMemory(*Graphics::allocator, allocation);
+	}
 }
 
 void Buffer::setDataChecked(const void* data, size_t size, size_t offset)
@@ -81,16 +90,16 @@ uint32_t Buffer::findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags prop
 	return 0;
 }
 
-void Buffer::copy(VkBuffer destination, VkBuffer source, size_t size)
+void Buffer::copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDeviceSize dst_offset, VkDeviceSize src_offset)
 {
 	CommandBuffer command_buffer;
 	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
 	VkBufferCopy copy_region{};
-	copy_region.srcOffset = 0;
-	copy_region.dstOffset = 0;
+	copy_region.srcOffset = src_offset;
+	copy_region.dstOffset = dst_offset;
 	copy_region.size = size;
-	vkCmdCopyBuffer(command_buffer, source, destination, 1, &copy_region);
+	vkCmdCopyBuffer(Graphics::active.command_buffer, source, destination, 1, &copy_region);
 	
 	command_buffer.end();
 	command_buffer.submitIdle();

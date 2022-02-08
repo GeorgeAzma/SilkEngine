@@ -1,10 +1,10 @@
 - Implement dynamic multi texturing
 - Multiple render passes
-- SPIRV, reflections and stuff
-- Support more instances, by making vertex buffer resizable
-- Fix coordinate system (Kinda already did)
+- SPIRV, reflection
 - Better material system
 - Font rendering
+- Threaded command buffer recorder/allocator/manager
+- Make use of new image barriers in ImageArray
 - Descriptor allocator
 - Caching (Graphics Pipeline etc.)
 - Editable shader defines

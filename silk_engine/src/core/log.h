@@ -41,50 +41,22 @@ inline OStream &operator<<(OStream &os, glm::qua<T, Q> quaternion)
 
 #ifdef SK_ENABLE_DEBUG_OUTPUT
     #ifdef SK_CORE
-        #define SK_TRACE(...) Log::getCoreLogger()->trace(__VA_ARGS__)
-        #define SK_INFO(...) Log::getCoreLogger()->info(__VA_ARGS__)
-        #define SK_WARN(...) Log::getCoreLogger()->warn(__VA_ARGS__)
-        #define SK_ERROR(...) do { Log::getCoreLogger()->error(__VA_ARGS__); SK_DEBUG_BREAK(); } while(0)
-        #define SK_CRITICAL(...) do{ Log::getCoreLogger()->critical(__VA_ARGS__); SK_DEBUG_BREAK() } while(0)
-        #define SK_ASSERT(x, ...)          \
-            do                                  \
-            {                                   \
-                if (!(x))                       \
-                {                               \
-                    SK_ERROR(__VA_ARGS__); \
-                    SK_DEBUG_BREAK();           \
-                }                               \
-            } while (0)
+        #define SK_LOGGER Log::getCoreLogger()
     #else
-        #define SK_TRACE(...) Log::getClientLogger()->trace(__VA_ARGS__)
-        #define SK_INFO(...) Log::getClientLogger()->info(__VA_ARGS__)
-        #define SK_WARN(...) Log::getClientLogger()->warn(__VA_ARGS__)
-        #define SK_ERROR(...) do { Log::getClientLogger()->error(__VA_ARGS__); SK_DEBUG_BREAK(); } while(0)
-        #define SK_CRITICAL(...) do { Log::getClientLogger()->critical(__VA_ARGS__); SK_DEBUG_BREAK(); } while(0)
-        #define SK_ASSERT(x, ...)          \
-            do                             \
-            {                              \
-                if (!(x))                  \
-                {                          \
-                    SK_ERROR(__VA_ARGS__); \
-                    SK_DEBUG_BREAK();      \
-                }                          \
-            } while (0)
+        #define SK_LOGGER Log::getClientLogger()
     #endif
+
+    #define SK_TRACE(...) SK_LOGGER->trace(__VA_ARGS__)
+    #define SK_INFO(...) SK_LOGGER->info(__VA_ARGS__)
+    #define SK_WARN(...) SK_LOGGER->warn(__VA_ARGS__)
+    #define SK_ERROR(...) do { SK_LOGGER->error(__VA_ARGS__); SK_DEBUG_BREAK(); } while(0)
+    #define SK_CRITICAL(...) do { SK_LOGGER->critical(__VA_ARGS__); SK_DEBUG_BREAK() } while(0)
+    #define SK_ASSERT(x, ...) do { if (!(x)) { SK_ERROR(__VA_ARGS__); SK_DEBUG_BREAK(); } } while (0)
 #else
-    #ifdef SK_CORE
-        #define SK_TRACE(...)
-        #define SK_INFO(...)
-        #define SK_WARN(...)
-        #define SK_ERROR(...)
-        #define SK_CRITICAL(...)
-        #define SK_ASSERT(x, ...)
-    #else
-        #define SK_TRACE(...)
-        #define SK_INFO(...)
-        #define SK_WARN(...)
-        #define SK_ERROR(...)
-        #define SK_CRITICAL(...)
-        #define SK_ASSERT(x, ...)
-    #endif
+    #define SK_TRACE(...)
+    #define SK_INFO(...)
+    #define SK_WARN(...)
+    #define SK_ERROR(...)
+    #define SK_CRITICAL(...)
+    #define SK_ASSERT(x, ...)
 #endif

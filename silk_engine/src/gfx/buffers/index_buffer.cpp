@@ -9,15 +9,7 @@ IndexBuffer::IndexBuffer(const void* data, VkDeviceSize count, IndexType index_t
 		memory_usage),
 	index_type(EnumInfo::indexType(index_type))
 {
-	if (memory_usage == VMA_MEMORY_USAGE_GPU_ONLY)
-	{
-		StagingBuffer staging_buffer(data, count * EnumInfo::size(index_type));
-		staging_buffer.copy(buffer);
-	}
-	else
-	{
-		setData(data, count * EnumInfo::size(index_type));
-	}
+	setData(data, count * EnumInfo::size(index_type));
 }
 
 void IndexBuffer::bind()

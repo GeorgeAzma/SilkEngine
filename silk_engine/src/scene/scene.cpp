@@ -12,14 +12,17 @@
 Scene::Scene()
 {
 	Dispatcher::subscribe(this, &Scene::onWindowResize);
-	
+
 	registry.on_construct<MeshComponent>().connect<&Scene::onMeshComponentCreate>(this);
 	registry.on_construct<ModelComponent>().connect<&Scene::onModelComponentCreate>(this);
 	registry.on_construct<LightComponent>().connect<&Scene::onLightComponentCreate>(this);
 	
+	registry.on_update<TransformComponent>().connect<&Scene::onTransformComponentUpdate>(this);
+	
 	registry.on_destroy<MeshComponent>().connect<&Scene::onMeshComponentDestroy>(this);
 	registry.on_destroy<ModelComponent>().connect<&Scene::onModelComponentDestroy>(this);
 	registry.on_destroy<LightComponent>().connect<&Scene::onLightComponentDestroy>(this);
+	
 	instance_batches.reserve(Graphics::MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
 	material_data_3D = makeShared<Material>(Resources::getShaderEffect("3D"), std::vector<shared<DescriptorSet>>{ Resources::getDescriptorSet("Global"), Resources::getDescriptorSet("Images") });
 
@@ -145,13 +148,6 @@ void Scene::onUpdate()
 void Scene::onStop()
 {
 	Dispatcher::unsubscribe(this, &Scene::onWindowResize);
-	registry.on_construct<MeshComponent>().disconnect<&Scene::onMeshComponentCreate>(this);
-	registry.on_construct<ModelComponent>().disconnect<&Scene::onModelComponentCreate>(this);
-	registry.on_construct<LightComponent>().disconnect<&Scene::onLightComponentCreate>(this);
-
-	registry.on_destroy<MeshComponent>().disconnect<&Scene::onMeshComponentDestroy>(this);
-	registry.on_destroy<ModelComponent>().disconnect<&Scene::onModelComponentDestroy>(this);
-	registry.on_destroy<LightComponent>().disconnect<&Scene::onLightComponentDestroy>(this);
 	registry.view<ScriptComponent>().each(
 		[&](auto entity, auto& script_component)
 		{
@@ -176,6 +172,30 @@ void Scene::onWindowResize(const WindowResizeEvent& e)
 		{
 			camera_component.camera.onViewportResize();
 		});
+}
+
+void Scene::onTransformComponentUpdate(entt::registry& registry, entt::entity entity)
+{
+	//TODO: Figure out how to get rid of all the stupid transform component child checks
+	TransformComponent& transform = registry.get<TransformComponent>(entity);
+	
+	if (auto mesh_component = registry.try_get<MeshComponent>(entity))
+	{
+		instance_batches[mesh_component->instance->instance_batch_index].instance_data[mesh_component->instance->instance_data_index].transform = transform;
+		instance_batches[mesh_component->instance->instance_batch_index].needs_update = true;
+	}
+	if (auto model_component = registry.try_get<ModelComponent>(entity))
+	{
+		for (size_t i = 0; i < model_component->instances.size(); ++i)
+		{
+			instance_batches[model_component->instances[i]->instance_batch_index].instance_data[model_component->instances[i]->instance_data_index].transform = transform;
+			instance_batches[model_component->instances[i]->instance_batch_index].needs_update = true;
+		}
+	}
+	if (auto light_component = registry.try_get<LightComponent>(entity))
+	{
+		light_component->light_ptr->position = transform.transform * glm::vec4(light_component->light.position, 1);
+	}
 }
 
 void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
@@ -331,34 +351,5 @@ void Scene::destroyMeshInstance(shared<RenderedInstance> instance)
 			}
 		}
 		instance_batches.pop_back();
-	}
-}
-
-template<>
-void Scene::updateComponent<TransformComponent>(entt::entity entity)
-{
-	TransformComponent& transform = registry.get<TransformComponent>(entity);
-
-	if (registry.any_of<MeshComponent>(entity))
-	{
-		MeshComponent& mesh_component = registry.get<MeshComponent>(entity);
-		
-		instance_batches[mesh_component.instance->instance_batch_index].instance_data[mesh_component.instance->instance_data_index].transform = transform;
-		instance_batches[mesh_component.instance->instance_batch_index].needs_update = true;
-	}
-	else if (registry.any_of<ModelComponent>(entity))
-	{
-		ModelComponent& model_component = registry.get<ModelComponent>(entity);
-
-		for (size_t i = 0; i < model_component.instances.size(); ++i)
-		{
-			instance_batches[model_component.instances[i]->instance_batch_index].instance_data[model_component.instances[i]->instance_data_index].transform = transform;
-			instance_batches[model_component.instances[i]->instance_batch_index].needs_update = true;
-		}
-	}
-	if (registry.any_of<LightComponent>(entity))
-	{
-		LightComponent& light_component = registry.get<LightComponent>(entity);
-		light_component.light_ptr->position = transform.transform * glm::vec4(light_component.light.position, 1);
 	}
 }

@@ -11,7 +11,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
     auto rectangle = Resources::getMesh("Rectangle");
     auto circle = Resources::getMesh("Circle");
-    entities.resize(200000);
+    entities.resize(100000);
     for (size_t i = 0; i < entities.size(); ++i)
     {
         entities[i] = scene->createEntity();
@@ -23,7 +23,8 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
         //else if (RNG::Bool())
         //    entities[i]->addComponent<MeshComponent>(circle);
         //else
-            entities[i]->addComponent<MeshComponent>(rectangle);
+            entities[i]->addComponent<MeshComponent>(circle);
+        //entities[i]->addComponent<ModelComponent>(Resources::getModel("Backpack"));
     }
 
     //entities.emplace_back(scene->createEntity());
@@ -51,12 +52,17 @@ void SandboxApp::onUpdate()
         entities.back()->addComponent<ModelComponent>(Resources::getModel("Backpack"));
         //entities.back()->addComponent<MeshComponent>(makeShared<RenderedInstance>(Resources::getMesh("Circle")));
     }
-    for (size_t i = 0; i < entities.size(); ++i)
-    {
-        glm::mat4& transform = entities[i]->getComponent<TransformComponent>();
-        //transform = glm::translate(transform, (glm::vec3(RNG::Float(), RNG::Float(), RNG::Float()) - 0.5f) * 100.0f * (float)Time::dt);
-        scene->updateComponent<TransformComponent>(*entities[i]);
-    }
+
+    //Resources::pool.forEach(entities.size(), 
+    //    [&](size_t i) 
+    //    {
+    //        entities[i]->updateComponent<TransformComponent>([](TransformComponent& transform) {});
+    //    });
+    //Resources::pool.wait();
+
+    //for(auto& entity : entities)
+    //    entity->updateComponent<TransformComponent>([](TransformComponent& transform) {});
+
     scene->onUpdate();
 }
 

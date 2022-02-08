@@ -6,5 +6,5 @@ class StagingBuffer : public Buffer
 {
 public:
 	StagingBuffer(const void* data, VkDeviceSize size);
-	void copy(VkBuffer destination) const;
+	void copy(VkBuffer destination, VkDeviceSize offset = 0) const;
 };

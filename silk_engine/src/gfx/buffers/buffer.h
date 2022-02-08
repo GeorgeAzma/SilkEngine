@@ -17,7 +17,7 @@ public:
 	operator const VkBuffer& () const { return buffer; }
 
 public:
-	static void copy(VkBuffer destination, VkBuffer source, size_t size);
+	static void copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDeviceSize dst_offset = 0, VkDeviceSize src_offset = 0);
 	static uint32_t findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags properties);
 
 public:
@@ -29,4 +29,5 @@ protected:
 
 private:
 	uint8_t* data = nullptr;
+	const bool needs_staging = false;
 };
