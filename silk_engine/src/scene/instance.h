@@ -47,6 +47,7 @@ struct InstanceBatch
 
 	std::vector<InstanceData> instance_data;
 	std::vector<shared<RenderedInstance>> instances;
+	shared<VertexBuffer> instance_buffer = nullptr;
 
 	bool needs_update = true;
 

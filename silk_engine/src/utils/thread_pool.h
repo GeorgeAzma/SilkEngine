@@ -3,7 +3,7 @@
 class ThreadPool
 {
 public:
-    size_t wait_time = 0; //Wait time in microseconds, if set to 0 it calls yield() instead of sleep()
+    size_t wait_time = 1; //Wait time in microseconds, if set to 0 it calls yield() instead of sleep()
 
     ThreadPool(unsigned int thread_count = std::thread::hardware_concurrency());
     ~ThreadPool();

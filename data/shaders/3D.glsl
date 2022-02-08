@@ -13,8 +13,8 @@ layout(location = 0) out VertexOutput
 {
     vec2 texture_coordinate;
     vec3 normal;
-    flat uint texture_index;
-    flat vec4 color;
+    uint texture_index;
+    vec4 color;
     vec3 world_position;
 } vertex_output;
 
@@ -93,7 +93,7 @@ layout(location = 0) out vec4 color;
 
 layout(set = 1, binding = 0) uniform sampler2D texture_sampler[32];
 
-#include light
+#include "light.glsl"
 
 //Good HDR filter
 vec3 aces(vec3 x)

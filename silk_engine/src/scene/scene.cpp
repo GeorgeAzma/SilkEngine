@@ -116,12 +116,13 @@ void Scene::onUpdate()
 
 		if (instance_batch.needs_update)
 		{
-			instance_batch.instance->mesh->vertex_array->getVertexBuffer(1)->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size() * sizeof(InstanceData));
+			instance_batch.instance_buffer->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size() * sizeof(InstanceData));
 			instance_batch.needs_update = false;
 		}
 
 		instance_batch.instance->mesh->material->shader_effect->pipeline->bind();
 		instance_batch.instance->mesh->vertex_array->bind();
+		instance_batch.instance_buffer->bind(1);
 		instance_batch.instance->mesh->material->bind();
 		
 		if (instance_batch.instance->mesh->vertex_array->hasIndexBuffer())
@@ -293,11 +294,14 @@ void Scene::createMeshInstance(shared<RenderedInstance> instance, const Instance
 	}
 
 	instance_batches.emplace_back(instance);
-	instance_batches.back().instance_data.reserve(Graphics::MAX_INSTANCES);
-	instance_batches.back().instances.reserve(Graphics::MAX_INSTANCES);
+	auto& new_batch = instance_batches.back();
+	new_batch.instance_data.reserve(Graphics::MAX_INSTANCES);
+	new_batch.instances.reserve(Graphics::MAX_INSTANCES);
+	
+	new_batch.instance_data.emplace_back(std::move(instance_data));
+	new_batch.instances.emplace_back(instance);
 
-	instance_batches.back().instance_data.emplace_back(std::move(instance_data));
-	instance_batches.back().instances.emplace_back(instance);
+	new_batch.instance_buffer = makeShared<VertexBuffer>(new_batch.instance_data.data(), Graphics::MAX_INSTANCES * sizeof(InstanceData), VMA_MEMORY_USAGE_CPU_TO_GPU);
 
 	instance->instance_batch_index = instance_batches.size() - 1;
 	instance->instance_data_index = instance_batches.back().instance_data.size() - 1;

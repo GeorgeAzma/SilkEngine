@@ -12,29 +12,19 @@ void Mesh::createVertexArray()
 {
 	auto vbo = makeShared<VertexBuffer>(this->vertices.data(), this->vertices.size() * sizeof(Vertex));
 	auto ibo = makeShared<IndexBuffer>(this->indices.data(), this->indices.size());
-	std::vector<InstanceData> data(Graphics::MAX_INSTANCES, InstanceData{});
-	auto instance_vbo = makeShared<VertexBuffer>(data.data(), sizeof(InstanceData) * data.size(), VMA_MEMORY_USAGE_CPU_TO_GPU);
 	vertex_array = shared<VertexArray>(new VertexArray());
-	vertex_array->setIndexBuffer(ibo).addVertexBuffer(vbo).addVertexBuffer(instance_vbo);	
+	vertex_array->setIndexBuffer(ibo).addVertexBuffer(vbo);
 }
 
 void Mesh::calculateAABB()
 {
 	aabb.max = glm::vec3(-std::numeric_limits<float>::max());
 	aabb.min = glm::vec3(std::numeric_limits<float>::max()); 
-	
-	if (vertices.size() <= MAX_VERTEX_COUNT_TO_CALCULATE_BOUNDS)
+
+	for (size_t i = 0; i < vertices.size(); ++i)
 	{
-		for (size_t i = 0; i < vertices.size(); ++i)
-		{
-			aabb.max = glm::max(vertices[i].position, aabb.max);
-			aabb.min = glm::min(vertices[i].position, aabb.min);
-		}
-	}
-	else
-	{
-		aabb.max = glm::vec3(std::numeric_limits<float>::max());
-		aabb.min = glm::vec3(-std::numeric_limits<float>::max());
+		aabb.max = glm::max(vertices[i].position, aabb.max);
+		aabb.min = glm::min(vertices[i].position, aabb.min);
 	}
 }
 

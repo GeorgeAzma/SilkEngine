@@ -3,7 +3,6 @@
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
 #include <spirv_cross/spirv_cross.hpp>
-#include <shaderc/shaderc.hpp>
 
 Shader::Shader(const std::string& file)
 {
@@ -11,7 +10,7 @@ Shader::Shader(const std::string& file)
 	shaderc::CompileOptions options;
 	options.SetTargetEnvironment(shaderc_target_env_vulkan, EnumInfo::shadercApiVersion(Graphics::API_VERSION));
 	options.SetForcedVersionProfile(450, shaderc_profile_core);
-	options.SetWarningsAsErrors();
+	options.SetIncluder(makeUnique<ShaderIncluder>());
 	options.SetOptimizationLevel(shaderc_optimization_level_performance);
 #ifdef SK_ENABLE_DEBUG_OUTPUT
 	options.SetGenerateDebugInfo();
@@ -39,8 +38,11 @@ Shader::Shader(const std::string& file)
 		else
 #endif
 		{
-			preProcess(source);
-		
+			shaderc::PreprocessedSourceCompilationResult result =
+			compiler.PreprocessGlsl(source, EnumInfo::shadercType((ShaderType)type), path.c_str(), options);
+			SK_ASSERT(result.GetCompilationStatus() == shaderc_compilation_status_success, result.GetErrorMessage());
+			source = { result.cbegin(), result.cend() };
+
 			shaderc::SpvCompilationResult compiled_shader = compiler.CompileGlslToSpv(source, EnumInfo::shadercType((ShaderType)type), path.c_str(), options);
 			SK_ASSERT(compiled_shader.GetCompilationStatus() == shaderc_compilation_status_success, compiled_shader.GetErrorMessage());
 		
@@ -101,32 +103,6 @@ std::unordered_map<uint32_t, std::string> Shader::parse(const std::string& file)
 	}
 
 	return shader_sources;
-}
-
-void Shader::preProcess(std::string& source)
-{
-	constexpr char include_token[] = "#include";
-	constexpr size_t include_token_length = sizeof(include_token) - 1;
-	size_t pos = source.find(include_token, 0);
-	while (pos != std::string::npos)
-	{
-		size_t eol = source.find_first_of("\r\n", pos);
-		SK_ASSERT(eol != std::string::npos, "Syntax error");
-		size_t begin = pos + include_token_length + 1;
-		std::string include_string = source.substr(begin, eol - begin);		
-
-		std::string path = std::string("data/shaders/") + include_string + ".glsl";
-		std::string before_source = source.substr(0, pos);
-		std::string after_source = source.substr(eol);
-		
-		size_t next_line_pos = source.find_first_not_of("\r\n", eol);
-		SK_ASSERT(next_line_pos != std::string::npos, "Syntax error");
-		pos = source.find(include_token, next_line_pos);
-
-		std::string include = File::read(path);
-		preProcess(include);
-		source = before_source + include + after_source;
-	}
 }
 
 void Shader::reflect(const std::vector<uint32_t>& source)

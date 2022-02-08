@@ -1,4 +1,4 @@
-#include math
+#include "math.glsl"
 
 vec3 fresnelSchlick(float cos_theta, vec3 F0)
 {
