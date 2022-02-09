@@ -49,7 +49,10 @@ public:
 		scene->registry.replace<T>(entity, std::forward<Args>(args)...);
 	}
 
+	operator uint32_t () const { return (uint32_t)entity; }
 	operator entt::entity () const { return entity; }
+	operator bool() const { return entity != entt::null; }
+	bool operator==(const Entity& other) const { return entity == other.entity && scene == other.scene; }
 
 private:
 	entt::entity entity = entt::null;

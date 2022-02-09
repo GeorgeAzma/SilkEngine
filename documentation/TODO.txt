@@ -2,6 +2,7 @@
 - Multiple render passes
 - SPIRV, reflection
 - Better material system
+- Create system which handles vulkan object creation and update for multiple frames
 - Font rendering
 - Threaded command buffer recorder/allocator/manager
 - Make use of new image barriers in ImageArray
@@ -12,8 +13,6 @@
 - 4 component image converter shader
 - OpenAL and audio streaming
 - Video (mp4 etc.)
-- Create system which handles buffer creation for multiple frames 
-(perhaps static function like Graphics::createBuffer())
 - Sort meshes and materials and render with minimal binds
 - Fix dirty swap chain code and render pass code
 - Seperate dispatchers for related events and create getters for them

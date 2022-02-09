@@ -32,6 +32,7 @@ struct Material
 
 	void bind(size_t first_set = 0)
 	{
+		shader_effect->pipeline->bind();
 		for (size_t i = 0; i < descriptor_sets.size(); ++i)
 		{
 			descriptor_sets[i]->bind(i + first_set);

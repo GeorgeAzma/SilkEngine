@@ -5,6 +5,11 @@
 
 class Shader : NonCopyable
 {
+    struct Define
+    {
+        std::string name = "";
+        std::string value = "";
+    };
     class ShaderIncluder : public shaderc::CompileOptions::IncluderInterface
     {
         shaderc_include_result* GetInclude(
@@ -39,14 +44,16 @@ class Shader : NonCopyable
             delete data;
         };
     };
+
 public:
-	Shader(const std::string& file); //Handy for compute shader
+    Shader(const std::string& file, const std::vector<Define>& defines = {});
 	~Shader();
 
-	const std::vector<VkPipelineShaderStageCreateInfo>& getShaderStageInfos() const { return shader_stage_infos; }
+    void compile(const std::vector<Define>& defines = {});
 
-	operator const VkShaderModule& () const { return shader_modules[0]; }
+	const std::vector<VkPipelineShaderStageCreateInfo>& getShaderStageInfos() const { return shader_stage_infos; }
 	const std::vector<VkShaderModule>& getShaderModules() const { return shader_modules; }
+	operator const VkShaderModule& () const { return shader_modules[0]; }
 
 private:
 	std::unordered_map<uint32_t, std::string> parse(const std::string& file);
@@ -56,4 +63,5 @@ private:
 private:
 	std::vector<VkPipelineShaderStageCreateInfo> shader_stage_infos;
 	std::vector<VkShaderModule> shader_modules;
+    std::string file;
 };

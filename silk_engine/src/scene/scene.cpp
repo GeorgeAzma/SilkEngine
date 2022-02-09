@@ -52,6 +52,15 @@ void Scene::onPlay()
 
 void Scene::onUpdate()
 {
+	//TODO: This is TEMP figure out a good system for creating stuff for multiple frames and threads
+	std::vector<VkDescriptorImageInfo> infos(32);
+	vkDeviceWaitIdle(*Graphics::logical_device);
+	for (auto& i : infos)
+		i = Resources::getImage("Test1")->getDescriptorInfo();
+	material_data_3D->descriptor_sets[1]->getWrites()[0]->setImageInfos(infos);
+	if(Time::frame % 4 == 0)
+	material_data_3D->descriptor_sets[1]->update();
+
 	//Update components
 	registry.view<ScriptComponent>().each(
 		[&](auto entity, auto& script_component)
@@ -123,7 +132,6 @@ void Scene::onUpdate()
 			instance_batch.needs_update = false;
 		}
 
-		instance_batch.instance->mesh->material->shader_effect->pipeline->bind();
 		instance_batch.instance->mesh->vertex_array->bind();
 		instance_batch.instance_buffer->bind(1);
 		instance_batch.instance->mesh->material->bind();
