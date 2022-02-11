@@ -38,14 +38,13 @@ private:
 	void onLightComponentDestroy(entt::registry& registry, entt::entity entity);
 	
 	void createMeshInstance(shared<RenderedInstance> instance, const InstanceData& instance_data);
+	void addInstanceBatch(shared<RenderedInstance> instance, const InstanceData& instance_data);
 	void destroyMeshInstance(shared<RenderedInstance> instance);
 
 private:
 	entt::registry registry;
 	std::vector<InstanceBatch> instance_batches;
-	shared<IndirectBuffer> indexed_indirect_buffer;
 	shared<IndirectBuffer> indirect_buffer;
-	shared<Material> material_data_3D;
 	std::array<Light, Graphics::MAX_LIGHTS> lights;
 	size_t light_index = 0;
 	bool lights_updated = false;

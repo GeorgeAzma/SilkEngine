@@ -39,33 +39,38 @@ void CommandBuffer::end()
 
 	Graphics::vulkanAssert(vkEndCommandBuffer(command_buffer)); 
 	Graphics::active.command_buffer = VK_NULL_HANDLE;
+	recorded = true;
 }
 
-void CommandBuffer::submit(const CommandBufferSubmitInfo& command_buffer_submit_info)
+void CommandBuffer::submit(const CommandBufferSubmitInfo& info)
 {
 	end();
+	if (!recorded)
+		return;
 
 	VkSubmitInfo submit_info{};
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &command_buffer;
 
-	submit_info.pWaitDstStageMask = command_buffer_submit_info.wait_stages;
-	submit_info.waitSemaphoreCount = command_buffer_submit_info.wait_semaphores.size();
-	submit_info.pWaitSemaphores = command_buffer_submit_info.wait_semaphores.data();
+	submit_info.pWaitDstStageMask = info.wait_stages;
+	submit_info.waitSemaphoreCount = info.wait_semaphores.size();
+	submit_info.pWaitSemaphores = info.wait_semaphores.data();
 
-	submit_info.signalSemaphoreCount = command_buffer_submit_info.signal_semaphores.size();
-	submit_info.pSignalSemaphores = command_buffer_submit_info.signal_semaphores.data();
+	submit_info.signalSemaphoreCount = info.signal_semaphores.size();
+	submit_info.pSignalSemaphores = info.signal_semaphores.data();
 
-	if (command_buffer_submit_info.fence != VK_NULL_HANDLE)
-		Graphics::vulkanAssert(vkResetFences(*Graphics::logical_device, 1, &command_buffer_submit_info.fence));
+	if (info.fence != VK_NULL_HANDLE)
+		Graphics::vulkanAssert(vkResetFences(*Graphics::logical_device, 1, &info.fence));
 	
-	Graphics::vulkanAssert(vkQueueSubmit(getQueue(), 1, &submit_info, command_buffer_submit_info.fence));
+	Graphics::vulkanAssert(vkQueueSubmit(getQueue(), 1, &submit_info, info.fence));
 }
 
 void CommandBuffer::submitIdle()
 {
 	end();
+	if (!recorded)
+		return;
 
 	VkSubmitInfo submit_info{};
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

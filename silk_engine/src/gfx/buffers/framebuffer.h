@@ -1,11 +1,11 @@
 #pragma once
 
-#include "gfx/images/image.h"
+#include "gfx/images/image2D.h"
 
 class Framebuffer : NonCopyable
 {
 public:
-	Framebuffer(VkRenderPass render_pass, const std::vector<shared<Image>>& attachments, uint32_t width, uint32_t height);
+	Framebuffer(VkRenderPass render_pass, const std::vector<shared<Image2D>>& attachments, uint32_t width, uint32_t height);
 	~Framebuffer();
 
 	operator const VkFramebuffer& () const { return framebuffer; }

@@ -24,10 +24,8 @@ Scene::Scene()
 	registry.on_destroy<LightComponent>().connect<&Scene::onLightComponentDestroy>(this);
 	
 	instance_batches.reserve(Graphics::MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
-	material_data_3D = makeShared<Material>(Resources::getShaderEffect("3D"), std::vector<shared<DescriptorSet>>{ Resources::getDescriptorSet("Global"), Resources::getDescriptorSet("Images") });
 
-	indexed_indirect_buffer = makeShared<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
-	indirect_buffer = makeShared<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(VkDrawIndirectCommand));
+	indirect_buffer = makeShared<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
 }
 
 Scene::~Scene()
@@ -52,15 +50,6 @@ void Scene::onPlay()
 
 void Scene::onUpdate()
 {
-	//TODO: This is TEMP figure out a good system for creating stuff for multiple frames and threads
-	std::vector<VkDescriptorImageInfo> infos(32);
-	vkDeviceWaitIdle(*Graphics::logical_device);
-	for (auto& i : infos)
-		i = Resources::getImage("Test1")->getDescriptorInfo();
-	material_data_3D->descriptor_sets[1]->getWrites()[0]->setImageInfos(infos);
-	if(Time::frame % 4 == 0)
-	material_data_3D->descriptor_sets[1]->update();
-
 	//Update components
 	registry.view<ScriptComponent>().each(
 		[&](auto entity, auto& script_component)
@@ -91,66 +80,59 @@ void Scene::onUpdate()
 
 	Graphics::global_uniform->setDataChecked(&global_uniform_data, sizeof(Graphics::GlobalUniformData));
 
-	//Drawing
-
-	std::vector<VkDrawIndexedIndirectCommand> indexed_draw_commands;
-	std::vector<VkDrawIndirectCommand> draw_commands;
-	
-	for (auto& instance_batch : instance_batches)
+	//Drawing	
+	bool any_needs_update = false;
+	static std::vector<VkDrawIndexedIndirectCommand> draw_commands(instance_batches.size());
+	for (size_t i = 0; i < instance_batches.size(); ++i)
 	{
-		if (instance_batch.instance->mesh->vertex_array->hasIndexBuffer())
+		if (instance_batches[i].needs_update)
 		{
-			VkDrawIndexedIndirectCommand indexed_draw_command{};
-			indexed_draw_command.instanceCount = instance_batch.instance_data.size();
-			indexed_draw_command.indexCount = instance_batch.instance->mesh->indices.size();
-			indexed_draw_commands.emplace_back(indexed_draw_command);
-		}
-		else
-		{
-			VkDrawIndirectCommand draw_command{};
-			draw_command.instanceCount = instance_batch.instance_data.size();
-			draw_command.vertexCount = instance_batch.instance->mesh->indices.size();
-			draw_commands.emplace_back(draw_command);
+			instance_batches[i].instance_buffer->setData(instance_batches[i].instance_data.data(), instance_batches[i].instance_data.size() * sizeof(InstanceData));
+			instance_batches[i].needs_update = false;
+			VkDrawIndexedIndirectCommand draw_command{};
+			draw_command.instanceCount = instance_batches[i].instance_data.size();
+			draw_command.indexCount = instance_batches[i].instance->mesh->indices.size();
+			draw_commands[i] = std::move(draw_command);
+			any_needs_update = true;
 		}
 	}
-	indexed_indirect_buffer->setDataChecked(indexed_draw_commands.data(), indexed_draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand));
-	indirect_buffer->setDataChecked(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndirectCommand));
+	if (any_needs_update)
+	{
+		indirect_buffer->setDataChecked(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand));
+	}
+
+	//vkDeviceWaitIdle(*Graphics::logical_device);
+	for (auto& instance_batch : instance_batches)
+	{
+		instance_batch.descriptor_sets.resize(2);
+		instance_batch.descriptor_sets[0] = Resources::getDescriptorSet("Global");
+		instance_batch.descriptor_sets[1] = Resources::getDescriptorSet("Images");
+		//std::vector<VkDescriptorImageInfo> image_infos(Graphics::MAX_IMAGE_SLOTS, Resources::getImage("White")->getDescriptorInfo());
+		//for (size_t i = 0; i < instance_batch.images.size(); ++i)
+		//	image_infos[i] = *instance_batch.images[i];
+		//instance_batch.descriptor_sets[1]->setImageInfo(0, image_infos);
+		//instance_batch.descriptor_sets[1]->update();
+	}
 
 	//Draw instances
-	Graphics::swap_chain->beginRenderPass();
+	Graphics::swap_chain->acquireNextImage();
+	Graphics::swap_chain->beginFrame(Graphics::swap_chain->getImageIndex());
+	Graphics::swap_chain->beginRenderPass(Graphics::swap_chain->getImageIndex());
 
-	size_t indexed_draw_index = 0;
 	size_t draw_index = 0;
 	for (auto& instance_batch : instance_batches)
 	{
-		if (instance_batch.instance_data.empty())
-			continue;
-
-		if (instance_batch.needs_update)
-		{
-			instance_batch.instance_buffer->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size() * sizeof(InstanceData));
-			instance_batch.needs_update = false;
-		}
-
-		instance_batch.instance->mesh->vertex_array->bind();
-		instance_batch.instance_buffer->bind(1);
-		instance_batch.instance->mesh->material->bind();
-		
-		if (instance_batch.instance->mesh->vertex_array->hasIndexBuffer())
-		{
-			vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indexed_indirect_buffer, indexed_draw_index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
-			++indexed_draw_index;
-		}
-		else
-		{
-			vkCmdDrawIndirect(Graphics::active.command_buffer, *indirect_buffer, draw_index * sizeof(VkDrawIndirectCommand), 1, sizeof(VkDrawIndirectCommand));
-			++draw_index;
-		}
+		instance_batch.bind();
+		vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, draw_index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
+		++draw_index;
 	}
-	Graphics::stats.instances = instance_batches.size();
-	
+
 	//End draw
 	Graphics::swap_chain->endRenderPass();
+	Graphics::swap_chain->endFrame(Graphics::swap_chain->getImageIndex());
+	Graphics::swap_chain->present();
+
+	Graphics::stats.instance_batches = instance_batches.size();
 }
 
 void Scene::onStop()
@@ -184,7 +166,7 @@ void Scene::onWindowResize(const WindowResizeEvent& e)
 
 void Scene::onTransformComponentUpdate(entt::registry& registry, entt::entity entity)
 {
-	//TODO: Figure out how to get rid of all the stupid transform component child checks
+	//TODO: Figure out how to get rid of all the stupid transform component child checks (IDEA: have ParentComponent which takes 2 template arguments parent and child, whenever parent component gets updated it calls onTransformUpdate of child component, it's messy but better performance)
 	TransformComponent& transform = registry.get<TransformComponent>(entity);
 	
 	if (auto mesh_component = registry.try_get<MeshComponent>(entity))
@@ -215,18 +197,31 @@ void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
 	if (auto transform = registry.try_get<TransformComponent>(entity))
 		instance_data.transform = *transform;
 
-	if (auto sprite = registry.try_get<SpriteComponent>(entity))
-		instance_data.texture_index = *sprite;
-
 	if (auto color = registry.try_get<ColorComponent>(entity))
 		instance_data.color = *color;
 
 	if (!mesh_component.mesh->material.get())
-		if (auto material = registry.try_get<MaterialComponent>(entity))
+		if (auto material = registry.try_get<MaterialComponent>(entity)) //TODO: Material component is currently same as shader effect component, might have to remove it
 			mesh_component.mesh->material = material->material;
 
 	mesh_component.instance = makeShared<RenderedInstance>(mesh_component.mesh);
 	createMeshInstance(mesh_component.instance, instance_data);
+	
+	//if (auto image = registry.try_get<ImageComponent>(entity))
+	//{
+	//	auto& mesh_instance_batch = instance_batches[mesh_component.instance->instance_batch_index];
+	//	auto& mesh_instance_data = mesh_instance_batch.instance_data[mesh_component.instance->instance_data_index];
+	//	uint32_t image_index = mesh_instance_batch.addImages(image->images);
+	//	if (image_index == UINT32_MAX) //UINT32_MAX here means error if you look in addImages()
+	//	{
+	//		//TODO: This is either incorrect or bit inefficient
+	//		destroyMeshInstance(mesh_component.instance);
+	//		addInstanceBatch(mesh_component.instance, mesh_instance_data);
+	//		image_index = instance_batches.back().addImages(image->images);
+	//		SK_ASSERT(image_index != UINT32_MAX, "Entity might have too much images");
+	//	}
+	//	mesh_instance_data.image_index = image_index; //TODO: Implement image/buffer bindings for compute shader effects in onComputeShaderEffectComponentCreate();
+	//}
 }
 
 void Scene::onMeshComponentDestroy(entt::registry& registry, entt::entity entity)
@@ -236,16 +231,12 @@ void Scene::onMeshComponentDestroy(entt::registry& registry, entt::entity entity
 
 void Scene::onModelComponentCreate(entt::registry& registry, entt::entity entity)
 {
-	//TODO: Fix material hardcode IMPORTANT
 	ModelComponent& model_component = registry.get<ModelComponent>(entity);
 
 	InstanceData instance_data{};
 
 	if (auto transform = registry.try_get<TransformComponent>(entity))
 		instance_data.transform = *transform;
-
-	if (auto sprite = registry.try_get<SpriteComponent>(entity)) //TODO:
-		instance_data.texture_index = *sprite;
 
 	if (auto color = registry.try_get<ColorComponent>(entity))
 		instance_data.color = *color;
@@ -300,7 +291,8 @@ void Scene::onLightComponentDestroy(entt::registry& registry, entt::entity entit
 void Scene::createMeshInstance(shared<RenderedInstance> instance, const InstanceData& instance_data)
 {
 	if (!instance->mesh->vertex_array.get()) instance->mesh->createVertexArray();
-	if (!instance->mesh->material.get()) instance->mesh->material = material_data_3D;
+	if (!instance->mesh->hasAABB()) instance->mesh->calculateAABB(); //TEMP for now
+	if (!instance->mesh->material.get()) instance->mesh->material = Resources::getMaterial("Textured Lit 3D");
 
 	for (size_t i = 0; i < instance_batches.size(); ++i)
 	{
@@ -321,11 +313,19 @@ void Scene::createMeshInstance(shared<RenderedInstance> instance, const Instance
 		}
 	}
 
+	addInstanceBatch(instance, instance_data);
+}
+
+void Scene::addInstanceBatch(shared<RenderedInstance> instance, const InstanceData& instance_data)
+{
 	instance_batches.emplace_back(instance);
 	auto& new_batch = instance_batches.back();
 	new_batch.instance_data.reserve(Graphics::MAX_INSTANCES);
 	new_batch.instances.reserve(Graphics::MAX_INSTANCES);
-	
+
+	//new_batch.images.reserve(Graphics::MAX_IMAGE_SLOTS);
+	//new_batch.images.emplace_back(Resources::getImage("White"));
+
 	new_batch.instance_data.emplace_back(std::move(instance_data));
 	new_batch.instances.emplace_back(instance);
 
@@ -346,6 +346,9 @@ void Scene::destroyMeshInstance(shared<RenderedInstance> instance)
 	std::swap(instance_batch.instances[instance->instance_data_index], instance_batch.instances.back());
 	instance_batch.instances[instance->instance_data_index]->instance_data_index = instance->instance_data_index;
 	instance_batch.instances.pop_back();
+
+	//TODO: Update instance_batch images
+	//Have another vector containing image owner instances for each image in images if (image_owners[image].size() - 1) == 0 swap that image with latest image in images and pop back, but also update image_index for all the owner instances of images.back() to index where it got swapped to
 	
 	if (instance_batch.instance_data.empty())
 	{
@@ -355,7 +358,7 @@ void Scene::destroyMeshInstance(shared<RenderedInstance> instance)
 			std::swap(instance_batch, instance_batches.back());
 			for (size_t j = 0; j < last_batch->instances.size(); ++j)
 			{
-				last_batch->instances[j]->instance_batch_index = instance_batches.back().instance->instance_batch_index; //TODO: This might be incorrect??
+				last_batch->instances[j]->instance_batch_index = instance_batches.back().instance->instance_batch_index;
 			}
 		}
 		instance_batches.pop_back();

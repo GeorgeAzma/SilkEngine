@@ -13,6 +13,11 @@ namespace math
 		return { mat[3][0], mat[3][1], mat[3][2] };
 	}
 
+	static glm::vec2 position(const glm::mat3& mat)
+	{
+		return { mat[2][0], mat[2][1] };
+	}
+
 	static glm::vec3 eulerToDirection(const glm::vec3& euler_angles)
 	{
 		float cosy = cos(euler_angles.y);

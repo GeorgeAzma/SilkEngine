@@ -1,5 +1,7 @@
 #pragma once
 
+#include "scene/AABB.h"
+
 class Frustum
 {
 private:
@@ -23,8 +25,8 @@ private:
 public:
 	Frustum() = default;
 	Frustum(const glm::mat4& projection_view);
-	void calculatePlanes(glm::mat4 projection_view);
-	bool isBoxVisible(const glm::vec3& min, const glm::vec3& max) const;
+	void calculatePlanes(const glm::mat4& projection_view);
+	bool isBoxVisible(const AABB& aabb) const;
 	std::array<glm::vec4, COUNT> getPlanes() const { return planes; }
 
 private:

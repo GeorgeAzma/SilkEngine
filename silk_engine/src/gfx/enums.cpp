@@ -231,19 +231,6 @@ size_t EnumInfo::rows(Type type)
 	return 0;
 }
 
-bool EnumInfo::hasStencil(VkFormat format)
-{
-	return format == VK_FORMAT_D32_SFLOAT_S8_UINT 
-		|| format == VK_FORMAT_D24_UNORM_S8_UINT
-		|| format == VK_FORMAT_D16_UNORM_S8_UINT
-		|| format == VK_FORMAT_S8_UINT;
-}
-
-bool EnumInfo::hasDepth(VkFormat format)
-{
-	return ((format == VK_FORMAT_D32_SFLOAT) || hasStencil(format));
-}
-
 size_t EnumInfo::channelCount(VkFormat format)
 {
 	switch (format)
@@ -336,23 +323,6 @@ size_t EnumInfo::formatSize(VkFormat format)
 
 	SK_ERROR("Unsupported format specified: {0}.", format);
 	return 0;
-}
-
-VkImageAspectFlags EnumInfo::getAspectFlags(VkFormat format)
-{
-	if (!EnumInfo::hasDepth(format))
-	{
-		return VK_IMAGE_ASPECT_COLOR_BIT;
-	}
-	else
-	{
-		if (EnumInfo::hasStencil(format))
-		{
-			return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-		}
-
-		return VK_IMAGE_ASPECT_DEPTH_BIT;
-	}
 }
 
 VkIndexType EnumInfo::indexType(IndexType index_type)

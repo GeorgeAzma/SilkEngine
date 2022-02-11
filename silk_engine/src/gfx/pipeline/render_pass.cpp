@@ -30,7 +30,7 @@ RenderPass& RenderPass::addAttachment(VkFormat format, VkImageLayout image_layou
     
     VkAttachmentReference attachment_reference{};
     attachment_reference.attachment = subpasses.back().attachments.size() - 1;
-    if (EnumInfo::hasDepth(attachment_description.format) || EnumInfo::hasStencil(attachment_description.format))
+    if (Image::hasDepth(attachment_description.format) || Image::hasStencil(attachment_description.format))
     {
         attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         subpasses.back().depth_stencil_attachment_reference = attachment_reference;
@@ -87,6 +87,7 @@ void RenderPass::build()
         subpass_description.pResolveAttachments = &subpasses[i].resolve_attachment_reference;     
         subpass_descriptions[i] = std::move(subpass_description);
 
+        //TODO:
         VkSubpassDependency dependency{};
         dependency.srcSubpass = i ? (i - 1) : VK_SUBPASS_EXTERNAL;
         dependency.dstSubpass = i;
@@ -113,6 +114,7 @@ void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_cont
 {
     if (Graphics::active.render_pass == render_pass)
         return;
+
     VkRenderPassBeginInfo render_pass_begin_info{};
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     render_pass_begin_info.renderPass = render_pass;
@@ -125,7 +127,7 @@ void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_cont
     for (size_t i = 0; i < clear_values.size(); ++i)
     {
         VkClearValue clear_value{};
-        if (EnumInfo::hasDepth(subpasses.back().attachments[i].format))
+        if (Image::hasDepth(subpasses.back().attachments[i].format))
         {
             clear_value.depthStencil = { 1.0f, 0 };
         }

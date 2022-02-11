@@ -14,7 +14,7 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 
 	sample_count = Graphics::physical_device->getMaxSampleCount();
 
-	render_pass = new RenderPass(); //0.11ms
+	render_pass = makeShared<RenderPass>();
 	render_pass->addSubpass()
 		.addAttachment(surface_format.format, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, sample_count)
 		.addAttachment(depth_format, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, sample_count)
@@ -48,13 +48,13 @@ void SwapChain::recreate()
 	Graphics::vulkanAssert(vkDeviceWaitIdle(*Graphics::logical_device));
 
 	VkSwapchainKHR old_swapchain = swap_chain;
-	destroy();
-	create();
+	create(old_swapchain);
+	vkDestroySwapchainKHR(*Graphics::logical_device, old_swapchain, nullptr);
 }
 
 void SwapChain::createFramebuffers()
 {
-	ImageProps props{};
+	Image2DProps props{};
 	props.width = extent.width;
 	props.height = extent.height;
 	props.format = Graphics::physical_device->findDepthFormat();
@@ -63,21 +63,16 @@ void SwapChain::createFramebuffers()
 	props.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 	props.mipmap = false;
 	props.samples = sample_count;
-	depth = makeShared<Image>(props);
+	depth = makeShared<Image2D>(props);
 
-	props.width = extent.width;
-	props.height = extent.height;
 	props.format = surface_format.format;
 	props.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	props.create_sampler = false;
 	props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
-	props.mipmap = false;
-	props.samples = sample_count;
-	msaa_image = makeShared<Image>(props);
+	msaa_image = makeShared<Image2D>(props);
 
 	for (size_t i = 0; i < images.size(); ++i)
 	{
-		framebuffers[i] = makeShared<Framebuffer>(*render_pass, std::vector<shared<Image>>{ msaa_image, depth, images[i] }, extent.width, extent.height);
+		framebuffers[i] = makeShared<Framebuffer>(*render_pass, std::vector<shared<Image2D>>{ msaa_image, depth, images[i] }, extent.width, extent.height);
 	}
 }
 
@@ -98,7 +93,12 @@ void SwapChain::present()
 	const std::vector<VkSemaphore> signal_semaphores = { render_finished_semaphores[current_frame] };
 	VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
-	command_buffers[image_index]->submit({ in_flight_fences[current_frame], { image_available_semaphores[current_frame] }, signal_semaphores, wait_stages });
+	CommandBufferSubmitInfo submit_info{};
+	submit_info.fence = in_flight_fences[current_frame];
+	submit_info.signal_semaphores = signal_semaphores;
+	submit_info.wait_semaphores = { image_available_semaphores[current_frame] };
+	submit_info.wait_stages = wait_stages;
+	command_buffers[image_index]->submit(submit_info);
 
 	VkPresentInfoKHR present_info{};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -111,27 +111,27 @@ void SwapChain::present()
 	present_info.pImageIndices = &image_index;
 	std::vector<VkResult> results(swap_chains.size());
 	present_info.pResults = results.data();
+	for (auto& result : results)
+		Graphics::vulkanAssert(result);
 
 	vkQueuePresentKHR(Graphics::logical_device->getPresentQueue(), &present_info);
 
 	current_frame = (current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void SwapChain::beginFrame()
+void SwapChain::beginFrame(size_t i)
 {
-	acquireNextImage();
-	command_buffers[image_index]->begin({});
+	command_buffers[i]->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 }
 
-void SwapChain::beginRenderPass()
+void SwapChain::beginRenderPass(size_t i)
 {
-	render_pass->begin(*framebuffers[image_index]);
+	render_pass->begin(*framebuffers[i]);
 }
 
-void SwapChain::endFrame()
+void SwapChain::endFrame(size_t i)
 {
-	command_buffers[image_index]->end();
-	present();
+	command_buffers[i]->end();
 }
 
 void SwapChain::endRenderPass()
@@ -184,12 +184,12 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 
 	for (size_t i = 0; i < images.size(); ++i)
 	{
-		ImageProps props{};
+		Image2DProps props{};
 		props.create_sampler = false;
 		props.mipmap = false;
 		props.format = surface_format.format;
 		props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
-		this->images[i] = makeShared<Image>(images[i], props);
+		this->images[i] = makeShared<Image2D>(images[i], props);
 	}
 
 	framebuffers.resize(images.size());
@@ -208,11 +208,11 @@ void SwapChain::destroy()
 
 SwapChain::~SwapChain()
 {
-	delete render_pass;
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
 		vkDestroySemaphore(*Graphics::logical_device, render_finished_semaphores[i], nullptr);
 		vkDestroySemaphore(*Graphics::logical_device, image_available_semaphores[i], nullptr);
+
 		vkDestroyFence(*Graphics::logical_device, in_flight_fences[i], nullptr);
 	}
 

@@ -2,7 +2,7 @@
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
 
-Framebuffer::Framebuffer(VkRenderPass render_pass, const std::vector<shared<Image>>& attachments, uint32_t width, uint32_t height)
+Framebuffer::Framebuffer(VkRenderPass render_pass, const std::vector<shared<Image2D>>& attachments, uint32_t width, uint32_t height)
     : width(width), height(height)
 {
     std::vector<VkImageView> attachment_views(attachments.size());

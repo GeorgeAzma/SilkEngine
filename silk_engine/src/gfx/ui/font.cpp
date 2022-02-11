@@ -1,5 +1,5 @@
 #include "font.h"
-#include "gfx/images/image.h"
+#include "gfx/images/image2D.h"
 
 void Font::init()
 {
@@ -90,12 +90,12 @@ Font::Font(const std::string& file, size_t size)
 		origin_x += face->glyph->bitmap.width + 1;
 	}
 
-	ImageProps texture_atlas_props{};
+	Image2DProps texture_atlas_props{};
 	texture_atlas_props.width = width;
 	texture_atlas_props.height = height;
 	texture_atlas_props.data = texture_atlas_data.data();
 	texture_atlas_props.format = VK_FORMAT_R8_UNORM;
-	texture_atlas = makeShared<Image>(texture_atlas_props);
+	texture_atlas = makeShared<Image2D>(texture_atlas_props);
 }
 
 Font::~Font()

@@ -1,7 +1,7 @@
 #include "window.h"
 #include "core/input/keys.h"
 #include "core/event.h"
-#include "gfx/images/image.h"
+#include "gfx/images/image2D.h"
 
 static bool GLFW_initialized = false;
 
@@ -28,7 +28,7 @@ void Window::init()
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    window = glfwCreateWindow(data.width, data.height, data.title, data.fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+    window = glfwCreateWindow(data.width, data.height, data.title.c_str(), data.fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 
     glfwDefaultWindowHints();
     glfwShowWindow(window);
@@ -234,12 +234,12 @@ void Window::setSize(const glm::uvec2 &size)
     glfwSetWindowSize(window, data.width, data.height);
 }
 
-void Window::setTitle(const const char *title)
+void Window::setTitle(const std::string& title)
 {
     if (title == data.title)
         return;
     data.title = title;
-    glfwSetWindowTitle(window, data.title);
+    glfwSetWindowTitle(window, title.c_str());
 }
 
 void Window::align(WindowAlignment a)
@@ -294,7 +294,7 @@ void Window::align(WindowAlignment a)
 void Window::setIcon(const std::string& file)
 {
     std::string path = std::string("icons/") + file;
-    ImageData bitmap_data = Image::load(path);
+    ImageData bitmap_data = Image2D::load(path);
     std::vector<GLFWimage> icons(1);
     icons[0].height = bitmap_data.height;
     icons[0].width = bitmap_data.width;

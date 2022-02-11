@@ -24,32 +24,40 @@ struct ComputeShaderEffect
 	}
 };
 
-//TODO:
+//TODO: Support multiple passes, or do that in shader_effect and remove this struct
 struct Material
 {
 	shared<ShaderEffect> shader_effect;
-	std::vector<shared<DescriptorSet>> descriptor_sets;
 
 	void bind(size_t first_set = 0)
 	{
 		shader_effect->pipeline->bind();
-		for (size_t i = 0; i < descriptor_sets.size(); ++i)
-		{
-			descriptor_sets[i]->bind(i + first_set);
-		}
+	}
+
+	bool operator==(const Material& other) const
+	{
+		return shader_effect == other.shader_effect;
 	}
 };
 
-struct ComputeMaterialData
+//TODO:
+struct ComputeMaterial
 {
-	shared<ComputeShaderEffect> material;
-	std::vector<shared<DescriptorSet>> descriptor_sets;
+	shared<ComputeShaderEffect> compute_shader_effect;
+	std::vector<DescriptorSet> descriptor_sets;
+	
+	void update()
+	{
+		for (size_t i = 0; i < descriptor_sets.size(); ++i)
+			descriptor_sets[i].update();
+	}
 
 	void bind(size_t first_set = 0)
 	{
+		compute_shader_effect->pipeline->bind();
 		for (size_t i = 0; i < descriptor_sets.size(); ++i)
 		{
-			descriptor_sets[i]->bind(i + first_set);
+			descriptor_sets[i].bind(i + first_set);
 		}
 	}
 };

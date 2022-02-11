@@ -1,16 +1,38 @@
 #include "image_view.h"
+#include "image.h"
 #include "gfx/graphics.h"
 #include "gfx/enums.h"
 #include "gfx/devices/logical_device.h"
 
-ImageView::ImageView(VkImage image, VkFormat format, uint32_t mip_levels, size_t layer_count)
+ImageView::ImageView(VkImage image, VkFormat format, uint32_t mip_levels, size_t layer_count, ImageViewType view_type)
 {
 	VkImageViewCreateInfo view_info{};
 	view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	view_info.image = image;
-	view_info.viewType = layer_count == 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+	VkImageViewType image_view_type;
+	switch (view_type)
+	{
+	case ImageViewType::IMAGE1D:
+		image_view_type = layer_count == 1 ? VK_IMAGE_VIEW_TYPE_1D : VK_IMAGE_VIEW_TYPE_1D_ARRAY;
+		break;
+	case ImageViewType::IMAGE2D:
+		image_view_type = layer_count == 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+		break;
+	case ImageViewType::IMAGE3D:
+		SK_ASSERT(layer_count == 1, "Layer count({0}) can't be more than 1 for 3D images", layer_count);
+		image_view_type = VK_IMAGE_VIEW_TYPE_3D;
+		break;
+	case ImageViewType::CUBEMAP:
+		image_view_type = layer_count == 1 ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
+		break;
+	default:
+		SK_ERROR("Invalid view type: {0}", view_type);
+		break;
+	}
+	view_info.viewType = image_view_type;
 	view_info.format = format;
-	view_info.subresourceRange.aspectMask = EnumInfo::getAspectFlags(format);
+	view_info.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
+	view_info.subresourceRange.aspectMask = Image::getAspectFlags(format);
 	view_info.subresourceRange.baseMipLevel = 0;
 	view_info.subresourceRange.levelCount = mip_levels;
 	view_info.subresourceRange.baseArrayLayer = 0;

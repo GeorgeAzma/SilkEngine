@@ -1,8 +1,77 @@
 #include "model.h"
 #include "io/file.h"
 #include "resources.h"
+#include "gfx/graphics.h"
 
 Model::Model(const std::string& file)
+{
+    *this = load(file);
+}
+
+RawModel Model::load(const std::string& file)
+{
+    RawModel raw_model(file);
+    return raw_model;
+}
+
+Model& Model::operator=(const RawModel& raw_model)
+{
+    meshes = raw_model.meshes;
+    path = raw_model.path;
+
+    Image2DProps image_props{};
+    VkDescriptorImageInfo white = Resources::getImage("White")->getDescriptorInfo();
+    shared<Material> default_model_material = Resources::getMaterial("Textured Lit 3D");
+
+    images.clear();
+    images.reserve(RawModel::MeshMaterialData::size() * raw_model.material_data.size());
+    for (size_t i = 0; i < raw_model.material_data.size(); ++i) //Material data for each mesh
+    {
+        const auto& md = raw_model.material_data[i];
+
+        image_props.width = md.diffuse_map.width;
+        image_props.height = md.diffuse_map.height;
+        image_props.format = Image::getDefaultFormatFromChannelCount(md.diffuse_map.channels);
+        image_props.data = md.diffuse_map.data.data();
+        images.emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : nullptr);
+
+        image_props.width = md.normal_map.width;
+        image_props.height = md.normal_map.height;
+        image_props.format = Image::getDefaultFormatFromChannelCount(md.normal_map.channels);
+        image_props.data = md.normal_map.data.data();
+        images.emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : nullptr);
+
+        image_props.width = md.height_map.width;
+        image_props.height = md.height_map.height;
+        image_props.format = Image::getDefaultFormatFromChannelCount(md.height_map.channels);
+        image_props.data = md.height_map.data.data();
+        images.emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : nullptr);
+
+        image_props.width = md.ao_map.width;
+        image_props.height = md.ao_map.height;
+        image_props.format = Image::getDefaultFormatFromChannelCount(md.ao_map.channels);
+        image_props.data = md.ao_map.data.data();
+        images.emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : nullptr);
+
+        image_props.width = md.specular_map.width;
+        image_props.height = md.specular_map.height;
+        image_props.format = Image::getDefaultFormatFromChannelCount(md.specular_map.channels);
+        image_props.data = md.specular_map.data.data();
+        images.emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : nullptr);
+
+        image_props.width = md.emissive_map.width;
+        image_props.height = md.emissive_map.height;
+        image_props.format = Image::getDefaultFormatFromChannelCount(md.emissive_map.channels);
+        image_props.data = md.emissive_map.data.data();
+        images.emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : nullptr);
+        
+        meshes[i]->material = default_model_material;
+    }
+
+    return *this;
+}
+
+RawModel::RawModel(const std::string& file)
 {
     std::string path = std::string("data/models/") + file;
     this->path = path;
@@ -10,17 +79,17 @@ Model::Model(const std::string& file)
 	Assimp::Importer importer;
     // | aiProcess_MakeLeftHanded
 	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_OptimizeGraph | aiProcess_OptimizeMeshes/* | aiProcess_CalcTangentSpace*/);
-	
 	SK_ASSERT(scene && (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) != AI_SCENE_FLAGS_INCOMPLETE && scene->mRootNode,
 		"Assimp: Couldn't load model at path: {0}", path);
 
 	directory = file.substr(0, file.find_last_of('/'));
 
     processNode(scene->mRootNode, scene);
+
     SK_TRACE("Model loaded: {0}", file);
 }
 
-void Model::processNode(aiNode* node, const aiScene* scene)
+void RawModel::processNode(aiNode* node, const aiScene* scene)
 {
     for (size_t i = 0; i < node->mNumMeshes; ++i)
         processMesh(scene->mMeshes[node->mMeshes[i]], scene);
@@ -29,11 +98,10 @@ void Model::processNode(aiNode* node, const aiScene* scene)
         processNode(node->mChildren[i], scene);
 }
 
-void Model::processMesh(aiMesh *mesh, const aiScene *scene)
+void RawModel::processMesh(aiMesh *mesh, const aiScene *scene)
 {
     std::vector<Vertex> vertices(mesh->mNumVertices, Vertex{});
     std::vector<uint32_t> indices;
-    std::vector<ImageData> images;
 
     for(size_t i = 0; i < mesh->mNumVertices; ++i)
     {
@@ -58,31 +126,40 @@ void Model::processMesh(aiMesh *mesh, const aiScene *scene)
             indices.emplace_back(mesh->mFaces[i].mIndices[j]);
     }
 
-    if(mesh->mMaterialIndex >= 0)
-    {
-        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-        
-        std::vector<ImageData> diffuse_maps = loadMaterialTextures(material, aiTextureType_DIFFUSE);
-        images.insert(images.end(), diffuse_maps.begin(), diffuse_maps.end());
-        
-        std::vector<ImageData> specular_maps = loadMaterialTextures(material, aiTextureType_SPECULAR);
-        images.insert(images.end(), specular_maps.begin(), specular_maps.end());
-
-        //TODO: Create mesh material
-    }
-      
     auto new_mesh = makeShared<Mesh>(vertices, indices);
     new_mesh->name = path + std::to_string(meshes.size());
 
+    if(mesh->mMaterialIndex >= 0)
+    {
+        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+        std::vector<ImageData> diffuse_maps = loadMaterialTextures(material, aiTextureType_DIFFUSE); 
+        std::vector<ImageData> normal_maps = loadMaterialTextures(material, aiTextureType_NORMALS);        
+        std::vector<ImageData> ao_maps = loadMaterialTextures(material, aiTextureType_AMBIENT);
+        std::vector<ImageData> height_maps = loadMaterialTextures(material, aiTextureType_HEIGHT);        
+        std::vector<ImageData> specular_maps = loadMaterialTextures(material, aiTextureType_SPECULAR);        
+        std::vector<ImageData> emissive_maps = loadMaterialTextures(material, aiTextureType_EMISSIVE);
+
+        MeshMaterialData mat{};
+        mat.diffuse_map = diffuse_maps.size() ? diffuse_maps[0] : ImageData{};
+        mat.normal_map = normal_maps.size() ? normal_maps[0] : ImageData{};
+        mat.ao_map = ao_maps.size() ? ao_maps[0] : ImageData{};
+        mat.height_map = height_maps.size() ? height_maps[0] : ImageData{};
+        mat.specular_map = specular_maps.size() ? specular_maps[0] : ImageData{};
+        mat.emissive_map = emissive_maps.size() ? emissive_maps[0] : ImageData{};
+        material_data.emplace_back(std::move(mat));
+    }
+      
     meshes.emplace_back(new_mesh);
 }  
 
-std::vector<ImageData> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type)
+std::vector<ImageData> RawModel::loadMaterialTextures(aiMaterial* mat, aiTextureType type)
 {
     std::vector<ImageData> images;
 
     for (size_t i = 0; i < mat->GetTextureCount(type); ++i)
     {
+        if (i > 0) break; //TODO: We don't support multiple textures for each mesh (and we might not)
         aiString str;
         mat->GetTexture(type, i, &str); 
 
@@ -93,7 +170,7 @@ std::vector<ImageData> Model::loadMaterialTextures(aiMaterial* mat, aiTextureTyp
         }
         else
         {
-            ImageData image_data = Image::load(directory + '/' + str.C_Str());
+            ImageData image_data = Image2D::load(directory + '/' + str.C_Str());
             if (image_data.channels == 3)
                 Image::align4(image_data);
             image_cache.emplace(str.C_Str(), image_data);

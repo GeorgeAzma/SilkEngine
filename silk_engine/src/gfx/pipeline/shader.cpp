@@ -26,6 +26,9 @@ void Shader::compile(const std::vector<Define>& defines)
 #ifdef SK_ENABLE_DEBUG_OUTPUT
 	options.SetGenerateDebugInfo();
 #endif
+	//Default defines
+	options.AddMacroDefinition("MAX_IMAGE_SLOTS", std::to_string(Graphics::MAX_IMAGE_SLOTS));
+	//Custom defines
 	for(auto& define : defines)
 		options.AddMacroDefinition(define.name, define.value);
 

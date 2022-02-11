@@ -14,6 +14,7 @@ public:
 	void getData(void* data, size_t size = 0) const;
 	size_t getSize() const { return size; }
 
+	operator const VkDescriptorBufferInfo& () const { return { buffer, 0, size }; }
 	operator const VkBuffer& () const { return buffer; }
 
 public:

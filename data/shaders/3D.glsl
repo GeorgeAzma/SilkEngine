@@ -26,7 +26,7 @@ layout(set = 0, binding = 0) uniform GlobalUniform
     vec3 camera_direction;
     float delta_time;
     uvec2 resolution;
-    uint frame;
+    uint frame; 
     uint flags;
 } global_uniform;
 
@@ -91,7 +91,7 @@ layout(set = 1, binding = 0) uniform Material
 
 layout(location = 0) out vec4 color;
 
-layout(set = 1, binding = 0) uniform sampler2D texture_sampler[32];
+layout(set = 1, binding = 0) uniform sampler2D images[MAX_IMAGE_SLOTS];
 
 #include "light.glsl"
 
@@ -108,7 +108,7 @@ vec3 aces(vec3 x)
 
 void main()
 {
-    vec4 albedo = texture(texture_sampler[fragment_input.texture_index], fragment_input.texture_coordinate) * fragment_input.color;
+    vec4 albedo = texture(images[fragment_input.texture_index], fragment_input.texture_coordinate) * fragment_input.color;
     color.a = albedo.a;
     if(color.a <= 0.01)
         discard;

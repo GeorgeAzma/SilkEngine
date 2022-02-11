@@ -24,4 +24,9 @@ struct AABB
 			&& point.z >= min.z 
 			&& point.z <= max.z;
 	}
+
+	static AABB translate(const AABB& aabb, const glm::vec3& vec)
+	{
+		return AABB(aabb.min + vec, aabb.max + vec);
+	}
 };

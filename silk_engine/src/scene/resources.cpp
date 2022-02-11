@@ -14,15 +14,9 @@ void Resources::init()
             std::filesystem::create_directories("data/cache/shaders");
     }
 
-    //MESHES
-    {
-        addMesh("Circle", makeShared<CircleMesh>());
-        addMesh("Rectangle", makeShared<RectangleMesh>());
-    }
-
     //IMAGES
     {
-        ImageProps white_image_props{};
+        Image2DProps white_image_props{};
         white_image_props.width = 1;
         white_image_props.height = 1;
         white_image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
@@ -32,9 +26,9 @@ void Resources::init()
         white_image_props.mipmap = false;
         constexpr glm::u8vec4 white(255);
         white_image_props.data = &white;
-        addImage("White", makeShared<Image>(white_image_props));
+        addImage("White", makeShared<Image2D>(white_image_props));
 
-        ImageProps null_image_props{};
+        Image2DProps null_image_props{};
         null_image_props.width = 2;
         null_image_props.height = 2;
         null_image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
@@ -46,10 +40,16 @@ void Resources::init()
         null_image_props.mipmap = false;       
         constexpr glm::u8vec4 null_data[4] = { { 0, 0, 0, 255 }, { 255, 0, 255, 255 }, { 255, 0, 255, 255 }, { 0, 0, 0, 255 } };
         null_image_props.data = null_data;
-        addImage("Null", makeShared<Image>(null_image_props));
+        addImage("Null", makeShared<Image2D>(null_image_props));
 
-        addImage("Test1", makeShared<Image>("test1.png"));
-        addImage("Test2", makeShared<Image>("test2.png"));
+        addImage("Test1", makeShared<Image2D>("test1.png"));
+        addImage("Test2", makeShared<Image2D>("test2.png"));
+    }
+
+    //MESHES
+    {
+        addMesh("Circle", makeShared<CircleMesh>());
+        addMesh("Rectangle", makeShared<RectangleMesh>());
     }
 
     //FONTS
@@ -64,20 +64,14 @@ void Resources::init()
             .build();
         addDescriptorSet("Global", global_descriptor_set);
 
-        auto white_image = Resources::getImage("White");
-        shared<DescriptorSet> descriptor_set = makeShared<DescriptorSet>();
-        descriptor_set->addImages(0, {
-                *white_image, *white_image, *white_image, *white_image,
-                *white_image, *white_image, *white_image, *white_image,
-                *white_image, *white_image, *white_image, *white_image,
-                *white_image, *white_image, *white_image, *white_image,
-                *white_image, *white_image, *white_image, *white_image,
-                *white_image, *white_image, *white_image, *white_image,
-                *white_image, *white_image, *white_image, *white_image,
-                *white_image, *white_image, *white_image, *white_image
-            }, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+        auto white_image = Resources::getImage("Test1");
+        shared<DescriptorSet> image_descriptor_set = makeShared<DescriptorSet>();
+        std::vector<VkDescriptorImageInfo> white_images(Graphics::MAX_IMAGE_SLOTS);
+        for (auto& image : white_images)
+            image = *white_image;
+        image_descriptor_set->addImages(0, white_images, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
             .build();
-        addDescriptorSet("Images", descriptor_set);
+        addDescriptorSet("Images", image_descriptor_set);
 
         shared<Shader> shader = makeShared<Shader>("3D");
         shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
@@ -85,13 +79,15 @@ void Resources::init()
             .enable(EnableTag::DEPTH_TEST)
             .enable(EnableTag::DEPTH_WRITE)
             .addDescriptorSetLayout(global_descriptor_set->getLayout())
-            .addDescriptorSetLayout(descriptor_set->getLayout())
+            .addDescriptorSetLayout(image_descriptor_set->getLayout())
             .setShader(shader)
             .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
             .setSampleCount(Graphics::swap_chain->getSampleCount())
             .setRenderPass(Graphics::swap_chain->getRenderPass())
             .build();
         addShaderEffect("3D", makeShared<ShaderEffect>(graphics_pipeline));
+
+        addMaterial("Textured Lit 3D", makeShared<Material>(Resources::getShaderEffect("3D")));
     }
 
     //MODELS
@@ -109,6 +105,7 @@ void Resources::cleanup()
 	models.clear();
     shader_effects.clear();
     compute_shader_effects.clear();
+    materials.clear();
     images.clear();
     descriptor_set_layouts.clear();
     descriptor_sets.clear();
@@ -132,13 +129,19 @@ shared<ShaderEffect> Resources::getShaderEffect(const std::string& name)
     return it == shader_effects.end() ? nullptr : it->second;
 }
 
+shared<Material> Resources::getMaterial(const std::string& name)
+{
+    auto it = materials.find(name);
+    return it == materials.end() ? nullptr : it->second;
+}
+
 shared<ComputeShaderEffect> Resources::getComputeShaderEffect(const std::string& name)
 {
     auto it = compute_shader_effects.find(name);
     return it == compute_shader_effects.end() ? nullptr : it->second;
 }
 
-shared<Image> Resources::getImage(const std::string& name)
+shared<Image2D> Resources::getImage(const std::string& name)
 {
     auto it = images.find(name);
     return it == images.end() ? nullptr : it->second;
@@ -187,12 +190,17 @@ void Resources::addShaderEffect(const std::string& name, shared<ShaderEffect> sh
     shader_effects[name] = shader_effect;
 }
 
+void Resources::addMaterial(const std::string& name, shared<Material> material)
+{
+    materials[name] = material;
+}
+
 void Resources::addComputeShaderEffect(const std::string& name, shared<ComputeShaderEffect> compute_shader_effect)
 {
     compute_shader_effects[name] = compute_shader_effect;
 }
 
-void Resources::addImage(const std::string& name, shared<Image> image)
+void Resources::addImage(const std::string& name, shared<Image2D> image)
 {
     images[name] = image;
 }

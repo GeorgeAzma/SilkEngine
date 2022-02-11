@@ -39,7 +39,7 @@ public:
     static void setWidth(unsigned int width);
     static void setHeight(unsigned int height);
     static void setSize(const glm::uvec2 &size);
-    static void setTitle(const char* title);
+    static void setTitle(const std::string& title);
     static void align(WindowAlignment a = WindowAlignment::CENTER);
     static void setIcon(const std::string& file);
     static void focus();
@@ -51,7 +51,7 @@ private:
     {
         int width = 1280;
         int height = 720;
-        const char *title = "Window";
+        std::string title = "Window";
         int x = 0;
         int y = 0;
         bool fullscreen = false;

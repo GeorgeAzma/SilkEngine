@@ -40,7 +40,7 @@
 
 #include "gfx/window/window.h"
 
-#include "gfx/images/image.h"
+#include "gfx/images/image2D.h"
 #include "gfx/images/image_view.h"
 #include "gfx/images/image_array.h"
 #include "gfx/images/sampler.h"

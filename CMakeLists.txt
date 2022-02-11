@@ -158,8 +158,7 @@ list(APPEND EXTRA_LIBS "assimp" "$<IF:$<CONFIG:Debug>,zlibstaticd,zlibstatic>" "
 
 #Sub dirs
 ############################__SILK ENGINE__#####################################
-file(GLOB_RECURSE SILK_ENGINE_SOURCES 
-"silk_engine/src/*.cpp")
+file(GLOB_RECURSE SILK_ENGINE_SOURCES "silk_engine/src/*.cpp")
 
 #Create SilkEngine.lib
 add_library(SilkEngine STATIC ${SILK_ENGINE_SOURCES})
@@ -202,6 +201,7 @@ silk_engine/src/core/base.h
 <map>
 <set>
 <vector>
+<execution>
 <chrono>
 <sstream>
 <fstream>
@@ -219,7 +219,6 @@ silk_engine/src/core/base.h
 <bit>
 <math.h>
 <filesystem>
-<future>
 <stdexcept>
 <cstdlib>
 <numeric>
@@ -234,7 +233,7 @@ silk_engine/src/core/base.h
 <GLFW/glfw3.h>
 <entt/entt.hpp>
 <semaphore>
-<thread>
+<future>
 <concepts>
 silk_engine/src/core/log.h
 silk_engine/src/io/file.h

@@ -93,9 +93,6 @@ public:
 	static size_t size(IndexType index_type);
 	static size_t count(Type type);
 	static size_t rows(Type type);
-	static bool hasStencil(VkFormat format);
-	static bool hasDepth(VkFormat format);
 	static size_t channelCount(VkFormat format);
 	static size_t formatSize(VkFormat format);
-	static VkImageAspectFlags getAspectFlags(VkFormat format);
 };

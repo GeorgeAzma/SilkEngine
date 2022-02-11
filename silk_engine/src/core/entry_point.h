@@ -10,7 +10,7 @@ int main(int argc, char **argv)
 {
     try
     {
-        auto app = createApp({argc, argv});
+        auto app = createApp({ argc, argv });
         app->run();
         Graphics::vulkanAssert(vkDeviceWaitIdle(*Graphics::logical_device));
         delete app;

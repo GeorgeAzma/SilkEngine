@@ -17,7 +17,7 @@ public:
 	void begin(VkCommandBufferUsageFlagBits usage = {});
 	void end();
 
-	void submit(const CommandBufferSubmitInfo& command_buffer_submit_info = {});
+	void submit(const CommandBufferSubmitInfo& info = {});
 	void submitIdle();
 
 	operator const VkCommandBuffer& () const { return command_buffer; }
@@ -29,4 +29,5 @@ private:
 	VkCommandBuffer command_buffer;
 	VkCommandBufferLevel level;
 	VkQueueFlagBits queue_type;
+	bool recorded = false;
 };

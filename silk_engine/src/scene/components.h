@@ -14,12 +14,23 @@ struct TransformComponent
 	operator glm::mat4& () { return transform; }
 };
 
-struct SpriteComponent
+struct ImageComponent
 {
-	uint32_t texture_index = 0;
+	ImageComponent(shared<Image2D> image) : images({ image }) {}
+	ImageComponent(const std::vector<shared<Image2D>>& images) : images(images) {}
 
-	operator uint32_t& () { return texture_index; }
+	std::vector<shared<Image2D>> images;
+
+	operator const std::vector<shared<Image2D>>& () const { return images; }
 };
+
+struct BufferComponent
+{
+	std::vector<shared<Buffer>> buffers;
+
+	operator const std::vector<shared<Buffer>>& () const { return buffers; }
+};
+
 
 struct CameraComponent
 {
@@ -96,7 +107,7 @@ struct TextComponent
 struct LightComponent
 {
 	Light light = {};
-	Light* light_ptr = nullptr;
+	Light* light_ptr = nullptr; //Never touch this, it's used for scene's internal code
 
 	operator Light& () { return light; };
 };

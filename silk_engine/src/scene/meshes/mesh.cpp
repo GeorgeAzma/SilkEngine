@@ -12,12 +12,13 @@ void Mesh::createVertexArray()
 {
 	auto vbo = makeShared<VertexBuffer>(this->vertices.data(), this->vertices.size() * sizeof(Vertex));
 	auto ibo = makeShared<IndexBuffer>(this->indices.data(), this->indices.size());
-	vertex_array = shared<VertexArray>(new VertexArray());
+	vertex_array = makeShared<VertexArray>();
 	vertex_array->setIndexBuffer(ibo).addVertexBuffer(vbo);
 }
 
 void Mesh::calculateAABB()
 {
+	has_aabb = true;
 	aabb.max = glm::vec3(-std::numeric_limits<float>::max());
 	aabb.min = glm::vec3(std::numeric_limits<float>::max()); 
 

@@ -100,9 +100,11 @@ bool Instance::checkExtensionSupport(const std::vector<const char *> &required_e
 
 std::vector<const char *> Instance::getRequiredValidationLayers() const
 {
-    return std::vector<const char *>
+    return
     {
+#ifdef SK_ENABLE_DEBUG_OUTPUT
         "VK_LAYER_KHRONOS_validation"
+#endif
     };
 }
 
@@ -119,6 +121,7 @@ std::vector<VkLayerProperties> Instance::getAvailableValidationLayers() const
 
 bool Instance::checkValidationLayerSupport(const std::vector<const char *> &required_layers) const
 {
+#ifdef SK_ENABLE_DEBUG_OUTPUT
     std::vector<VkLayerProperties> available_layers = getAvailableValidationLayers();
     for (const char *required_layer : required_layers)
     {
@@ -134,6 +137,7 @@ bool Instance::checkValidationLayerSupport(const std::vector<const char *> &requ
         if (!layer_found)
             return false;
     }
+#endif
     return true;
 }
 

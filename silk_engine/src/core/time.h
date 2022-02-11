@@ -17,7 +17,7 @@ public:
     //Slower function which determines runtime without relying on the application, otherwise prefer getTime()
     static double getSystemTime()
     {
-        return unsigned long long(std::chrono::high_resolution_clock::now().time_since_epoch().count() - start) * 0.000000001;
+        return (std::chrono::high_resolution_clock::now().time_since_epoch().count() - start) * 0.000000001;
     }
 
 private:

@@ -15,10 +15,12 @@ public:
 	void createVertexArray();
 	void calculateAABB();
 
+	bool hasAABB() const { return has_aabb; }
+
 	bool operator==(const Mesh& other) const 
 	{ 
 		SK_ASSERT(name != "" && other.name != "", "Mesh compare operator failed, mesh had invalid name"); 
-		return name == other.name; 
+		return name == other.name && *material == *other.material;
 	}
 
 public:
@@ -33,8 +35,9 @@ protected:
 private:
 	std::string name = "";
 	AABB aabb = {};
+	bool has_aabb = false;
 
 	friend class Resources;
-	friend class Model;
+	friend class RawModel;
 	friend class Scene;
 };

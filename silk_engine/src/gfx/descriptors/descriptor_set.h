@@ -3,9 +3,8 @@
 #include "descriptor_set_layout.h"
 #include "gfx/images/image.h"
 #include "gfx/images/image_array.h"
-#include "gfx/descriptors/write_descriptor_set.h"
 
-class DescriptorSet : NonCopyable
+class DescriptorSet : NonCopyable, NonMovable
 {
 public:
 	DescriptorSet& addBuffers(uint32_t binding, const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
@@ -13,17 +12,21 @@ public:
 	void build();
 
 	void update();
-	void update(const std::vector<shared<WriteDescriptorSet>>& write_descriptor_sets);
 
 	void bind(size_t first_set = 0);
 
 	operator const VkDescriptorSet& () const { return descriptor_set; }
 	const VkDescriptorSetLayout& getLayout() const { return *layout; }
-	std::vector<shared<WriteDescriptorSet>>& getWrites() { return write_descriptor_sets; }
+	std::vector<VkWriteDescriptorSet>& getWrites() { return write_descriptor_sets; }
+
+	void setImageInfo(size_t write_index, const std::vector<VkDescriptorImageInfo>& image_info);
+	void setBufferInfo(size_t write_index, const std::vector<VkDescriptorBufferInfo>& buffer_info);
 
 private:
 	VkDescriptorSet descriptor_set;
 	shared<DescriptorSetLayout> layout;
-	std::vector<shared<WriteDescriptorSet>> write_descriptor_sets;
+	std::vector<VkWriteDescriptorSet> write_descriptor_sets; 
+	std::vector<std::vector<VkDescriptorImageInfo>> image_infos;
+	std::vector<std::vector<VkDescriptorBufferInfo>> buffer_infos;
 	std::vector<VkDescriptorSetLayoutBinding> descriptor_layout_bindings;
 };

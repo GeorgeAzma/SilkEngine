@@ -1,67 +1,17 @@
 #include "image.h"
-#include "image_barrier.h"
 #include "gfx/graphics.h"
 #include "gfx/buffers/buffer.h"
 #include "gfx/enums.h"
 #include "gfx/buffers/command_buffer.h"
 #include "gfx/devices/physical_device.h"
-
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
-Image::Image(const std::string& file, const ImageProps& props)
-	: path(std::string("data/images/") + file), props(props)
-{
-	ImageData load_data = load(file);
-	this->props.width = load_data.width;
-	this->props.height = load_data.height;
-	if (load_data.channels == 3)
-		align4(load_data);
-	this->props.format = getDefaultFormatFromChannelCount(load_data.channels);
-	staging_buffer = makeShared<StagingBuffer>(load_data.data.data(), load_data.data.size() * sizeof(uint8_t));
-	create(this->props);
-}
-
-Image::Image(const ImageProps& props)
-	: props(props)
-{
-	if (props.data)
-		staging_buffer = makeShared<StagingBuffer>(props.data, props.width * props.height * EnumInfo::formatSize(props.format));
-	create(props);
-}
-
-Image::Image(VkImage image, const ImageProps& props)
-	: image(image), props(props)
-{
-	if (props.data)
-		staging_buffer = makeShared<StagingBuffer>(props.data, props.width * props.height * EnumInfo::formatSize(props.format));
-	create(props);
-}
+#include "gfx/window/swap_chain.h"
 
 Image::~Image()
 {
-	staging_buffer = nullptr;
 	view = nullptr;
 	sampler = nullptr;
 	if(allocation != VK_NULL_HANDLE)
 		vmaDestroyImage(*Graphics::allocator, image, allocation);
-}
-
-ImageData Image::load(const std::string& file)
-{
-	std::string path = std::string("data/images/") + file;
-
-	ImageData image_data{};
-	stbi_uc* pixels = stbi_load(path.c_str(), &image_data.width, &image_data.height, &image_data.channels, 0);
-	SK_ASSERT(pixels, "Failed to load image: {0}", path);
-
-	image_data.data.resize(image_data.width * image_data.height * image_data.channels);
-	std::memcpy(image_data.data.data(), pixels, image_data.data.size() * sizeof(uint8_t));
-
-	stbi_image_free(pixels);
-
-	SK_TRACE("Image Loaded: {0}", path);
-	return image_data;
 }
 
 void Image::align4(ImageData& image)
@@ -81,30 +31,38 @@ void Image::align4(ImageData& image)
 
 void Image::create(const ImageProps& props)
 {
+	SK_ASSERT((props.is_1D ? (props.height == 1 && props.depth == 1) : true), "If image is 1D it's height and depth must be 1");
+	SK_ASSERT(((!props.is_1D && ! props.is_cubemap) ? (props.depth == 1) : true), "If image is 2D it's depth must be 1");
+	unique<StagingBuffer> staging_buffer = props.data ? makeUnique<StagingBuffer>(props.data, props.width * props.height * EnumInfo::formatSize(props.format) * props.array_layers) : nullptr;
+
 	if (image == VK_NULL_HANDLE)
 	{
 		VkImageCreateInfo create_info{};
 		create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		create_info.imageType = VK_IMAGE_TYPE_2D;
-		create_info.extent.width = props.width;
-		create_info.extent.height = props.height;
-		create_info.extent.depth = 1;
-		create_info.arrayLayers = 1;
+		create_info.imageType = props.is_1D ? VK_IMAGE_TYPE_1D : (props.depth == 1 ? VK_IMAGE_TYPE_2D : VK_IMAGE_TYPE_3D);
 		create_info.format = props.format;
 		create_info.tiling = props.tiling;
-		create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		create_info.usage = props.usage;
+		create_info.flags = props.is_cubemap ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
+		create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		SK_ASSERT(props.width <= Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxExtent.width, "Vulkan: Image is too wide");
+		SK_ASSERT(props.height <= Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxExtent.height, "Vulkan: Image is too tall");
+		SK_ASSERT(props.depth <= Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxExtent.depth, "Vulkan: Image is too deep");
+		SK_ASSERT(props.array_layers <= Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxArrayLayers, "Vulkan: Image has too much layers");
+		create_info.extent = { props.width, props.height, props.depth };
+		create_info.arrayLayers = props.array_layers;
 		if (props.mipmap)
 		{
 			mip_levels = std::floor(std::log2(std::max(props.width, props.height))) + 1;
-			mip_levels = std::max(std::min(mip_levels, Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxMipLevels), 1u);
+			SK_ASSERT(mip_levels <= Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxMipLevels, "Vulkan: Image has too much mip levels");
 		}
 		create_info.mipLevels = mip_levels;
 		create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		SK_ASSERT((uint32_t)create_info.samples <= (uint32_t)Graphics::physical_device->getMaxSampleCount(), "Vulkan: Image has too much samples");
 		create_info.samples = props.samples;
 
 		VmaAllocationCreateInfo allocation_info = {};
-		allocation_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+		allocation_info.usage = props.memory_usage;
 
 		Graphics::vulkanAssert(vmaCreateImage(*Graphics::allocator, &create_info, &allocation_info, &image, &allocation, nullptr));
 	}
@@ -112,7 +70,7 @@ void Image::create(const ImageProps& props)
 	if (staging_buffer.get() != nullptr)
 	{
 		transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-		copyBufferToImage();
+		copyBufferToImage(*staging_buffer);
 		if (props.mipmap)
 		{
 			generateMipmaps();
@@ -123,7 +81,7 @@ void Image::create(const ImageProps& props)
 	
 	if (props.create_view)
 	{
-		view = makeUnique<ImageView>(image, props.format, mip_levels);
+		view = makeUnique<ImageView>(this->image, props.format, mip_levels, props.array_layers, (props.is_cubemap ? ImageViewType::CUBEMAP : (props.is_1D ? ImageViewType::IMAGE1D : (props.depth == 1 ? ImageViewType::IMAGE2D : ImageViewType::IMAGE3D))));
 		descriptor_image_info.imageView = *view;
 	}
 	if (props.create_sampler)
@@ -136,7 +94,7 @@ void Image::create(const ImageProps& props)
 	}
 }
 
-void Image::transitionLayout(VkImageLayout new_layout)
+void Image::transitionLayout(VkImageLayout new_layout) 
 {
 	if (descriptor_image_info.imageLayout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
 		return;
@@ -144,40 +102,128 @@ void Image::transitionLayout(VkImageLayout new_layout)
 	CommandBuffer command_buffer;
 	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
-	ImageBarrierProps barrier_props{};
-	barrier_props.image = image;
-	barrier_props.old_layout = descriptor_image_info.imageLayout;
-	barrier_props.new_layout = new_layout;
-	barrier_props.aspect = EnumInfo::getAspectFlags(props.format);
-	barrier_props.mip_levels = mip_levels;
-	ImageBarrier barrier(barrier_props);
+	VkImageMemoryBarrier barrier = {};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.oldLayout = descriptor_image_info.imageLayout;
+	barrier.newLayout = new_layout;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = image;
+	barrier.subresourceRange.aspectMask = getAspectFlags(props.format);
+	barrier.subresourceRange.baseMipLevel = 0;
+	barrier.subresourceRange.levelCount = mip_levels;
+	barrier.subresourceRange.baseArrayLayer = 0;
+	barrier.subresourceRange.layerCount = props.array_layers;
 
-	command_buffer.end();
+	// Source access mask controls actions that have to be finished on the old layout before it will be transitioned to the new layout.
+	switch (barrier.oldLayout)
+	{
+	case VK_IMAGE_LAYOUT_UNDEFINED:
+		barrier.srcAccessMask = 0;
+		break;
+	case VK_IMAGE_LAYOUT_PREINITIALIZED:
+		barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+		barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+		barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+		barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		break;
+	default:
+		SK_ERROR("Unsupported image layout transition source: {0}", barrier.oldLayout);
+		break;
+	}
+
+	// Destination access mask controls the dependency for the new image layout.
+	switch (new_layout)
+	{
+	case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+		barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+		barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+		if (barrier.srcAccessMask == 0)
+			barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		break;
+	default:
+		SK_ERROR("Unsupported image layout transition destination: {0}", barrier.oldLayout);
+		break;
+	}
+
+	vkCmdPipelineBarrier(Graphics::active.command_buffer, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
 	command_buffer.submitIdle();
 
 	descriptor_image_info.imageLayout = new_layout;
 }
 
-void Image::copyBufferToImage()
+void Image::copyBufferToImage(VkBuffer buffer)
 {
 	CommandBuffer command_buffer;
 	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
-	VkBufferImageCopy region{};
-	region.bufferOffset = 0;
-	region.bufferRowLength = 0;
-	region.bufferImageHeight = 0;
-	region.imageSubresource.aspectMask = EnumInfo::getAspectFlags(props.format);
-	region.imageSubresource.mipLevel = 0;
-	region.imageSubresource.baseArrayLayer = 0;
-	region.imageSubresource.layerCount = 1;
-	region.imageOffset = { 0, 0, 0 };
-	region.imageExtent = { props.width, props.height, 1 };
+	size_t offset = 0;
+	std::vector<VkBufferImageCopy> copy_regions(props.array_layers);
+	for (size_t layer = 0; layer < props.array_layers; ++layer)
+	{
+		VkBufferImageCopy copy_region{};
+		copy_region.bufferOffset = 0;
+		copy_region.bufferRowLength = 0;
+		copy_region.bufferImageHeight = 0;
+		copy_region.imageSubresource.aspectMask = getAspectFlags(props.format);
+		copy_region.imageSubresource.mipLevel = 0;
+		copy_region.imageSubresource.baseArrayLayer = layer;
+		copy_region.imageSubresource.layerCount = 1;
+		copy_region.imageOffset = { 0, 0, 0 };
+		copy_region.imageExtent = { props.width, props.height, props.depth };
 
-	vkCmdCopyBufferToImage(command_buffer, *staging_buffer, image, descriptor_image_info.imageLayout, 1, &region);
+		offset += props.width * props.height * props.depth * EnumInfo::formatSize(props.format);
 
-	command_buffer.end();
+		copy_regions[layer] = std::move(copy_region);
+	}
+
+	vkCmdCopyBufferToImage(command_buffer, buffer, image, descriptor_image_info.imageLayout, copy_regions.size(), copy_regions.data());
+
 	command_buffer.submitIdle();
+}
+
+void Image::insertMemoryBarrier(const VkImage& image, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkImageAspectFlags aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t array_layers, uint32_t base_array_layer)
+{
+	VkImageMemoryBarrier barrier = {};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.srcAccessMask = source_access_mask;
+	barrier.dstAccessMask = destination_access_mask;
+	barrier.oldLayout = old_layout;
+	barrier.newLayout = new_layout;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = image;
+	barrier.subresourceRange.aspectMask = aspect;
+	barrier.subresourceRange.baseMipLevel = base_mip_level;
+	barrier.subresourceRange.levelCount = mip_levels;
+	barrier.subresourceRange.baseArrayLayer = base_array_layer;
+	barrier.subresourceRange.layerCount = array_layers;
+	vkCmdPipelineBarrier(Graphics::active.command_buffer, source_stage_mask, destination_access_mask, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
 void Image::generateMipmaps()
@@ -190,58 +236,66 @@ void Image::generateMipmaps()
 
 	SK_ASSERT(format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT,
 		"Image format does not support linear blitting");
+	SK_ASSERT(format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT,
+		"Image format does not support src blitting");
+	SK_ASSERT(format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT,
+		"Image format does not support dst blitting");
 
 	CommandBuffer command_buffer;
 	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+	
+	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.image = image;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.subresourceRange.aspectMask = getAspectFlags(props.format);
+	barrier.subresourceRange.baseArrayLayer = 0;
+	barrier.subresourceRange.layerCount = props.array_layers;
+	barrier.subresourceRange.levelCount = 1;
 
 	int32_t mip_width = props.width;
 	int32_t mip_height = props.height;
 
-	ImageBarrierProps barrier_props{};
-	barrier_props.image = image;
-	barrier_props.old_layout = descriptor_image_info.imageLayout;
-	barrier_props.new_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-	barrier_props.aspect = EnumInfo::getAspectFlags(props.format);
-	barrier_props.mip_levels = mip_levels;
-	ImageBarrier transfer_barrier(barrier_props);
-
-	barrier_props.mip_levels = 1;
-
 	for (uint32_t i = 1; i < mip_levels; ++i)
 	{
-		barrier_props.old_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		barrier_props.new_layout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-		barrier_props.base_mip_level = i - 1;
-		ImageBarrier barrier(barrier_props);
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		barrier.subresourceRange.baseMipLevel = i - 1;
+		vkCmdPipelineBarrier(Graphics::active.command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
 		VkImageBlit blit{};
 		blit.srcOffsets[0] = { 0, 0, 0 };
 		blit.srcOffsets[1] = { mip_width, mip_height, 1 };
-		blit.srcSubresource.aspectMask = barrier_props.aspect;
+		blit.srcSubresource.aspectMask = barrier.subresourceRange.aspectMask;
 		blit.srcSubresource.mipLevel = i - 1;
 		blit.srcSubresource.baseArrayLayer = 0;
-		blit.srcSubresource.layerCount = 1;
+		blit.srcSubresource.layerCount = props.array_layers;
 		blit.dstOffsets[0] = { 0, 0, 0 };
 		blit.dstOffsets[1] = 
 		{ 
 			mip_width > 1 ? mip_width / 2 : 1, 
 			mip_height > 1 ? mip_height / 2 : 1, 1 
 		};
-		blit.dstSubresource.aspectMask = barrier_props.aspect;
+		blit.dstSubresource.aspectMask = barrier.subresourceRange.aspectMask;
 		blit.dstSubresource.mipLevel = i;
 		blit.dstSubresource.baseArrayLayer = 0;
-		blit.dstSubresource.layerCount = 1;
+		blit.dstSubresource.layerCount = props.array_layers;
 
-		vkCmdBlitImage(command_buffer,
+		vkCmdBlitImage(Graphics::active.command_buffer,
 			image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
 			image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			1, &blit,
 			props.mipmap_filter);
 
-		barrier_props.old_layout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-		barrier_props.new_layout = props.layout;
-		descriptor_image_info.imageLayout = barrier_props.new_layout;
-		ImageBarrier reset_barrier(barrier_props);
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		barrier.newLayout = props.layout;
+		descriptor_image_info.imageLayout = barrier.newLayout;
+		vkCmdPipelineBarrier(Graphics::active.command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
 		if (mip_width > 1) 
 			mip_width /= 2;
@@ -250,19 +304,101 @@ void Image::generateMipmaps()
 			mip_height /= 2;
 	}
 
-	barrier_props.base_mip_level = mip_levels - 1;
-	barrier_props.old_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-	barrier_props.new_layout = props.layout;
-	ImageBarrier barrier(barrier_props);
+	barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+	barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+	barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	barrier.newLayout = props.layout;
+	barrier.subresourceRange.baseMipLevel = mip_levels - 1;
+	vkCmdPipelineBarrier(Graphics::active.command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-	command_buffer.end();
 	command_buffer.submitIdle();
+}
+
+bool Image::copyImage(shared<Image> destination, uint32_t array_layer)
+{
+	auto supports_blit = true;
+	VkFormatProperties format_properties;
+	vkGetPhysicalDeviceFormatProperties(*Graphics::physical_device, Graphics::swap_chain->getSurfaceFormat().format, &format_properties);
+
+	if (!(format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT)) 
+	{
+		SK_WARN("Device does not support blitting from optimal tiled images, using copy instead of blit!");
+		supports_blit = false;
+	}
+
+	// Check if the device supports blitting to linear images.
+	vkGetPhysicalDeviceFormatProperties(*Graphics::physical_device, props.format, &format_properties);
+
+	if (!(format_properties.linearTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT)) 
+	{
+		SK_WARN("Device does not support blitting to linear tiled images, using copy instead of blit!\n");
+		supports_blit = false;
+	}
+
+	// Do the actual blit from the swapchain image to our host visible destination image.
+	CommandBuffer command_buffer;
+
+	// Transition destination image to transfer destination layout.
+	insertMemoryBarrier(*destination, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_IMAGE_ASPECT_COLOR_BIT, 1, 0, 1, 0);
+
+	// Transition image from previous usage to transfer source layout
+	insertMemoryBarrier(image, VK_ACCESS_MEMORY_READ_BIT, VK_ACCESS_TRANSFER_READ_BIT, descriptor_image_info.imageLayout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+		VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_IMAGE_ASPECT_COLOR_BIT, 1, 0, 1, array_layer);
+
+	// If source and destination support blit we'll blit as this also does automatic format conversion (e.g. from BGR to RGB).
+	if (supports_blit) 
+	{
+		// Define the region to blit (we will blit the whole swapchain image).
+		VkOffset3D blitSize = { int32_t(props.width), int32_t(props.height), int32_t(props.depth) };
+
+		VkImageBlit imageBlitRegion = {};
+		imageBlitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		imageBlitRegion.srcSubresource.mipLevel = 0;
+		imageBlitRegion.srcSubresource.baseArrayLayer = array_layer;
+		imageBlitRegion.srcSubresource.layerCount = 1;
+		imageBlitRegion.srcOffsets[1] = blitSize;
+		imageBlitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		imageBlitRegion.dstSubresource.mipLevel = 0;
+		imageBlitRegion.dstSubresource.baseArrayLayer = 0;
+		imageBlitRegion.dstSubresource.layerCount = 1;
+		imageBlitRegion.dstOffsets[1] = blitSize;
+		vkCmdBlitImage(Graphics::active.command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, *destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imageBlitRegion, VK_FILTER_NEAREST);
+	}
+	else 
+	{
+		// Otherwise use image copy (requires us to manually flip components).
+		VkImageCopy imageCopyRegion = {};
+		imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		imageCopyRegion.srcSubresource.mipLevel = 0;
+		imageCopyRegion.srcSubresource.baseArrayLayer = array_layer;
+		imageCopyRegion.srcSubresource.layerCount = 1;
+		imageCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		imageCopyRegion.dstSubresource.mipLevel = 0;
+		imageCopyRegion.dstSubresource.baseArrayLayer = 0;
+		imageCopyRegion.dstSubresource.layerCount = 1;
+		imageCopyRegion.extent = { props.width, props.height, props.depth };
+		vkCmdCopyImage(Graphics::active.command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, *destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imageCopyRegion);
+	}
+
+	// Transition destination image to general layout, which is the required layout for mapping the image memory later on.
+	insertMemoryBarrier(*destination, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL,
+		VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_IMAGE_ASPECT_COLOR_BIT, 1, 0, 1, 0);
+
+	// Transition back the image after the blit is done.
+	insertMemoryBarrier(image, VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_MEMORY_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, descriptor_image_info.imageLayout,
+		VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_IMAGE_ASPECT_COLOR_BIT, 1, 0, 1, array_layer);
+
+	command_buffer.submitIdle();
+
+	return supports_blit;
 }
 
 VkFormat Image::getDefaultFormatFromChannelCount(int channels)
 {
 	switch (channels)
 	{
+	case 0: return VkFormat(0);
 	case 1: return VK_FORMAT_R8_SRGB;
 	case 2: return VK_FORMAT_R8G8_SRGB;
 	case 3: return VK_FORMAT_R8G8B8_SRGB;
@@ -271,4 +407,37 @@ VkFormat Image::getDefaultFormatFromChannelCount(int channels)
 
 	SK_ERROR("Unsupported channel count specified: {0}", channels);
 	return VkFormat(0);
+}
+
+bool Image::hasStencil(VkFormat format)
+{
+	return format == VK_FORMAT_D32_SFLOAT_S8_UINT
+		|| format == VK_FORMAT_D24_UNORM_S8_UINT
+		|| format == VK_FORMAT_D16_UNORM_S8_UINT
+		|| format == VK_FORMAT_S8_UINT;
+}
+
+bool Image::hasDepth(VkFormat format)
+{
+	return format == VK_FORMAT_D32_SFLOAT 
+		|| format == VK_FORMAT_D32_SFLOAT_S8_UINT
+		|| format == VK_FORMAT_D24_UNORM_S8_UINT
+		|| format == VK_FORMAT_D16_UNORM_S8_UINT;
+}
+
+VkImageAspectFlags Image::getAspectFlags(VkFormat format)
+{
+	if (!hasDepth(format))
+	{
+		return VK_IMAGE_ASPECT_COLOR_BIT;
+	}
+	else
+	{
+		if (hasStencil(format))
+		{
+			return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+		}
+
+		return VK_IMAGE_ASPECT_DEPTH_BIT;
+	}
 }

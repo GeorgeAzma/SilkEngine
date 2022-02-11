@@ -16,13 +16,14 @@ struct CullData
 struct InstanceData
 {
 	glm::mat4 transform = glm::mat4(1);
-	uint32_t texture_index = 0;
+	uint32_t image_index = 0;
 	glm::vec4 color = glm::vec4(1);
 
 	bool operator==(const InstanceData& other) const
 	{
 		return transform == other.transform
-			&& texture_index == other.texture_index;
+			&& image_index == other.image_index
+			&& color == color;
 	}
 };
 
@@ -48,6 +49,20 @@ struct InstanceBatch
 	std::vector<InstanceData> instance_data;
 	std::vector<shared<RenderedInstance>> instances;
 	shared<VertexBuffer> instance_buffer = nullptr;
+	std::vector<shared<Image>> images;
+	std::vector<shared<Buffer>> buffers;
+	std::vector<shared<DescriptorSet>> descriptor_sets;
+
+	void bind()
+	{
+		instance->mesh->material->bind();
+		for (size_t i = 0; i < descriptor_sets.size(); ++i)
+			descriptor_sets[i]->bind(i);
+		instance->mesh->vertex_array->bind();
+		instance_buffer->bind(1);
+	}
+
+	uint32_t addImages(const std::vector<shared<Image>>& new_images);
 
 	bool needs_update = true;
 

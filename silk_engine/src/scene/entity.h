@@ -2,10 +2,9 @@
 
 #include "scene.h"
 
-class Entity
+class Entity : NonCopyable
 {
 public:
-	Entity() = default;
 	Entity(entt::entity handle, Scene* scene);
 
 	~Entity();

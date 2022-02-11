@@ -2,7 +2,14 @@
 
 SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 {
-    scene = makeShared<Scene>();
+    scene = makeShared<Scene>(); 
+    
+    using namespace std::chrono_literals;
+    Timers::every(0.5s, 
+        [this] 
+        { 
+            Window::setTitle(fmt::format("Vulkan - {0} FPS ({1:.4} ms)", int(1.0 / Time::dt), (Time::dt * 1000)));
+        });
 
     Window::setSize({ 800, 600 });
     camera = scene->createEntity();
@@ -16,14 +23,9 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     {
         entities[i] = scene->createEntity();
         entities[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(i % (size_t)sqrt(entities.size()), i / (size_t)sqrt(entities.size()), RNG::Float() * sqrt(entities.size()) + 1.0f)));
-        entities[i]->addComponent<SpriteComponent>((uint32_t)RNG::Bool());
+        entities[i]->addComponent<ImageComponent>(Resources::getImage(RNG::Bool() ? "Test2" : "Test1"));
         entities[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        //if(RNG::Uint() % 5)
-        //    entities[i]->addComponent<ModelComponent>(Resources::getModel("Backpack"));
-        //else if (RNG::Bool())
-        //    entities[i]->addComponent<MeshComponent>(circle);
-        //else
-            entities[i]->addComponent<MeshComponent>(circle);
+        entities[i]->addComponent<MeshComponent>(circle);
         //entities[i]->addComponent<ModelComponent>(Resources::getModel("Backpack"));
     }
 
@@ -50,18 +52,14 @@ void SandboxApp::onUpdate()
         entities.emplace_back(scene->createEntity());
         entities.back()->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float()) * 20.0f));
         entities.back()->addComponent<ModelComponent>(Resources::getModel("Backpack"));
-        //entities.back()->addComponent<MeshComponent>(makeShared<RenderedInstance>(Resources::getMesh("Circle")));
     }
-
+    
     //Resources::pool.forEach(entities.size(), 
     //    [&](size_t i) 
     //    {
     //        entities[i]->updateComponent<TransformComponent>([](TransformComponent& transform) {});
     //    });
     //Resources::pool.wait();
-
-    //for(auto& entity : entities)
-    //    entity->updateComponent<TransformComponent>([](TransformComponent& transform) {});
 
     scene->onUpdate();
 }

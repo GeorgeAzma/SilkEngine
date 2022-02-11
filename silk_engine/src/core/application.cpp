@@ -49,8 +49,7 @@ void Application::pushOverlay(Layer *layer)
 void Application::run()
 {
     using namespace std::chrono_literals;
-    Timers::every(0.5s, [this] { SK_TRACE("{0} FPS ({1:.4} ms)", app_update.getFPS(), (app_update.getDeltaTime() * 1000)); });
-
+   
     while (running)
     {
         update();
@@ -67,9 +66,7 @@ void Application::update()
             Time::frame = app_update.getFramesPassed();
             Time::runtime = app_update.getRuntime();
 
-            Graphics::swap_chain->beginFrame();
             onUpdate();
-            Graphics::swap_chain->endFrame();
 
             for (Layer* layer : layer_stack)
                 layer->onUpdate();

@@ -20,7 +20,7 @@ class Graphics
 public:
 	static constexpr size_t MAX_INSTANCE_BATCHES = 65536;
 	static constexpr size_t MAX_INSTANCES = 16384;
-	static constexpr size_t MAX_TEXTURE_SLOTS = 32;
+	static constexpr size_t MAX_IMAGE_SLOTS = 256; //Can be more
 	static constexpr size_t MAX_LIGHTS = 64;
 	static constexpr APIVersion API_VERSION = APIVersion::VULKAN_1_2;
 
@@ -39,7 +39,7 @@ public:
 	};
 	static inline struct Statistics
 	{
-		size_t instances = 0;
+		size_t instance_batches = 0;
 	} stats{};
 	static inline struct Active
 	{
@@ -54,7 +54,6 @@ public:
 	static void init();
 	static void cleanup();
 
-public:
 	static void vulkanAssert(VkResult result);
 
 public:
