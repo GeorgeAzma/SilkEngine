@@ -6,6 +6,7 @@ include(ExternalProject)
 
 #Some good to have code
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_DEBUG_POSTFIX d)
 
 if(MSVC)
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
@@ -28,9 +29,9 @@ list(APPEND EXTRA_LIBS ${Vulkan_LIBRARIES})
 string(FIND ${Vulkan_LIBRARIES} "/Lib" Vulkan_PATH_POS)
 string(SUBSTRING ${Vulkan_LIBRARIES} 0 ${Vulkan_PATH_POS} VULKAN_PATH)
 list(APPEND EXTRA_LIBS 
-    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}shaderc_combined${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-core${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-glsl${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}shaderc_combined$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-core$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-glsl$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
 )
 
 #spdlog
@@ -147,14 +148,14 @@ CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_SOURCE_DIR}/vendor/assimp/lib
                 -DASSIMP_BUILD_ZLIB:BOOL=ON
                 -DASSIMP_LIBRARY_SUFFIX:STRING=
                 -DLIBRARY_SUFFIX:STRING=
-                -DCMAKE_DEBUG_POSTFIX:STRING=
+                -DCMAKE_DEBUG_POSTFIX:STRING=${CMAKE_DEBUG_POSTFIX}
                 -DASSIMP_INJECT_DEBUG_POSTFIX:BOOL=OFF
                 -DBUILD_SHARED_LIBS:BOOL=OFF
                 -DCMAKE_POLICY_DEFAULT_CMP0091:STRING=NEW
 )
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/assimp/include)
 link_directories("${PROJECT_SOURCE_DIR}/vendor/assimp/lib")
-list(APPEND EXTRA_LIBS "assimp" "$<IF:$<CONFIG:Debug>,zlibstaticd,zlibstatic>" "irrXML")
+list(APPEND EXTRA_LIBS "assimp$<$<CONFIG:DEBUG>:d>" "$<IF:$<CONFIG:Debug>,zlibstaticd,zlibstatic>" "irrXML")
 
 #Sub dirs
 ############################__SILK ENGINE__#####################################
@@ -242,7 +243,6 @@ silk_engine/src/utils/RNG.h
 silk_engine/src/utils/thread_pool.h)
 
 #Link
-target_link_directories(SilkEngine PUBLIC ${EXTRA_LIB_DIRS})
 target_link_libraries(SilkEngine ${EXTRA_LIBS})
 
 ############################__SANDBOX__#####################################

@@ -16,12 +16,12 @@ struct TransformComponent
 
 struct ImageComponent
 {
-	ImageComponent(shared<Image2D> image) : images({ image }) {}
-	ImageComponent(const std::vector<shared<Image2D>>& images) : images(images) {}
+	ImageComponent(shared<Image> image) : images({ image }) {}
+	ImageComponent(const std::vector<shared<Image>>& images) : images(images) {}
 
-	std::vector<shared<Image2D>> images;
+	std::vector<shared<Image>> images;
 
-	operator const std::vector<shared<Image2D>>& () const { return images; }
+	operator const std::vector<shared<Image>>& () const { return images; }
 };
 
 struct BufferComponent

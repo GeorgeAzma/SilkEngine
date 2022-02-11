@@ -82,7 +82,8 @@ void Scene::onUpdate()
 
 	//Drawing	
 	bool any_needs_update = false;
-	static std::vector<VkDrawIndexedIndirectCommand> draw_commands(instance_batches.size());
+	static std::vector<VkDrawIndexedIndirectCommand> draw_commands;
+	draw_commands.resize(instance_batches.size());
 	for (size_t i = 0; i < instance_batches.size(); ++i)
 	{
 		if (instance_batches[i].needs_update)
@@ -101,17 +102,17 @@ void Scene::onUpdate()
 		indirect_buffer->setDataChecked(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand));
 	}
 
-	//vkDeviceWaitIdle(*Graphics::logical_device);
+	vkDeviceWaitIdle(*Graphics::logical_device);
 	for (auto& instance_batch : instance_batches)
 	{
 		instance_batch.descriptor_sets.resize(2);
 		instance_batch.descriptor_sets[0] = Resources::getDescriptorSet("Global");
 		instance_batch.descriptor_sets[1] = Resources::getDescriptorSet("Images");
-		//std::vector<VkDescriptorImageInfo> image_infos(Graphics::MAX_IMAGE_SLOTS, Resources::getImage("White")->getDescriptorInfo());
-		//for (size_t i = 0; i < instance_batch.images.size(); ++i)
-		//	image_infos[i] = *instance_batch.images[i];
-		//instance_batch.descriptor_sets[1]->setImageInfo(0, image_infos);
-		//instance_batch.descriptor_sets[1]->update();
+		std::vector<VkDescriptorImageInfo> image_infos(Graphics::MAX_IMAGE_SLOTS, Resources::getImage("White")->getDescriptorInfo());
+		for (size_t i = 0; i < instance_batch.images.size(); ++i)
+			image_infos[i] = *instance_batch.images[i];
+		instance_batch.descriptor_sets[1]->setImageInfo(0, image_infos);
+		instance_batch.descriptor_sets[1]->update();
 	}
 
 	//Draw instances
@@ -207,21 +208,21 @@ void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
 	mesh_component.instance = makeShared<RenderedInstance>(mesh_component.mesh);
 	createMeshInstance(mesh_component.instance, instance_data);
 	
-	//if (auto image = registry.try_get<ImageComponent>(entity))
-	//{
-	//	auto& mesh_instance_batch = instance_batches[mesh_component.instance->instance_batch_index];
-	//	auto& mesh_instance_data = mesh_instance_batch.instance_data[mesh_component.instance->instance_data_index];
-	//	uint32_t image_index = mesh_instance_batch.addImages(image->images);
-	//	if (image_index == UINT32_MAX) //UINT32_MAX here means error if you look in addImages()
-	//	{
-	//		//TODO: This is either incorrect or bit inefficient
-	//		destroyMeshInstance(mesh_component.instance);
-	//		addInstanceBatch(mesh_component.instance, mesh_instance_data);
-	//		image_index = instance_batches.back().addImages(image->images);
-	//		SK_ASSERT(image_index != UINT32_MAX, "Entity might have too much images");
-	//	}
-	//	mesh_instance_data.image_index = image_index; //TODO: Implement image/buffer bindings for compute shader effects in onComputeShaderEffectComponentCreate();
-	//}
+	if (auto image = registry.try_get<ImageComponent>(entity))
+	{
+		auto& mesh_instance_batch = instance_batches[mesh_component.instance->instance_batch_index];
+		auto& mesh_instance_data = mesh_instance_batch.instance_data[mesh_component.instance->instance_data_index];
+		uint32_t image_index = mesh_instance_batch.addImages(image->images);
+		if (image_index == UINT32_MAX) //UINT32_MAX here means error if you look in addImages()
+		{
+			//TODO: This is either incorrect or bit inefficient
+			destroyMeshInstance(mesh_component.instance);
+			addInstanceBatch(mesh_component.instance, mesh_instance_data);
+			image_index = instance_batches.back().addImages(image->images);
+			SK_ASSERT(image_index != UINT32_MAX, "Entity might have too much images");
+		}
+		mesh_instance_data.image_index = image_index; //TODO: Implement image/buffer bindings for compute shader effects in onComputeShaderEffectComponentCreate();
+	}
 }
 
 void Scene::onMeshComponentDestroy(entt::registry& registry, entt::entity entity)
@@ -323,8 +324,8 @@ void Scene::addInstanceBatch(shared<RenderedInstance> instance, const InstanceDa
 	new_batch.instance_data.reserve(Graphics::MAX_INSTANCES);
 	new_batch.instances.reserve(Graphics::MAX_INSTANCES);
 
-	//new_batch.images.reserve(Graphics::MAX_IMAGE_SLOTS);
-	//new_batch.images.emplace_back(Resources::getImage("White"));
+	new_batch.images.reserve(Graphics::MAX_IMAGE_SLOTS);
+	new_batch.images.emplace_back(Resources::getImage("White"));
 
 	new_batch.instance_data.emplace_back(std::move(instance_data));
 	new_batch.instances.emplace_back(instance);
