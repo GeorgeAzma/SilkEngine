@@ -1,6 +1,6 @@
 #include "file.h"
 
-std::string File::read(const std::string& file)
+std::string File::read(const std::filesystem::path& file)
 {
 	std::ifstream is(file, std::ios::ate | std::ios::binary);
 
@@ -15,7 +15,7 @@ std::string File::read(const std::string& file)
 	return buffer;
 }
 
-void File::write(const std::string& file, const char* data, size_t size)
+void File::write(const std::filesystem::path& file, const char* data, size_t size)
 {
 	std::ofstream os(file, std::ofstream::trunc);
 
@@ -27,7 +27,7 @@ void File::write(const std::string& file, const char* data, size_t size)
 		os << data;
 }
 
-bool File::exists(const std::string& file)
+bool File::exists(const std::filesystem::path& file)
 {
 	return std::filesystem::exists(file);
 }

@@ -27,6 +27,24 @@ Buffer::~Buffer()
 	vmaDestroyBuffer(*Graphics::allocator, buffer, allocation);
 }
 
+void Buffer::map(void** data) const
+{
+	if (mapped)
+		return;
+	SK_ASSERT(!needs_staging, "Can't map the buffer if it's usage is set to GPU_ONLY");
+	vmaMapMemory(*Graphics::allocator, allocation, data);
+	mapped = true;
+}
+
+void Buffer::unmap() const
+{
+	if (!mapped)
+		return;
+	SK_ASSERT(!needs_staging, "Can't unmap the buffer if it's usage is set to GPU_ONLY");
+	vmaUnmapMemory(*Graphics::allocator, allocation);
+	mapped = false;
+}
+
 void Buffer::setData(const void* data, size_t size, size_t offset)
 {
 	if (!data)
@@ -43,9 +61,9 @@ void Buffer::setData(const void* data, size_t size, size_t offset)
 	else
 	{
 		void* buffer_data;
-		vmaMapMemory(*Graphics::allocator, allocation, &buffer_data);
+		map(&buffer_data);
 		std::memcpy((uint8_t*)buffer_data + offset, data, size ? size : this->size);
-		vmaUnmapMemory(*Graphics::allocator, allocation);
+		unmap();
 	}
 }
 
@@ -67,9 +85,9 @@ void Buffer::setDataChecked(const void* data, size_t size, size_t offset)
 void Buffer::getData(void* data, size_t size) const
 {
 	void* buffer_data;
-	vmaMapMemory(*Graphics::allocator, allocation, &buffer_data);
+	map(&buffer_data);
 	std::memcpy(data, buffer_data, size ? size : this->size);
-	vmaUnmapMemory(*Graphics::allocator, allocation);
+	unmap();
 }
 
 uint32_t Buffer::findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags properties)
@@ -88,6 +106,19 @@ uint32_t Buffer::findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags prop
 
 	SK_ERROR("Vulkan: Couldn't find suitable memory type");
 	return 0;
+}
+void Buffer::insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDeviceSize offset, VkDeviceSize size)
+{
+	VkBufferMemoryBarrier barrier = {};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.srcAccessMask = source_access_mask;
+	barrier.dstAccessMask = destination_access_mask;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.buffer = buffer;
+	barrier.offset = offset;
+	barrier.size = size;
+	vkCmdPipelineBarrier(Graphics::active.command_buffer, source_stage_mask, destination_stage_mask, 0, 0, nullptr, 1, &barrier, 0, nullptr);
 }
 
 void Buffer::copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDeviceSize dst_offset, VkDeviceSize src_offset)

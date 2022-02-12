@@ -314,6 +314,16 @@ void Image::generateMipmaps()
 	command_buffer.submitIdle();
 }
 
+void Image::setData(void* data, uint32_t array_layers, uint32_t base_array_layer)
+{
+	StagingBuffer staging_buffer(data, props.width * props.height * props.depth * EnumInfo::formatSize(props.format) * props.array_layers);
+	void* buffer_data;
+	staging_buffer.map(&buffer_data);
+	memcpy(buffer_data, data, staging_buffer.size);
+	staging_buffer.unmap();
+	copyBufferToImage(staging_buffer);
+}
+
 bool Image::copyImage(shared<Image> destination, uint32_t array_layer)
 {
 	auto supports_blit = true;

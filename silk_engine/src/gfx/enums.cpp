@@ -337,68 +337,6 @@ VkIndexType EnumInfo::indexType(IndexType index_type)
 	return VkIndexType(0);
 }
 
-VkShaderStageFlagBits EnumInfo::shaderType(ShaderType shader_type)
-{
-	switch (shader_type)
-	{
-	case ShaderType::VERTEX: return VK_SHADER_STAGE_VERTEX_BIT;
-	case ShaderType::FRAGMENT: return VK_SHADER_STAGE_FRAGMENT_BIT;
-	case ShaderType::GEOMETRY: return VK_SHADER_STAGE_GEOMETRY_BIT;
-	case ShaderType::COMPUTE: return VK_SHADER_STAGE_COMPUTE_BIT;
-	case ShaderType::TESSELATION_CONTROL: return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-	case ShaderType::TESSELATION_EVALUATION: return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-	}
-
-	SK_ERROR("Unsupported shader type specified: {0}.", shader_type);
-	return VkShaderStageFlagBits(0);
-}
-
-std::string EnumInfo::shaderTypeFileExtension(ShaderType shader_type)
-{
-	switch (shader_type)
-	{
-	case ShaderType::VERTEX: return ".vert";
-	case ShaderType::FRAGMENT: return ".frag";
-	case ShaderType::GEOMETRY: return ".geom";
-	case ShaderType::COMPUTE: return ".comp";
-	case ShaderType::TESSELATION_CONTROL: return ".tesc";
-	case ShaderType::TESSELATION_EVALUATION: return ".tese";
-	}
-
-	SK_ERROR("Unsupported shader type specified: {0}.", shader_type);
-	return "";
-}
-
-shaderc_shader_kind EnumInfo::shadercType(ShaderType shader_type)
-{
-	switch (shader_type)
-	{
-	case ShaderType::VERTEX: return shaderc_glsl_vertex_shader;
-	case ShaderType::FRAGMENT: return shaderc_glsl_fragment_shader;
-	case ShaderType::GEOMETRY: return shaderc_glsl_geometry_shader;
-	case ShaderType::COMPUTE: return shaderc_glsl_compute_shader;
-	case ShaderType::TESSELATION_CONTROL: return shaderc_glsl_tess_control_shader;
-	case ShaderType::TESSELATION_EVALUATION: return shaderc_glsl_tess_evaluation_shader;
-	}
-
-	SK_ERROR("Unsupported shader type specified: {0}.", shader_type);
-	return shaderc_shader_kind(0);
-}
-
-ShaderType EnumInfo::shaderString(const std::string& shader_string)
-{
-	
-	if(shader_string == "vertex") return ShaderType::VERTEX;
-	else if (shader_string == "fragment") return ShaderType::FRAGMENT;
-	else if (shader_string == "geometry") return ShaderType::GEOMETRY;
-	else if (shader_string == "compute") return ShaderType::COMPUTE;
-	else if (shader_string == "tesselation_control") return ShaderType::TESSELATION_CONTROL;
-	else if (shader_string == "tesselation_evaluation") return ShaderType::TESSELATION_EVALUATION;
-	
-	SK_ERROR("Unsupported shader type string specified: {0}. try writing #type vertex/fragment/geometry/compute/tesselation_control/tesselation_evaluation", shader_string);
-	return ShaderType(0);
-}
-
 uint32_t EnumInfo::apiVersion(APIVersion api_version)
 {
 	switch (api_version)
@@ -410,17 +348,4 @@ uint32_t EnumInfo::apiVersion(APIVersion api_version)
 
 	SK_ERROR("Unsupported api version specified: {0}.", api_version);
 	return uint32_t(0);
-}
-
-shaderc_env_version EnumInfo::shadercApiVersion(APIVersion api_version)
-{
-	switch (api_version)
-	{
-	case APIVersion::VULKAN_1_0: return shaderc_env_version_vulkan_1_0;
-	case APIVersion::VULKAN_1_1: return shaderc_env_version_vulkan_1_1;
-	case APIVersion::VULKAN_1_2: return shaderc_env_version_vulkan_1_2;
-	}
-
-	SK_ERROR("Unsupported api version specified: {0}.", api_version);
-	return shaderc_env_version(0);
 }

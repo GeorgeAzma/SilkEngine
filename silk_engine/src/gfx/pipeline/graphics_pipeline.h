@@ -19,7 +19,7 @@ public:
 	GraphicsPipeline& setSubpass(uint32_t subpass);
 	GraphicsPipeline& addDescriptorSetLayout(VkDescriptorSetLayout layout);
 	GraphicsPipeline& addDynamicState(VkDynamicState dynamic_state);
-	GraphicsPipeline& addPushConstant(size_t size, VkShaderStageFlags shader_stages, size_t offset = 0);
+	GraphicsPipeline& addPushConstant(uint32_t size, VkShaderStageFlags shader_stages, uint32_t offset = 0);
 	GraphicsPipeline& enable(EnableTag tag);
 
 	void recreate();

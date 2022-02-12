@@ -64,13 +64,9 @@ GraphicsPipeline& GraphicsPipeline::addDynamicState(VkDynamicState dynamic_state
 }
 
 
-GraphicsPipeline& GraphicsPipeline::addPushConstant(size_t size, VkShaderStageFlags shader_stages, size_t offset)
+GraphicsPipeline& GraphicsPipeline::addPushConstant(uint32_t size, VkShaderStageFlags shader_stages, uint32_t offset)
 {
-	VkPushConstantRange push_constant_range{};
-	push_constant_range.offset = 0;
-	push_constant_range.size = size;
-	push_constant_range.stageFlags = shader_stages;
-	push_constant_ranges.emplace_back(std::move(push_constant_range));
+	push_constant_ranges.emplace_back(shader_stages, offset, size);
 	return *this;
 }
 
@@ -87,7 +83,7 @@ GraphicsPipeline& GraphicsPipeline::enable(EnableTag tag)
 	case EnableTag::DEPTH_WRITE:
 		depth_stencil_info.depthWriteEnable = VK_TRUE;
 		break;
-	case EnableTag::PRIMITISK_RESTART:
+	case EnableTag::PRIMITIVE_RESTART:
 		input_assembly_info.primitiveRestartEnable = VK_TRUE;
 		break;
 	case EnableTag::SAMPLE_SHADING:

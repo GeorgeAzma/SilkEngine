@@ -94,7 +94,7 @@ struct ImageProps
 	bool create_sampler = true;
 	const void* data = nullptr;
 	uint32_t array_layers = 1;
-	VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
+	VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY; //Currently has no use and should always be GPU_ONLY
 	bool is_cubemap = false;
 	bool is_1D = false;
 
@@ -217,6 +217,7 @@ public:
 
 	static void align4(ImageData& image);
 
+	void setData(void* data, uint32_t array_layers, uint32_t base_array_layer);
 	bool copyImage(shared<Image> destination, uint32_t array_layer = 0);
 	
 	operator const VkImage& () const { return image; }

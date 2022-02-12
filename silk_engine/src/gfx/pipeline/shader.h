@@ -1,7 +1,8 @@
 #pragma once
 
 #include "gfx/enums.h"
-#include <shaderc/shaderc.hpp>
+#include <glslang/Public/ShaderLang.h>
+#include <glslang/SPIRV/GlslangToSpv.h>
 
 class Shader : NonCopyable
 {
@@ -10,39 +11,18 @@ class Shader : NonCopyable
         std::string name = "";
         std::string value = "";
     };
-    class ShaderIncluder : public shaderc::CompileOptions::IncluderInterface
+
+    struct Extension
     {
-        shaderc_include_result* GetInclude(
-            const char* requested_source,
-            shaderc_include_type type,
-            const char* requesting_source,
-            size_t include_depth) override
-        {
-            const std::string name = std::string("data/shaders/") + requested_source;
-            const std::string contents = File::read(name);
+        std::string name = "";
+        std::string behavior = "require";
+    };
 
-            auto container = new std::array<std::string, 2>;
-            (*container)[0] = name;
-            (*container)[1] = contents;
-
-            auto data = new shaderc_include_result;
-
-            data->user_data = container;
-
-            data->source_name = (*container)[0].data();
-            data->source_name_length = (*container)[0].size();
-
-            data->content = (*container)[1].data();
-            data->content_length = (*container)[1].size();
-
-            return data;
-        };
-
-        void ReleaseInclude(shaderc_include_result* data) override
-        {
-            delete static_cast<std::array<std::string, 2>*>(data->user_data);
-            delete data;
-        };
+    class Includer : public glslang::TShader::Includer
+    {
+        IncludeResult* includeLocal(const char* header, const char* includer, size_t inclusion_depth) override;
+        IncludeResult* includeSystem(const char* header, const char* includer, size_t inclusion_depth) override;
+        void releaseInclude(IncludeResult* result) override;
     };
 
 public:
@@ -55,11 +35,18 @@ public:
 	const std::vector<VkShaderModule>& getShaderModules() const { return shader_modules; }
 	operator const VkShaderModule& () const { return shader_modules[0]; }
 
+public:
+    static EShLanguage getEshLanguage(ShaderType stage_flag);
+    static VkShaderStageFlagBits getVulkanType(ShaderType shader_type);
+    static ShaderType getStringType(const std::string& shader_string);
+    static std::string getTypeFileExtension(ShaderType shader_type);
+    static glslang::EShTargetClientVersion getEshClientVersion(APIVersion api_version);
+    static TBuiltInResource getResources();
+
 private:
 	std::unordered_map<uint32_t, std::string> parse(const std::string& file);
-	void reflect(const std::vector<uint32_t>& source);
 	VkShaderModule createShaderModule(const std::vector<uint32_t>& source) const;
-
+    
 private:
 	std::vector<VkPipelineShaderStageCreateInfo> shader_stage_infos;
 	std::vector<VkShaderModule> shader_modules;
