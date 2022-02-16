@@ -26,12 +26,6 @@ enum class Type
 	MAT2,
 	MAT3,
 	MAT4,
-	MAT2I,
-	MAT3I,
-	MAT4I,
-	MAT2U,
-	MAT3U,
-	MAT4U,
 	MAT2D,
 	MAT3D,
 	MAT4D
@@ -41,17 +35,6 @@ enum class IndexType
 {
 	UINT16,
 	UINT32
-};
-
-enum class ShaderType : uint32_t
-{
-	NONE = 0,
-	VERTEX = 1,
-	FRAGMENT = 2,
-	GEOMETRY = 4,
-	COMPUTE = 8,
-	TESSELATION_CONTROL = 16,
-	TESSELATION_EVALUATION = 32
 };
 
 enum class EnableTag
@@ -79,6 +62,7 @@ class EnumInfo
 {
 public:
 	static VkFormat type(Type type);
+	static VkFormat glTypeToVk(uint32_t gl_type);
 	static Type formatToType(VkFormat format);
 	static VkIndexType indexType(IndexType index_type);
 	static uint32_t apiVersion(APIVersion api_version);

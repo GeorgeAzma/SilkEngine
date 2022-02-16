@@ -16,7 +16,8 @@ ComputePipeline::~ComputePipeline()
 ComputePipeline& ComputePipeline::setShader(shared<Shader> shader)
 {
 	this->shader = shader;
-	create_info.stage = shader->getShaderStageInfos()[0];
+	shader_stage_info = shader->getPipelineShaderStageInfos().back();
+	create_info.stage = shader_stage_info;
 	return *this;
 }
 

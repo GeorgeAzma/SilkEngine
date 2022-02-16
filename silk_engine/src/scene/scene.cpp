@@ -101,7 +101,7 @@ void Scene::onUpdate()
 	{
 		indirect_buffer->setDataChecked(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand));
 	}
-
+	// TODO:
 	vkDeviceWaitIdle(*Graphics::logical_device);
 	for (auto& instance_batch : instance_batches)
 	{

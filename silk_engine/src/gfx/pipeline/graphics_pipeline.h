@@ -60,5 +60,6 @@ private:
 	VkRenderPass render_pass = VK_NULL_HANDLE;
 	uint32_t subpass = 0;
 	BufferLayout layout = {}; 
-	shared<Shader> shader;
+	shared<Shader> shader = nullptr;
+	std::vector<VkPipelineShaderStageCreateInfo> shader_stage_infos;
 };

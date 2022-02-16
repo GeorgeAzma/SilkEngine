@@ -52,7 +52,7 @@ struct Keys
 		LEFT_BRACKET = 91,  /* [ */
 		BACKSLASH = 92,  /* \ */
 		RIGHT_BRACKET = 93,  /* ] */
-		GRASK_ACCENT = 96,  /* ` */
+		GRAVE_ACCENT = 96,  /* ` */
 		WORLD_1 = 161, /* non-US #1 */
 		WORLD_2 = 162, /* non-US #2 */
 

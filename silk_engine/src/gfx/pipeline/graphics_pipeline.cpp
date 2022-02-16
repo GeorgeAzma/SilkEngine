@@ -18,8 +18,11 @@ GraphicsPipeline::~GraphicsPipeline()
 GraphicsPipeline& GraphicsPipeline::setShader(shared<Shader> shader)
 {
 	this->shader = shader;
-	create_info.stageCount = shader->getShaderStageInfos().size();
-	create_info.pStages = shader->getShaderStageInfos().data();
+	shader_stage_infos.clear();
+	for (const auto& pipeline_shader_stage_info : shader->getPipelineShaderStageInfos())
+		shader_stage_infos.emplace_back(pipeline_shader_stage_info);
+	create_info.stageCount = shader_stage_infos.size();
+	create_info.pStages = shader_stage_infos.data();
 	return *this;
 }
 

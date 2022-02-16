@@ -50,7 +50,7 @@ inline OStream &operator<<(OStream &os, glm::qua<T, Q> quaternion)
     #define SK_INFO(...) SK_LOGGER->info(__VA_ARGS__)
     #define SK_WARN(...) SK_LOGGER->warn(__VA_ARGS__)
     #define SK_ERROR(...) do { SK_LOGGER->error(__VA_ARGS__); SK_DEBUG_BREAK(); } while(0)
-    #define SK_CRITICAL(...) do { SK_LOGGER->critical(__VA_ARGS__); SK_DEBUG_BREAK() } while(0)
+    #define SK_CRITICAL(...) do { SK_LOGGER->critical(__VA_ARGS__); SK_DEBUG_BREAK(); } while(0)
     #define SK_ASSERT(x, ...) do { if (!(x)) { SK_ERROR(__VA_ARGS__); SK_DEBUG_BREAK(); } } while (0)
 #else
     #define SK_TRACE(...)

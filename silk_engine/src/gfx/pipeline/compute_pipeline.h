@@ -41,5 +41,6 @@ private:
 	VkComputePipelineCreateInfo create_info{};
 	std::vector<VkPushConstantRange> push_constant_ranges;
 	std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
-	shared<Shader> shader;
+	shared<Shader> shader = nullptr;
+	VkPipelineShaderStageCreateInfo shader_stage_info;
 };

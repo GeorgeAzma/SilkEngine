@@ -23,7 +23,6 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 
 	create(old_swap_chain);
 
-	//Create semaphores and fences (0.064ms)
 	images_in_flight.resize(images.size(), VK_NULL_HANDLE);
 
 	VkSemaphoreCreateInfo semaphore_info{};
@@ -100,19 +99,14 @@ void SwapChain::present()
 	submit_info.wait_stages = wait_stages;
 	command_buffers[image_index]->submit(submit_info);
 
+	//Present
 	VkPresentInfoKHR present_info{};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	present_info.waitSemaphoreCount = signal_semaphores.size();
 	present_info.pWaitSemaphores = signal_semaphores.data();
-
-	const std::vector<VkSwapchainKHR> swap_chains = { swap_chain };
-	present_info.swapchainCount = swap_chains.size();
-	present_info.pSwapchains = swap_chains.data();
+	present_info.swapchainCount = 1;
+	present_info.pSwapchains = &swap_chain;
 	present_info.pImageIndices = &image_index;
-	std::vector<VkResult> results(swap_chains.size());
-	present_info.pResults = results.data();
-	for (auto& result : results)
-		Graphics::vulkanAssert(result);
 
 	vkQueuePresentKHR(Graphics::logical_device->getPresentQueue(), &present_info);
 
@@ -227,9 +221,7 @@ void SwapChain::chooseSwapChainSurfaceFormat()
 	{
 		int score = rateSwapChainSurfaceFormat(available_format);
 		if (score >= 0)
-		{
 			formats.insert(std::make_pair(score, available_format));
-		}
 	}
 
 	SK_ASSERT(formats.rbegin()->first >= 0,
