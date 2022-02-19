@@ -1,8 +1,8 @@
 #include "file.h"
 
-std::string File::read(const std::filesystem::path& file)
+std::string File::read(const std::filesystem::path& file, std::ios::openmode open_mode)
 {
-	std::ifstream is(file, std::ios::ate | std::ios::binary);
+	std::ifstream is(file, std::ios::ate | open_mode);
 
 	SK_ASSERT(is.is_open(), "Couldn't open file: {0}", file);
 
@@ -15,14 +15,14 @@ std::string File::read(const std::filesystem::path& file)
 	return buffer;
 }
 
-void File::write(const std::filesystem::path& file, const char* data, size_t size)
+void File::write(const std::filesystem::path& file, const void* data, size_t size, std::ios::openmode open_mode)
 {
-	std::ofstream os(file, std::ofstream::trunc);
+	std::ofstream os(file, open_mode);
 
 	SK_ASSERT(os.is_open(), "Couldn't open file: {0}", file);
 
 	if (size)
-		os.write(data, size);
+		os.write((const char*)data, size);
 	else
 		os << data;
 }

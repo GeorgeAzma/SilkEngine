@@ -107,6 +107,7 @@ uint32_t Buffer::findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags prop
 	SK_ERROR("Vulkan: Couldn't find suitable memory type");
 	return 0;
 }
+
 void Buffer::insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDeviceSize offset, VkDeviceSize size)
 {
 	VkBufferMemoryBarrier barrier = {};
@@ -132,6 +133,5 @@ void Buffer::copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDe
 	copy_region.size = size;
 	vkCmdCopyBuffer(Graphics::active.command_buffer, source, destination, 1, &copy_region);
 	
-	command_buffer.end();
 	command_buffer.submitIdle();
 }

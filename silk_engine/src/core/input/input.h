@@ -58,6 +58,9 @@ public:
 	static void lockMouse();
 	static void unlockMouse();
 
+	static void setClipboardString(const std::string& str);
+	static std::string getClipboardString();
+
 	static InputDevice getActiveInputDevice();
 	static const Joystick* getActiveJoystick();
 

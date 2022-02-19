@@ -142,21 +142,14 @@ public:
     const bool connected;
 };
 
-
 // Dispatching and such code
 class HandlerFunctionBase
 {
 public:
-    void exec(const Event& event) const
-    {
-        call(event);
-    }
+    virtual void operator()(const Event& event) const = 0;
 
     virtual bool operator==(const HandlerFunctionBase& other) const = 0;
     virtual bool operator!=(const HandlerFunctionBase& other) const = 0;
-
-private:
-    virtual void call(const Event& event) const = 0;
 };
 
 template <typename T>
@@ -191,11 +184,11 @@ public:
     MemberFunctionHandler(T* instance, MemberFunction member_function)
         : instance(instance), member_function(member_function) {}
 
-    void call(const Event& event) const
+    void operator()(const Event& event) const
     {
         SK_ASSERT(instance && member_function, 
             "Attempted to call \"onEvent(const EventType&)\" when it was nullptr, did you forget to unsubscribe event when class got deleted?");
-        (instance->*member_function)(static_cast<const EventType&>(event));
+        (instance->*member_function)((const EventType&)event);
     }
 
     bool operator==(const MemberFunctionHandler& other) const
@@ -217,10 +210,10 @@ public:
     FunctionHandler(Function function)
         : function(function) {}
 
-    void call(const Event& event) const
+    void operator()(const Event& event) const
     {
         SK_ASSERT(function,
-            "Attempted to call \"onEvent(const EventType&)\" when it was nullptr, did you forget to unsubscribe event when class got deleted?");
+            "Attempted to call \"onEvent(const EventType&)\" when it was nullptr, did you forget to unsubscribe event before lambda function got deleted?");
         (*function)(static_cast<const EventType&>(event));
     }
 
@@ -235,18 +228,14 @@ private:
 
 class Dispatcher
 {
-    typedef std::vector<shared<HandlerFunctionBase>> HandlerList;
-
 public:
     template <typename EventType>
     static void post(const EventType& event)
     {
-        const HandlerList& handlers = subscribers[typeid(EventType)];
+        const auto& handlers = subscribers[typeid(EventType)];
 
         for (const auto& handler : handlers)
-        {
-            handler->exec(event);
-        }
+            (*handler)(event);
     }
 
     template <class T, class EventType>
@@ -265,7 +254,7 @@ public:
     static void unsubscribe(void (*function)(const EventType&))
     {
         const FunctionHandler<EventType> comp(function); // tmp for operator==
-        HandlerList& handlers = subscribers.at(typeid(EventType));
+        auto& handlers = subscribers.at(typeid(EventType));
         for (size_t i = 0; i < handlers.size(); ++i)
         {
             if (*handlers[i] == comp)
@@ -281,7 +270,7 @@ public:
     static void unsubscribe(T* instance, void (T::* member_function)(const EventType&))
     {
         const MemberFunctionHandler<T, EventType> comp(instance, member_function); // tmp for operator==
-        HandlerList& handlers = subscribers.at(typeid(EventType));
+        auto& handlers = subscribers.at(typeid(EventType));
         for (size_t i = 0; i < handlers.size(); ++i)
         {
             if (*handlers[i] == comp)
@@ -294,5 +283,5 @@ public:
     }
 
 private:
-    static inline std::map<std::type_index, HandlerList> subscribers;
+    static inline std::map<std::type_index, std::vector<shared<HandlerFunctionBase>>> subscribers;
 };

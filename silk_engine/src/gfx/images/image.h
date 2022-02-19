@@ -9,7 +9,7 @@ struct CubemapProps
 {
 	uint32_t width = 0;
 	uint32_t height = 0;
-	VkFormat format = VK_FORMAT_B8G8R8A8_SRGB;
+	VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -26,7 +26,7 @@ struct CubemapProps
 struct Image1DProps
 {
 	uint32_t width = 0;
-	VkFormat format = VK_FORMAT_B8G8R8A8_SRGB;
+	VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -44,7 +44,7 @@ struct Image2DProps
 {
 	uint32_t width = 0;
 	uint32_t height = 0;
-	VkFormat format = VK_FORMAT_B8G8R8A8_SRGB;
+	VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -62,7 +62,7 @@ struct ImageArrayProps
 {
 	uint32_t width = 0;
 	uint32_t height = 0;
-	VkFormat format = VK_FORMAT_B8G8R8A8_SRGB;
+	VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -82,7 +82,7 @@ struct ImageProps
 	uint32_t width = 0;
 	uint32_t height = 0;
 	uint32_t depth = 1;
-	VkFormat format = VK_FORMAT_B8G8R8A8_SRGB;
+	VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;

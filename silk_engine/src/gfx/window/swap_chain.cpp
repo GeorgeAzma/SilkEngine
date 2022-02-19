@@ -7,8 +7,29 @@
 
 SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 {
-	chooseSwapChainSurfaceFormat();
-	chooseSwapChainPresentMode();
+	//Choose format
+	std::multimap<int, VkSurfaceFormatKHR> surface_formats;
+	for (const auto& available_format : Graphics::physical_device->getSurfaceFormats())
+	{
+		int score = (available_format.format == VK_FORMAT_B8G8R8A8_UNORM) * 1000 +
+			(available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) * 400;
+		if (score >= 0)
+			surface_formats.insert(std::make_pair(score, available_format));
+	}
+	SK_ASSERT(surface_formats.rbegin()->first >= 0, "Vulkan: Couldn't find supported formats to choose from");
+	this->surface_format = surface_formats.rbegin()->second;
+
+	//Choose present mode
+	VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
+	for (const auto& available_present_mode : Graphics::physical_device->getPresentModes())
+	{
+		if (available_present_mode == VK_PRESENT_MODE_MAILBOX_KHR)
+		{
+			present_mode = available_present_mode;
+			break;
+		}
+	}
+	this->present_mode = present_mode;
 
 	depth_format = Graphics::physical_device->findDepthFormat();
 
@@ -16,8 +37,8 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 
 	render_pass = makeShared<RenderPass>();
 	render_pass->addSubpass()
-		.addAttachment(surface_format.format, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, sample_count)
-		.addAttachment(depth_format, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, sample_count)
+		.addAttachment(surface_format.format, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, {}, sample_count)
+		.addAttachment(depth_format, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, {}, sample_count)
 		.addAttachment(surface_format.format, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
 		.build();
 
@@ -45,7 +66,6 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 void SwapChain::recreate()
 {
 	Graphics::vulkanAssert(vkDeviceWaitIdle(*Graphics::logical_device));
-
 	VkSwapchainKHR old_swapchain = swap_chain;
 	create(old_swapchain);
 	vkDestroySwapchainKHR(*Graphics::logical_device, old_swapchain, nullptr);
@@ -70,9 +90,7 @@ void SwapChain::createFramebuffers()
 	msaa_image = makeShared<Image2D>(props);
 
 	for (size_t i = 0; i < images.size(); ++i)
-	{
 		framebuffers[i] = makeShared<Framebuffer>(*render_pass, std::vector<shared<Image2D>>{ msaa_image, depth, images[i] }, extent.width, extent.height);
-	}
 }
 
 void SwapChain::acquireNextImage()
@@ -89,21 +107,20 @@ void SwapChain::present()
 	images_in_flight[image_index] = in_flight_fences[current_frame];
 
 	//Submit the command buffer
-	const std::vector<VkSemaphore> signal_semaphores = { render_finished_semaphores[current_frame] };
-	VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+	VkPipelineStageFlags wait_stage =  VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 	CommandBufferSubmitInfo submit_info{};
 	submit_info.fence = in_flight_fences[current_frame];
-	submit_info.signal_semaphores = signal_semaphores;
+	submit_info.signal_semaphores = { render_finished_semaphores[current_frame] };
 	submit_info.wait_semaphores = { image_available_semaphores[current_frame] };
-	submit_info.wait_stages = wait_stages;
+	submit_info.wait_stages = &wait_stage;
 	command_buffers[image_index]->submit(submit_info);
 
 	//Present
 	VkPresentInfoKHR present_info{};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-	present_info.waitSemaphoreCount = signal_semaphores.size();
-	present_info.pWaitSemaphores = signal_semaphores.data();
+	present_info.waitSemaphoreCount = 1;
+	present_info.pWaitSemaphores = &render_finished_semaphores[current_frame];
 	present_info.swapchainCount = 1;
 	present_info.pSwapchains = &swap_chain;
 	present_info.pImageIndices = &image_index;
@@ -115,7 +132,7 @@ void SwapChain::present()
 
 void SwapChain::beginFrame(size_t i)
 {
-	command_buffers[i]->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+	command_buffers[i]->begin(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
 }
 
 void SwapChain::beginRenderPass(size_t i)
@@ -135,7 +152,17 @@ void SwapChain::endRenderPass()
 
 void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 {
-	chooseSwapChainExtent();
+	int width, height;
+	glfwGetFramebufferSize(Window::getGLFWWindow(), &width, &height);
+	this->extent =
+	{
+		std::clamp((uint32_t)width,
+			Graphics::physical_device->getSurfaceCapabilities().minImageExtent.width,
+			Graphics::physical_device->getSurfaceCapabilities().maxImageExtent.width),
+		std::clamp((uint32_t)height,
+			Graphics::physical_device->getSurfaceCapabilities().minImageExtent.height,
+			Graphics::physical_device->getSurfaceCapabilities().maxImageExtent.height)
+	};
 
 	uint32_t image_count = Graphics::physical_device->getSurfaceCapabilities().minImageCount + 1;
 	if (Graphics::physical_device->getSurfaceCapabilities().maxImageCount > 0)
@@ -165,9 +192,7 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 		create_info.pQueueFamilyIndices = queue_family_indices.data();
 	}
 	else
-	{
 		create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	}
 
 	Graphics::vulkanAssert(vkCreateSwapchainKHR(*Graphics::logical_device, &create_info, nullptr, &swap_chain));
 
@@ -211,86 +236,4 @@ SwapChain::~SwapChain()
 	}
 
 	destroy();
-}
-
-void SwapChain::chooseSwapChainSurfaceFormat()
-{
-	std::multimap<int, VkSurfaceFormatKHR> formats;
-
-	for (const auto& available_format : Graphics::physical_device->getSurfaceFormats())
-	{
-		int score = rateSwapChainSurfaceFormat(available_format);
-		if (score >= 0)
-			formats.insert(std::make_pair(score, available_format));
-	}
-
-	SK_ASSERT(formats.rbegin()->first >= 0,
-		"Vulkan: Couldn't find supported formats to choose from");
-
-	this->surface_format = formats.rbegin()->second;
-}
-
-int SwapChain::rateSwapChainSurfaceFormat(VkSurfaceFormatKHR format) const
-{
-	int score = 0;
-
-	score += (format.format == VK_FORMAT_B8G8R8A8_SRGB) * 1000;
-	score += (format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) * 400;
-
-	return score;
-}
-
-void SwapChain::chooseSwapChainPresentMode()
-{
-	std::map<int, VkPresentModeKHR> present_modes;
-
-	for (const auto& available_present_mode : Graphics::physical_device->getPresentModes())
-	{
-		int score = 0;
-		switch (available_present_mode)
-		{
-		case VK_PRESENT_MODE_MAILBOX_KHR:
-			score = 4;
-			break;
-		case VK_PRESENT_MODE_FIFO_KHR:
-			score = 3;
-			break;
-		case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
-			score = 2;
-			break;
-		case VK_PRESENT_MODE_IMMEDIATE_KHR:
-			score = 1;
-			break;
-		}
-		if (score >= 0)
-		{
-			present_modes.insert(std::make_pair(score, available_present_mode));
-		}
-	}
-
-	SK_ASSERT(present_modes.rbegin()->first >= 0,
-		"Vulkan: Couldn't find supported present modes to choose from");
-
-	this->present_mode = present_modes.rbegin()->second;
-}
-
-void SwapChain::chooseSwapChainExtent()
-{
-	if (Graphics::physical_device->getSurfaceCapabilities().currentExtent.width != std::numeric_limits<uint32_t>::max())
-	{
-		this->extent = Graphics::physical_device->getSurfaceCapabilities().currentExtent;
-		return;
-	}
-
-	int width, height;
-	glfwGetFramebufferSize(Window::getGLFWWindow(), &width, &height);
-	this->extent =
-	{
-		std::clamp((uint32_t)width,
-			Graphics::physical_device->getSurfaceCapabilities().minImageExtent.width,
-			Graphics::physical_device->getSurfaceCapabilities().maxImageExtent.width),
-		std::clamp((uint32_t)height,
-			Graphics::physical_device->getSurfaceCapabilities().minImageExtent.height,
-			Graphics::physical_device->getSurfaceCapabilities().maxImageExtent.height)
-	};
 }

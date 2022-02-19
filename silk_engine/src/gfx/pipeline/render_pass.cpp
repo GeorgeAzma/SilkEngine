@@ -9,7 +9,7 @@ RenderPass::~RenderPass()
     vkDestroyRenderPass(*Graphics::logical_device, render_pass, nullptr);
 }
 
-RenderPass& RenderPass::addAttachment(VkFormat format, VkImageLayout image_layout, VkSampleCountFlagBits samples)
+RenderPass& RenderPass::addAttachment(VkFormat format, VkImageLayout image_layout, std::optional<VkClearValue> clear_value, VkSampleCountFlagBits samples)
 {
     VkAttachmentDescription attachment_description{};
     attachment_description.format = format;
@@ -25,28 +25,41 @@ RenderPass& RenderPass::addAttachment(VkFormat format, VkImageLayout image_layou
     {
         subpasses.back().multisampled = true;
     }
-    
-    subpasses.back().attachments.emplace_back(attachment_description);
+
+    Attachment attachment{};
+    Attachment::Type type;
+    if (clear_value)
+        attachment.clear_value = *clear_value;
+    else
+        attachment.clear_value.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    attachment.description = attachment_description;
     
     VkAttachmentReference attachment_reference{};
-    attachment_reference.attachment = subpasses.back().attachments.size() - 1;
+    attachment_reference.attachment = subpasses.back().attachments.size();
     if (Image::hasDepth(attachment_description.format) || Image::hasStencil(attachment_description.format))
     {
         attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        subpasses.back().depth_stencil_attachment_reference = attachment_reference;
+        type = Attachment::Type::DEPTH_STENCIL;
     }
     else if (subpasses.back().multisampled && image_layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
     {
         attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        subpasses.back().resolve_attachment_reference = attachment_reference;
+        type = Attachment::Type::RESOLVE;
     }
     else
     {
         attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        subpasses.back().color_attachment_references.emplace_back(attachment_reference);
+        type = Attachment::Type::COLOR;
     }
+    attachment.reference = attachment_reference;
+    attachment.type = type;
+
+    if (type == Attachment::Type::DEPTH_STENCIL)
+        attachment.clear_value.depthStencil = { 1.0f, 0 };
+    else
+        attachment.clear_value.color = { 0.0f, 0.0f, 0.0f, 1.0f };
     
-    subpasses.back().attachment_references.emplace_back(attachment_reference);
+    subpasses.back().attachments.emplace_back(std::move(attachment));
    
     return *this;
 }
@@ -57,12 +70,11 @@ RenderPass& RenderPass::addSubpass()
 
     if (subpasses.size() > 1)
     {
-        subpasses.back().input_attachment_references = subpasses[subpasses.size() - 2].attachment_references;
-        for (size_t i = 0; i < subpasses.back().input_attachment_references.size(); ++i)
-        {
-            VkAttachmentReference& input_attachment_reference = subpasses.back().input_attachment_references[i];
-            input_attachment_reference.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; //bit hardcoded
-        }
+        auto& last_subpass = subpasses[subpasses.size() - 2];
+        std::vector<VkAttachmentReference> input_attachment_references(last_subpass.attachments.size());
+        for (size_t i = 0; i < last_subpass.attachments.size(); ++i)
+            input_attachment_references[i] = last_subpass.attachments[i].reference;
+        subpasses.back().input_attachment_references = std::move(input_attachment_references);
     }
 
     return *this;
@@ -70,32 +82,55 @@ RenderPass& RenderPass::addSubpass()
 
 void RenderPass::build()
 {
+
     std::vector<VkAttachmentDescription> attachments;
     std::vector<VkSubpassDescription> subpass_descriptions(subpasses.size());
     std::vector<VkSubpassDependency> subpass_dependencies(subpasses.size());
+
+    //We need these alive for till this function finishes
+    std::vector<std::vector<VkAttachmentReference>> color_attachment_references(subpasses.size());
+    std::vector<VkAttachmentReference> depth_stencil_attachment_references(subpasses.size());
+    std::vector<VkAttachmentReference> resolve_attachment_references(subpasses.size());
+
     for (size_t i = 0; i < subpasses.size(); ++i)
     {
-        attachments.insert(attachments.end(), subpasses[i].attachments.begin(), subpasses[i].attachments.end());
-        
+        //Sort attachments in 3 categories
+        for (auto& attachment : subpasses[i].attachments)
+        {
+            switch (attachment.type)
+            {
+            case Attachment::Type::COLOR:
+                color_attachment_references[i].emplace_back(attachment.reference);
+                break;
+            case Attachment::Type::DEPTH_STENCIL:
+                depth_stencil_attachment_references[i] = attachment.reference;
+                break;
+            case Attachment::Type::RESOLVE:
+                resolve_attachment_references[i] = attachment.reference;
+                break;
+            }
+            attachments.emplace_back(attachment.description);
+        }
+
         VkSubpassDescription subpass_description{};
         subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass_description.inputAttachmentCount = subpasses[i].input_attachment_references.size();
         subpass_description.pInputAttachments = subpasses[i].input_attachment_references.data();
-        subpass_description.colorAttachmentCount = subpasses[i].color_attachment_references.size();
-        subpass_description.pColorAttachments = subpasses[i].color_attachment_references.data();
-        subpass_description.pDepthStencilAttachment = &subpasses[i].depth_stencil_attachment_reference;
-        subpass_description.pResolveAttachments = &subpasses[i].resolve_attachment_reference;     
+        subpass_description.colorAttachmentCount = color_attachment_references[i].size();
+        subpass_description.pColorAttachments = color_attachment_references[i].data();
+        subpass_description.pDepthStencilAttachment = &depth_stencil_attachment_references[i];
+        subpass_description.pResolveAttachments = &resolve_attachment_references[i];
         subpass_descriptions[i] = std::move(subpass_description);
 
         //TODO:
-        VkSubpassDependency dependency{};
-        dependency.srcSubpass = i ? (i - 1) : VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = i;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependency.srcAccessMask = 0;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        subpass_dependencies[i] = std::move(dependency);
+        VkSubpassDependency subpass_dependency{};
+        subpass_dependency.srcSubpass = i ? (i - 1) : VK_SUBPASS_EXTERNAL;
+        subpass_dependency.dstSubpass = i;
+        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        subpass_dependency.srcAccessMask = 0;
+        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[i] = std::move(subpass_dependency);
     }
     
     VkRenderPassCreateInfo create_info{};
@@ -125,18 +160,7 @@ void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_cont
 
     std::vector<VkClearValue> clear_values(subpasses.back().attachments.size());
     for (size_t i = 0; i < clear_values.size(); ++i)
-    {
-        VkClearValue clear_value{};
-        if (Image::hasDepth(subpasses.back().attachments[i].format))
-        {
-            clear_value.depthStencil = { 1.0f, 0 };
-        }
-        else
-        {
-            clear_value.color = { 0.15f, 0.4f, 0.6f, 1.0f }; //TEMP sky color (should be 0.0 normally)
-        }
-        clear_values[i] = clear_value;
-    }
+        clear_values[i] = subpasses.back().attachments[i].clear_value;
 
     render_pass_begin_info.clearValueCount = clear_values.size();
     render_pass_begin_info.pClearValues = clear_values.data();

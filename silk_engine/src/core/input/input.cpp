@@ -117,6 +117,16 @@ void Input::unlockMouse()
 	glfwSetInputMode(Window::getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
+void Input::setClipboardString(const std::string& str)
+{
+	glfwSetClipboardString(Window::getGLFWWindow(), str.c_str());
+}
+
+std::string Input::getClipboardString()
+{
+	return glfwGetClipboardString(Window::getGLFWWindow());
+}
+
 InputDevice Input::getActiveInputDevice()
 {
 	return active_joystick ? InputDevice::JOYSTICK : InputDevice::KEYBOARD_AND_MOUSE;

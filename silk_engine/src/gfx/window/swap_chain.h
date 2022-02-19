@@ -43,11 +43,6 @@ private:
     void create(const std::optional<VkSwapchainKHR>& old_swap_chain = {});
     void destroy();
 
-    void chooseSwapChainSurfaceFormat();
-    void chooseSwapChainPresentMode();
-    void chooseSwapChainExtent();
-    int rateSwapChainSurfaceFormat(VkSurfaceFormatKHR format) const;
-
 private:
     VkSwapchainKHR swap_chain = VK_NULL_HANDLE;
     std::vector<shared<Image2D>> images;

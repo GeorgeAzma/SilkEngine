@@ -79,14 +79,9 @@ VkFormat PhysicalDevice::findSupportedFormat(const std::vector<VkFormat>& candid
 	for (VkFormat format : candidates)
 	{
 		VkFormatProperties props = getFormatProperties(format);
-		if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) 
-		{
+		if ((tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features
+			|| (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)))
 			return format;
-		}
-		if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) 
-		{
-			return format;
-		}
 	}
 
 	SK_ERROR("Vulkan: Couldn't find supported format");
@@ -273,17 +268,12 @@ bool PhysicalDevice::checkPhysicalDeviceExtensionSupport(const std::vector<const
 	{
 		bool extension_found = false;
 		for (const auto& available_extension : available_extensions)
-		{
 			if (strcmp(required_extension, available_extension.extensionName) == 0)
-			{
 				extension_found = true;
-			}
-		}
 		if (!extension_found)
-		{
 			return false;
-		}
 	}
+
 	return true;
 }
 
