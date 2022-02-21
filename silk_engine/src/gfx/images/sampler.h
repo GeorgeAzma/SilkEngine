@@ -7,7 +7,7 @@ struct SamplerProps
 	VkSamplerAddressMode u_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	VkSamplerAddressMode v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	VkSamplerAddressMode w_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-	bool anisotropy = true;
+	bool anisotropy = false;
 	bool linear_mipmap = true;
 	uint32_t mip_levels = 1;
 };

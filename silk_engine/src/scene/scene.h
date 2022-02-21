@@ -45,6 +45,7 @@ private:
 	entt::registry registry;
 	std::vector<InstanceBatch> instance_batches;
 	shared<IndirectBuffer> indirect_buffer;
+	shared<DescriptorSet> global_descriptor_set;
 	std::array<Light, Graphics::MAX_LIGHTS> lights;
 	size_t light_index = 0;
 	bool lights_updated = false;

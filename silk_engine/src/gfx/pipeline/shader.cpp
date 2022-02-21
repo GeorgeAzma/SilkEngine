@@ -36,7 +36,7 @@ void Shader::Includer::releaseInclude(IncludeResult* result)
 	}
 }
 
-Shader::Shader(const std::string& file, const std::vector<Define>& defines)
+Shader::Shader(const std::filesystem::path& file, const std::vector<Define>& defines)
 	: file(file)
 {
 	compile(defines);
@@ -44,6 +44,7 @@ Shader::Shader(const std::string& file, const std::vector<Define>& defines)
 
 void Shader::compile(const std::vector<Define>& defines)
 {
+	bool resources_was_compiled = resources.size();
 	for (auto& pipeline_shader_stage_info : pipeline_shader_stage_infos)
 		vkDestroyShaderModule(*Graphics::logical_device, pipeline_shader_stage_info.module, nullptr);
 	pipeline_shader_stage_infos.clear();
@@ -63,8 +64,8 @@ void Shader::compile(const std::vector<Define>& defines)
 
 	std::string preamble_str = preamble.str();
 
-	std::string path = std::string("data/shaders/") + file + ".glsl";
-	std::string cache_path = std::string("data/cache/shaders/") + file + ".glsl";
+	std::filesystem::path path = (std::filesystem::path("data/shaders") / file).string() + ".glsl";
+	std::filesystem::path cache_path = (std::filesystem::path("data/cache/shaders") / file).string() + ".glsl";
 	std::unordered_map<uint32_t, std::string> shader_sources = parse(path);
 
 	auto resources = getResources();
@@ -90,7 +91,7 @@ void Shader::compile(const std::vector<Define>& defines)
 		shader.setEnvClient(glslang::EShClientVulkan, getEshClientVersion(Graphics::API_VERSION));
 		shader.setEnvTarget(glslang::EShTargetSpv, glslang::EShTargetSpv_1_5);
 		
-		std::string file_cache_path = cache_path + getTypeFileExtension((Type)type) + ".spv";
+		std::filesystem::path file_cache_path = cache_path.string() + getTypeFileExtension((Type)type) + ".spv";
 		std::ifstream in(file_cache_path, std::ios::ate | std::ios::binary);
 		std::vector<uint32_t> binary;
 #ifndef SK_ENABLE_DEBUG_OUTPUT
@@ -108,6 +109,7 @@ void Shader::compile(const std::vector<Define>& defines)
 		{
 			Includer includer;
 			std::string str;
+			
 			if (!shader.preprocess(&resources, getEshClientVersion(Graphics::API_VERSION), ENoProfile, false, false, messages, &str, includer))
 				SK_ERROR("[Shader compiler]: SPRIV shader preprocess failed: {0}:\n{1}\n{2}", path, shader.getInfoLog(), shader.getInfoDebugLog());
 
@@ -147,155 +149,56 @@ void Shader::compile(const std::vector<Define>& defines)
 		pipeline_shader_stage_info.module = createShaderModule(binary);
 		pipeline_shader_stage_info.pName = "main";
 
-		//Reflection
-		program.buildReflection();	
+		spirv_cross::Compiler compiler(binary.data(), binary.size());
+		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
 		
-		//Local size reflection
-		for (uint32_t dimension = 0; dimension < 3; ++dimension)
-			if (auto local_size = program.getLocalSize(dimension); local_size > 1)
-				local_sizes[dimension] = local_size;
-		
-		for (int32_t i = program.getNumLiveUniformBlocks() - 1; i >= 0; --i)
-			loadUniformBlock(program, stage_flag, i);
-		
-		for (size_t i = 0; i < program.getNumLiveUniformVariables(); ++i)
-			loadUniform(program, stage_flag, i);
-		
-		for (size_t i = 0; i < program.getNumLiveAttributes(); ++i)
-			loadAttribute(program, i);
+		if (!resources_was_compiled)
+		{
+			for (const spirv_cross::Resource& sampled_image : resources.sampled_images)
+				loadResource(sampled_image, compiler, resources, stage_flag, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 
+			for (const spirv_cross::Resource& seperate_image : resources.separate_images)
+				loadResource(seperate_image, compiler, resources, stage_flag, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+
+			for (const spirv_cross::Resource& seperate_sampler : resources.separate_samplers)
+				loadResource(seperate_sampler, compiler, resources, stage_flag, VK_DESCRIPTOR_TYPE_SAMPLER);
+
+			for (const spirv_cross::Resource& storage_buffer : resources.storage_buffers)
+				loadResource(storage_buffer, compiler, resources, stage_flag, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+
+			for (const spirv_cross::Resource& storage_image : resources.storage_images)
+				loadResource(storage_image, compiler, resources, stage_flag, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+
+			for (const spirv_cross::Resource& subpass_input : resources.subpass_inputs)
+				loadResource(subpass_input, compiler, resources, stage_flag, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT);
+
+			for (const spirv_cross::Resource& uniform_buffer : resources.uniform_buffers)
+				loadResource(uniform_buffer, compiler, resources, stage_flag, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+
+			for (const spirv_cross::Resource& push_constant : resources.push_constant_buffers)
+				loadPushConstant(push_constant, compiler, resources, stage_flag);
+
+			//Local size reflection
+			local_size = glm::uvec3(0);
+			local_size[0] = compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 0);
+			local_size[1] = compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 1);
+			local_size[2] = compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 2);
+			if (local_size != glm::uvec3(0))
+				local_size = glm::max(local_size, glm::uvec3(1));
+		}
 		pipeline_shader_stage_infos.emplace_back(std::move(pipeline_shader_stage_info));
-
 	}
 
-	descriptor_set = makeShared<DescriptorSet>();
-	
-	size_t current_offset = 0;
-	for (const auto& [uniform_block_name, uniform_block] : uniform_blocks)
+	if (!resources_was_compiled)
 	{
-		auto descriptor_type = VK_DESCRIPTOR_TYPE_MAX_ENUM;
-		switch (uniform_block.type)
-		{
-		case UniformBlock::Type::Uniform:
-		{
-			descriptor_type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			descriptor_set->addBuffers(uniform_block.binding, 1, descriptor_type, uniform_block.stage_flags);
-			descriptor_types.emplace(uniform_block.binding, descriptor_type);
-			break;
-		}
-		case UniformBlock::Type::Storage:
-		{
-			descriptor_type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-			descriptor_set->addBuffers(uniform_block.binding, 1, descriptor_type, uniform_block.stage_flags);
-			descriptor_types.emplace(uniform_block.binding, descriptor_type);
-			break;
-		}
-		case UniformBlock::Type::Push:
-		{
-			VkPushConstantRange push_constant_range = {};
-			push_constant_range.stageFlags = uniform_block.getStageFlags();
-			push_constant_range.offset = current_offset;
-			push_constant_range.size = uniform_block.getSize();
-			push_constant_ranges.emplace_back(std::move(push_constant_range));
-			current_offset += uniform_block.getSize();
-			break;
-		}
-		}
+		for (const auto& resource : this->resources)
+			descriptor_sets.at(resource.set)->add(resource.binding, resource.count, resource.type, resource.stage_flags);
 
-		descriptor_locations.emplace(uniform_block_name, uniform_block.binding);
-		descriptor_sizes.emplace(uniform_block_name, uniform_block.size);
-	}
-	
-	for (const auto& [uniform_name, uniform] : uniforms)
-	{
-		auto descriptor_type = VK_DESCRIPTOR_TYPE_MAX_ENUM;
-	
-		switch (uniform.gl_type)
-		{
-		case 0x8B5E: // GL_SAMPLER_2D
-		case 0x904D: // GL_IMAGE_2D
-		case 0x8DC1: // GL_TEXTURE_2D_ARRAY
-		case 0x9108: // GL_SAMPLER_2D_MULTISAMPLE
-		case 0x9055: // GL_IMAGE_2D_MULTISAMPLE
-		{
-			descriptor_type = uniform.write_only ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			descriptor_set->addImages(uniform.binding, uniform.count, descriptor_type, uniform.stage_flags);
-			descriptor_types.emplace(uniform.binding, descriptor_type);
-			break;
-		}
-		case 0x8B60: // GL_SAMPLER_CUBE
-		case 0x9050: // GL_IMAGE_CUBE
-		case 0x9054: // GL_IMAGE_CUBE_MAP_ARRAY
-		{
-			descriptor_type = uniform.write_only ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			descriptor_set->addImages(uniform.binding, uniform.count, descriptor_type, uniform.stage_flags);
-			descriptor_types.emplace(uniform.binding, descriptor_type);
-			break;
-		}
-		}
-		
-		descriptor_locations.emplace(uniform_name, uniform.binding);
-		descriptor_sizes.emplace(uniform_name, uniform.size);
-	}
-
-	descriptor_set->build();
-
-	//TODO: This is currently useless until it supports instancing
-	current_offset = 4;
-	for (const auto& [attribute_name, attribute] : attributes) 
-	{
-		VkVertexInputAttributeDescription attribute_description = {};
-		attribute_description.location = uint32_t(attribute.location);
-		attribute_description.binding = 0;
-		attribute_description.format = EnumInfo::glTypeToVk(attribute.gl_type);
-		attribute_description.offset = current_offset;
-		attribute_descriptions.emplace_back(std::move(attribute_description));
-		current_offset += attribute.size;
+		for (auto& descriptor_set : descriptor_sets)
+			descriptor_set.second->build();
 	}
 
 	SK_TRACE("Shader loaded: {0}", path);
-}
-
-std::optional<uint32_t> Shader::getDescriptorLocation(const std::string& name) const 
-{
-	if (auto it = descriptor_locations.find(name); it != descriptor_locations.end())
-		return it->second;
-	return std::nullopt;
-}
-
-std::optional<uint32_t> Shader::getDescriptorSize(const std::string& name) const 
-{
-	if (auto it = descriptor_sizes.find(name); it != descriptor_sizes.end())
-		return it->second;
-	return std::nullopt;
-}
-
-std::optional<Shader::Uniform> Shader::getUniform(const std::string& name) const 
-{
-	if (auto it = uniforms.find(name); it != uniforms.end())
-		return it->second;
-	return std::nullopt;
-}
-
-std::optional<Shader::UniformBlock> Shader::getUniformBlock(const std::string& name) const 
-{
-	if (auto it = uniform_blocks.find(name); it != uniform_blocks.end())
-		return it->second;
-	return std::nullopt;
-}
-
-std::optional<Shader::Attribute> Shader::getAttribute(const std::string& name) const 
-{
-	if (auto it = attributes.find(name); it != attributes.end())
-		return it->second;
-	return std::nullopt;
-}
-
-std::optional<VkDescriptorType> Shader::getDescriptorType(uint32_t location) const 
-{
-	if (auto it = descriptor_types.find(location); it != descriptor_types.end())
-		return it->second;
-	return std::nullopt;
 }
 
 Shader::~Shader()
@@ -304,7 +207,7 @@ Shader::~Shader()
 		vkDestroyShaderModule(*Graphics::logical_device, pipeline_shader_stage_info.module, nullptr);
 }
 
-std::unordered_map<uint32_t, std::string> Shader::parse(const std::string& file)
+std::unordered_map<uint32_t, std::string> Shader::parse(const std::filesystem::path& file)
 {
 	std::unordered_map<uint32_t, std::string> shader_sources;
 
@@ -343,75 +246,62 @@ VkShaderModule Shader::createShaderModule(const std::vector<uint32_t>& source) c
 	return shader_module;
 }
 
-void Shader::loadUniformBlock(const glslang::TProgram& program, VkShaderStageFlagBits stage_flag, int32_t index)
+void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, VkShaderStageFlagBits stage_flag, VkDescriptorType type)
 {
-	auto reflection = program.getUniformBlock(index);
-	for (auto& [uniform_block_name, uniform_block] : uniform_blocks)
+	const spirv_cross::SPIRType& spir_type = compiler.get_type(spirv_resource.type_id);
+
+	for (Resource& resource : this->resources)
 	{
-		if (uniform_block_name == reflection.name)
+		if (resource.id == spir_type.basetype)
 		{
-			uniform_block.stage_flags |= stage_flag;
+			resource.stage_flags |= stage_flag;
 			return;
 		}
 	}
+	
+	uint32_t set = compiler.get_decoration(spirv_resource.id, spv::DecorationDescriptorSet);
+	uint32_t binding = compiler.get_decoration(spirv_resource.id, spv::DecorationBinding);
+	
+	if (descriptor_sets.find(set) == descriptor_sets.end())
+		descriptor_sets.emplace(set, makeShared<DescriptorSet>());
+	
+	uint32_t count = 0;
+	for (const auto& arr : spir_type.array)
+		count += arr;
+	if (!count)
+		count = 1;
 
-	auto uniform_type = UniformBlock::Type::None;
-	if (reflection.getType()->getQualifier().storage == glslang::EvqUniform)
-		uniform_type = UniformBlock::Type::Uniform;
-	if (reflection.getType()->getQualifier().storage == glslang::EvqBuffer)
-		uniform_type = UniformBlock::Type::Storage;
-	if (reflection.getType()->getQualifier().layoutPushConstant)
-		uniform_type = UniformBlock::Type::Push;
-	uniform_blocks.emplace(reflection.name, UniformBlock(reflection.getBinding(), reflection.size, stage_flag, uniform_type));
+	Resource resource
+	{
+		.id = (size_t)spir_type.basetype,
+		.count = count,
+		.set = set,
+		.binding = binding,
+		.stage_flags = (VkShaderStageFlags)stage_flag,
+		.type = type
+	};
+	this->resources.emplace_back(std::move(resource));
 }
 
-void Shader::loadUniform(const glslang::TProgram& program, VkShaderStageFlagBits stage_flag, int32_t index)
+void Shader::loadPushConstant(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, VkShaderStageFlagBits stage_flag)
 {
-	auto reflection = program.getUniform(index);
-
-	if (reflection.getBinding() == -1)
+	auto ranges = compiler.get_active_buffer_ranges(resources.push_constant_buffers.front().id);
+	for (auto& range : ranges)
 	{
-		auto split_name = String::split(reflection.name, '.');
-		if (split_name.size() > 1)
+		for (auto& push_constant : push_constants)
 		{
-			for (auto& [uniform_block_name, uniform_block] : uniform_blocks)
+			if (push_constant.size == range.range && push_constant.offset == range.offset)
 			{
-				if (uniform_block_name == split_name.at(0))
-				{
-					uniform_block.uniforms.emplace(String::replaceFirst(reflection.name, split_name.at(0) + ".", ""),
-						Uniform(reflection.getBinding(), reflection.offset, computeSize(reflection.getType()), reflection.glDefineType, false, false, stage_flag, reflection.size));
-					return;
-				}
+				push_constant.stageFlags |= stage_flag;
+				return;
 			}
 		}
+		VkPushConstantRange push_constant_range{};
+		push_constant_range.offset = range.offset;
+		push_constant_range.size = range.range;
+		push_constant_range.stageFlags = stage_flag;
+		push_constants.emplace_back(std::move(push_constant_range));
 	}
-
-	for (auto& [uniform_name, uniform] : uniforms)
-	{
-		if (uniform_name == reflection.name)
-		{
-			uniform.stage_flags |= stage_flag;
-			return;
-		}
-	}
-
-	auto& qualifier = reflection.getType()->getQualifier();
-	uniforms.emplace(reflection.name, Uniform(reflection.getBinding(), reflection.offset, -1, reflection.glDefineType, qualifier.readonly, qualifier.writeonly, stage_flag, reflection.size));
-}
-
-void Shader::loadAttribute(const glslang::TProgram& program, int32_t index)
-{
-	auto reflection = program.getPipeInput(index);
-
-	if (reflection.name.empty())
-		return;
-
-	for (const auto& [attribute_name, attribute] : attributes)
-		if (attribute_name == reflection.name)
-			return;
-
-	auto& qualifier = reflection.getType()->getQualifier();
-	attributes.emplace(reflection.name, Attribute(qualifier.layoutSet, qualifier.layoutLocation, computeSize(reflection.getType()), reflection.glDefineType));
 }
 
 EShLanguage Shader::getEshLanguage(Shader::Type shader_type)

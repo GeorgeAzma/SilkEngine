@@ -26,6 +26,10 @@ Scene::Scene()
 	instance_batches.reserve(Graphics::MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
 
 	indirect_buffer = makeShared<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
+	global_descriptor_set = Resources::getShaderEffect("3D")->pipeline->getShader()->getDescirptorSets().at(0);
+	global_descriptor_set->setBufferInfo(0, { *Graphics::global_uniform }); //TODO: move global_uniform here
+	global_descriptor_set->update();
+
 }
 
 Scene::~Scene()
@@ -80,7 +84,6 @@ void Scene::onUpdate()
 
 	Graphics::global_uniform->setDataChecked(&global_uniform_data, sizeof(Graphics::GlobalUniformData));
 
-
 	//Drawing	
 	bool any_needs_update = false;
 	static std::vector<VkDrawIndexedIndirectCommand> draw_commands;
@@ -101,9 +104,8 @@ void Scene::onUpdate()
 	if (any_needs_update)
 		indirect_buffer->setDataChecked(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand));
 
-	
-
-	vkDeviceWaitIdle(*Graphics::logical_device);
+	//Draw instances
+	Graphics::swap_chain->acquireNextImage();
 	for (auto& instance_batch : instance_batches)
 	{
 		std::vector<VkDescriptorImageInfo> descriptor_images(Graphics::MAX_IMAGE_SLOTS);
@@ -112,15 +114,11 @@ void Scene::onUpdate()
 		for (size_t i = instance_batch.images.size(); i < descriptor_images.size(); ++i)
 			descriptor_images[i] = *Resources::getImage("White");
 
-		auto& descriptor_set = instance_batch.descriptor_sets[0];
+		auto& descriptor_set = instance_batch.descriptor_sets[Graphics::swap_chain->getImageIndex()];
 
-		descriptor_set.setBufferInfo(0, { { *Graphics::global_uniform, 0, VK_WHOLE_SIZE } });
-		descriptor_set.setImageInfo(1, descriptor_images);
-		descriptor_set.update();
+		descriptor_set[1].setImageInfo(0, descriptor_images);
+		descriptor_set[1].update();
 	}
-
-	//Draw instances
-	Graphics::swap_chain->acquireNextImage();
 	Graphics::swap_chain->beginFrame(Graphics::swap_chain->getImageIndex());
 	Graphics::swap_chain->beginRenderPass(Graphics::swap_chain->getImageIndex());
 
@@ -128,6 +126,7 @@ void Scene::onUpdate()
 	for (auto& instance_batch : instance_batches)
 	{
 		instance_batch.bind();
+		global_descriptor_set->bind(0);
 		vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, draw_index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
 		++draw_index;
 	}
@@ -336,9 +335,13 @@ void Scene::addInstanceBatch(shared<RenderedInstance> instance, const InstanceDa
 
 	new_batch.instance_buffer = makeShared<VertexBuffer>(new_batch.instance_data.data(), Graphics::MAX_INSTANCES * sizeof(InstanceData), VMA_MEMORY_USAGE_CPU_TO_GPU);
 
-	new_batch.descriptor_sets.resize(1);
-	new_batch.descriptor_sets[0] = *new_batch.instance->mesh->material->shader_effect->pipeline->getShader()->getDescriptorSet();
-
+	new_batch.descriptor_sets.resize(Graphics::swap_chain->getImages().size());
+	for (auto& descriptor_sets : new_batch.descriptor_sets)
+		for (auto&& [set, descriptor_set] : new_batch.instance->mesh->material->shader_effect->pipeline->getShader()->getDescirptorSets())
+			if(set != 0) //0 is reserved as Global uniform buffer
+				descriptor_sets[set] = *descriptor_set;
+		
+	
 	instance->instance_batch_index = instance_batches.size() - 1;
 	instance->instance_data_index = instance_batches.back().instance_data.size() - 1;
 }

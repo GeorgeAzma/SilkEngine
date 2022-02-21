@@ -11,13 +11,12 @@ public:
 	DescriptorSet(const DescriptorSet & other);
 	DescriptorSet& operator=(const DescriptorSet & other);
 
-	DescriptorSet& addBuffers(uint32_t binding, uint32_t count, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
-	DescriptorSet& addImages(uint32_t binding, uint32_t count, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
+	DescriptorSet& add(uint32_t binding, uint32_t count, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
 	void build();
 
-	void update();
+	void update() const;
 
-	void bind(size_t first_set = 0);
+	void bind(size_t first_set = 0) const;
 
 	operator const VkDescriptorSet& () const { return descriptor_set; }
 	const VkDescriptorSetLayout& getLayout() const { return *layout; }

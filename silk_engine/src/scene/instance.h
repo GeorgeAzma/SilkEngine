@@ -51,7 +51,7 @@ struct InstanceBatch
 	shared<VertexBuffer> instance_buffer = nullptr;
 	std::vector<shared<Image>> images;
 	std::vector<shared<Buffer>> buffers;
-	std::vector<DescriptorSet> descriptor_sets;
+	std::vector<std::unordered_map<uint32_t, DescriptorSet>> descriptor_sets;
 
 	void bind();
 	uint32_t addImages(const std::vector<shared<Image>>& new_images);

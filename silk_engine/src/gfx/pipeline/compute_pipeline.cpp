@@ -2,22 +2,18 @@
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
 
-ComputePipeline& ComputePipeline::setShader(shared<Shader> shader)
+ComputePipeline::ComputePipeline(const std::string& shader_file)
 {
-	this->shader = shader;
+	this->shader = makeShared<Shader>(shader_file);
 	shader_stage_infos.resize(1);
 	shader_stage_infos[0] = shader->getPipelineShaderStageInfos().back();
 	create_info.stage = shader_stage_infos[0];
 
-	push_constant_ranges = shader->getPushConstantRanges();
-	if (shader->getDescriptorSet().get())
-		descriptor_set_layouts = { shader->getDescriptorSet()->getLayout() };
+	push_constant_ranges = shader->getPushConstants(); 
+	descriptor_set_layouts.clear();
+	for (auto&& [set, descriptor_set] : shader->getDescirptorSets())
+		descriptor_set_layouts.emplace_back(descriptor_set->getLayout());
 
-	return *this;
-}
-
-void ComputePipeline::build()
-{
 	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipeline_layout_info.setLayoutCount = descriptor_set_layouts.size();
 	pipeline_layout_info.pSetLayouts = descriptor_set_layouts.data();
@@ -37,6 +33,14 @@ void ComputePipeline::bind()
 	Graphics::active.pipeline = pipeline;
 	Graphics::active.pipeline_layout = pipeline_layout;
 	Graphics::active.bind_point = VK_PIPELINE_BIND_POINT_COMPUTE;
+}
+
+void ComputePipeline::dispatch(uint32_t global_invocation_count_x, uint32_t global_invocation_count_y, uint32_t global_invocation_count_z) const
+{
+	glm::uvec3 global_invocation_count(global_invocation_count_x, global_invocation_count_y, global_invocation_count_z);
+	glm::uvec3 local_size = shader->getLocalSize();
+	glm::uvec3 group_count = global_invocation_count / local_size + glm::uvec3(global_invocation_count.x % local_size.x > 0, global_invocation_count.y % local_size.y > 0, global_invocation_count.z % local_size.z > 0);
+	vkCmdDispatch(Graphics::active.command_buffer, group_count.x, group_count.y, group_count.z);
 }
 
 void ComputePipeline::create()

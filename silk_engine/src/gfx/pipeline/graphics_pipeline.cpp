@@ -3,18 +3,19 @@
 #include "gfx/window/swap_chain.h"
 #include "gfx/devices/logical_device.h"
 
-GraphicsPipeline& GraphicsPipeline::setShader(shared<Shader> shader)
+GraphicsPipeline& GraphicsPipeline::setShader(const std::filesystem::path& shader_file)
 {
-	this->shader = shader;
+	this->shader = makeShared<Shader>(shader_file);
 	shader_stage_infos.clear();
 	for (const auto& pipeline_shader_stage_info : shader->getPipelineShaderStageInfos())
 		shader_stage_infos.emplace_back(pipeline_shader_stage_info);
 	create_info.stageCount = shader_stage_infos.size();
 	create_info.pStages = shader_stage_infos.data();
 
-	push_constant_ranges = shader->getPushConstantRanges();
-	if(shader->getDescriptorSet().get())
-		descriptor_set_layouts = { shader->getDescriptorSet()->getLayout() }; //TODO: Support more than 1 descriptor sets
+	push_constant_ranges = shader->getPushConstants();
+	descriptor_set_layouts.clear();
+	for (auto&& [set, descriptor_set] : shader->getDescirptorSets())
+		descriptor_set_layouts.emplace_back(descriptor_set->getLayout());
 
 	return *this;
 }

@@ -4,6 +4,7 @@
 #include "gfx/enums.h"
 #include "gfx/buffers/command_buffer.h"
 #include "gfx/devices/physical_device.h"
+#include "gfx/devices/logical_device.h"
 #include "gfx/window/swap_chain.h"
 
 Image::~Image()
@@ -38,6 +39,14 @@ void Image::create(const ImageProps& props)
 
 	if (image == VK_NULL_HANDLE)
 	{
+#ifdef SK_ENABLE_DEBUG_OUTPUT
+		if (props.usage & VK_IMAGE_USAGE_STORAGE_BIT)
+		{
+			VkFormatProperties format_properties;
+			vkGetPhysicalDeviceFormatProperties(*Graphics::physical_device, props.format, &format_properties);
+			SK_ASSERT(((props.tiling == VK_IMAGE_TILING_OPTIMAL) ? format_properties.optimalTilingFeatures : format_properties.linearTilingFeatures) & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT, "Storage image doesn't support specified format.");
+		}
+#endif
 		VkImageCreateInfo create_info{};
 		create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		create_info.imageType = props.is_1D ? VK_IMAGE_TYPE_1D : (props.depth == 1 ? VK_IMAGE_TYPE_2D : VK_IMAGE_TYPE_3D);
@@ -46,21 +55,15 @@ void Image::create(const ImageProps& props)
 		create_info.usage = props.usage;
 		create_info.flags = props.is_cubemap ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
 		create_info.initialLayout = props.initial_layout;
-		SK_ASSERT(props.width <= Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxExtent.width, "Vulkan: Image is too wide");
-		SK_ASSERT(props.height <= Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxExtent.height, "Vulkan: Image is too tall");
-		SK_ASSERT(props.depth <= Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxExtent.depth, "Vulkan: Image is too deep");
-		SK_ASSERT(props.array_layers <= Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxArrayLayers, "Vulkan: Image has too much layers");
 		create_info.extent = { props.width, props.height, props.depth };
 		create_info.arrayLayers = props.array_layers;
 		if (props.mipmap)
 		{
 			mip_levels = std::floor(std::log2(std::max(props.width, props.height))) + 1;
 			auto max_mip_levels = Graphics::physical_device->getImageFormatProperties(create_info.format, create_info.imageType, create_info.tiling, create_info.usage, create_info.flags).maxMipLevels;
-			SK_ASSERT(mip_levels <= max_mip_levels, "Vulkan: Image has too much mip levels: {0}/{1}", mip_levels, max_mip_levels);
 		}
 		create_info.mipLevels = mip_levels;
 		create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		SK_ASSERT((uint32_t)create_info.samples <= (uint32_t)Graphics::physical_device->getMaxSampleCount(), "Vulkan: Image has too much samples");
 		create_info.samples = props.samples;
 
 		VmaAllocationCreateInfo allocation_info = {};
@@ -139,6 +142,9 @@ void Image::transitionLayout(VkImageLayout new_layout)
 	case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
 		barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
 		break;
+	case VK_IMAGE_LAYOUT_GENERAL: //This is most likely usecase but might not be true
+		barrier.srcAccessMask = VK_ACCESS_HOST_READ_BIT;
+		break;
 	default:
 		SK_ERROR("Unsupported image layout transition source: {0}", barrier.oldLayout);
 		break;
@@ -164,6 +170,9 @@ void Image::transitionLayout(VkImageLayout new_layout)
 			barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
 
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_GENERAL: //This is most likely usecase but might not be true
+		barrier.dstAccessMask = VK_ACCESS_HOST_READ_BIT;
 		break;
 	default:
 		SK_ERROR("Unsupported image layout transition destination: {0}", barrier.oldLayout);
@@ -322,6 +331,22 @@ void Image::setData(void* data, uint32_t array_layers, uint32_t base_array_layer
 	memcpy(buffer_data, data, staging_buffer.size);
 	staging_buffer.unmap();
 	copyBufferToImage(staging_buffer);
+}
+
+void Image::getData(void* data, uint32_t array_layer)
+{
+	VkImageSubresource image_subresource = {};
+	image_subresource.aspectMask = getAspectFlags(props.format);
+	image_subresource.mipLevel = 0;
+	image_subresource.arrayLayer = array_layer;
+
+	VkSubresourceLayout destination_subresource_layout;
+	vkGetImageSubresourceLayout(*Graphics::logical_device, image, &image_subresource, &destination_subresource_layout);
+
+	void* buffer_data;
+	map(&buffer_data);
+	std::memcpy(data, (const uint8_t*)buffer_data + destination_subresource_layout.offset, destination_subresource_layout.size);
+	unmap();
 }
 
 bool Image::copyImage(shared<Image> destination, uint32_t array_layer)

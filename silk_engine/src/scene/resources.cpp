@@ -59,18 +59,20 @@ void Resources::init()
 
     //MATERIALS
     {
-        shared<Shader> shader = makeShared<Shader>("3D");
         shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
         graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
             .enable(EnableTag::DEPTH_TEST)
             .enable(EnableTag::DEPTH_WRITE)
-            .setShader(shader)
+            .setShader("3D")
             .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
             .setSampleCount(Graphics::swap_chain->getSampleCount())
             .setRenderPass(Graphics::swap_chain->getRenderPass())
             .build();
         addShaderEffect("3D", makeShared<ShaderEffect>(graphics_pipeline));
         addMaterial("Textured Lit 3D", makeShared<Material>(Resources::getShaderEffect("3D")));
+
+        shared<ComputePipeline> compute_pipeline = makeShared<ComputePipeline>("bgra_to_rgba");
+        addComputeShaderEffect("BGRA To RGBA", makeShared<ComputeShaderEffect>(compute_pipeline)); 
     }
 
     //MODELS

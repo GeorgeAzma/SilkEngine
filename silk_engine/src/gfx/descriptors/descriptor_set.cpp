@@ -4,7 +4,7 @@
 #include "gfx/descriptors/descriptor_pool.h"
 #include "scene/resources.h"
 
-DescriptorSet& DescriptorSet::addBuffers(uint32_t binding, uint32_t count, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags)
+DescriptorSet& DescriptorSet::add(uint32_t binding, uint32_t count, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags)
 {
 	buffer_infos.push_back({});
 	image_infos.push_back({});
@@ -15,31 +15,6 @@ DescriptorSet& DescriptorSet::addBuffers(uint32_t binding, uint32_t count, VkDes
 	write_descriptor.descriptorType = descriptor_type;
 	write_descriptor.dstArrayElement = 0;
 	write_descriptor.dstBinding = binding;
-	write_descriptor.pBufferInfo = nullptr;
-	write_descriptor_sets.emplace_back(std::move(write_descriptor));
-
-	VkDescriptorSetLayoutBinding descriptor_layout_binding{};
-	descriptor_layout_binding.binding = binding;
-	descriptor_layout_binding.descriptorCount = count;
-	descriptor_layout_binding.descriptorType = descriptor_type;
-	descriptor_layout_binding.stageFlags = stage_flags;
-	descriptor_layout_bindings.emplace_back(std::move(descriptor_layout_binding));
-
-	return *this;
-}
-
-DescriptorSet& DescriptorSet::addImages(uint32_t binding, uint32_t count, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags)
-{
-	buffer_infos.push_back({});
-	image_infos.push_back({});
-	
-	VkWriteDescriptorSet write_descriptor{};
-	write_descriptor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	write_descriptor.descriptorCount = count;
-	write_descriptor.descriptorType = descriptor_type;
-	write_descriptor.dstArrayElement = 0;
-	write_descriptor.dstBinding = binding;
-	write_descriptor.pImageInfo = nullptr;
 	write_descriptor_sets.emplace_back(std::move(write_descriptor));
 
 	VkDescriptorSetLayoutBinding descriptor_layout_binding{};
@@ -71,12 +46,12 @@ void DescriptorSet::build()
 		write.dstSet = descriptor_set;
 }
 
-void DescriptorSet::update()
+void DescriptorSet::update() const
 {
 	vkUpdateDescriptorSets(*Graphics::logical_device, write_descriptor_sets.size(), write_descriptor_sets.data(), 0, nullptr);
 }
 
-void DescriptorSet::bind(size_t first_set)
+void DescriptorSet::bind(size_t first_set) const
 {
 	vkCmdBindDescriptorSets(Graphics::active.command_buffer, Graphics::active.bind_point, Graphics::active.pipeline_layout, first_set, 1, &descriptor_set, 0, nullptr);
 }

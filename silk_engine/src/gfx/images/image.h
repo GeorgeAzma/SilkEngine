@@ -229,6 +229,8 @@ public:
 	static void align4(Bitmap& image);
 
 	void setData(void* data, uint32_t array_layers, uint32_t base_array_layer);
+	//Copies data from the image to the pointer provided
+	void getData(void* data, uint32_t array_layer = 0);
 	bool copyImage(shared<Image> destination, uint32_t array_layer = 0);
 	void transitionLayout(VkImageLayout new_layout);
 	void copyBufferToImage(VkBuffer buffer);
