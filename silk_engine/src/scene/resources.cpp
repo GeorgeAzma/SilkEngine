@@ -59,34 +59,17 @@ void Resources::init()
 
     //MATERIALS
     {
-        shared<DescriptorSet> global_descriptor_set = makeShared<DescriptorSet>();
-        global_descriptor_set->addBuffers(0, { { *Graphics::global_uniform, 0, VK_WHOLE_SIZE } }, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
-            .build();
-        addDescriptorSet("Global", global_descriptor_set);
-
-        auto white_image = Resources::getImage("Test1");
-        shared<DescriptorSet> image_descriptor_set = makeShared<DescriptorSet>();
-        std::vector<VkDescriptorImageInfo> white_images(Graphics::MAX_IMAGE_SLOTS);
-        for (auto& image : white_images)
-            image = *white_image;
-        image_descriptor_set->addImages(0, white_images, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-            .build();
-        addDescriptorSet("Images", image_descriptor_set);
-
         shared<Shader> shader = makeShared<Shader>("3D");
         shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
         graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
             .enable(EnableTag::DEPTH_TEST)
             .enable(EnableTag::DEPTH_WRITE)
-            .addDescriptorSetLayout(global_descriptor_set->getLayout())
-            .addDescriptorSetLayout(image_descriptor_set->getLayout())
             .setShader(shader)
             .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
             .setSampleCount(Graphics::swap_chain->getSampleCount())
             .setRenderPass(Graphics::swap_chain->getRenderPass())
             .build();
         addShaderEffect("3D", makeShared<ShaderEffect>(graphics_pipeline));
-
         addMaterial("Textured Lit 3D", makeShared<Material>(Resources::getShaderEffect("3D")));
     }
 
@@ -94,8 +77,6 @@ void Resources::init()
     {
         addModel("Backpack", makeShared<Model>("backpack/backpack.obj"));
     }
-
-    Graphics::command_pool->bind();
 }
 
 void Resources::cleanup()
@@ -108,7 +89,6 @@ void Resources::cleanup()
     materials.clear();
     images.clear();
     descriptor_set_layouts.clear();
-    descriptor_sets.clear();
 }
 
 shared<Mesh> Resources::getMesh(const std::string& name)
@@ -162,12 +142,6 @@ shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<
     return new_layout;
 }
 
-shared<DescriptorSet> Resources::getDescriptorSet(const std::string& name)
-{
-    auto it = descriptor_sets.find(name);
-    return it == descriptor_sets.end() ? nullptr : it->second;
-}
-
 shared<Font> Resources::getFont(const std::string& name)
 {
     auto it = fonts.find(name);
@@ -208,11 +182,6 @@ void Resources::addImage(const std::string& name, shared<Image2D> image)
 void Resources::addDescriptorSetLayout(shared<DescriptorSetLayout> descriptor_layout)
 {
     descriptor_set_layouts[DescriptorSetLayoutInfo{descriptor_layout->bindings_vector}] = descriptor_layout;
-}
-
-void Resources::addDescriptorSet(const std::string& name, shared<DescriptorSet> descriptor_set)
-{
-    descriptor_sets[name] = descriptor_set;
 }
 
 void Resources::addFont(const std::string& name, shared<Font> font)

@@ -51,7 +51,7 @@ constexpr Color::Color(uint32_t hex, Type type)
 	}
 }
 
-constexpr Color::Color(std::string hex, float a)
+Color::Color(std::string hex, float a)
 {
 	color.a = a;
 	if (hex[0] == '#')
@@ -69,11 +69,11 @@ constexpr uint32_t Color::getHex(Type type) const
 {
 	switch (type) {
 	case Type::RGBA:
-		return (uint8_t(r * 255.0f) << 24) | (uint8_t(g * 255.0f) << 16) | (uint8_t(b * 255.0f) << 8) | (uint8_t(a * 255.0f) & 0xFF);
+		return (uint8_t(color.r * 255.0f) << 24) | (uint8_t(color.g * 255.0f) << 16) | (uint8_t(color.b * 255.0f) << 8) | (uint8_t(color.a * 255.0f) & 0xFF);
 	case Type::ARGB:
-		return (uint8_t(a * 255.0f) << 24) | (uint8_t(r * 255.0f) << 16) | (uint8_t(g * 255.0f) << 8) | (uint8_t(b * 255.0f) & 0xFF);
+		return (uint8_t(color.a * 255.0f) << 24) | (uint8_t(color.r * 255.0f) << 16) | (uint8_t(color.g * 255.0f) << 8) | (uint8_t(color.b * 255.0f) & 0xFF);
 	case Type::RGB:
-		return (uint8_t(r * 255.0f) << 16) | (uint8_t(g * 255.0f) << 8) | (uint8_t(b * 255.0f) & 0xFF);
+		return (uint8_t(color.r * 255.0f) << 16) | (uint8_t(color.g * 255.0f) << 8) | (uint8_t(color.b * 255.0f) & 0xFF);
 	default:
 		SK_ERROR("Unknown Color type");
 	}
@@ -84,9 +84,9 @@ std::string Color::getHexString() const
 	std::stringstream stream;
 	stream << "#";
 
-	auto hexValue = ((uint32_t(r * 255.0f) & 0xFF) << 16) +
-					((uint32_t(g * 255.0f) & 0xFF) << 8) +
-					(uint32_t(b * 255.0f) & 0xFF);
+	auto hexValue = ((uint32_t(color.r * 255.0f) & 0xFF) << 16) +
+					((uint32_t(color.g * 255.0f) & 0xFF) << 8) +
+					(uint32_t(color.b * 255.0f) & 0xFF);
 	stream << std::hex << std::setfill('0') << std::setw(6) << hexValue;
 
 	return stream.str();

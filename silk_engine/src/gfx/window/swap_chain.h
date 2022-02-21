@@ -12,7 +12,7 @@ class SwapChain : NonCopyable
     friend class PhysicalDevice;
 
 public:
-    static constexpr int MAX_FRAMES_IN_FLIGHT = 2; //TODO: Support 2-3
+    static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
 public:
     SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain = {});
@@ -26,6 +26,7 @@ public:
     const std::vector<shared<Image2D>>& getImages() const { return images; }
     const VkRenderPass& getRenderPass() const { return *render_pass; }
     uint32_t getImageIndex() const { return image_index; }
+    shared<Image2D> getActiveImage() const { return images[image_index]; }
     VkSampleCountFlagBits getSampleCount() const { return sample_count; }
     
     void recreate();

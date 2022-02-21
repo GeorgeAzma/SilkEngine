@@ -102,7 +102,7 @@ void Shader::compile(const std::vector<Define>& defines)
 			in.read((char*)binary.data(), size);
 
 			SK_TRACE("Shader cache loaded: {0}", file_cache_path);
-}
+		}
 		else
 #endif
 		{
@@ -116,7 +116,7 @@ void Shader::compile(const std::vector<Define>& defines)
 
 			program.addShader(&shader);
 
-			if (!program.link(messages) || !program.mapIO()) 
+			if (!program.link(messages) || !program.mapIO())
 				SK_ERROR("[Shader compiler]: Couldn't link shader program");
 
 			glslang::SpvOptions spv_options;
@@ -165,26 +165,45 @@ void Shader::compile(const std::vector<Define>& defines)
 			loadAttribute(program, i);
 
 		pipeline_shader_stage_infos.emplace_back(std::move(pipeline_shader_stage_info));
+
 	}
 
+	descriptor_set = makeShared<DescriptorSet>();
+	
+	size_t current_offset = 0;
 	for (const auto& [uniform_block_name, uniform_block] : uniform_blocks)
 	{
 		auto descriptor_type = VK_DESCRIPTOR_TYPE_MAX_ENUM;
 		switch (uniform_block.type)
 		{
 		case UniformBlock::Type::Uniform:
+		{
 			descriptor_type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			break;
-		case UniformBlock::Type::Storage:
-			descriptor_type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-			break;
-		case UniformBlock::Type::Push:
+			descriptor_set->addBuffers(uniform_block.binding, 1, descriptor_type, uniform_block.stage_flags);
+			descriptor_types.emplace(uniform_block.binding, descriptor_type);
 			break;
 		}
-		//TODO:
-		//shared<DescriptorSetLayout> descriptor_set_layout = makeShared<DescriptorSetLayout>();
-		//descriptor_set_layout->addBinding(uniform_block.binding, descriptor_type, uniform_block.stage_flags)
-		//	.build();
+		case UniformBlock::Type::Storage:
+		{
+			descriptor_type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			descriptor_set->addBuffers(uniform_block.binding, 1, descriptor_type, uniform_block.stage_flags);
+			descriptor_types.emplace(uniform_block.binding, descriptor_type);
+			break;
+		}
+		case UniformBlock::Type::Push:
+		{
+			VkPushConstantRange push_constant_range = {};
+			push_constant_range.stageFlags = uniform_block.getStageFlags();
+			push_constant_range.offset = current_offset;
+			push_constant_range.size = uniform_block.getSize();
+			push_constant_ranges.emplace_back(std::move(push_constant_range));
+			current_offset += uniform_block.getSize();
+			break;
+		}
+		}
+
+		descriptor_locations.emplace(uniform_block_name, uniform_block.binding);
+		descriptor_sizes.emplace(uniform_block_name, uniform_block.size);
 	}
 	
 	for (const auto& [uniform_name, uniform] : uniforms)
@@ -198,22 +217,31 @@ void Shader::compile(const std::vector<Define>& defines)
 		case 0x8DC1: // GL_TEXTURE_2D_ARRAY
 		case 0x9108: // GL_SAMPLER_2D_MULTISAMPLE
 		case 0x9055: // GL_IMAGE_2D_MULTISAMPLE
+		{
 			descriptor_type = uniform.write_only ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			descriptor_set->addImages(uniform.binding, uniform.count, descriptor_type, uniform.stage_flags);
+			descriptor_types.emplace(uniform.binding, descriptor_type);
 			break;
+		}
 		case 0x8B60: // GL_SAMPLER_CUBE
 		case 0x9050: // GL_IMAGE_CUBE
 		case 0x9054: // GL_IMAGE_CUBE_MAP_ARRAY
+		{
 			descriptor_type = uniform.write_only ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			descriptor_set->addImages(uniform.binding, uniform.count, descriptor_type, uniform.stage_flags);
+			descriptor_types.emplace(uniform.binding, descriptor_type);
 			break;
 		}
-		//TODO:
-		//shared<DescriptorSetLayout> descriptor_set_layout = makeShared<DescriptorSetLayout>();
-		//descriptor_set_layout->addBinding(uniform.binding, descriptor_type, uniform.stage_flags)
-		//	.build();
+		}
+		
+		descriptor_locations.emplace(uniform_name, uniform.binding);
+		descriptor_sizes.emplace(uniform_name, uniform.size);
 	}
-	
-	//TODO: This is currently useless until I it supports instancing
-	uint32_t current_offset = 4;
+
+	descriptor_set->build();
+
+	//TODO: This is currently useless until it supports instancing
+	current_offset = 4;
 	for (const auto& [attribute_name, attribute] : attributes) 
 	{
 		VkVertexInputAttributeDescription attribute_description = {};
@@ -226,6 +254,48 @@ void Shader::compile(const std::vector<Define>& defines)
 	}
 
 	SK_TRACE("Shader loaded: {0}", path);
+}
+
+std::optional<uint32_t> Shader::getDescriptorLocation(const std::string& name) const 
+{
+	if (auto it = descriptor_locations.find(name); it != descriptor_locations.end())
+		return it->second;
+	return std::nullopt;
+}
+
+std::optional<uint32_t> Shader::getDescriptorSize(const std::string& name) const 
+{
+	if (auto it = descriptor_sizes.find(name); it != descriptor_sizes.end())
+		return it->second;
+	return std::nullopt;
+}
+
+std::optional<Shader::Uniform> Shader::getUniform(const std::string& name) const 
+{
+	if (auto it = uniforms.find(name); it != uniforms.end())
+		return it->second;
+	return std::nullopt;
+}
+
+std::optional<Shader::UniformBlock> Shader::getUniformBlock(const std::string& name) const 
+{
+	if (auto it = uniform_blocks.find(name); it != uniform_blocks.end())
+		return it->second;
+	return std::nullopt;
+}
+
+std::optional<Shader::Attribute> Shader::getAttribute(const std::string& name) const 
+{
+	if (auto it = attributes.find(name); it != attributes.end())
+		return it->second;
+	return std::nullopt;
+}
+
+std::optional<VkDescriptorType> Shader::getDescriptorType(uint32_t location) const 
+{
+	if (auto it = descriptor_types.find(location); it != descriptor_types.end())
+		return it->second;
+	return std::nullopt;
 }
 
 Shader::~Shader()
@@ -292,7 +362,6 @@ void Shader::loadUniformBlock(const glslang::TProgram& program, VkShaderStageFla
 		uniform_type = UniformBlock::Type::Storage;
 	if (reflection.getType()->getQualifier().layoutPushConstant)
 		uniform_type = UniformBlock::Type::Push;
-
 	uniform_blocks.emplace(reflection.name, UniformBlock(reflection.getBinding(), reflection.size, stage_flag, uniform_type));
 }
 
@@ -310,7 +379,7 @@ void Shader::loadUniform(const glslang::TProgram& program, VkShaderStageFlagBits
 				if (uniform_block_name == split_name.at(0))
 				{
 					uniform_block.uniforms.emplace(String::replaceFirst(reflection.name, split_name.at(0) + ".", ""),
-						Uniform(reflection.getBinding(), reflection.offset, computeSize(reflection.getType()), reflection.glDefineType, false, false, stage_flag));
+						Uniform(reflection.getBinding(), reflection.offset, computeSize(reflection.getType()), reflection.glDefineType, false, false, stage_flag, reflection.size));
 					return;
 				}
 			}
@@ -327,7 +396,7 @@ void Shader::loadUniform(const glslang::TProgram& program, VkShaderStageFlagBits
 	}
 
 	auto& qualifier = reflection.getType()->getQualifier();
-	uniforms.emplace(reflection.name, Uniform(reflection.getBinding(), reflection.offset, -1, reflection.glDefineType, qualifier.readonly, qualifier.writeonly, stage_flag));
+	uniforms.emplace(reflection.name, Uniform(reflection.getBinding(), reflection.offset, -1, reflection.glDefineType, qualifier.readonly, qualifier.writeonly, stage_flag, reflection.size));
 }
 
 void Shader::loadAttribute(const glslang::TProgram& program, int32_t index)

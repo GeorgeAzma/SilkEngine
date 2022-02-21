@@ -7,7 +7,7 @@ ImageArray::ImageArray(const std::vector<std::string>& files, const ImageArrayPr
 	this->props = props;
 	for (size_t i = 0; i < files.size(); ++i)
 		paths[i] = std::string("data/images/") + files[i];
-	ImageData load_data = load(files);
+	Bitmap load_data = load(files);
 	this->props.width = load_data.width;
 	this->props.height = load_data.height;
 	this->props.array_layers = files.size();
@@ -24,16 +24,16 @@ ImageArray::ImageArray(const ImageArrayProps& props)
 	create(this->props);
 }
 
-ImageData ImageArray::load(const std::vector<std::string>& files)
+Bitmap ImageArray::load(const std::vector<std::string>& files)
 {
 	SK_ASSERT(files.size(), "You have to specify at least one filepath for loading image array");
 	std::vector<std::string> paths(files.size());
 	for (size_t i = 0; i < files.size(); ++i)
 		paths[i] = std::string("data/images/") + files[i];
 
-	ImageData load_data;
+	Bitmap load_data;
 
-	ImageData data = Image2D::load(paths[0]);
+	Bitmap data = Image2D::load(paths[0]);
 	if (data.channels == 3)
 		Image::align4(data);
 

@@ -11,7 +11,7 @@ public:
 
 	const std::string& getPath() const { return path; }
 
-	static ImageData load(const std::string& file);
+	static Bitmap load(const std::string& file);
 
 private:
 	std::string path = "";

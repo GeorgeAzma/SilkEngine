@@ -82,7 +82,6 @@ RenderPass& RenderPass::addSubpass()
 
 void RenderPass::build()
 {
-
     std::vector<VkAttachmentDescription> attachments;
     std::vector<VkSubpassDescription> subpass_descriptions(subpasses.size());
     std::vector<VkSubpassDependency> subpass_dependencies(subpasses.size());

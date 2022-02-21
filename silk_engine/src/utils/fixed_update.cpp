@@ -1,5 +1,5 @@
 #include "fixed_update.h"
-#include "core/time.h"
+#include "time.h"
 
 FixedUpdate::FixedUpdate(double interval)
     : interval(interval), delta(Time::getSystemTime()) {}

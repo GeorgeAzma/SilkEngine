@@ -2,6 +2,7 @@
 
 #include "scene/light.h"
 #include "enums.h"
+#include "utils/alarm.h"
 
 class WindowResizeEvent;
 class Instance;
@@ -47,12 +48,16 @@ public:
 		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
 		VkPipelineBindPoint bind_point = VK_PIPELINE_BIND_POINT_MAX_ENUM;
 		VkCommandBuffer command_buffer = VK_NULL_HANDLE;
-		VkCommandPool command_pool = VK_NULL_HANDLE;
 		VkRenderPass render_pass = VK_NULL_HANDLE;
 	} active{};
 public:
 	static void init();
 	static void cleanup();
+	static void update();
+
+	static shared<CommandPool> getCommandPool();
+
+	static void screenshot(const std::string& file);
 
 	static void vulkanAssert(VkResult result);
 
@@ -62,10 +67,11 @@ public:
 	static inline PhysicalDevice* physical_device = nullptr;
 	static inline LogicalDevice* logical_device = nullptr;
 	static inline Allocator* allocator = nullptr;
-	static inline CommandPool* command_pool = nullptr;
+	static inline std::unordered_map<std::thread::id, shared<CommandPool>> command_pools;
 	static inline SwapChain* swap_chain = nullptr;
 	static inline DescriptorPool* descriptor_pool = nullptr;
 	static inline UniformBuffer* global_uniform = nullptr;
+	static inline Alarm command_pool_purge_alarm = Alarm(5s);
 
 private:
 	static constexpr std::string stringifyResult(VkResult result);

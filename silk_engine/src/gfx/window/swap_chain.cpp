@@ -183,6 +183,16 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	create_info.clipped = VK_TRUE;
 	create_info.oldSwapchain = old_swap_chain ? *old_swap_chain : VK_NULL_HANDLE; //Necessary for resizing and such
 
+	// Enable transfer source on swap chain images if supported
+	if (Graphics::physical_device->getSurfaceCapabilities().supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
+		create_info.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+	else SK_WARN("Swap chain doesn't support trasfer source usage");
+
+	// Enable transfer destination on swap chain images if supported
+	if (Graphics::physical_device->getSurfaceCapabilities().supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT)
+		create_info.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+	else SK_WARN("Swap chain doesn't support trasfer destination usage");
+
 	const auto& indices = Graphics::physical_device->getQueueFamilyIndices();
 	if (indices.graphics != indices.present)
 	{
@@ -204,13 +214,15 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	for (size_t i = 0; i < images.size(); ++i)
 	{
 		Image2DProps props{};
+		props.width = extent.width;
+		props.height = extent.height;
 		props.create_sampler = false;
 		props.mipmap = false;
 		props.format = surface_format.format;
-		props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
+		props.layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		props.initial_layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 		this->images[i] = makeShared<Image2D>(images[i], props);
 	}
-
 	framebuffers.resize(images.size());
 
 	createFramebuffers();

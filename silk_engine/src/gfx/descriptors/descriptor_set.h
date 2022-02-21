@@ -4,11 +4,15 @@
 #include "gfx/images/image.h"
 #include "gfx/images/image_array.h"
 
-class DescriptorSet : NonCopyable, NonMovable
+class DescriptorSet : NonMovable
 {
 public:
-	DescriptorSet& addBuffers(uint32_t binding, const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
-	DescriptorSet& addImages(uint32_t binding, const std::vector<VkDescriptorImageInfo>& descriptor_image_infos, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
+	DescriptorSet() = default;
+	DescriptorSet(const DescriptorSet & other);
+	DescriptorSet& operator=(const DescriptorSet & other);
+
+	DescriptorSet& addBuffers(uint32_t binding, uint32_t count, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
+	DescriptorSet& addImages(uint32_t binding, uint32_t count, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags);
 	void build();
 
 	void update();

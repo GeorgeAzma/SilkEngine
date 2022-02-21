@@ -8,6 +8,8 @@ public:
 	Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_usage);
 	virtual ~Buffer();
 
+	VmaAllocation getAllocation() const { return allocation; }
+
 	void map(void** data) const;
 	void unmap() const;
 

@@ -11,7 +11,7 @@ class Color
 public:
 	constexpr Color(float r, float g, float b, float a);
 	constexpr Color(uint32_t hex, Type type = Type::RGBA);
-	constexpr Color(std::string hex, float a = 1.0f);
+	Color(std::string hex, float a = 1.0f);
 
 	constexpr uint32_t getHex(Type type = Type::RGBA) const;
 	std::string getHexString() const;

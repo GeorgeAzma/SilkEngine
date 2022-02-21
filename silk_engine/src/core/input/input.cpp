@@ -135,7 +135,7 @@ InputDevice Input::getActiveInputDevice()
 void Input::setCursor(const std::string& file, CursorHotSpot hot_spot)
 {
 	std::string path = std::string("cursors/") + file;
-	ImageData bitmap_data = Image2D::load(path);
+	Bitmap bitmap_data = Image2D::load(path);
 	GLFWimage cursor_image[1];
 	cursor_image[0].height = bitmap_data.height;
 	cursor_image[0].width = bitmap_data.width;

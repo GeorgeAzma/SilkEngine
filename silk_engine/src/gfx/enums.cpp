@@ -244,53 +244,6 @@ size_t EnumInfo::rows(Type type)
 	return 0;
 }
 
-size_t EnumInfo::channelCount(VkFormat format)
-{
-	switch (format)
-	{
-	case VK_FORMAT_R8_SINT: return 1;
-	case VK_FORMAT_R8_UINT: return 1;
-	case VK_FORMAT_R16_SINT: return 1;
-	case VK_FORMAT_R16_UINT: return 1;
-	case VK_FORMAT_R32_SINT: return 1;
-	case VK_FORMAT_R32_UINT: return 1;
-	case VK_FORMAT_R32_SFLOAT: return 1;
-	case VK_FORMAT_R64_SFLOAT: return 1;
-	case VK_FORMAT_R32G32_SFLOAT: return 2;
-	case VK_FORMAT_R32G32B32_SFLOAT: return 3;
-	case VK_FORMAT_R32G32B32A32_SFLOAT: return 4;
-	case VK_FORMAT_R32G32_SINT: return 2;
-	case VK_FORMAT_R32G32B32_SINT: return 3;
-	case VK_FORMAT_R32G32B32A32_SINT: return 4;
-	case VK_FORMAT_R32G32_UINT: return 2;
-	case VK_FORMAT_R32G32B32_UINT:  return 3;
-	case VK_FORMAT_R32G32B32A32_UINT: return 4;
-	case VK_FORMAT_R64G64_SFLOAT: return 2;
-	case VK_FORMAT_R64G64B64_SFLOAT: return 3;
-	case VK_FORMAT_R64G64B64A64_SFLOAT: return 4;
-	case VK_FORMAT_R8_SRGB: return 1;
-	case VK_FORMAT_R8G8_SRGB: return 2;
-	case VK_FORMAT_R8G8B8_SRGB: return 3;
-	case VK_FORMAT_R8G8B8A8_SRGB: return 4;
-	case VK_FORMAT_R8_UNORM: return 1;
-	case VK_FORMAT_R8G8_UNORM: return 2;
-	case VK_FORMAT_R8G8B8_UNORM: return 3;
-	case VK_FORMAT_R8G8B8A8_UNORM: return 4;
-	case VK_FORMAT_D16_UNORM: return 1;
-	case VK_FORMAT_D16_UNORM_S8_UINT: return 1;
-	case VK_FORMAT_D24_UNORM_S8_UINT: return 1;
-	case VK_FORMAT_D32_SFLOAT_S8_UINT: return 1;
-	case VK_FORMAT_D32_SFLOAT: return 1;
-	case VK_FORMAT_B8G8R8_SRGB: return 3;
-	case VK_FORMAT_B8G8R8A8_SRGB: return 4;
-	case VK_FORMAT_B8G8R8_UNORM: return 3;
-	case VK_FORMAT_B8G8R8A8_UNORM: return 4;
-	}
-
-	//SK_ERROR("Unsupported format specified: {0}.", format);
-	return 0;
-}
-
 size_t EnumInfo::formatSize(VkFormat format)
 {
 	switch (format)

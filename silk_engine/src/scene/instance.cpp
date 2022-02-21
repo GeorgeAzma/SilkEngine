@@ -1,6 +1,14 @@
 #include "instance.h"
 #include "gfx/graphics.h"
+#include "gfx/window/swap_chain.h"
 
+void InstanceBatch::bind()
+{
+	instance->mesh->material->bind();
+	descriptor_sets[0].bind();
+	instance->mesh->vertex_array->bind();
+	instance_buffer->bind(1);
+}
 uint32_t InstanceBatch::addImages(const std::vector<shared<Image>>& new_images)
 {
 	const auto it = std::search(images.begin(), images.end(), new_images.begin(), new_images.end());

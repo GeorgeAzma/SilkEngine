@@ -3,18 +3,6 @@
 #include "gfx/window/swap_chain.h"
 #include "gfx/devices/logical_device.h"
 
-GraphicsPipeline::GraphicsPipeline()
-{
-	Dispatcher::subscribe(this, &GraphicsPipeline::onWindowResize);
-}
-
-GraphicsPipeline::~GraphicsPipeline()
-{
-	Dispatcher::unsubscribe(this, &GraphicsPipeline::onWindowResize);
-	vkDestroyPipelineLayout(*Graphics::logical_device, pipeline_layout, nullptr);
-	destroy();
-}
-
 GraphicsPipeline& GraphicsPipeline::setShader(shared<Shader> shader)
 {
 	this->shader = shader;
@@ -23,6 +11,11 @@ GraphicsPipeline& GraphicsPipeline::setShader(shared<Shader> shader)
 		shader_stage_infos.emplace_back(pipeline_shader_stage_info);
 	create_info.stageCount = shader_stage_infos.size();
 	create_info.pStages = shader_stage_infos.data();
+
+	push_constant_ranges = shader->getPushConstantRanges();
+	if(shader->getDescriptorSet().get())
+		descriptor_set_layouts = { shader->getDescriptorSet()->getLayout() }; //TODO: Support more than 1 descriptor sets
+
 	return *this;
 }
 
@@ -54,22 +47,9 @@ GraphicsPipeline& GraphicsPipeline::setSubpass(uint32_t subpass)
 	return *this;
 }
 
-GraphicsPipeline& GraphicsPipeline::addDescriptorSetLayout(VkDescriptorSetLayout layout)
-{
-	descriptor_set_layouts.push_back(layout);
-	return *this;
-}
-
 GraphicsPipeline& GraphicsPipeline::addDynamicState(VkDynamicState dynamic_state)
 {
 	dynamic_states.emplace_back(dynamic_state);
-	return *this;
-}
-
-
-GraphicsPipeline& GraphicsPipeline::addPushConstant(uint32_t size, VkShaderStageFlags shader_stages, uint32_t offset)
-{
-	push_constant_ranges.emplace_back(shader_stages, offset, size);
 	return *this;
 }
 
@@ -112,12 +92,6 @@ GraphicsPipeline& GraphicsPipeline::enable(EnableTag tag)
 	return *this;
 }
 
-void GraphicsPipeline::recreate()
-{
-	destroy();
-	create();
-}
-
 void GraphicsPipeline::build()
 {
 	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -125,8 +99,6 @@ void GraphicsPipeline::build()
 	pipeline_layout_info.pSetLayouts = descriptor_set_layouts.data();
 	pipeline_layout_info.pushConstantRangeCount = push_constant_ranges.size();
 	pipeline_layout_info.pPushConstantRanges = push_constant_ranges.data(); 
-	
-	Graphics::vulkanAssert(vkCreatePipelineLayout(*Graphics::logical_device, &pipeline_layout_info, nullptr, &pipeline_layout));
 
 	vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
@@ -173,7 +145,6 @@ void GraphicsPipeline::build()
 	create_info.pColorBlendState = &color_blending;
 	create_info.pDynamicState = &dynamic_state;
 	create_info.renderPass = render_pass;
-	create_info.layout = pipeline_layout; 
 	create_info.subpass = subpass;
 	create_info.pDepthStencilState = &depth_stencil_info;
 
@@ -190,14 +161,11 @@ void GraphicsPipeline::bind()
 	Graphics::active.bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS;
 }
 
-void GraphicsPipeline::destroy()
-{
-	vkDestroyPipelineCache(*Graphics::logical_device, cache, nullptr);
-	vkDestroyPipeline(*Graphics::logical_device, pipeline, nullptr);
-}
-
 void GraphicsPipeline::create()
 {
+	Graphics::vulkanAssert(vkCreatePipelineLayout(*Graphics::logical_device, &pipeline_layout_info, nullptr, &pipeline_layout));
+	create_info.layout = pipeline_layout;
+
 	VkViewport viewport = {};
 	viewport.x = 0;
 	viewport.y = Graphics::swap_chain->getExtent().height;
@@ -214,23 +182,4 @@ void GraphicsPipeline::create()
 	create_info.pViewportState = &viewport_info;
 
 	Graphics::vulkanAssert(vkCreateGraphicsPipelines(*Graphics::logical_device, VK_NULL_HANDLE, 1, &create_info, nullptr, &pipeline));
-	
-	VkPipelineCacheCreateInfo cache_info{};
-	cache_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-	cache_info.initialDataSize = 0;
-	cache_info.pInitialData = nullptr;
-	Graphics::vulkanAssert(vkCreatePipelineCache(*Graphics::logical_device, &cache_info, nullptr, &cache));
-	
-	size_t cache_data_size = 0;
-	vkGetPipelineCacheData(*Graphics::logical_device, cache, &cache_data_size, nullptr);
-	char* cache_data = new char[cache_data_size];
-	vkGetPipelineCacheData(*Graphics::logical_device, cache, &cache_data_size, nullptr);
-
-	delete cache_data;
-}
-
-void GraphicsPipeline::onWindowResize(const WindowResizeEvent& e)
-{
-	vkDeviceWaitIdle(*Graphics::logical_device);
-	recreate();
 }

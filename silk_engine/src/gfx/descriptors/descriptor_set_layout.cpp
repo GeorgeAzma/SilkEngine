@@ -25,6 +25,7 @@ void DescriptorSetLayout::build()
 	bindings_vector.resize(bindings.size());
 	for (const auto& binding : bindings) 
 		bindings_vector[index++] = binding.second;
+	std::sort(bindings_vector.begin(), bindings_vector.end(), [](const VkDescriptorSetLayoutBinding& l, const VkDescriptorSetLayoutBinding& r)->bool { return l.binding < r.binding; });
 
 	layout_info.bindingCount = bindings_vector.size();
 	layout_info.pBindings = bindings_vector.data();

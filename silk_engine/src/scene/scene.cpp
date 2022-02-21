@@ -6,7 +6,7 @@
 #include "gfx/devices/physical_device.h"
 #include "gfx/buffers/uniform_buffer.h"
 #include "utils/general_utils.h"
-#include "core/time.h"
+#include "utils/time.h"
 #include "gfx/window/swap_chain.h"
 
 Scene::Scene()
@@ -80,6 +80,7 @@ void Scene::onUpdate()
 
 	Graphics::global_uniform->setDataChecked(&global_uniform_data, sizeof(Graphics::GlobalUniformData));
 
+
 	//Drawing	
 	bool any_needs_update = false;
 	static std::vector<VkDrawIndexedIndirectCommand> draw_commands;
@@ -98,21 +99,24 @@ void Scene::onUpdate()
 		}
 	}
 	if (any_needs_update)
-	{
 		indirect_buffer->setDataChecked(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand));
-	}
-	// TODO:
+
+	
+
 	vkDeviceWaitIdle(*Graphics::logical_device);
 	for (auto& instance_batch : instance_batches)
 	{
-		instance_batch.descriptor_sets.resize(2);
-		instance_batch.descriptor_sets[0] = Resources::getDescriptorSet("Global");
-		instance_batch.descriptor_sets[1] = Resources::getDescriptorSet("Images");
-		std::vector<VkDescriptorImageInfo> image_infos(Graphics::MAX_IMAGE_SLOTS, Resources::getImage("White")->getDescriptorInfo());
+		std::vector<VkDescriptorImageInfo> descriptor_images(Graphics::MAX_IMAGE_SLOTS);
 		for (size_t i = 0; i < instance_batch.images.size(); ++i)
-			image_infos[i] = *instance_batch.images[i];
-		instance_batch.descriptor_sets[1]->setImageInfo(0, image_infos);
-		instance_batch.descriptor_sets[1]->update();
+			descriptor_images[i] = *instance_batch.images[i];
+		for (size_t i = instance_batch.images.size(); i < descriptor_images.size(); ++i)
+			descriptor_images[i] = *Resources::getImage("White");
+
+		auto& descriptor_set = instance_batch.descriptor_sets[0];
+
+		descriptor_set.setBufferInfo(0, { { *Graphics::global_uniform, 0, VK_WHOLE_SIZE } });
+		descriptor_set.setImageInfo(1, descriptor_images);
+		descriptor_set.update();
 	}
 
 	//Draw instances
@@ -331,6 +335,9 @@ void Scene::addInstanceBatch(shared<RenderedInstance> instance, const InstanceDa
 	new_batch.instances.emplace_back(instance);
 
 	new_batch.instance_buffer = makeShared<VertexBuffer>(new_batch.instance_data.data(), Graphics::MAX_INSTANCES * sizeof(InstanceData), VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+	new_batch.descriptor_sets.resize(1);
+	new_batch.descriptor_sets[0] = *new_batch.instance->mesh->material->shader_effect->pipeline->getShader()->getDescriptorSet();
 
 	instance->instance_batch_index = instance_batches.size() - 1;
 	instance->instance_data_index = instance_batches.back().instance_data.size() - 1;

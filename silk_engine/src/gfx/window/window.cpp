@@ -294,7 +294,7 @@ void Window::align(WindowAlignment a)
 void Window::setIcon(const std::string& file)
 {
     std::string path = std::string("icons/") + file;
-    ImageData bitmap_data = Image2D::load(path);
+    Bitmap bitmap_data = Image2D::load(path);
     std::vector<GLFWimage> icons(1);
     icons[0].height = bitmap_data.height;
     icons[0].width = bitmap_data.width;

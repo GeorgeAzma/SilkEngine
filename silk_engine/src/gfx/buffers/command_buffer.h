@@ -1,5 +1,7 @@
 #pragma once
 
+#include "gfx/allocators/command_pool.h"
+
 struct CommandBufferSubmitInfo
 {
 	VkFence fence = VK_NULL_HANDLE;
@@ -29,5 +31,6 @@ private:
 	VkCommandBuffer command_buffer;
 	VkCommandBufferLevel level;
 	VkQueueFlagBits queue_type;
+	shared<CommandPool> pool;
 	bool recorded = false;
 };

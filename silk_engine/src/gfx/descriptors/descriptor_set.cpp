@@ -4,23 +4,23 @@
 #include "gfx/descriptors/descriptor_pool.h"
 #include "scene/resources.h"
 
-DescriptorSet& DescriptorSet::addBuffers(uint32_t binding, const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags)
+DescriptorSet& DescriptorSet::addBuffers(uint32_t binding, uint32_t count, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags)
 {
-	buffer_infos.push_back(descriptor_buffer_infos);
+	buffer_infos.push_back({});
 	image_infos.push_back({});
 
 	VkWriteDescriptorSet write_descriptor{};
 	write_descriptor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	write_descriptor.descriptorCount = descriptor_buffer_infos.size();
+	write_descriptor.descriptorCount = count;
 	write_descriptor.descriptorType = descriptor_type;
 	write_descriptor.dstArrayElement = 0;
 	write_descriptor.dstBinding = binding;
-	write_descriptor.pBufferInfo = buffer_infos.back().data();
+	write_descriptor.pBufferInfo = nullptr;
 	write_descriptor_sets.emplace_back(std::move(write_descriptor));
 
 	VkDescriptorSetLayoutBinding descriptor_layout_binding{};
 	descriptor_layout_binding.binding = binding;
-	descriptor_layout_binding.descriptorCount = descriptor_buffer_infos.size();
+	descriptor_layout_binding.descriptorCount = count;
 	descriptor_layout_binding.descriptorType = descriptor_type;
 	descriptor_layout_binding.stageFlags = stage_flags;
 	descriptor_layout_bindings.emplace_back(std::move(descriptor_layout_binding));
@@ -28,23 +28,23 @@ DescriptorSet& DescriptorSet::addBuffers(uint32_t binding, const std::vector<VkD
 	return *this;
 }
 
-DescriptorSet& DescriptorSet::addImages(uint32_t binding, const std::vector<VkDescriptorImageInfo>& descriptor_image_infos, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags)
+DescriptorSet& DescriptorSet::addImages(uint32_t binding, uint32_t count, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags)
 {
 	buffer_infos.push_back({});
-	image_infos.push_back(descriptor_image_infos);
-
+	image_infos.push_back({});
+	
 	VkWriteDescriptorSet write_descriptor{};
 	write_descriptor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	write_descriptor.descriptorCount = descriptor_image_infos.size();
+	write_descriptor.descriptorCount = count;
 	write_descriptor.descriptorType = descriptor_type;
 	write_descriptor.dstArrayElement = 0;
 	write_descriptor.dstBinding = binding;
-	write_descriptor.pImageInfo = descriptor_image_infos.data();
+	write_descriptor.pImageInfo = nullptr;
 	write_descriptor_sets.emplace_back(std::move(write_descriptor));
 
 	VkDescriptorSetLayoutBinding descriptor_layout_binding{};
 	descriptor_layout_binding.binding = binding;
-	descriptor_layout_binding.descriptorCount = descriptor_image_infos.size();
+	descriptor_layout_binding.descriptorCount = count;
 	descriptor_layout_binding.descriptorType = descriptor_type;
 	descriptor_layout_binding.stageFlags = stage_flags;
 	descriptor_layout_bindings.emplace_back(std::move(descriptor_layout_binding));
@@ -54,6 +54,9 @@ DescriptorSet& DescriptorSet::addImages(uint32_t binding, const std::vector<VkDe
 
 void DescriptorSet::build()
 {
+	if (descriptor_layout_bindings.empty())
+		return;
+
 	layout = Resources::getDescriptorSetLayout(descriptor_layout_bindings);
 
 	VkDescriptorSetAllocateInfo allocation_info{};
@@ -66,8 +69,6 @@ void DescriptorSet::build()
 
 	for (auto& write : write_descriptor_sets)
 		write.dstSet = descriptor_set;
-
-	update();
 }
 
 void DescriptorSet::update()
@@ -92,4 +93,36 @@ void DescriptorSet::setBufferInfo(size_t write_index, const std::vector<VkDescri
 	SK_ASSERT(buffer_info.size() == write_descriptor_sets[write_index].descriptorCount, "Invalid buffer_info size: {0}, should be {1}", buffer_info.size(), write_descriptor_sets[write_index].descriptorCount);
 	this->buffer_infos[write_index] = buffer_info;
 	write_descriptor_sets[write_index].pBufferInfo = this->buffer_infos[write_index].data();
+}
+
+DescriptorSet::DescriptorSet(const DescriptorSet& other)
+{
+	*this = other;
+}
+
+DescriptorSet& DescriptorSet::operator=(const DescriptorSet& other)
+{
+	layout = other.layout;
+	VkDescriptorSetAllocateInfo allocation_info{};
+	allocation_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocation_info.descriptorPool = *Graphics::descriptor_pool;
+	allocation_info.descriptorSetCount = 1;
+	allocation_info.pSetLayouts = &layout->layout;
+
+	Graphics::vulkanAssert(vkAllocateDescriptorSets(*Graphics::logical_device, &allocation_info, &descriptor_set));
+
+	image_infos = other.image_infos;
+	buffer_infos = other.buffer_infos;
+	write_descriptor_sets = other.write_descriptor_sets;
+	for (size_t i = 0; i < write_descriptor_sets.size(); ++i)
+	{
+		write_descriptor_sets[i].dstSet = descriptor_set;
+		write_descriptor_sets[i].pImageInfo = image_infos[i].data();
+		write_descriptor_sets[i].pBufferInfo = buffer_infos[i].data();
+
+	}
+
+	descriptor_layout_bindings = other.descriptor_layout_bindings;
+
+	return *this;
 }

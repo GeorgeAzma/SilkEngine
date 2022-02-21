@@ -4,7 +4,7 @@
 Cubemap::Cubemap(const std::vector<std::string>& files, const CubemapProps& props)
 {
 	this->props = props;
-	ImageData load_data = load(files);
+	Bitmap load_data = load(files);
 	this->props.width = load_data.width;
 	this->props.height = load_data.height;
 	if (load_data.channels == 3)
@@ -20,7 +20,7 @@ Cubemap::Cubemap(const CubemapProps& props)
 	create(this->props);
 }
 
-ImageData Cubemap::load(const std::vector<std::string>& files)
+Bitmap Cubemap::load(const std::vector<std::string>& files)
 {
 	SK_ASSERT(files.size() == 6, "You have to specify exactly 6 filepaths for loading cube array, instead of: {0}", files.size());
 
@@ -28,9 +28,9 @@ ImageData Cubemap::load(const std::vector<std::string>& files)
 	for (size_t i = 0; i < files.size(); ++i)
 		paths[i] = std::string("data/images/") + files[i];
 	
-	ImageData load_data;
+	Bitmap load_data;
 	
-	ImageData data = Image2D::load(paths[0]);
+	Bitmap data = Image2D::load(paths[0]);
 	if (data.channels == 3)
 		Image::align4(data);
 	

@@ -73,6 +73,7 @@ void Application::update()
             for (Layer* layer : layer_stack)
                 layer->onUpdate();
 
+            Graphics::update();
             Timers::update();
             Input::update();
         }

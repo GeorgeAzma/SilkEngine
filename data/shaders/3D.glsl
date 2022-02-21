@@ -18,7 +18,7 @@ layout(location = 0) out VertexOutput
     vec3 world_position;
 } vertex_output;
 
-layout(set = 0, binding = 0) uniform GlobalUniform
+layout(binding = 0) uniform GlobalUniform
 {
     mat4 projection_view;
     vec3 camera_position;
@@ -69,7 +69,7 @@ struct Light
     float padding;
 };
 
-layout(set = 0, binding = 0) uniform GlobalUniform
+layout(binding = 0) uniform GlobalUniform
 {
     mat4 projection_view;
     vec3 camera_position;
@@ -82,7 +82,7 @@ layout(set = 0, binding = 0) uniform GlobalUniform
     Light lights[MAX_LIGHTS];
 } global_uniform;
 
-layout(set = 1, binding = 0) uniform Material
+layout(binding = 1) uniform Material
 {
     float ambient;
     float ambient_occlusion;
@@ -92,7 +92,7 @@ layout(set = 1, binding = 0) uniform Material
 
 layout(location = 0) out vec4 color;
 
-layout(set = 1, binding = 0) uniform sampler2D images[MAX_IMAGE_SLOTS];
+layout(binding = 2) uniform sampler2D images[MAX_IMAGE_SLOTS];
 
 #include "light.glsl"
 

@@ -1,12 +1,13 @@
 #pragma once
 
 #include "gfx/enums.h"
+#include "gfx/descriptors/descriptor_set.h"
 #include <glslang/Public/ShaderLang.h>
 #include <glslang/SPIRV/GlslangToSpv.h>
 
 class Shader : NonCopyable
 {
-    struct Define
+	struct Define
     {
         std::string name = "";
         std::string value = "";
@@ -30,8 +31,8 @@ class Shader : NonCopyable
 		friend class Shader;
 
 	public:
-		explicit Uniform(int32_t binding = -1, int32_t offset = -1, int32_t size = -1, int32_t gl_type = -1, bool read_only = false, bool write_only = false, VkShaderStageFlags stage_flags = 0)
-			: binding(binding), offset(offset), size(size), gl_type(gl_type), read_only(read_only), write_only(write_only), stage_flags(stage_flags)
+		explicit Uniform(int32_t binding = -1, int32_t offset = -1, int32_t size = -1, int32_t gl_type = -1, bool read_only = false, bool write_only = false, VkShaderStageFlags stage_flags = 0, int32_t count = -1)
+			: binding(binding), offset(offset), size(size), gl_type(gl_type), read_only(read_only), write_only(write_only), stage_flags(stage_flags), count(count)
 		{
 		}
 
@@ -39,6 +40,7 @@ class Shader : NonCopyable
 		int32_t getOffset() const { return offset; }
 		int32_t getSize() const { return size; }
 		int32_t getGlType() const { return gl_type; }
+		int32_t getCount() const { return count; }
 		bool isReadOnly() const { return read_only; }
 		bool isWriteOnly() const { return write_only; }
 		VkShaderStageFlags getStageFlags() const { return stage_flags; }
@@ -48,6 +50,7 @@ class Shader : NonCopyable
 		int32_t offset;
 		int32_t size;
 		int32_t gl_type;
+		int32_t count;
 		bool read_only;
 		bool write_only;
 		VkShaderStageFlags stage_flags;
@@ -111,28 +114,6 @@ class Shader : NonCopyable
 		int32_t gl_type;
 	};
 
-	class Constant 
-	{
-		friend class Shader;
-
-	public:
-		explicit Constant(int32_t binding = -1, int32_t size = -1, VkShaderStageFlags stage_flags = 0, int32_t gl_type = -1) :
-			binding(binding), size(size), stage_flags(stage_flags), gl_type(gl_type)
-		{
-		}
-
-		int32_t getBinding() const { return binding; }
-		int32_t getSize() const { return size; }
-		VkShaderStageFlags getStageFlags() const { return stage_flags; }
-		int32_t getGlType() const { return gl_type; }
-
-	private:
-		int32_t binding;
-		int32_t size;
-		VkShaderStageFlags stage_flags;
-		int32_t gl_type;
-	};
-
 public:
 	enum class Type : uint32_t
 	{
@@ -151,6 +132,14 @@ public:
 
     void compile(const std::vector<Define>& defines = {});
 
+	std::optional<uint32_t> getDescriptorLocation(const std::string& name) const;
+	std::optional<uint32_t> getDescriptorSize(const std::string& name) const;
+	std::optional<Uniform> getUniform(const std::string& name) const;
+	std::optional<UniformBlock> getUniformBlock(const std::string& name) const;
+	std::optional<Attribute> getAttribute(const std::string& name) const;
+	std::optional<VkDescriptorType> getDescriptorType(uint32_t location) const;
+	const std::vector<VkPushConstantRange>& getPushConstantRanges() const { return push_constant_ranges;  }
+	shared<DescriptorSet> getDescriptorSet() { return descriptor_set->getWrites().empty() ? nullptr : descriptor_set; }
 	const std::vector<VkPipelineShaderStageCreateInfo>& getPipelineShaderStageInfos() const { return pipeline_shader_stage_infos; }
 
 public:
@@ -176,10 +165,14 @@ private:
     std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_infos;
 	
 	//Reflection data
-	std::optional<uint32_t> local_sizes[3];
+	std::optional<uint32_t> local_sizes[3]; 
+	std::vector<VkPushConstantRange> push_constant_ranges;
+	std::unordered_map<std::string, uint32_t> descriptor_locations;
+	std::unordered_map<std::string, uint32_t> descriptor_sizes;
+	std::unordered_map<uint32_t, VkDescriptorType> descriptor_types;
 	std::unordered_map<std::string, UniformBlock> uniform_blocks;
 	std::unordered_map<std::string, Uniform> uniforms;
 	std::unordered_map<std::string, Attribute> attributes;
-	std::unordered_map<std::string, Constant> constants; 
 	std::vector<VkVertexInputAttributeDescription> attribute_descriptions;
+	shared<DescriptorSet> descriptor_set = nullptr;
 };

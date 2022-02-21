@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/time.h"
+#include "time.h"
 
 class Timers
 {
@@ -9,12 +9,11 @@ class Timers
         friend class Timers;
 
     public:
-        template <class Rep, class Period>
-        Timer(const std::chrono::duration<Rep, Period>& interval, int repeat, std::function<void()>&& on_tick)
+        Timer(const Time& interval, int repeat, std::function<void()>&& on_tick)
             : repeat(repeat),
-            interval(std::chrono::duration_cast<std::chrono::nanoseconds>(interval).count() * 0.000000001),
-            next(Time::getTime() + this->interval),
-            on_tick(on_tick)
+              interval(interval.asSeconds()),
+              next(Time::getTime() + this->interval),
+              on_tick(on_tick)
         {
         }
 

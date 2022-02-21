@@ -21,6 +21,7 @@ struct CubemapProps
 	bool create_sampler = true;
 	const void* data = nullptr;
 	VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
+	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 };
 
 struct Image1DProps
@@ -38,6 +39,7 @@ struct Image1DProps
 	bool create_sampler = true;
 	const void* data = nullptr;
 	VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
+	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 };
 
 struct Image2DProps
@@ -56,6 +58,7 @@ struct Image2DProps
 	bool create_sampler = true;
 	const void* data = nullptr;
 	VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
+	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 };
 
 struct ImageArrayProps
@@ -75,6 +78,7 @@ struct ImageArrayProps
 	const void* data = nullptr;
 	uint32_t array_layers = 1;
 	VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
+	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 };
 
 struct ImageProps
@@ -97,6 +101,7 @@ struct ImageProps
 	VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY; //Currently has no use and should always be GPU_ONLY
 	bool is_cubemap = false;
 	bool is_1D = false;
+	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
 	ImageProps& operator=(const Image1DProps& props)
 	{
@@ -118,6 +123,7 @@ struct ImageProps
 		depth = 1;
 		is_cubemap = false;
 		is_1D = false;
+		initial_layout = props.initial_layout;
 
 		return *this;
 	}
@@ -142,6 +148,7 @@ struct ImageProps
 		depth = 1;
 		is_cubemap = false;
 		is_1D = false;
+		initial_layout = props.initial_layout;
 
 		return *this;
 	}
@@ -166,6 +173,7 @@ struct ImageProps
 		depth = 1;
 		is_cubemap = true;
 		is_1D = false;
+		initial_layout = props.initial_layout;
 
 		return *this;
 	}
@@ -190,12 +198,13 @@ struct ImageProps
 		depth = 1;
 		is_cubemap = false;
 		is_1D = false;
+		initial_layout = props.initial_layout;
 
 		return *this;
 	}
 };
 
-struct ImageData
+struct Bitmap
 {
 	int width;
 	int height;
@@ -214,19 +223,24 @@ public:
 	uint32_t mipLevels() const { return mip_levels; }
 	const ImageProps& getProps() const { return props; }
 	const VkDescriptorImageInfo& getDescriptorInfo() const { return descriptor_image_info; }
+	void setLayout(VkImageLayout layout) { descriptor_image_info.imageLayout = layout; }
+	VmaAllocation getAllocation() const { return allocation; }
 
-	static void align4(ImageData& image);
+	static void align4(Bitmap& image);
 
 	void setData(void* data, uint32_t array_layers, uint32_t base_array_layer);
 	bool copyImage(shared<Image> destination, uint32_t array_layer = 0);
+	void transitionLayout(VkImageLayout new_layout);
+	void copyBufferToImage(VkBuffer buffer);
 	
+	void map(void** data) const;
+	void unmap() const;
+
 	operator const VkImage& () const { return image; }
 	operator const VkDescriptorImageInfo& () const { return descriptor_image_info; }
 
 protected:
 	void create(const ImageProps& props);
-	void transitionLayout(VkImageLayout new_layout);
-	void copyBufferToImage(VkBuffer buffer);
 	void generateMipmaps();
 
 protected:
@@ -237,6 +251,7 @@ public:
 	static bool hasStencil(VkFormat format);
 	static bool hasDepth(VkFormat format);
 	static VkImageAspectFlags getAspectFlags(VkFormat format);
+	static size_t channelCount(VkFormat format);
 
 protected:
 	VkImage image = VK_NULL_HANDLE;
@@ -246,4 +261,5 @@ protected:
 	VmaAllocation allocation = VK_NULL_HANDLE;
 	ImageProps props = {};
 	uint32_t mip_levels = 1;
+	mutable bool mapped = false;
 };

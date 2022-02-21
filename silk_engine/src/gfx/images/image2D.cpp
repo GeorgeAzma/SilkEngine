@@ -13,7 +13,7 @@ Image2D::Image2D(const std::string& file, const Image2DProps& props)
 	: path(std::string("data/images/") + file)
 {
 	this->props = props;
-	ImageData load_data = load(file);
+	Bitmap load_data = load(file);
 	this->props.width = load_data.width;
 	this->props.height = load_data.height;
 	if (load_data.channels == 3)
@@ -30,11 +30,11 @@ Image2D::Image2D(VkImage image, const Image2DProps& props)
 	create(this->props);
 }
 
-ImageData Image2D::load(const std::string& file)
+Bitmap Image2D::load(const std::string& file)
 {
 	std::string path = std::string("data/images/") + file;
 
-	ImageData image_data{};
+	Bitmap image_data{};
 	stbi_uc* pixels = stbi_load(path.c_str(), &image_data.width, &image_data.height, &image_data.channels, 0);
 	SK_ASSERT(pixels, "Failed to load image: {0}", path);
 

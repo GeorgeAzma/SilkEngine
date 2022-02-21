@@ -5,7 +5,6 @@
 #include "core/platform.h"
 #include "core/event.h"
 #include "core/layer.h"
-#include "core/time.h"
 #include "core/layer_stack.h"
 
 #include "core/input/mouse_buttons.h"
@@ -18,6 +17,7 @@
 #include "utils/delta.h"
 #include "utils/math.h"
 #include "utils/RNG.h"
+#include "utils/time.h"
 #include "utils/timers.h"
 #include "utils/detected.h"
 #include "utils/thread_pool.h"

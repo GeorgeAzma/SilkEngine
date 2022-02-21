@@ -51,17 +51,9 @@ struct InstanceBatch
 	shared<VertexBuffer> instance_buffer = nullptr;
 	std::vector<shared<Image>> images;
 	std::vector<shared<Buffer>> buffers;
-	std::vector<shared<DescriptorSet>> descriptor_sets;
+	std::vector<DescriptorSet> descriptor_sets;
 
-	void bind()
-	{
-		instance->mesh->material->bind();
-		for (size_t i = 0; i < descriptor_sets.size(); ++i)
-			descriptor_sets[i]->bind(i);
-		instance->mesh->vertex_array->bind();
-		instance_buffer->bind(1);
-	}
-
+	void bind();
 	uint32_t addImages(const std::vector<shared<Image>>& new_images);
 
 	bool needs_update = true;

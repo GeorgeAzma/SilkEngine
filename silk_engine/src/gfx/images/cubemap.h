@@ -10,7 +10,7 @@ public:
 
 	const std::vector<std::string>& getPaths() const { return paths; }
 
-	static ImageData load(const std::vector<std::string>& files);
+	static Bitmap load(const std::vector<std::string>& files);
 
 private:
 	std::vector<std::string> paths;

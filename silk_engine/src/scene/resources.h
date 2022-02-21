@@ -20,7 +20,6 @@ public:
 	static shared<Image2D> getImage(const std::string& name);
 	//@return descriptor layout from the cache, if it doesn't exist creates new one
 	static shared<DescriptorSetLayout> getDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
-	static shared<DescriptorSet> getDescriptorSet(const std::string& name);
 	static shared<Font> getFont(const std::string& path);
 
 	static void addMesh(const std::string& name, shared<Mesh> mesh);
@@ -30,7 +29,6 @@ public:
 	static void addComputeShaderEffect(const std::string& name, shared<ComputeShaderEffect> compute_shader_effect);
 	static void addImage(const std::string& name, shared<Image2D> image);
 	static void addDescriptorSetLayout(shared<DescriptorSetLayout> descriptor_layout);
-	static void addDescriptorSet(const std::string& name, shared<DescriptorSet> descriptor_set);
 	static void addFont(const std::string& name, shared<Font> font);
 
 public:
@@ -56,5 +54,4 @@ private:
 		size_t operator()(const DescriptorSetLayoutInfo& k) const { return k.hash(); }
 	};
 	static inline std::unordered_map<DescriptorSetLayoutInfo, shared<DescriptorSetLayout>, DescriptorSetLayoutHash> descriptor_set_layouts;
-	static inline std::unordered_map<std::string, shared<DescriptorSet>> descriptor_sets;
 };

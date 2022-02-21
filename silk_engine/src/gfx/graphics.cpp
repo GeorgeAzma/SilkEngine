@@ -11,6 +11,11 @@
 #include "buffers/uniform_buffer.h"
 #include "descriptors/descriptor_set.h"
 #include "gfx/ui/font.h"
+#include "utils/alarm.h"
+#include "window/window.h"
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
 
 void Graphics::init()
 {
@@ -22,8 +27,6 @@ void Graphics::init()
 	physical_device = new PhysicalDevice(); //10ms
 	logical_device = new LogicalDevice(); //80ms
 	allocator = new Allocator();
-	command_pool = new CommandPool(); //0.025ms
-	active.command_pool = *command_pool;
 
 	descriptor_pool = new DescriptorPool();
 	descriptor_pool->addSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 64)
@@ -44,7 +47,7 @@ void Graphics::cleanup() //25ms
 	delete global_uniform;
 	delete swap_chain;
 	delete descriptor_pool;
-	delete command_pool;
+	command_pools.clear();
 	delete allocator;
 	delete logical_device;
 	delete physical_device;
@@ -52,6 +55,90 @@ void Graphics::cleanup() //25ms
 	delete instance;
 
 	glfwTerminate();
+}
+
+void Graphics::update()
+{
+	//Destroy old unused command pools
+	if (command_pool_purge_alarm)
+	{
+		screenshot("data/images/screenshots/screenshot.png");
+		for (auto it = command_pools.begin(); it != command_pools.end();)
+		{
+			if (it->second.use_count() <= 1)
+			{
+				it = command_pools.erase(it);
+				continue;
+			}
+	
+			++it;
+		}
+	}
+}
+#include "scene/resources.h"
+shared<CommandPool> Graphics::getCommandPool()
+{
+	auto it = command_pools.find(std::this_thread::get_id());
+	if (it != command_pools.end())
+		return it->second;
+	return command_pools.emplace(std::this_thread::get_id(), makeShared<CommandPool>()).first->second;
+}
+
+void Graphics::screenshot(const std::string& file)
+{
+	DebugTimer t0("Screenshot");
+	int width = swap_chain->getExtent().width;
+	int height = swap_chain->getExtent().height;
+	int channels = Image::channelCount(swap_chain->getSurfaceFormat().format);
+	size_t pixels = width * height;
+
+	DebugTimer t1("Copy From swapchain");
+	Image2DProps props{};
+	props.width = width;
+	props.height = height;
+	props.create_sampler = false;
+	props.create_view = false;
+	props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
+	props.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+	props.memory_usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+	props.format = swap_chain->getSurfaceFormat().format;
+	props.tiling = VK_IMAGE_TILING_LINEAR;
+	props.mipmap = false;
+	shared<Image2D> destination = makeShared<Image2D>(props);
+	auto image = swap_chain->getActiveImage();
+	image->copyImage(destination);
+	t1.stop();
+
+	DebugTimer t2("Host image transformation");
+	VkImageSubresource image_subresource = {};
+	image_subresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	image_subresource.mipLevel = 0;
+	image_subresource.arrayLayer = 0;
+	
+	VkSubresourceLayout destination_subresource_layout;
+	vkGetImageSubresourceLayout(*Graphics::logical_device, *destination, &image_subresource, &destination_subresource_layout);
+
+	std::vector<uint8_t> bitmap_data(destination_subresource_layout.size);
+	
+	void* data;
+	destination->map(&data);
+	uint8_t* u_data = (uint8_t*)data;
+	Resources::pool.forEach(pixels, [&](size_t i)
+		{
+			size_t index = i * channels;
+			bitmap_data[index + 0] = u_data[index + 2];
+			bitmap_data[index + 1] = u_data[index + 1];
+			bitmap_data[index + 2] = u_data[index + 0];
+			bitmap_data[index + 3] = u_data[index + 3];
+		});
+	destination->unmap();
+	t2.stop();
+
+	DebugTimer t3("Writing png");
+	stbi_write_png(file.c_str(), width, height, channels, bitmap_data.data(), 0);
+	SK_TRACE("Screenshot created: at {0}", file);
+	t3.stop();
+	t0.stop();
 }
 
 void Graphics::vulkanAssert(VkResult result)

@@ -133,29 +133,29 @@ void RawModel::processMesh(aiMesh *mesh, const aiScene *scene)
     {
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-        std::vector<ImageData> diffuse_maps = loadMaterialTextures(material, aiTextureType_DIFFUSE); 
-        std::vector<ImageData> normal_maps = loadMaterialTextures(material, aiTextureType_NORMALS);        
-        std::vector<ImageData> ao_maps = loadMaterialTextures(material, aiTextureType_AMBIENT);
-        std::vector<ImageData> height_maps = loadMaterialTextures(material, aiTextureType_HEIGHT);        
-        std::vector<ImageData> specular_maps = loadMaterialTextures(material, aiTextureType_SPECULAR);        
-        std::vector<ImageData> emissive_maps = loadMaterialTextures(material, aiTextureType_EMISSIVE);
+        std::vector<Bitmap> diffuse_maps = loadMaterialTextures(material, aiTextureType_DIFFUSE); 
+        std::vector<Bitmap> normal_maps = loadMaterialTextures(material, aiTextureType_NORMALS);        
+        std::vector<Bitmap> ao_maps = loadMaterialTextures(material, aiTextureType_AMBIENT);
+        std::vector<Bitmap> height_maps = loadMaterialTextures(material, aiTextureType_HEIGHT);        
+        std::vector<Bitmap> specular_maps = loadMaterialTextures(material, aiTextureType_SPECULAR);        
+        std::vector<Bitmap> emissive_maps = loadMaterialTextures(material, aiTextureType_EMISSIVE);
 
         MeshMaterialData mat{};
-        mat.diffuse_map = diffuse_maps.size() ? diffuse_maps[0] : ImageData{};
-        mat.normal_map = normal_maps.size() ? normal_maps[0] : ImageData{};
-        mat.ao_map = ao_maps.size() ? ao_maps[0] : ImageData{};
-        mat.height_map = height_maps.size() ? height_maps[0] : ImageData{};
-        mat.specular_map = specular_maps.size() ? specular_maps[0] : ImageData{};
-        mat.emissive_map = emissive_maps.size() ? emissive_maps[0] : ImageData{};
+        mat.diffuse_map = diffuse_maps.size() ? diffuse_maps[0] : Bitmap{};
+        mat.normal_map = normal_maps.size() ? normal_maps[0] : Bitmap{};
+        mat.ao_map = ao_maps.size() ? ao_maps[0] : Bitmap{};
+        mat.height_map = height_maps.size() ? height_maps[0] : Bitmap{};
+        mat.specular_map = specular_maps.size() ? specular_maps[0] : Bitmap{};
+        mat.emissive_map = emissive_maps.size() ? emissive_maps[0] : Bitmap{};
         material_data.emplace_back(std::move(mat));
     }
       
     meshes.emplace_back(new_mesh);
 }  
 
-std::vector<ImageData> RawModel::loadMaterialTextures(aiMaterial* mat, aiTextureType type)
+std::vector<Bitmap> RawModel::loadMaterialTextures(aiMaterial* mat, aiTextureType type)
 {
-    std::vector<ImageData> images;
+    std::vector<Bitmap> images;
 
     for (size_t i = 0; i < mat->GetTextureCount(type); ++i)
     {
@@ -170,7 +170,7 @@ std::vector<ImageData> RawModel::loadMaterialTextures(aiMaterial* mat, aiTexture
         }
         else
         {
-            ImageData image_data = Image2D::load(directory + '/' + str.C_Str());
+            Bitmap image_data = Image2D::load(directory + '/' + str.C_Str());
             if (image_data.channels == 3)
                 Image::align4(image_data);
             image_cache.emplace(str.C_Str(), image_data);

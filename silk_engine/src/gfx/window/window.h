@@ -21,10 +21,10 @@ class Window
 public:
     static void init();
     static void cleanup();
-    static unsigned int getWidth() { return data.width; }
-    static unsigned int getHeight() { return data.height; }
-    static unsigned int getX() { return data.x; }
-    static unsigned int getY() { return data.y; }
+    static int getWidth() { return data.width; }
+    static int getHeight() { return data.height; }
+    static int getX() { return data.x; }
+    static int getY() { return data.y; }
     static float getAspectRatio() { return (float)data.width / data.height; }
     static GLFWwindow *getGLFWWindow() { return window; }
     static bool isFullscreen() { return data.fullscreen; }
