@@ -209,7 +209,7 @@ void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
 		instance_data.color = *color;
 
 	if (!mesh_component.mesh->material.get())
-		if (auto material = registry.try_get<MaterialComponent>(entity)) //TODO: Material component is currently same as shader effect component, might have to remove it
+		if (auto material = registry.try_get<MaterialComponent>(entity))
 			mesh_component.mesh->material = material->material;
 
 	mesh_component.instance = makeShared<RenderedInstance>(mesh_component.mesh);
@@ -220,15 +220,16 @@ void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
 		auto& mesh_instance_batch = instance_batches[mesh_component.instance->instance_batch_index];
 		auto& mesh_instance_data = mesh_instance_batch.instance_data[mesh_component.instance->instance_data_index];
 		uint32_t image_index = mesh_instance_batch.addImages(image->images);
-		if (image_index == UINT32_MAX) //UINT32_MAX here means error if you look in addImages()
+		if (image_index == UINT32_MAX) //UINT32_MAX here means out of batch images
 		{
-			//TODO: This is either incorrect or bit inefficient
+			//TODO: This is bit inefficient, we don't have to destroy this instance (but it's fine because it only happens one in MAX_IMAGE_SLOT times in the worst case)
 			destroyMeshInstance(mesh_component.instance);
 			addInstanceBatch(mesh_component.instance, mesh_instance_data);
 			image_index = instance_batches.back().addImages(image->images);
-			SK_ASSERT(image_index != UINT32_MAX, "Entity might have too much images");
+			SK_ASSERT(image_index != UINT32_MAX, "Entity might has {0} images, when max image slot count is {1}.", image->images.size(), Graphics::MAX_IMAGE_SLOTS);
 		}
 		mesh_instance_data.image_index = image_index; //TODO: Implement image/buffer bindings for compute shader effects in onComputeShaderEffectComponentCreate();
+		mesh_component.instance->owned_image_count = image->images.size();
 	}
 }
 
@@ -333,6 +334,7 @@ void Scene::addInstanceBatch(shared<RenderedInstance> instance, const InstanceDa
 
 	new_batch.images.reserve(Graphics::MAX_IMAGE_SLOTS);
 	new_batch.images.emplace_back(Resources::getImage("White"));
+	new_batch.image_owners.resize(Graphics::MAX_IMAGE_SLOTS);
 
 	new_batch.instance_data.emplace_back(std::move(instance_data));
 	new_batch.instances.emplace_back(instance);
@@ -355,16 +357,12 @@ void Scene::destroyMeshInstance(shared<RenderedInstance> instance)
 	auto& instance_batch = instance_batches[instance->instance_batch_index];
 	instance_batch.needs_update = true;
 	
-	std::swap(instance_batch.instance_data[instance->instance_data_index], instance_batch.instance_data.back());
-	instance_batch.instance_data.pop_back();
-	
-	std::swap(instance_batch.instances[instance->instance_data_index], instance_batch.instances.back());
-	instance_batch.instances[instance->instance_data_index]->instance_data_index = instance->instance_data_index;
-	instance_batch.instances.pop_back();
+	//This would be down near std::swaps but it's here because we don't wanna skip this with return statement which is below
+	instance_batch.instances.back()->instance_data_index = instance->instance_data_index;
 
-	//TODO: Update instance_batch images
-	//Have another vector containing image owner instances for each image in images if (image_owners[image].size() - 1) == 0 swap that image with latest image in images and pop back, but also update image_index for all the owner instances of images.back() to index where it got swapped to
-	
+	for (size_t i = 0; i < instance->owned_image_count; ++i)
+		--instance_batch.image_owners[instance_batch.instance_data[instance->instance_data_index].image_index + i];
+
 	if (instance_batch.instance_data.empty())
 	{
 		if (instance->instance_batch_index != instance_batches.size() - 1)
@@ -372,10 +370,15 @@ void Scene::destroyMeshInstance(shared<RenderedInstance> instance)
 			InstanceBatch* last_batch = &instance_batch;
 			std::swap(instance_batch, instance_batches.back());
 			for (size_t j = 0; j < last_batch->instances.size(); ++j)
-			{
 				last_batch->instances[j]->instance_batch_index = instance_batches.back().instance->instance_batch_index;
-			}
 		}
 		instance_batches.pop_back();
+		return;
 	}
+
+	std::swap(instance_batch.instance_data[instance->instance_data_index], instance_batch.instance_data.back());
+	instance_batch.instance_data.pop_back();
+
+	std::swap(instance_batch.instances[instance->instance_data_index], instance_batch.instances.back());
+	instance_batch.instances.pop_back();
 }

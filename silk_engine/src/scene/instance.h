@@ -33,6 +33,7 @@ struct RenderedInstance
 {
 	shared<Mesh> mesh;
 
+	size_t owned_image_count = 0;
 	size_t instance_data_index = -1;
 	size_t instance_batch_index = -1;
 
@@ -50,8 +51,12 @@ struct InstanceBatch
 	std::vector<shared<RenderedInstance>> instances;
 	shared<VertexBuffer> instance_buffer = nullptr;
 	std::vector<shared<Image>> images;
-	std::vector<shared<Buffer>> buffers;
+	std::vector<uint32_t> image_owners;
 	std::vector<std::unordered_map<uint32_t, DescriptorSet>> descriptor_sets;
+
+	//vector<{shared<Image>, uint32_t(owner_count)}> images; AddInstance: images[instance.img_index].owner_count++;
+	//RemoveInstance: images[instance.img_index].owner_count--; if(owner_count == 0) ResetImage(instance.img_index); images[instance.img_index].free = true;
+	//AddImages: search(images, new_images); if they don't exist add new ones to the first free spot, if out of free spots return UINT32_MAX
 
 	void bind();
 	uint32_t addImages(const std::vector<shared<Image>>& new_images);
