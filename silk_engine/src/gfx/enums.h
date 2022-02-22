@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vk_mem_alloc.h>
+
 enum class Type
 {
 	BOOL,
@@ -72,4 +74,5 @@ public:
 	static size_t rows(Type type);
 	static size_t channelCount(VkFormat format);
 	static size_t formatSize(VkFormat format);
+	static bool needsStaging(VmaMemoryUsage usage);
 };

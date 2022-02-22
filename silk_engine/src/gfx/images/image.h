@@ -225,6 +225,8 @@ public:
 	const VkDescriptorImageInfo& getDescriptorInfo() const { return descriptor_image_info; }
 	void setLayout(VkImageLayout layout) { descriptor_image_info.imageLayout = layout; }
 	VmaAllocation getAllocation() const { return allocation; }
+	VkImageAspectFlags getAspectFlags() const { return getAspectFlags(props.format); }
+	bool isMapped() const { return mapped; }
 
 	static void align4(Bitmap& image);
 
@@ -233,7 +235,10 @@ public:
 	void getData(void* data, uint32_t array_layer = 0);
 	bool copyImage(shared<Image> destination, uint32_t array_layer = 0);
 	void transitionLayout(VkImageLayout new_layout);
-	void copyBufferToImage(VkBuffer buffer);
+	void insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VkPipelineStageFlags destination_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, uint32_t base_mip_level = 0, uint32_t base_array_layer = 0);
+	bool isFeatureSupported(VkFormatFeatureFlags feature) const;
+	void copyFromBuffer(VkBuffer buffer);
+	void copyToBuffer(VkBuffer buffer);
 	
 	void map(void** data) const;
 	void unmap() const;
@@ -264,4 +269,5 @@ protected:
 	ImageProps props = {};
 	uint32_t mip_levels = 1;
 	mutable bool mapped = false;
+	bool needs_staging = false;
 };

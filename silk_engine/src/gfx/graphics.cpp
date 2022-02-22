@@ -88,74 +88,68 @@ shared<CommandPool> Graphics::getCommandPool()
 
 void Graphics::screenshot(const std::string& file)
 {
-	//DebugTimer t0("Screenshot");
-	//int width = swap_chain->getExtent().width;
-	//int height = swap_chain->getExtent().height;
-	//int channels = Image::channelCount(swap_chain->getSurfaceFormat().format);
-	//size_t pixels = width * height;
-	//
-	//DebugTimer t1("Copy From swapchain");
-	//Image2DProps props{};
-	//props.width = width;
-	//props.height = height;
-	//props.create_sampler = false;
-	//props.create_view = false;
-	//props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
-	//props.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-	//props.memory_usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-	//props.format = swap_chain->getSurfaceFormat().format;
-	//props.tiling = VK_IMAGE_TILING_LINEAR;
-	//props.mipmap = false;
-	//props.sampler_props.anisotropy = false;
-	//shared<Image2D> destination = makeShared<Image2D>(props);
-	//auto image = swap_chain->getActiveImage();
-	//image->copyImage(destination);
-	//t1.stop();
-	//
-	//DebugTimer t2("Host image transformation");
-	//
-	//VkImageSubresource image_subresource = {};
-	//image_subresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	//image_subresource.mipLevel = 0;
-	//image_subresource.arrayLayer = 0;
-	//
-	//VkSubresourceLayout destination_subresource_layout;
-	//vkGetImageSubresourceLayout(*Graphics::logical_device, *destination, &image_subresource, &destination_subresource_layout);
-	//
-	//void* data;
-	//std::vector<uint8_t> bitmap(destination_subresource_layout.size);
-	//destination->getData(bitmap.data());
-	//
-	//CommandBuffer command_buffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_QUEUE_COMPUTE_BIT);
-	//command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-	//auto compute = Resources::getComputeShaderEffect("BGRA To RGBA")->pipeline;
-	//compute->bind();
-	//
-	//props.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
-	//props.format = VK_FORMAT_R8G8B8A8_UNORM;
-	//props.layout = VK_IMAGE_LAYOUT_GENERAL;
-	//props.tiling = VK_IMAGE_TILING_OPTIMAL;
-	//props.create_sampler = true;
-	//props.create_view = true;
-	//Image2D image_storage(props);
-	//
-	//compute->getShader()->getDescirptorSets().at(0)->setImageInfo(0, { *image });
-	//compute->getShader()->getDescirptorSets().at(0)->update();
-	//compute->getShader()->getDescirptorSets().at(0)->bind();
-	//compute->dispatch(width * height);
-	//command_buffer.submitIdle();
-	//
-	//image_storage.getData(bitmap.data());
-	//
-	//t2.stop();
-	//
-	//DebugTimer t3("Writing png");
-	//
-	//stbi_write_png(file.c_str(), width, height, channels, bitmap.data(), 0);
-	//
-	//t3.stop();
-	//t0.stop();
-	//SK_TRACE("Screenshot created: at {0}", file);
+	DebugTimer t0("Screenshot");
+	int width = swap_chain->getExtent().width;
+	int height = swap_chain->getExtent().height;
+	int channels = Image::channelCount(swap_chain->getSurfaceFormat().format);
+	size_t pixels = width * height;
+
+	DebugTimer t1("Create/Copy Image");
+	Image2DProps props{};
+	props.width = width;
+	props.height = height;
+	props.create_sampler = false;
+	props.create_view = false;
+	props.layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	props.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+	props.memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
+	props.format = swap_chain->getSurfaceFormat().format;
+	props.tiling = VK_IMAGE_TILING_OPTIMAL;
+	props.mipmap = false;
+	props.sampler_props.anisotropy = false;
+	shared<Image2D> destination = makeShared<Image2D>(props);
+	auto image = swap_chain->getActiveImage();
+	image->copyImage(destination);
+	destination->transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+	t1.stop();
+
+	DebugTimer t2("Change layout to RGBA");
+	CommandBuffer command_buffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_QUEUE_COMPUTE_BIT);
+	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+
+	StorageBuffer image_storage(destination->getWidth() * destination->getHeight() * Image::channelCount(destination->getFormat()), VMA_MEMORY_USAGE_GPU_TO_CPU, VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+	VkBufferImageCopy region{};
+	region.imageOffset = { 0, 0, 0 };
+	region.imageExtent = { destination->getWidth(), destination->getHeight(), 1 };
+	region.bufferOffset = 0;
+	region.bufferImageHeight = destination->getHeight();
+	region.bufferRowLength = destination->getWidth();
+	region.imageSubresource.aspectMask = Image::getAspectFlags(destination->getFormat());
+	region.imageSubresource.baseArrayLayer = 0;
+	region.imageSubresource.layerCount = 1;
+	region.imageSubresource.mipLevel = 0;
+	vkCmdCopyImageToBuffer(Graphics::active.command_buffer, *destination, destination->getDescriptorInfo().imageLayout, image_storage, 1, &region);
+
+	auto compute = Resources::getComputeShaderEffect("BGRA To RGBA")->pipeline;
+	compute->bind();
+	
+	(*compute->getShader()->getDescriptorSets().at(0)).setBufferInfo(0, { image_storage });
+	(*compute->getShader()->getDescriptorSets().at(0)).update();
+	(*compute->getShader()->getDescriptorSets().at(0)).bind();
+	compute->dispatch(width * height);
+	
+	command_buffer.submitIdle();
+	t2.stop();
+
+	void* buffer_data;
+	image_storage.map(&buffer_data);
+	
+	stbi_write_png(file.c_str(), width, height, channels, buffer_data, 0);
+	image_storage.unmap();
+
+	t0.stop();
+	
+	SK_TRACE("Screenshot created: at {0}", file);
 }
 
 void Graphics::vulkanAssert(VkResult result)

@@ -26,7 +26,7 @@ Scene::Scene()
 	instance_batches.reserve(Graphics::MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
 
 	indirect_buffer = makeShared<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
-	global_descriptor_set = Resources::getShaderEffect("3D")->pipeline->getShader()->getDescirptorSets().at(0);
+	global_descriptor_set = Resources::getShaderEffect("3D")->pipeline->getShader()->getDescriptorSets().at(0);
 	global_descriptor_set->setBufferInfo(0, { *Graphics::global_uniform }); //TODO: move global_uniform here
 	global_descriptor_set->update();
 
@@ -100,24 +100,28 @@ void Scene::onUpdate()
 			draw_commands[i] = std::move(draw_command);
 			any_needs_update = true;
 		}
-	}
+	}  
 	if (any_needs_update)
 		indirect_buffer->setDataChecked(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand));
 
 	//Draw instances
 	Graphics::swap_chain->acquireNextImage();
+	const auto& white = Resources::getImage("White")->getDescriptorInfo();
 	for (auto& instance_batch : instance_batches)
 	{
-		std::vector<VkDescriptorImageInfo> descriptor_images(Graphics::MAX_IMAGE_SLOTS);
-		for (size_t i = 0; i < instance_batch.images.size(); ++i)
-			descriptor_images[i] = *instance_batch.images[i];
-		for (size_t i = instance_batch.images.size(); i < descriptor_images.size(); ++i)
-			descriptor_images[i] = *Resources::getImage("White");
+		if (instance_batch.images_need_update)
+		{
+			std::vector<VkDescriptorImageInfo> descriptor_images(Graphics::MAX_IMAGE_SLOTS, white);
+			for (size_t i = 0; i < instance_batch.images.size(); ++i)
+				descriptor_images[i] = *instance_batch.images[i];
 
-		auto& descriptor_set = instance_batch.descriptor_sets[Graphics::swap_chain->getImageIndex()];
-
-		descriptor_set[1].setImageInfo(0, descriptor_images);
-		descriptor_set[1].update();
+			for (auto& descriptor_set : instance_batch.descriptor_sets) //Update descriptors for each swap chain image (Annoying gotta think of automata)
+			{
+				descriptor_set[1].setImageInfo(0, descriptor_images);
+				descriptor_set[1].update();
+				instance_batch.images_need_update = false;
+			}
+		}
 	}
 	Graphics::swap_chain->beginFrame(Graphics::swap_chain->getImageIndex());
 	Graphics::swap_chain->beginRenderPass(Graphics::swap_chain->getImageIndex());
@@ -337,7 +341,7 @@ void Scene::addInstanceBatch(shared<RenderedInstance> instance, const InstanceDa
 
 	new_batch.descriptor_sets.resize(Graphics::swap_chain->getImages().size());
 	for (auto& descriptor_sets : new_batch.descriptor_sets)
-		for (auto&& [set, descriptor_set] : new_batch.instance->mesh->material->shader_effect->pipeline->getShader()->getDescirptorSets())
+		for (auto&& [set, descriptor_set] : new_batch.instance->mesh->material->shader_effect->pipeline->getShader()->getDescriptorSets())
 			if(set != 0) //0 is reserved as Global uniform buffer
 				descriptor_sets[set] = *descriptor_set;
 		

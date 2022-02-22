@@ -7,7 +7,7 @@
 #include "gfx/graphics.h"
 
 Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_usage)
-	: size(size), needs_staging(vma_usage == VMA_MEMORY_USAGE_GPU_ONLY)
+	: size(size), needs_staging(EnumInfo::needsStaging(vma_usage))
 {
 	VkBufferCreateInfo buffer_info{};
 	buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -84,28 +84,19 @@ void Buffer::setDataChecked(const void* data, size_t size, size_t offset)
 
 void Buffer::getData(void* data, size_t size) const
 {
-	void* buffer_data;
-	map(&buffer_data);
-	std::memcpy(data, buffer_data, size ? size : this->size);
-	unmap();
-}
-
-uint32_t Buffer::findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags properties)
-{
-	VkPhysicalDeviceMemoryProperties memory_properties;
-	vkGetPhysicalDeviceMemoryProperties(*Graphics::physical_device, &memory_properties);
-
-	for (uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i)
+	if (needs_staging)
 	{
-		if ((type_filter & (1 << i)) &&
-			(memory_properties.memoryTypes[i].propertyFlags & properties) == properties)
-		{
-			return i;
-		}
+		StagingBuffer sb(nullptr, size ? size : this->size);
+		copy(sb, buffer, sb.size, 0, 0);
+		sb.getData(data);
 	}
-
-	SK_ERROR("Vulkan: Couldn't find suitable memory type");
-	return 0;
+	else
+	{
+		void* buffer_data;
+		map(&buffer_data);
+		std::memcpy(data, buffer_data, size ? size : this->size);
+		unmap();
+	}
 }
 
 void Buffer::insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDeviceSize offset, VkDeviceSize size)

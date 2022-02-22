@@ -20,7 +20,6 @@ Application::Application(const char* name, ApplicationCommandLineArgs args)
     Dispatcher::subscribe(this, &Application::onKeyPress);
     Input::init();
     Graphics::init();
-    glslang::InitializeProcess();
     Resources::init();
 }
 
@@ -31,7 +30,6 @@ Application::~Application()
     Dispatcher::unsubscribe(this, &Application::onKeyPress);
     Window::cleanup();
     Resources::cleanup();
-    glslang::FinalizeProcess();
     Graphics::cleanup();
     SK_INFO("Terminated");
 }

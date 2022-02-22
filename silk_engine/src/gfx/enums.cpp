@@ -291,6 +291,21 @@ size_t EnumInfo::formatSize(VkFormat format)
 	return 0;
 }
 
+bool EnumInfo::needsStaging(VmaMemoryUsage usage)
+{
+	switch (usage)
+	{
+	case VMA_MEMORY_USAGE_AUTO:
+	case VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE:
+	case VMA_MEMORY_USAGE_CPU_COPY:
+	case VMA_MEMORY_USAGE_GPU_LAZILY_ALLOCATED:
+	case VMA_MEMORY_USAGE_GPU_ONLY:
+		return true;
+	}
+
+	return false;
+}
+
 VkIndexType EnumInfo::indexType(IndexType index_type)
 {
 	switch (index_type)

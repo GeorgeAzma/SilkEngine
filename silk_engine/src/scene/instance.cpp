@@ -21,6 +21,7 @@ uint32_t InstanceBatch::addImages(const std::vector<shared<Image>>& new_images)
 
 	size_t image_index = images.size();
 	images.insert(images.end(), new_images.begin(), new_images.end());
+	images_need_update = true;
 
 	return image_index;
 }

@@ -6,36 +6,6 @@
 #include "scene/resources.h"
 #include "utils/string.h"
 
-Shader::Includer::IncludeResult* Shader::Includer::includeLocal(const char* header, const char* includer, size_t inclusion_depth)
-{
-	std::filesystem::path directory = "data/shaders/";
-	std::string content_str = File::read(directory / header);
-	char* content = new char[content_str.size()];
-
-	std::memcpy(content, content_str.c_str(), content_str.size());
-
-	return new IncludeResult(header, content, content_str.size(), content);
-}
-
-Shader::Includer::IncludeResult* Shader::Includer::includeSystem(const char* header, const char* includer, size_t inclusion_depth)
-{
-	std::string content_str = File::read(header);
-	char* content = new char[content_str.size()];
-
-	std::memcpy(content, content_str.c_str(), content_str.size());
-
-	return new IncludeResult(header, content, content_str.size(), content);
-}
-
-void Shader::Includer::releaseInclude(IncludeResult* result)
-{
-	if (result)
-	{
-		delete[] static_cast<char*>(result->userData);
-		delete result;
-	}
-}
-
 Shader::Shader(const std::filesystem::path& file, const std::vector<Define>& defines)
 	: file(file)
 {
@@ -49,52 +19,29 @@ void Shader::compile(const std::vector<Define>& defines)
 		vkDestroyShaderModule(*Graphics::logical_device, pipeline_shader_stage_info.module, nullptr);
 	pipeline_shader_stage_infos.clear();
 
-	std::vector<Define> all_defines = defines;
-	all_defines.emplace_back("MAX_IMAGE_SLOTS", std::to_string(Graphics::MAX_IMAGE_SLOTS));
-	std::vector<Extension> all_extensions = {};
-	all_extensions.emplace_back("GL_GOOGLE_include_directive", "require");
-	all_extensions.emplace_back("GL_ARB_separate_shader_objects", "require");
-	all_extensions.emplace_back("GL_ARB_shading_language_420pack", "enable");
-	std::stringstream preamble;
-
-	for (const auto& define : all_defines)
-		preamble << "#define " << define.name << " " << define.value << '\n';
-	for (const auto& extension : all_extensions)
-		preamble << "#extension " << extension.name << " : " << extension.behavior << '\n';
-
-	std::string preamble_str = preamble.str();
+	shaderc::Compiler compiler;
+	shaderc::CompileOptions options;
+	options.SetTargetEnvironment(shaderc_target_env_vulkan, shadercApiVersion(Graphics::API_VERSION));
+	options.SetForcedVersionProfile(450, shaderc_profile_core);
+	options.AddMacroDefinition("MAX_IMAGE_SLOTS", std::to_string(Graphics::MAX_IMAGE_SLOTS));
+#ifdef SK_ENABLE_DEBUG_OUTPUT
+	options.SetGenerateDebugInfo();
+#endif
+	options.SetIncluder(std::make_unique<Includer>());
+	for (auto& define : defines)
+		options.AddMacroDefinition(define.name, define.value);
+	options.SetOptimizationLevel(shaderc_optimization_level_performance);
 
 	std::filesystem::path path = (std::filesystem::path("data/shaders") / file).string() + ".glsl";
 	std::filesystem::path cache_path = (std::filesystem::path("data/cache/shaders") / file).string() + ".glsl";
 	std::unordered_map<uint32_t, std::string> shader_sources = parse(path);
 
-	auto resources = getResources();
-
 	for (auto&& [type, source] : shader_sources)
 	{
-		EShLanguage language = getEshLanguage((Type)type);
-		glslang::TProgram program;
-		glslang::TShader shader(language);
-
-		auto messages = EShMessages(EShMsgSpvRules | EShMsgVulkanRules | EShMsgDefault);
-#ifdef SK_ENABLE_DEBUG_OUTPUT
-		messages = EShMessages(messages | EShMsgDebugInfo);
-#endif
-		
-		const char* shader_source = source.c_str();
-		const int shader_length = int(source.size());
-		std::string shader_name = getTypeFileExtension((Type)type);
-		const char* shader_name_cstr = shader_name.c_str();
-		shader.setStringsWithLengthsAndNames(&shader_source, nullptr, &shader_name_cstr, 1);
-		shader.setPreamble(preamble_str.c_str());
-		shader.setEnvInput(glslang::EShSourceGlsl, language, glslang::EShClientVulkan, 120);
-		shader.setEnvClient(glslang::EShClientVulkan, getEshClientVersion(Graphics::API_VERSION));
-		shader.setEnvTarget(glslang::EShTargetSpv, glslang::EShTargetSpv_1_5);
-		
-		std::filesystem::path file_cache_path = cache_path.string() + getTypeFileExtension((Type)type) + ".spv";
-		std::ifstream in(file_cache_path, std::ios::ate | std::ios::binary);
 		std::vector<uint32_t> binary;
+		std::string file_cache_path = cache_path.string() + getTypeFileExtension((Type)type) + ".spv";
 #ifndef SK_ENABLE_DEBUG_OUTPUT
+		std::ifstream in(file_cache_path, std::ios::ate | std::ios::binary);
 		if (in.is_open())
 		{
 			size_t size = in.tellg();
@@ -107,96 +54,83 @@ void Shader::compile(const std::vector<Define>& defines)
 		else
 #endif
 		{
-			Includer includer;
-			std::string str;
-			
-			if (!shader.preprocess(&resources, getEshClientVersion(Graphics::API_VERSION), ENoProfile, false, false, messages, &str, includer))
-				SK_ERROR("[Shader compiler]: SPRIV shader preprocess failed: {0}:\n{1}\n{2}", path, shader.getInfoLog(), shader.getInfoDebugLog());
-
-			if (!shader.parse(&resources, getEshClientVersion(Graphics::API_VERSION), true, messages, includer)) 
-				SK_ERROR("[Shader compiler]: SPRIV shader parse failed: {0}:\n{1}\n{2}", path, shader.getInfoLog(), shader.getInfoDebugLog());
-
-			program.addShader(&shader);
-
-			if (!program.link(messages) || !program.mapIO())
-				SK_ERROR("[Shader compiler]: Couldn't link shader program");
-
-			glslang::SpvOptions spv_options;
-			spv_options.disableOptimizer = false;
-#ifdef SK_ENABLE_DEBUG_OUTPUT
-			spv_options.stripDebugInfo = false;
-			spv_options.generateDebugInfo = true;
-#else
-			spv_options.generateDebugInfo = false;
-#endif
-			spv_options.optimizeSize = true;
-
-			spv::SpvBuildLogger logger;
-			glslang::GlslangToSpv(*program.getIntermediate(language), binary, &logger, &spv_options);
+			auto preprocess_result = compiler.PreprocessGlsl(source, shadercType((Type)type), path.string().c_str(), options);
+			SK_ASSERT(preprocess_result.GetCompilationStatus() == shaderc_compilation_status_success, preprocess_result.GetErrorMessage());
+			std::string parsed_source(preprocess_result.begin(), preprocess_result.end());
+		
+			auto compilation_result = compiler.CompileGlslToSpv(parsed_source, shadercType((Type)type), path.string().c_str(), options);
+			SK_ASSERT(compilation_result.GetCompilationStatus() == shaderc_compilation_status_success, compilation_result.GetErrorMessage());
+			binary = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend());
 
 			std::ofstream out(file_cache_path, std::ios::binary);
 			SK_ASSERT(out.is_open(), "Couldn't create shader cache file: {0}", file_cache_path);
-			out.write((char*)binary.data(), binary.size() * sizeof(uint32_t));
+			out.write((const char*)binary.data(), binary.size() * sizeof(uint32_t));
 
 			SK_TRACE("Shader cache created: {0}", file_cache_path);
 		}
 
 		VkShaderStageFlagBits stage_flag = getVulkanType((Type)type);
-
+		
 		VkPipelineShaderStageCreateInfo pipeline_shader_stage_info{};
 		pipeline_shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		pipeline_shader_stage_info.stage = stage_flag;
 		pipeline_shader_stage_info.module = createShaderModule(binary);
 		pipeline_shader_stage_info.pName = "main";
-
-		spirv_cross::Compiler compiler(binary.data(), binary.size());
-		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+		
+#define SK_WEIRD_ERROR_FIX 1
+#if SK_WEIRD_ERROR_FIX
+		spirv_cross::Compiler spirv_compiler(binary.data(), binary.size());
+		spirv_cross::ShaderResources shader_resources = spirv_compiler.get_shader_resources();
 		
 		if (!resources_was_compiled)
 		{
-			for (const spirv_cross::Resource& sampled_image : resources.sampled_images)
-				loadResource(sampled_image, compiler, resources, stage_flag, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-
-			for (const spirv_cross::Resource& seperate_image : resources.separate_images)
-				loadResource(seperate_image, compiler, resources, stage_flag, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
-
-			for (const spirv_cross::Resource& seperate_sampler : resources.separate_samplers)
-				loadResource(seperate_sampler, compiler, resources, stage_flag, VK_DESCRIPTOR_TYPE_SAMPLER);
-
-			for (const spirv_cross::Resource& storage_buffer : resources.storage_buffers)
-				loadResource(storage_buffer, compiler, resources, stage_flag, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-
-			for (const spirv_cross::Resource& storage_image : resources.storage_images)
-				loadResource(storage_image, compiler, resources, stage_flag, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-
-			for (const spirv_cross::Resource& subpass_input : resources.subpass_inputs)
-				loadResource(subpass_input, compiler, resources, stage_flag, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT);
-
-			for (const spirv_cross::Resource& uniform_buffer : resources.uniform_buffers)
-				loadResource(uniform_buffer, compiler, resources, stage_flag, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-
-			for (const spirv_cross::Resource& push_constant : resources.push_constant_buffers)
-				loadPushConstant(push_constant, compiler, resources, stage_flag);
-
+			for (const spirv_cross::Resource& sampled_image : shader_resources.sampled_images)
+				loadResource(sampled_image, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+			
+			for (const spirv_cross::Resource& seperate_image : shader_resources.separate_images)
+				loadResource(seperate_image, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+			
+			for (const spirv_cross::Resource& seperate_sampler : shader_resources.separate_samplers)
+				loadResource(seperate_sampler, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_SAMPLER);
+			
+			for (const spirv_cross::Resource& storage_buffer : shader_resources.storage_buffers)
+				loadResource(storage_buffer, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+			
+			for (const spirv_cross::Resource& storage_image : shader_resources.storage_images)
+				loadResource(storage_image, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+			
+			for (const spirv_cross::Resource& subpass_input : shader_resources.subpass_inputs)
+				loadResource(subpass_input, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT);
+			
+			for (const spirv_cross::Resource& uniform_buffer : shader_resources.uniform_buffers)
+				loadResource(uniform_buffer, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+			
+			for (const spirv_cross::Resource& push_constant : shader_resources.push_constant_buffers)
+				loadPushConstant(push_constant, spirv_compiler, shader_resources, stage_flag);
+			
 			//Local size reflection
 			local_size = glm::uvec3(0);
-			local_size[0] = compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 0);
-			local_size[1] = compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 1);
-			local_size[2] = compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 2);
+			local_size[0] = spirv_compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 0);
+			local_size[1] = spirv_compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 1);
+			local_size[2] = spirv_compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 2);
 			if (local_size != glm::uvec3(0))
 				local_size = glm::max(local_size, glm::uvec3(1));
 		}
+#endif
 		pipeline_shader_stage_infos.emplace_back(std::move(pipeline_shader_stage_info));
 	}
 
+#if SK_WEIRD_ERROR_FIX
 	if (!resources_was_compiled)
 	{
 		for (const auto& resource : this->resources)
 			descriptor_sets.at(resource.set)->add(resource.binding, resource.count, resource.type, resource.stage_flags);
-
+	
 		for (auto& descriptor_set : descriptor_sets)
 			descriptor_set.second->build();
 	}
+#endif
+#undef SK_WEIRD_ERROR_FIX
 
 	SK_TRACE("Shader loaded: {0}", path);
 }
@@ -304,22 +238,6 @@ void Shader::loadPushConstant(const spirv_cross::Resource& spirv_resource, const
 	}
 }
 
-EShLanguage Shader::getEshLanguage(Shader::Type shader_type)
-{
-	switch (shader_type)
-	{
-	case Shader::Type::VERTEX: return EShLangVertex;
-	case Shader::Type::FRAGMENT: return EShLangFragment;
-	case Shader::Type::GEOMETRY: return EShLangGeometry;
-	case Shader::Type::COMPUTE: return EShLangCompute;
-	case Shader::Type::TESSELATION_CONTROL: return EShLangTessControl;
-	case Shader::Type::TESSELATION_EVALUATION: return EShLangTessEvaluation;
-	}
-
-	SK_ERROR("Unsupported shader type specified: {0}.", shader_type);
-	return EShLanguage(0);
-}
-
 Shader::Type Shader::getStringType(const std::string& shader_string)
 {
 	if (shader_string == "vertex") return Type::VERTEX;
@@ -331,6 +249,36 @@ Shader::Type Shader::getStringType(const std::string& shader_string)
 
 	SK_ERROR("Unsupported shader type string specified: {0}. try writing #type vertex/fragment/geometry/compute/tesselation_control/tesselation_evaluation", shader_string);
 	return Shader::Type(0);
+}
+
+shaderc_shader_kind Shader::shadercType(Type shader_type)
+{
+	switch (shader_type)
+	{
+	case Shader::Type::NONE:
+	case Shader::Type::VERTEX: return shaderc_vertex_shader;
+	case Shader::Type::FRAGMENT: return shaderc_fragment_shader;
+	case Shader::Type::GEOMETRY: return shaderc_geometry_shader;
+	case Shader::Type::COMPUTE: return shaderc_compute_shader;
+	case Shader::Type::TESSELATION_CONTROL: return shaderc_tess_control_shader;
+	case Shader::Type::TESSELATION_EVALUATION: return shaderc_tess_evaluation_shader;
+	}
+	
+	SK_ERROR("Unsupported shader type specified");
+	return shaderc_shader_kind(0);
+}
+
+shaderc_env_version Shader::shadercApiVersion(APIVersion api_version)
+{
+	switch (api_version)	
+	{
+	case APIVersion::VULKAN_1_0: return shaderc_env_version_vulkan_1_0;
+	case APIVersion::VULKAN_1_1: return shaderc_env_version_vulkan_1_1;
+	case APIVersion::VULKAN_1_2: return shaderc_env_version_vulkan_1_2;
+	}
+
+	SK_ERROR("Unsupported api version specified");
+	return shaderc_env_version(0);
 }
 
 VkShaderStageFlagBits Shader::getVulkanType(Type shader_type)
@@ -363,142 +311,4 @@ std::string Shader::getTypeFileExtension(Shader::Type shader_type)
 
 	SK_ERROR("Unsupported shader type specified: {0}.", shader_type);
 	return "";
-}
-
-glslang::EShTargetClientVersion Shader::getEshClientVersion(APIVersion api_version)
-{
-	switch (api_version)
-	{
-	case APIVersion::VULKAN_1_0: return glslang::EShTargetVulkan_1_0;
-	case APIVersion::VULKAN_1_1: return glslang::EShTargetVulkan_1_1;
-	case APIVersion::VULKAN_1_2: return glslang::EShTargetVulkan_1_2;
-	}
-
-	SK_ERROR("Unsupported API version specified: {0}", api_version);
-	return glslang::EShTargetClientVersion(0);
-}
-
-TBuiltInResource Shader::getResources() 
-{
-	TBuiltInResource resources = {};
-	resources.maxLights = 32;
-	resources.maxClipPlanes = 6;
-	resources.maxTextureUnits = 32;
-	resources.maxTextureCoords = 32;
-	resources.maxVertexAttribs = 64;
-	resources.maxVertexUniformComponents = 4096;
-	resources.maxVaryingFloats = 64;
-	resources.maxVertexTextureImageUnits = 32;
-	resources.maxCombinedTextureImageUnits = 80;
-	resources.maxTextureImageUnits = Graphics::MAX_IMAGE_SLOTS;
-	resources.maxFragmentUniformComponents = 4096;
-	resources.maxDrawBuffers = 32;
-	resources.maxVertexUniformVectors = 128;
-	resources.maxVaryingVectors = 8;
-	resources.maxFragmentUniformVectors = 16;
-	resources.maxVertexOutputVectors = 16;
-	resources.maxFragmentInputVectors = 15;
-	resources.minProgramTexelOffset = -8;
-	resources.maxProgramTexelOffset = 7;
-	resources.maxClipDistances = 8;
-	resources.maxComputeWorkGroupCountX = 65535;
-	resources.maxComputeWorkGroupCountY = 65535;
-	resources.maxComputeWorkGroupCountZ = 65535;
-	resources.maxComputeWorkGroupSizeX = 1024;
-	resources.maxComputeWorkGroupSizeY = 1024;
-	resources.maxComputeWorkGroupSizeZ = 64;
-	resources.maxComputeUniformComponents = 1024;
-	resources.maxComputeTextureImageUnits = 16;
-	resources.maxComputeImageUniforms = 8;
-	resources.maxComputeAtomicCounters = 8;
-	resources.maxComputeAtomicCounterBuffers = 1;
-	resources.maxVaryingComponents = 60;
-	resources.maxVertexOutputComponents = 64;
-	resources.maxGeometryInputComponents = 64;
-	resources.maxGeometryOutputComponents = 128;
-	resources.maxFragmentInputComponents = 128;
-	resources.maxImageUnits = Graphics::MAX_IMAGE_SLOTS;
-	resources.maxCombinedImageUnitsAndFragmentOutputs = 8;
-	resources.maxCombinedShaderOutputResources = 8;
-	resources.maxImageSamples = 0;
-	resources.maxVertexImageUniforms = 0;
-	resources.maxTessControlImageUniforms = 0;
-	resources.maxTessEvaluationImageUniforms = 0;
-	resources.maxGeometryImageUniforms = 0;
-	resources.maxFragmentImageUniforms = 8;
-	resources.maxCombinedImageUniforms = 8;
-	resources.maxGeometryTextureImageUnits = 16;
-	resources.maxGeometryOutputVertices = 256;
-	resources.maxGeometryTotalOutputComponents = 1024;
-	resources.maxGeometryUniformComponents = 1024;
-	resources.maxGeometryVaryingComponents = 64;
-	resources.maxTessControlInputComponents = 128;
-	resources.maxTessControlOutputComponents = 128;
-	resources.maxTessControlTextureImageUnits = 16;
-	resources.maxTessControlUniformComponents = 1024;
-	resources.maxTessControlTotalOutputComponents = 4096;
-	resources.maxTessEvaluationInputComponents = 128;
-	resources.maxTessEvaluationOutputComponents = 128;
-	resources.maxTessEvaluationTextureImageUnits = 16;
-	resources.maxTessEvaluationUniformComponents = 1024;
-	resources.maxTessPatchComponents = 120;
-	resources.maxPatchVertices = 32;
-	resources.maxTessGenLevel = 64;
-	resources.maxViewports = 16;
-	resources.maxVertexAtomicCounters = 0;
-	resources.maxTessControlAtomicCounters = 0;
-	resources.maxTessEvaluationAtomicCounters = 0;
-	resources.maxGeometryAtomicCounters = 0;
-	resources.maxFragmentAtomicCounters = 8;
-	resources.maxCombinedAtomicCounters = 8;
-	resources.maxAtomicCounterBindings = 1;
-	resources.maxVertexAtomicCounterBuffers = 0;
-	resources.maxTessControlAtomicCounterBuffers = 0;
-	resources.maxTessEvaluationAtomicCounterBuffers = 0;
-	resources.maxGeometryAtomicCounterBuffers = 0;
-	resources.maxFragmentAtomicCounterBuffers = 1;
-	resources.maxCombinedAtomicCounterBuffers = 1;
-	resources.maxAtomicCounterBufferSize = 16384;
-	resources.maxTransformFeedbackBuffers = 4;
-	resources.maxTransformFeedbackInterleavedComponents = 64;
-	resources.maxCullDistances = 8;
-	resources.maxCombinedClipAndCullDistances = 8;
-	resources.maxSamples = 4;
-	resources.limits.nonInductiveForLoops = true;
-	resources.limits.whileLoops = true;
-	resources.limits.doWhileLoops = true;
-	resources.limits.generalUniformIndexing = true;
-	resources.limits.generalAttributeMatrixVectorIndexing = true;
-	resources.limits.generalVaryingIndexing = true;
-	resources.limits.generalSamplerIndexing = true;
-	resources.limits.generalVariableIndexing = true;
-	resources.limits.generalConstantMatrixVectorIndexing = true;
-	return resources;
-}
-
-int32_t Shader::computeSize(const glslang::TType* ttype) 
-{
-	int32_t components = 0;
-
-	if (ttype->getBasicType() == glslang::EbtStruct || ttype->getBasicType() == glslang::EbtBlock)
-		for (const auto& tl : *ttype->getStruct())
-			components += computeSize(tl.type);
-	else if (ttype->getMatrixCols() != 0)
-		components = ttype->getMatrixCols() * ttype->getMatrixRows();
-	else
-		components = ttype->getVectorSize();
-
-	if (ttype->getArraySizes()) 
-	{
-		int32_t arraySize = 1;
-
-		for (int32_t d = 0; d < ttype->getArraySizes()->getNumDims(); ++d)
-			// This only makes sense in paths that have a known array size.
-			if (auto dimSize = ttype->getArraySizes()->getDimSize(d); dimSize != glslang::UnsizedArraySize)
-				arraySize *= dimSize;
-
-		components *= arraySize;
-	}
-
-	return sizeof(float) * components;
 }

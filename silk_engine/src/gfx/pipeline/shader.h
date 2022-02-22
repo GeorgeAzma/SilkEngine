@@ -2,8 +2,8 @@
 
 #include "gfx/enums.h"
 #include "gfx/descriptors/descriptor_set.h"
-#include <glslang/Public/ShaderLang.h>
-#include <glslang/SPIRV/GlslangToSpv.h>
+#include <shaderc/shaderc.h>
+#include <shaderc/shaderc.hpp>
 #include <spirv_cross/spirv_cross.hpp>
 
 class Shader : NonCopyable
@@ -24,18 +24,40 @@ class Shader : NonCopyable
         std::string value = "";
     };
 
-    struct Extension
-    {
-        std::string name = "";
-        std::string behavior = "require";
-    };
+	class Includer : public shaderc::CompileOptions::IncluderInterface
+	{
+		shaderc_include_result* GetInclude(
+			const char* requested_source,
+			shaderc_include_type type,
+			const char* requesting_source,
+			size_t include_depth) override
+		{
+			const std::string name = std::string("data/shaders/") + requested_source;
+			const std::string contents = File::read(name);
 
-    class Includer : public glslang::TShader::Includer
-    {
-        IncludeResult* includeLocal(const char* header, const char* includer, size_t inclusion_depth) override;
-        IncludeResult* includeSystem(const char* header, const char* includer, size_t inclusion_depth) override;
-        void releaseInclude(IncludeResult* result) override;
-    };
+			auto container = new std::array<std::string, 2>;
+			(*container)[0] = name;
+			(*container)[1] = contents;
+
+			auto data = new shaderc_include_result;
+
+			data->user_data = container;
+
+			data->source_name = (*container)[0].data();
+			data->source_name_length = (*container)[0].size();
+
+			data->content = (*container)[1].data();
+			data->content_length = (*container)[1].size();
+
+			return data;
+		};
+
+		void ReleaseInclude(shaderc_include_result* data) override
+		{
+			delete static_cast<std::array<std::string, 2>*>(data->user_data);
+			delete data;
+		};
+	};
 
 public:
 	enum class Type : uint32_t
@@ -55,7 +77,7 @@ public:
 
     void compile(const std::vector<Define>& defines = {});
 
-	const std::unordered_map<uint32_t, shared<DescriptorSet>>& getDescirptorSets() const { return descriptor_sets; }
+	const std::unordered_map<uint32_t, shared<DescriptorSet>>& getDescriptorSets() const { return descriptor_sets; }
 	const std::vector<VkPushConstantRange>& getPushConstants() const { return push_constants; }
 	const std::vector<VkPipelineShaderStageCreateInfo>& getPipelineShaderStageInfos() const { return pipeline_shader_stage_infos; }
 	const glm::uvec3& getLocalSize() const 
@@ -65,13 +87,11 @@ public:
 	}
 
 public:
-    static EShLanguage getEshLanguage(Type shader_type);
+	static shaderc_shader_kind shadercType(Type shader_type);
+	static shaderc_env_version shadercApiVersion(APIVersion api_version);
     static VkShaderStageFlagBits getVulkanType(Type shader_type);
     static Type getStringType(const std::string& shader_string);
     static std::string getTypeFileExtension(Type shader_type);
-    static glslang::EShTargetClientVersion getEshClientVersion(APIVersion api_version);
-    static TBuiltInResource getResources();
-	static int32_t computeSize(const glslang::TType* ttype);
 
 private:
 	std::unordered_map<uint32_t, std::string> parse(const  std::filesystem::path& file);

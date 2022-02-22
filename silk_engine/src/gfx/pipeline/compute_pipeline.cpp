@@ -11,7 +11,7 @@ ComputePipeline::ComputePipeline(const std::string& shader_file)
 
 	push_constant_ranges = shader->getPushConstants(); 
 	descriptor_set_layouts.clear();
-	for (auto&& [set, descriptor_set] : shader->getDescirptorSets())
+	for (auto&& [set, descriptor_set] : shader->getDescriptorSets())
 		descriptor_set_layouts.emplace_back(descriptor_set->getLayout());
 
 	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

@@ -55,8 +55,10 @@ struct InstanceBatch
 
 	void bind();
 	uint32_t addImages(const std::vector<shared<Image>>& new_images);
+	void removeImage() { images_need_update = true; /*TODO:*/ }
 
 	bool needs_update = true;
+	bool images_need_update = true;
 
 	bool operator==(const RenderedInstance& instance) const
 	{
