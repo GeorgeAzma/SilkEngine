@@ -82,9 +82,9 @@ struct ModelComponent
 
 struct MaterialComponent
 {
-	shared<Material> material;
+	shared<ShaderEffect> material;
 
-	operator const Material& () const { return *material; }
+	operator const ShaderEffect& () const { return *material; }
 };
 
 struct ColorComponent

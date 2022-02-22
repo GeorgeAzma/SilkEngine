@@ -27,7 +27,7 @@ public:
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
 	shared<VertexArray> vertex_array = nullptr;
-	shared<Material> material = nullptr;
+	shared<ShaderEffect> material = nullptr;
 
 protected:
 	void calculateTangents();

@@ -21,7 +21,7 @@ Model& Model::operator=(const RawModel& raw_model)
 
     Image2DProps image_props{};
     VkDescriptorImageInfo white = Resources::getImage("White")->getDescriptorInfo();
-    shared<Material> default_model_material = Resources::getMaterial("Textured Lit 3D");
+    shared<ShaderEffect> default_model_material = Resources::getShaderEffect("Lit 3D");
 
     images.clear();
     images.reserve(RawModel::MeshMaterialData::size() * raw_model.material_data.size());

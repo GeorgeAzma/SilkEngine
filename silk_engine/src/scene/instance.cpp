@@ -4,7 +4,7 @@
 
 void InstanceBatch::bind()
 {
-	instance->mesh->material->bind();
+	instance->mesh->material->pipeline->bind();
 	for (auto& descriptor_set : descriptor_sets[Graphics::swap_chain->getImageIndex()])
 		descriptor_set.second.bind(descriptor_set.first);
 	instance->mesh->vertex_array->bind();

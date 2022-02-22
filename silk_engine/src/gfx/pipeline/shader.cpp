@@ -77,7 +77,7 @@ void Shader::compile(const std::vector<Define>& defines)
 		pipeline_shader_stage_info.module = createShaderModule(binary);
 		pipeline_shader_stage_info.pName = "main";
 		
-#define SK_WEIRD_ERROR_FIX 1
+#define SK_WEIRD_ERROR_FIX 1 //If you have error in this file, set this to 0, compile (you will get an error), set it back to 1, recompile (IDK why this works, help)
 #if SK_WEIRD_ERROR_FIX
 		spirv_cross::Compiler spirv_compiler(binary.data(), binary.size());
 		spirv_cross::ShaderResources shader_resources = spirv_compiler.get_shader_resources();

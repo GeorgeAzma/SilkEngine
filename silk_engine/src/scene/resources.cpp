@@ -63,13 +63,21 @@ void Resources::init()
         graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
             .enable(EnableTag::DEPTH_TEST)
             .enable(EnableTag::DEPTH_WRITE)
-            .setShader("3D")
+            .setShader("lit3D")
             .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
             .setSampleCount(Graphics::swap_chain->getSampleCount())
             .setRenderPass(Graphics::swap_chain->getRenderPass())
             .build();
-        addShaderEffect("3D", makeShared<ShaderEffect>(graphics_pipeline));
-        addMaterial("Textured Lit 3D", makeShared<Material>(Resources::getShaderEffect("3D")));
+        addShaderEffect("Lit 3D", makeShared<ShaderEffect>(graphics_pipeline));
+
+        graphics_pipeline = makeShared<GraphicsPipeline>();
+        graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
+            .setShader("font3D")
+            .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::MAT4, 1 }, { Type::VEC4, 1 } })
+            .setSampleCount(Graphics::swap_chain->getSampleCount())
+            .setRenderPass(Graphics::swap_chain->getRenderPass())
+            .build();
+        addShaderEffect("Font 3D", makeShared<ShaderEffect>(graphics_pipeline));
 
         shared<ComputePipeline> compute_pipeline = makeShared<ComputePipeline>("bgra_to_rgba");
         addComputeShaderEffect("BGRA To RGBA", makeShared<ComputeShaderEffect>(compute_pipeline)); 
@@ -88,7 +96,6 @@ void Resources::cleanup()
 	models.clear();
     shader_effects.clear();
     compute_shader_effects.clear();
-    materials.clear();
     images.clear();
     descriptor_set_layouts.clear();
 }
@@ -109,12 +116,6 @@ shared<ShaderEffect> Resources::getShaderEffect(const std::string& name)
 {
     auto it = shader_effects.find(name);
     return it == shader_effects.end() ? nullptr : it->second;
-}
-
-shared<Material> Resources::getMaterial(const std::string& name)
-{
-    auto it = materials.find(name);
-    return it == materials.end() ? nullptr : it->second;
 }
 
 shared<ComputeShaderEffect> Resources::getComputeShaderEffect(const std::string& name)
@@ -164,11 +165,6 @@ void Resources::addModel(const std::string& name, shared<Model> model)
 void Resources::addShaderEffect(const std::string& name, shared<ShaderEffect> shader_effect)
 {
     shader_effects[name] = shader_effect;
-}
-
-void Resources::addMaterial(const std::string& name, shared<Material> material)
-{
-    materials[name] = material;
 }
 
 void Resources::addComputeShaderEffect(const std::string& name, shared<ComputeShaderEffect> compute_shader_effect)

@@ -64,7 +64,6 @@ void Graphics::update()
 	//Destroy old unused command pools
 	if (command_pool_purge_alarm)
 	{
-		screenshot("data/images/screenshots/screenshot.png");
 		for (auto it = command_pools.begin(); it != command_pools.end();)
 		{
 			if (it->second.use_count() <= 1)

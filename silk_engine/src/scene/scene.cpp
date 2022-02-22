@@ -26,7 +26,7 @@ Scene::Scene()
 	instance_batches.reserve(Graphics::MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
 
 	indirect_buffer = makeShared<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
-	global_descriptor_set = Resources::getShaderEffect("3D")->pipeline->getShader()->getDescriptorSets().at(0);
+	global_descriptor_set = Resources::getShaderEffect("Lit 3D")->pipeline->getShader()->getDescriptorSets().at(0);
 	global_descriptor_set->setBufferInfo(0, { *Graphics::global_uniform }); //TODO: move global_uniform here
 	global_descriptor_set->update();
 
@@ -300,7 +300,7 @@ void Scene::createMeshInstance(shared<RenderedInstance> instance, const Instance
 {
 	if (!instance->mesh->vertex_array.get()) instance->mesh->createVertexArray();
 	if (!instance->mesh->hasAABB()) instance->mesh->calculateAABB(); //TEMP for now
-	if (!instance->mesh->material.get()) instance->mesh->material = Resources::getMaterial("Textured Lit 3D");
+	if (!instance->mesh->material.get()) instance->mesh->material = Resources::getShaderEffect("Lit 3D");
 
 	for (size_t i = 0; i < instance_batches.size(); ++i)
 	{
@@ -341,7 +341,7 @@ void Scene::addInstanceBatch(shared<RenderedInstance> instance, const InstanceDa
 
 	new_batch.descriptor_sets.resize(Graphics::swap_chain->getImages().size());
 	for (auto& descriptor_sets : new_batch.descriptor_sets)
-		for (auto&& [set, descriptor_set] : new_batch.instance->mesh->material->shader_effect->pipeline->getShader()->getDescriptorSets())
+		for (auto&& [set, descriptor_set] : new_batch.instance->mesh->material->pipeline->getShader()->getDescriptorSets())
 			if(set != 0) //0 is reserved as Global uniform buffer
 				descriptor_sets[set] = *descriptor_set;
 		

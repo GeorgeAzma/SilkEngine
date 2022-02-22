@@ -45,8 +45,6 @@ public:
 
 	static RawModel load(const std::string& file);
 
-	void setMaterial(size_t index, shared<Material> material) { meshes[index]->material = material; }
-
 	const std::vector<shared<Mesh>>& getMeshes() const { return meshes; }
 	const std::string& getPath() const { return path; }
 
