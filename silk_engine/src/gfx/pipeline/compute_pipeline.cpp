@@ -2,9 +2,9 @@
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
 
-ComputePipeline::ComputePipeline(const std::string& shader_file)
+ComputePipeline::ComputePipeline(shared<Shader> shader)
 {
-	this->shader = makeShared<Shader>(shader_file);
+	this->shader = shader;
 	shader_stage_infos.resize(1);
 	shader_stage_infos[0] = shader->getPipelineShaderStageInfos().back();
 	create_info.stage = shader_stage_infos[0];

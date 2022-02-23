@@ -7,7 +7,7 @@
 class GraphicsPipeline : public Pipeline
 {
 public:
-	GraphicsPipeline& setShader(const std::filesystem::path& shader_file);
+	GraphicsPipeline& setShader(shared<Shader> shader);
 	GraphicsPipeline& setVertexLayout(const BufferLayout& layout);
 	GraphicsPipeline& setSampleCount(VkSampleCountFlagBits sample_count);
 	GraphicsPipeline& setRenderPass(VkRenderPass render_pass);

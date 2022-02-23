@@ -13,7 +13,7 @@ void Font::cleanup()
 }
 
 Font::Font(const std::string& file, size_t size)
-	: characters(MAX_CHARACTER_COUNT)
+	: characters(MAX_CHARACTER_COUNT), size(size)
 {
 	path = std::string("data/fonts/") + file;
 	FT_Error result = FT_New_Face(free_type_library, path.c_str(), 0, &face);
@@ -80,11 +80,11 @@ Font::Font(const std::string& file, size_t size)
 
 		characters[i].texture_coordinate.x = origin_x / (float)width;
 		characters[i].texture_coordinate.y = origin_y / (float)height;
+		characters[i].texture_coordinate.z = (origin_x + face->glyph->bitmap.width) / (float)width;
+		characters[i].texture_coordinate.w = (origin_y + face->glyph->bitmap.rows) / (float)height;
 
 		for (size_t j = 0; j < face->glyph->bitmap.rows; ++j)
-		{
 			memcpy(texture_atlas_data.data() + (origin_x + (j + origin_y) * width), face->glyph->bitmap.buffer + j * face->glyph->bitmap.width, face->glyph->bitmap.width);
-		}
 
 		row_height = std::max(row_height, face->glyph->bitmap.rows);
 		origin_x += face->glyph->bitmap.width + 1;
@@ -101,4 +101,42 @@ Font::Font(const std::string& file, size_t size)
 Font::~Font()
 {
 	FT_Done_Face(face);
+}
+
+std::vector<Font::Character> Font::getCharacterLayout(const std::string& str)
+{
+	const int32_t new_line_offset = size / 8;
+	const int32_t new_line_indent = size + new_line_offset;
+	const int32_t tab_indent = size * 4;
+	
+	std::vector<Character> character_layout;
+	character_layout.reserve(str.size());
+
+	int32_t x = 0;
+	int32_t y = 0;
+
+	for (unsigned char c : str)
+	{
+		switch (c)
+		{
+		case '\n':
+			y += new_line_indent;
+			x = 0;
+			continue;
+
+		case '\t':
+			x += tab_indent;
+			continue;
+		}
+
+		character_layout.emplace_back
+		(
+			glm::vec2(x + this->characters[c].bearing.x, y - (this->characters[c].size.y - this->characters[c].bearing.y)),
+			this->characters[c].texture_coordinate
+		);
+
+		x += this->characters[c].advance.x >> 6;
+	}
+
+	return character_layout;
 }

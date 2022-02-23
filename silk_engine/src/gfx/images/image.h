@@ -4,7 +4,6 @@
 #include "gfx/enums.h"
 #include "image_view.h"
 #include "sampler.h"
-#include <vk_mem_alloc.h>
 
 struct CubemapProps
 {
@@ -211,6 +210,8 @@ struct Bitmap
 	int height;
 	int channels;
 	std::vector<uint8_t> data;
+
+	size_t size() const { return width * height * channels * sizeof(uint8_t); }
 };
 
 class Image : NonCopyable

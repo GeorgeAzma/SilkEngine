@@ -3,9 +3,9 @@
 #include "gfx/window/swap_chain.h"
 #include "gfx/devices/logical_device.h"
 
-GraphicsPipeline& GraphicsPipeline::setShader(const std::filesystem::path& shader_file)
+GraphicsPipeline& GraphicsPipeline::setShader(shared<Shader> shader)
 {
-	this->shader = makeShared<Shader>(shader_file);
+	this->shader = shader;
 	shader_stage_infos.clear();
 	for (const auto& pipeline_shader_stage_info : shader->getPipelineShaderStageInfos())
 		shader_stage_infos.emplace_back(pipeline_shader_stage_info);

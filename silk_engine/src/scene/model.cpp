@@ -10,8 +10,7 @@ Model::Model(const std::string& file)
 
 RawModel Model::load(const std::string& file)
 {
-    RawModel raw_model(file);
-    return raw_model;
+    return RawModel(file);
 }
 
 Model& Model::operator=(const RawModel& raw_model)
@@ -20,52 +19,51 @@ Model& Model::operator=(const RawModel& raw_model)
     path = raw_model.path;
 
     Image2DProps image_props{};
-    VkDescriptorImageInfo white = Resources::getImage("White")->getDescriptorInfo();
-    shared<ShaderEffect> default_model_material = Resources::getShaderEffect("Lit 3D");
+    auto white = Resources::getImage("White");
+    auto black = Resources::getImage("Black");
     
     images.clear();
-    images.reserve(RawModel::MeshMaterialData::size() * raw_model.material_data.size());
+    images.reserve(raw_model.material_data.size());
     for (size_t i = 0; i < raw_model.material_data.size(); ++i) //Material data for each mesh
     {
         const auto& md = raw_model.material_data[i];
-    
+        images.emplace_back();
+
         image_props.width = md.diffuse_map.width;
         image_props.height = md.diffuse_map.height;
         image_props.format = Image::getDefaultFormatFromChannelCount(md.diffuse_map.channels);
         image_props.data = md.diffuse_map.data.data();
-        images.emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : nullptr);
+        images.back().emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : white);
     
         image_props.width = md.normal_map.width;
         image_props.height = md.normal_map.height;
         image_props.format = Image::getDefaultFormatFromChannelCount(md.normal_map.channels);
         image_props.data = md.normal_map.data.data();
-        images.emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : nullptr);
+        images.back().emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : black);
     
         image_props.width = md.height_map.width;
         image_props.height = md.height_map.height;
         image_props.format = Image::getDefaultFormatFromChannelCount(md.height_map.channels);
         image_props.data = md.height_map.data.data();
-        images.emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : nullptr);
+        images.back().emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : black);
     
         image_props.width = md.ao_map.width;
         image_props.height = md.ao_map.height;
         image_props.format = Image::getDefaultFormatFromChannelCount(md.ao_map.channels);
         image_props.data = md.ao_map.data.data();
-        images.emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : nullptr);
+        images.back().emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : white);
     
         image_props.width = md.specular_map.width;
         image_props.height = md.specular_map.height;
         image_props.format = Image::getDefaultFormatFromChannelCount(md.specular_map.channels);
         image_props.data = md.specular_map.data.data();
-        images.emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : nullptr);
+        images.back().emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : black);
     
         image_props.width = md.emissive_map.width;
         image_props.height = md.emissive_map.height;
         image_props.format = Image::getDefaultFormatFromChannelCount(md.emissive_map.channels);
         image_props.data = md.emissive_map.data.data();
-        images.emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : nullptr);
-        
-        meshes[i]->material = default_model_material;
+        images.back().emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : black);
     }
 
     return *this;
@@ -127,7 +125,6 @@ void RawModel::processMesh(aiMesh *mesh, const aiScene *scene)
     }
 
     auto new_mesh = makeShared<Mesh>(vertices, indices);
-    new_mesh->name = path + std::to_string(meshes.size());
 
     if(mesh->mMaterialIndex >= 0)
     {

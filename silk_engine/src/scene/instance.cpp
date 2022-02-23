@@ -4,25 +4,30 @@
 
 void InstanceBatch::bind()
 {
-	instance->mesh->material->pipeline->bind();
+	instance->material->pipeline->bind();
 	for (auto& descriptor_set : descriptor_sets[Graphics::swap_chain->getImageIndex()])
 		descriptor_set.second.bind(descriptor_set.first);
 	instance->mesh->vertex_array->bind();
 	instance_buffer->bind(1);
 }
-uint32_t InstanceBatch::addImages(const std::vector<shared<Image>>& new_images)
+uint32_t InstanceBatch::addImages(const std::vector<shared<Image2D>>& new_images)
 {
 	SK_ASSERT(new_images.size(), "You should specify more than 0 images to add");
 	bool found = false;
-	for (size_t i = 0; i < (images.size() - (new_images.size() - 1)); ++i)
+	for (int64_t i = 0; i < ((int64_t)images.size() - ((int64_t)new_images.size() - 1)); ++i)
 	{
 		found = true;
 		for (size_t j = 0; j < new_images.size(); ++j)
 		{
-			if (!image_owners[i + j])
-				images[i + j] = new_images[j];
 			if (images[i + j].get() != new_images[j].get())
-				found = false;
+			{
+				if (!image_owners[i + j])
+				{
+					images_need_update = true;
+					images[i + j] = new_images[j];
+				}
+				else found = false;
+			}
 		}
 		if (found)
 		{

@@ -22,6 +22,7 @@ public:
 	void submit(const CommandBufferSubmitInfo& info = {});
 	void submitIdle();
 
+	bool wasRecorded() const { return recorded; }
 	operator const VkCommandBuffer& () const { return command_buffer; }
 
 private:

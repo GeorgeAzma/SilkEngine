@@ -18,12 +18,6 @@ class Shader : NonCopyable
 		VkDescriptorType type;
 	};
 
-	struct Define
-    {
-        std::string name = "";
-        std::string value = "";
-    };
-
 	class Includer : public shaderc::CompileOptions::IncluderInterface
 	{
 		shaderc_include_result* GetInclude(
@@ -69,6 +63,12 @@ public:
 		COMPUTE = 8,
 		TESSELATION_CONTROL = 16,
 		TESSELATION_EVALUATION = 32
+	};
+
+	struct Define
+	{
+		std::string name = "";
+		std::string value = "";
 	};
 
 public:

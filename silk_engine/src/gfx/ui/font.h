@@ -6,12 +6,17 @@
 
 class Font
 {
-	struct Character
+	struct CharacterInfo
 	{
 		glm::ivec2 size;
 		glm::ivec2 bearing;
 		glm::uvec2 advance;
-		glm::vec2 texture_coordinate;
+		glm::vec4 texture_coordinate;
+	};
+	struct Character
+	{
+		glm::ivec2 position;
+		glm::vec4 texture_coordinate;
 	};
 public:
 	static void init();
@@ -23,15 +28,19 @@ public:
 
 	const std::string& getPath() const { return path; }
 
+	std::vector<Character> getCharacterLayout(const std::string& str);
+
 public:
 	static constexpr size_t MAX_CHARACTER_COUNT = 256;
 
 private:
 	static inline FT_Library free_type_library;
+
 private:
 	FT_Face face;
 	std::string path;
-	std::vector<Character> characters;
-//TEMP
-public:shared<Image> texture_atlas;
+	std::vector<CharacterInfo> characters;
+	size_t size;
+
+	shared<Image> texture_atlas;
 };

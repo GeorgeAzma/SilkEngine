@@ -1,6 +1,7 @@
 - Multiple render passes
 - Stream data instead of pre-initializing it
 - Better material system
+- Implement multithreaded secondary command buffer submit system
 - Create system which handles vulkan object creation and update for multiple frames
 - Font rendering
 - Threaded command buffer recorder/allocator/manager

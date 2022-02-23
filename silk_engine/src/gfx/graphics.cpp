@@ -57,10 +57,10 @@ void Graphics::cleanup() //25ms
 
 void Graphics::update()
 {
+	stats.reset();
 	//Destroy old unused command pools
 	if (command_pool_purge_alarm)
 	{
-		screenshot("C:/Users/giorgi/Desktop/screenie.png");
 		for (auto it = command_pools.begin(); it != command_pools.end();)
 		{
 			if (it->second.use_count() <= 1)
@@ -130,7 +130,6 @@ void Graphics::screenshot(const std::string& file)
 
 	void* buffer_data;
 	image_storage.map(&buffer_data);
-	
 	stbi_write_png(file.c_str(), width, height, channels, buffer_data, 0);
 	image_storage.unmap();
 

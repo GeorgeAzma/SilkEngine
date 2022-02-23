@@ -46,12 +46,13 @@ public:
 	static RawModel load(const std::string& file);
 
 	const std::vector<shared<Mesh>>& getMeshes() const { return meshes; }
+	const std::vector<std::vector<shared<Image2D>>>& getImages() const { return images; }
 	const std::string& getPath() const { return path; }
 
-	Model& operator=(const RawModel & raw_model);
+	Model& operator=(const RawModel& raw_model);
 
 private:
 	std::vector<shared<Mesh>> meshes;
-	std::vector<shared<Image2D>> images;
+	std::vector<std::vector<shared<Image2D>>> images;
 	std::string path;
 };

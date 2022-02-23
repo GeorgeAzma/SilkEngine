@@ -16,12 +16,12 @@ struct TransformComponent
 
 struct ImageComponent
 {
-	ImageComponent(shared<Image> image) : images({ image }) {}
-	ImageComponent(const std::vector<shared<Image>>& images) : images(images) {}
+	ImageComponent(shared<Image2D> image) : images({ image }) {}
+	ImageComponent(const std::vector<shared<Image2D>>& images) : images(images) {}
 
-	std::vector<shared<Image>> images;
+	std::vector<shared<Image2D>> images;
 
-	operator const std::vector<shared<Image>>& () const { return images; }
+	operator const std::vector<shared<Image2D>>& () const { return images; }
 };
 
 struct BufferComponent
@@ -60,7 +60,7 @@ struct ScriptComponent
 		};
 	}
 
-	operator ScriptableEntity* () { return instance; }
+	operator ScriptableEntity& () { return *instance; }
 };
 
 struct MeshComponent
@@ -75,7 +75,7 @@ struct ModelComponent
 {
 	shared<Model> model;
 
-	std::vector<shared<RenderedInstance>> instances;
+	std::vector<shared<RenderedInstance>> instances{};
 
 	operator Model& () { return *model; }
 };

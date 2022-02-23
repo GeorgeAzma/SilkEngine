@@ -54,7 +54,7 @@ private:
 	
 	void createMeshInstance(shared<RenderedInstance> instance, const InstanceData& instance_data);
 	void addInstanceBatch(shared<RenderedInstance> instance, const InstanceData& instance_data);
-	void destroyMeshInstance(shared<RenderedInstance> instance);
+	void destroyMeshInstance(const RenderedInstance& instance);
 
 private:
 	entt::registry registry;

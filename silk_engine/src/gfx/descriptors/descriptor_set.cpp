@@ -48,6 +48,7 @@ void DescriptorSet::build()
 
 void DescriptorSet::update() const
 {
+	updated = true;
 	vkUpdateDescriptorSets(*Graphics::logical_device, write_descriptor_sets.size(), write_descriptor_sets.data(), 0, nullptr);
 }
 

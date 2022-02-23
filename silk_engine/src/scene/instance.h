@@ -1,6 +1,7 @@
 #pragma once
 
 #include "meshes/mesh.h"
+#include "gfx/images/image2D.h"
 #include "gfx/buffers/indirect_buffer.h"
 #include "material.h"
 
@@ -32,8 +33,9 @@ struct InstanceBatch;
 struct RenderedInstance
 {
 	shared<Mesh> mesh;
+	shared<ShaderEffect> material = nullptr;
 
-	size_t owned_image_count = 0;
+	std::vector<shared<Image2D>> images;
 	size_t instance_data_index = -1;
 	size_t instance_batch_index = -1;
 
@@ -54,13 +56,13 @@ struct InstanceBatch
 	std::vector<uint32_t> image_owners;
 	std::vector<std::unordered_map<uint32_t, DescriptorSet>> descriptor_sets;
 
-	//vector<{shared<Image>, uint32_t(owner_count)}> images; AddInstance: images[instance.img_index].owner_count++;
-	//RemoveInstance: images[instance.img_index].owner_count--; if(owner_count == 0) ResetImage(instance.img_index); images[instance.img_index].free = true;
-	//AddImages: search(images, new_images); if they don't exist add new ones to the first free spot, if out of free spots return UINT32_MAX
-
 	void bind();
-	uint32_t addImages(const std::vector<shared<Image>>& new_images);
-	void removeImage() { images_need_update = true; /*TODO:*/ }
+	uint32_t addImages(const std::vector<shared<Image2D>>& new_images);
+	void removeImages(size_t index, size_t count) 
+	{ 
+		for (size_t i = 0; i < count; ++i)
+			--image_owners[index + i];
+	}
 
 	bool needs_update = true;
 	bool images_need_update = true;

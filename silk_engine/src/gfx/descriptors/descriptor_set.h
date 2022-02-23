@@ -18,9 +18,10 @@ public:
 
 	void bind(size_t first_set = 0) const;
 
-	operator const VkDescriptorSet& () const { return descriptor_set; }
+	bool wasUpdated() const { return updated; }
 	const VkDescriptorSetLayout& getLayout() const { return *layout; }
 	std::vector<VkWriteDescriptorSet>& getWrites() { return write_descriptor_sets; }
+	operator const VkDescriptorSet& () const { return descriptor_set; }
 
 	void setImageInfo(size_t write_index, const std::vector<VkDescriptorImageInfo>& image_info);
 	void setBufferInfo(size_t write_index, const std::vector<VkDescriptorBufferInfo>& buffer_info);
@@ -32,4 +33,5 @@ private:
 	std::vector<std::vector<VkDescriptorImageInfo>> image_infos;
 	std::vector<std::vector<VkDescriptorBufferInfo>> buffer_infos;
 	std::vector<VkDescriptorSetLayoutBinding> descriptor_layout_bindings;
+	mutable bool updated = false;
 };

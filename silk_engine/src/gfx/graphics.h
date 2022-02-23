@@ -20,13 +20,24 @@ class Graphics
 public:
 	static constexpr size_t MAX_INSTANCE_BATCHES = 65536;
 	static constexpr size_t MAX_INSTANCES = 16384;
-	static constexpr size_t MAX_IMAGE_SLOTS = 1; //Can be more
+	static constexpr size_t MAX_IMAGE_SLOTS = 64; //Can be more
 	static constexpr APIVersion API_VERSION = APIVersion::VULKAN_1_2;
 
 public:
 	static inline struct Statistics
 	{
 		size_t instance_batches = 0;
+		size_t instances = 0;
+		size_t vertices = 0;
+		size_t indices = 0;
+
+		void reset() 
+		{ 
+			instance_batches = 0; 
+			instances = 0; 
+			vertices = 0;
+			indices = 0;
+		}
 	} stats{};
 	static inline struct Active
 	{

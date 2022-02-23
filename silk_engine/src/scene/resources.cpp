@@ -16,31 +16,34 @@ void Resources::init()
 
     //IMAGES
     {
-        Image2DProps white_image_props{};
-        white_image_props.width = 1;
-        white_image_props.height = 1;
-        white_image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
-        white_image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
-        white_image_props.sampler_props.linear_mipmap = false;
-        white_image_props.sampler_props.anisotropy = false;
-        white_image_props.mipmap = false;
+        Image2DProps image_props{};
+        image_props.width = 1;
+        image_props.height = 1;
+        image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
+        image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
+        image_props.sampler_props.linear_mipmap = false;
+        image_props.sampler_props.anisotropy = false;
+        image_props.mipmap = false;
         constexpr glm::u8vec4 white(255);
-        white_image_props.data = &white;
-        addImage("White", makeShared<Image2D>(white_image_props));
+        image_props.data = &white;
+        addImage("White", makeShared<Image2D>(image_props));
+        constexpr glm::u8vec4 black(0);
+        image_props.data = &black;
+        addImage("Black", makeShared<Image2D>(image_props));
 
-        Image2DProps null_image_props{};
-        null_image_props.width = 2;
-        null_image_props.height = 2;
-        null_image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
-        null_image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
-        null_image_props.sampler_props.linear_mipmap = false;
-        null_image_props.sampler_props.anisotropy = false;
-        null_image_props.sampler_props.u_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        null_image_props.sampler_props.v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        null_image_props.mipmap = false;       
+        image_props = {};
+        image_props.width = 2;
+        image_props.height = 2;
+        image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
+        image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
+        image_props.sampler_props.linear_mipmap = false;
+        image_props.sampler_props.anisotropy = false;
+        image_props.sampler_props.u_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        image_props.sampler_props.v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        image_props.mipmap = false;       
         constexpr glm::u8vec4 null_data[4] = { { 0, 0, 0, 255 }, { 255, 0, 255, 255 }, { 255, 0, 255, 255 }, { 0, 0, 0, 255 } };
-        null_image_props.data = null_data;
-        addImage("Null", makeShared<Image2D>(null_image_props));
+        image_props.data = null_data;
+        addImage("Null", makeShared<Image2D>(image_props));
 
         addImage("Test1", makeShared<Image2D>("test1.png"));
         addImage("Test2", makeShared<Image2D>("test2.png"));
@@ -50,6 +53,11 @@ void Resources::init()
     {
         addMesh("Circle", makeShared<CircleMesh>());
         addMesh("Rectangle", makeShared<RectangleMesh>());
+    }
+
+    //MODELS
+    {
+        addModel("Backpack", makeShared<Model>("backpack/backpack.obj"));
     }
 
     //FONTS
@@ -63,7 +71,7 @@ void Resources::init()
         graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
             .enable(EnableTag::DEPTH_TEST)
             .enable(EnableTag::DEPTH_WRITE)
-            .setShader("lit3D")
+            .setShader(makeShared<Shader>("3D", std::vector<Shader::Define>{ {"LIT", "1"} }))
             .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
             .setSampleCount(Graphics::swap_chain->getSampleCount())
             .setRenderPass(Graphics::swap_chain->getRenderPass())
@@ -72,20 +80,17 @@ void Resources::init()
 
         graphics_pipeline = makeShared<GraphicsPipeline>();
         graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-            .setShader("font3D")
-            .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::MAT4, 1 }, { Type::VEC4, 1 } })
+            .enable(EnableTag::DEPTH_TEST)
+            .enable(EnableTag::DEPTH_WRITE)
+            .setShader(makeShared<Shader>("3D", std::vector<Shader::Define>{ {"LIT", "0"} }))
+            .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
             .setSampleCount(Graphics::swap_chain->getSampleCount())
             .setRenderPass(Graphics::swap_chain->getRenderPass())
             .build();
-        addShaderEffect("Font 3D", makeShared<ShaderEffect>(graphics_pipeline));
+        addShaderEffect("3D", makeShared<ShaderEffect>(graphics_pipeline));
 
-        shared<ComputePipeline> compute_pipeline = makeShared<ComputePipeline>("bgra_to_rgba");
+        shared<ComputePipeline> compute_pipeline = makeShared<ComputePipeline>(makeShared<Shader>("bgra_to_rgba"));
         addComputeShaderEffect("BGRA To RGBA", makeShared<ComputeShaderEffect>(compute_pipeline)); 
-    }
-
-    //MODELS
-    {
-        addModel("Backpack", makeShared<Model>("backpack/backpack.obj"));
     }
 }
 
@@ -153,7 +158,6 @@ shared<Font> Resources::getFont(const std::string& name)
 
 void Resources::addMesh(const std::string& name, shared<Mesh> mesh)
 {
-	mesh->name = name;
 	meshes[name] = mesh;
 }
 

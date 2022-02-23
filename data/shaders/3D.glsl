@@ -80,14 +80,6 @@ layout(set = 0, binding = 0) uniform GlobalUniform
     Light lights[MAX_LIGHTS];
 } global_uniform;
 
-//layout(set = 2, binding = 0) uniform Material
-//{
-//    float ambient;
-//    float ambient_occlusion;
-//    float roughness;
-//    float metallic;
-//} material;
-
 layout(location = 0) out vec4 color;
 
 layout(set = 1, binding = 0) uniform sampler2D images[MAX_IMAGE_SLOTS];
@@ -107,6 +99,7 @@ vec3 aces(vec3 x)
 
 void main()
 {
+#if LIT
     vec4 albedo = texture(images[fragment_input.texture_index], fragment_input.texture_coordinate) * fragment_input.color;
     color.a = albedo.a;
     if(color.a <= 0.01)
@@ -140,4 +133,7 @@ void main()
         total_light += PBR(light, normal, to_camera, albedo.rgb, metallic, ROUGHNESS, F0, fragment_input.world_position.xyz);
     }
     color.rgb = aces(total_light + ambient.rgb);
+#else
+    color = texture(images[fragment_input.texture_index], fragment_input.texture_coordinate) * fragment_input.color;
+#endif
 }

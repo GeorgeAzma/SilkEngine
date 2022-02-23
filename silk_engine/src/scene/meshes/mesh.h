@@ -19,21 +19,18 @@ public:
 
 	bool operator==(const Mesh& other) const 
 	{ 
-		SK_ASSERT(name != "" && other.name != "", "Mesh compare operator failed, mesh had invalid name"); 
-		return name == other.name && *material == *other.material;
+		return this == &other;
 	}
 
 public:
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
 	shared<VertexArray> vertex_array = nullptr;
-	shared<ShaderEffect> material = nullptr;
 
 protected:
 	void calculateTangents();
 
 private:
-	std::string name = "";
 	AABB aabb = {};
 	bool has_aabb = false;
 

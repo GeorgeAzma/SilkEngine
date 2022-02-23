@@ -6,7 +6,7 @@
 #include "gfx/devices/physical_device.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/window/swap_chain.h"
-
+#include "gfx/buffers/storage_buffer.h"
 Image::~Image()
 {
 	view = nullptr;
@@ -17,6 +17,7 @@ Image::~Image()
 
 void Image::align4(Bitmap& image)
 {
+	//TODO: This can be done in compute shader
 	int old_channels = image.channels;
 	image.channels = 4;
 
