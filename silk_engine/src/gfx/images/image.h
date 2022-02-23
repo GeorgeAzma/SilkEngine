@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gfx/buffers/staging_buffer.h"
+#include "gfx/enums.h"
 #include "image_view.h"
 #include "sampler.h"
 #include <vk_mem_alloc.h>
@@ -220,6 +221,7 @@ public:
 	uint32_t getWidth() const { return props.width; }
 	uint32_t getHeight() const { return props.height; }
 	VkFormat getFormat() const { return props.format; }
+	size_t getSize() const { return props.width * props.height * props.depth * props.array_layers * formatSize(props.format); }
 	uint32_t mipLevels() const { return mip_levels; }
 	const ImageProps& getProps() const { return props; }
 	const VkDescriptorImageInfo& getDescriptorInfo() const { return descriptor_image_info; }
@@ -230,15 +232,15 @@ public:
 
 	static void align4(Bitmap& image);
 
-	void setData(void* data, uint32_t array_layers, uint32_t base_array_layer);
+	void setData(void* data, uint32_t base_array_layer = 0, uint32_t array_layers = 1);
 	//Copies data from the image to the pointer provided
-	void getData(void* data, uint32_t array_layer = 0);
+	void getData(void* data, uint32_t base_array_layer = 0, uint32_t array_layers = 0);
 	bool copyImage(shared<Image> destination, uint32_t array_layer = 0);
 	void transitionLayout(VkImageLayout new_layout);
 	void insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VkPipelineStageFlags destination_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, uint32_t base_mip_level = 0, uint32_t base_array_layer = 0);
 	bool isFeatureSupported(VkFormatFeatureFlags feature) const;
 	void copyFromBuffer(VkBuffer buffer);
-	void copyToBuffer(VkBuffer buffer);
+	void copyToBuffer(VkBuffer buffer, uint32_t base_array_layer = 0, uint32_t array_layers = 1);
 	
 	void map(void** data) const;
 	void unmap() const;
@@ -259,6 +261,8 @@ public:
 	static bool hasDepth(VkFormat format);
 	static VkImageAspectFlags getAspectFlags(VkFormat format);
 	static size_t channelCount(VkFormat format);
+	static Type formatToType(VkFormat format);
+	static size_t formatSize(VkFormat format);
 
 protected:
 	VkImage image = VK_NULL_HANDLE;

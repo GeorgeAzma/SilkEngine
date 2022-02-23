@@ -22,7 +22,6 @@
 void Graphics::init()
 {
 	SK_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
-
 	//These most likely won't change
 	instance = new Instance(); //70ms
 	surface = new Surface(); //0.05ms
@@ -38,15 +37,12 @@ void Graphics::init()
 
 	swap_chain = new SwapChain(); //16ms
 
-	global_uniform = new UniformBuffer(sizeof(GlobalUniformData));
-
 	Font::init();
 }
 
 void Graphics::cleanup() //25ms
 {
 	Font::cleanup();
-	delete global_uniform;
 	delete swap_chain;
 	delete descriptor_pool;
 	command_pools.clear();
@@ -64,6 +60,7 @@ void Graphics::update()
 	//Destroy old unused command pools
 	if (command_pool_purge_alarm)
 	{
+		screenshot("C:/Users/giorgi/Desktop/screenie.png");
 		for (auto it = command_pools.begin(); it != command_pools.end();)
 		{
 			if (it->second.use_count() <= 1)
@@ -113,21 +110,13 @@ void Graphics::screenshot(const std::string& file)
 	t1.stop();
 
 	DebugTimer t2("Change layout to RGBA");
-	CommandBuffer command_buffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_QUEUE_COMPUTE_BIT);
-	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
-	StorageBuffer image_storage(destination->getWidth() * destination->getHeight() * Image::channelCount(destination->getFormat()), VMA_MEMORY_USAGE_GPU_TO_CPU, VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-	VkBufferImageCopy region{};
-	region.imageOffset = { 0, 0, 0 };
-	region.imageExtent = { destination->getWidth(), destination->getHeight(), 1 };
-	region.bufferOffset = 0;
-	region.bufferImageHeight = destination->getHeight();
-	region.bufferRowLength = destination->getWidth();
-	region.imageSubresource.aspectMask = Image::getAspectFlags(destination->getFormat());
-	region.imageSubresource.baseArrayLayer = 0;
-	region.imageSubresource.layerCount = 1;
-	region.imageSubresource.mipLevel = 0;
-	vkCmdCopyImageToBuffer(Graphics::active.command_buffer, *destination, destination->getDescriptorInfo().imageLayout, image_storage, 1, &region);
+	StorageBuffer image_storage(destination->getSize(), VMA_MEMORY_USAGE_GPU_TO_CPU, VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+	destination->copyToBuffer(image_storage);
+
+	t2.stop();
+	CommandBuffer command_buffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_QUEUE_COMPUTE_BIT);
+	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);	
 
 	auto compute = Resources::getComputeShaderEffect("BGRA To RGBA")->pipeline;
 	compute->bind();
@@ -138,7 +127,6 @@ void Graphics::screenshot(const std::string& file)
 	compute->dispatch(width * height);
 	
 	command_buffer.submitIdle();
-	t2.stop();
 
 	void* buffer_data;
 	image_storage.map(&buffer_data);

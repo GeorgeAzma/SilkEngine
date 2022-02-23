@@ -25,11 +25,12 @@ Scene::Scene()
 	
 	instance_batches.reserve(Graphics::MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
 
-	indirect_buffer = makeShared<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
-	global_descriptor_set = Resources::getShaderEffect("Lit 3D")->pipeline->getShader()->getDescriptorSets().at(0);
-	global_descriptor_set->setBufferInfo(0, { *Graphics::global_uniform }); //TODO: move global_uniform here
-	global_descriptor_set->update();
-
+	indirect_buffer = makeUnique<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
+	
+	global_uniform_buffer = makeUnique<UniformBuffer>(sizeof(GlobalUniformData));
+	global_descriptor_set = *Resources::getShaderEffect("Lit 3D")->pipeline->getShader()->getDescriptorSets().at(0);
+	global_descriptor_set.setBufferInfo(0, { *global_uniform_buffer });
+	global_descriptor_set.update();
 }
 
 Scene::~Scene()
@@ -68,7 +69,7 @@ void Scene::onUpdate()
 			main_camera = &camera_component;
 		});
 
-	Graphics::GlobalUniformData global_uniform_data{};
+	GlobalUniformData global_uniform_data{};
 	if (main_camera)
 	{
 		global_uniform_data.projection_view = main_camera->camera.projection_view;
@@ -82,7 +83,7 @@ void Scene::onUpdate()
 	global_uniform_data.light_count = light_index;
 	global_uniform_data.lights = lights;
 
-	Graphics::global_uniform->setDataChecked(&global_uniform_data, sizeof(Graphics::GlobalUniformData));
+	global_uniform_buffer->setDataChecked(&global_uniform_data, sizeof(GlobalUniformData));
 
 	//Drawing	
 	bool any_needs_update = false;
@@ -130,7 +131,7 @@ void Scene::onUpdate()
 	for (auto& instance_batch : instance_batches)
 	{
 		instance_batch.bind();
-		global_descriptor_set->bind(0);
+		global_descriptor_set.bind(0);
 		vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, draw_index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
 		++draw_index;
 	}

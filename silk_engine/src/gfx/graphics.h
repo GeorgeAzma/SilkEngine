@@ -13,7 +13,6 @@ class Allocator;
 class CommandPool;
 class SwapChain;
 class DescriptorPool;
-class UniformBuffer;
 class DescriptorSet;
 
 class Graphics
@@ -21,23 +20,10 @@ class Graphics
 public:
 	static constexpr size_t MAX_INSTANCE_BATCHES = 65536;
 	static constexpr size_t MAX_INSTANCES = 16384;
-	static constexpr size_t MAX_IMAGE_SLOTS = 256; //Can be more
-	static constexpr size_t MAX_LIGHTS = 64;
+	static constexpr size_t MAX_IMAGE_SLOTS = 1; //Can be more
 	static constexpr APIVersion API_VERSION = APIVersion::VULKAN_1_2;
 
 public:
-	struct GlobalUniformData
-	{
-		glm::mat4 projection_view;
-		glm::vec3 camera_position;
-		float time;
-		glm::vec3 camera_direction;
-		float delta_time;
-		glm::uvec2 resolution;
-		uint32_t frame;
-		uint32_t light_count;
-		std::array<Light, MAX_LIGHTS> lights;
-	};
 	static inline struct Statistics
 	{
 		size_t instance_batches = 0;
@@ -70,7 +56,6 @@ public:
 	static inline std::unordered_map<std::thread::id, shared<CommandPool>> command_pools;
 	static inline SwapChain* swap_chain = nullptr;
 	static inline DescriptorPool* descriptor_pool = nullptr;
-	static inline UniformBuffer* global_uniform = nullptr;
 	static inline Alarm command_pool_purge_alarm = Alarm(5s);
 
 private:

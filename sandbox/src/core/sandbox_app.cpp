@@ -18,7 +18,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
     auto rectangle = Resources::getMesh("Rectangle");
     auto circle = Resources::getMesh("Circle");
-    entities.resize(1000000);
+    entities.resize(10);
     for (size_t i = 0; i < entities.size(); ++i)
     {
         entities[i] = scene->createEntity();
@@ -53,7 +53,7 @@ void SandboxApp::onUpdate()
         entities.back()->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float()) * 20.0f));
         entities.back()->addComponent<ModelComponent>(Resources::getModel("Backpack"));
     }
-    
+
     //Resources::pool.forEach(entities.size(), 
     //    [&](size_t i) 
     //    {

@@ -35,7 +35,7 @@ void Image::create(const ImageProps& props)
 	needs_staging = EnumInfo::needsStaging(props.memory_usage);
 	SK_ASSERT((props.is_1D ? (props.height == 1 && props.depth == 1) : true), "If image is 1D it's height and depth must be 1");
 	SK_ASSERT(((!props.is_1D && ! props.is_cubemap) ? (props.depth == 1) : true), "If image is 2D it's depth must be 1");
-	unique<StagingBuffer> staging_buffer = props.data ? makeUnique<StagingBuffer>(props.data, props.width * props.height * EnumInfo::formatSize(props.format) * props.array_layers) : nullptr;
+	unique<StagingBuffer> staging_buffer = props.data ? makeUnique<StagingBuffer>(props.data, getSize()) : nullptr;
 	descriptor_image_info.imageLayout = props.initial_layout;
 
 	if (image == VK_NULL_HANDLE)
@@ -75,13 +75,12 @@ void Image::create(const ImageProps& props)
 
 	if (staging_buffer.get() != nullptr)
 	{
-		transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 		copyFromBuffer(*staging_buffer);
 		if (props.mipmap)
 			generateMipmaps();
 	}
 
-	transitionLayout(props.layout); 
+	transitionLayout(props.layout);
 	
 	if (props.create_view)
 	{
@@ -199,6 +198,8 @@ bool Image::isFeatureSupported(VkFormatFeatureFlags feature) const
 
 void Image::copyFromBuffer(VkBuffer buffer)
 {
+	transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
 	CommandBuffer command_buffer;
 	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
@@ -217,12 +218,34 @@ void Image::copyFromBuffer(VkBuffer buffer)
 		copy_region.imageOffset = { 0, 0, 0 };
 		copy_region.imageExtent = { props.width, props.height, props.depth };
 
-		offset += props.width * props.height * props.depth * EnumInfo::formatSize(props.format);
+		offset += props.width * props.height * props.depth * formatSize(props.format);
 
 		copy_regions[layer] = std::move(copy_region);
 	}
 
 	vkCmdCopyBufferToImage(command_buffer, buffer, image, descriptor_image_info.imageLayout, copy_regions.size(), copy_regions.data());
+
+	command_buffer.submitIdle();
+}
+
+void Image::copyToBuffer(VkBuffer buffer, uint32_t base_array_layer, uint32_t array_layers)
+{
+	transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+
+	CommandBuffer command_buffer;
+	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+
+	VkBufferImageCopy region{};
+	region.imageOffset = { 0, 0, 0 };
+	region.imageExtent = { props.width, props.height, props.depth };
+	region.bufferOffset = 0;
+	region.bufferImageHeight = props.height;
+	region.bufferRowLength = props.width;
+	region.imageSubresource.aspectMask = getAspectFlags();
+	region.imageSubresource.baseArrayLayer = base_array_layer;
+	region.imageSubresource.layerCount = array_layers;
+	region.imageSubresource.mipLevel = 0;
+	vkCmdCopyImageToBuffer(Graphics::active.command_buffer, image, descriptor_image_info.imageLayout, buffer, 1, &region);
 
 	command_buffer.submitIdle();
 }
@@ -254,8 +277,6 @@ void Image::generateMipmaps()
 	VkFormatProperties format_properties;
 	vkGetPhysicalDeviceFormatProperties(*Graphics::physical_device, props.format, &format_properties);
 
-	SK_ASSERT(format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT,
-		"Image format does not support linear blitting");
 	SK_ASSERT(format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT,
 		"Image format does not support src blitting");
 	SK_ASSERT(format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT,
@@ -334,7 +355,7 @@ void Image::generateMipmaps()
 	command_buffer.submitIdle();
 }
 
-void Image::setData(void* data, uint32_t array_layers, uint32_t base_array_layer)
+void Image::setData(void* data, uint32_t base_array_layer, uint32_t array_layers)
 {
 	VkImageSubresource image_subresource = {};
 	image_subresource.aspectMask = getAspectFlags();
@@ -345,40 +366,45 @@ void Image::setData(void* data, uint32_t array_layers, uint32_t base_array_layer
 
 	if (needs_staging)
 	{
-		StagingBuffer staging_buffer(data, subresource_layout.size);
+		StagingBuffer sb(data, subresource_layout.size * array_layers);
 		void* buffer_data;
-		staging_buffer.map(&buffer_data);
-		memcpy((uint8_t*)buffer_data + subresource_layout.offset, data, staging_buffer.size);
-		staging_buffer.unmap();
-		copyFromBuffer(staging_buffer);
+		sb.map(&buffer_data);
+		memcpy((uint8_t*)buffer_data + subresource_layout.offset, data, sb.getSize());
+		sb.unmap();
+		copyFromBuffer(sb);
 	}
 	else
 	{
 		void* buffer_data;
 		map(&buffer_data);
-		std::memcpy((uint8_t*)buffer_data + subresource_layout.offset, data, subresource_layout.size);
+		std::memcpy((uint8_t*)buffer_data + subresource_layout.offset, data, subresource_layout.size * array_layers);
 		unmap();
 	}
 }
 
-void Image::getData(void* data, uint32_t array_layer)
+void Image::getData(void* data, uint32_t base_array_layer, uint32_t array_layers)
 {
 	VkImageSubresource image_subresource = {};
 	image_subresource.aspectMask = getAspectFlags();
 	image_subresource.mipLevel = 0;
-	image_subresource.arrayLayer = array_layer;
+	image_subresource.arrayLayer = base_array_layer;
 	VkSubresourceLayout subresource_layout;
 	vkGetImageSubresourceLayout(*Graphics::logical_device, image, &image_subresource, &subresource_layout);
 	
 	if (needs_staging)
 	{
-		SK_TODO("");
+		StagingBuffer sb(nullptr, subresource_layout.size * array_layers);
+		copyToBuffer(sb, base_array_layer, array_layers);
+		void* buffer_data;
+		sb.map(&buffer_data);
+		std::memcpy(data, (const uint8_t*)buffer_data + subresource_layout.offset, subresource_layout.size * array_layers);
+		sb.unmap();
 	}
 	else
 	{
 		void* buffer_data;
 		map(&buffer_data);
-		std::memcpy(data, (const uint8_t*)buffer_data + subresource_layout.offset, subresource_layout.size);
+		std::memcpy(data, (const uint8_t*)buffer_data + subresource_layout.offset, subresource_layout.size * array_layers);
 		unmap();
 	}
 }
@@ -403,33 +429,27 @@ bool Image::copyImage(shared<Image> destination, uint32_t array_layer)
 	CommandBuffer command_buffer;
 	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
-	//Transition destination image to transfer destination layout.
 	auto destination_old_layout = destination->getDescriptorInfo().imageLayout;
 	destination->insertMemoryBarrier(0, VK_ACCESS_TRANSFER_WRITE_BIT, destination_old_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0);
-
-	//Transition image from previous usage to transfer source layout
 	auto old_layout = descriptor_image_info.imageLayout;
 	insertMemoryBarrier(VK_ACCESS_MEMORY_READ_BIT, VK_ACCESS_TRANSFER_READ_BIT, old_layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, array_layer);
 
 	//If source and destination support blit we'll blit as this also does automatic format conversion (e.g. from BGR to RGB).
 	if (supports_blit) 
 	{
-		//Define the region to blit (we will blit the whole swapchain image).
-		VkOffset3D blit_size = { int32_t(props.width), int32_t(props.height), int32_t(props.depth) };
-
 		VkImageBlit image_blit_region = {};
 		image_blit_region.srcSubresource.aspectMask = getAspectFlags();
 		image_blit_region.srcSubresource.mipLevel = 0;
 		image_blit_region.srcSubresource.baseArrayLayer = array_layer;
 		image_blit_region.srcSubresource.layerCount = 1;
 		image_blit_region.srcOffsets[0] = { 0, 0, 0 };
-		image_blit_region.srcOffsets[1] = blit_size;
+		image_blit_region.srcOffsets[1] = { (int32_t)props.width, (int32_t)props.height, (int32_t)props.depth };
 		image_blit_region.dstSubresource.aspectMask = destination->getAspectFlags();
 		image_blit_region.dstSubresource.mipLevel = 0;
 		image_blit_region.dstSubresource.baseArrayLayer = 0;
 		image_blit_region.dstSubresource.layerCount = 1;
 		image_blit_region.dstOffsets[0] = { 0, 0, 0 };
-		image_blit_region.dstOffsets[1] = blit_size;
+		image_blit_region.dstOffsets[1] = { (int32_t)props.width, (int32_t)props.height, (int32_t)props.depth };
 		vkCmdBlitImage(Graphics::active.command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, *destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &image_blit_region, VK_FILTER_NEAREST);
 	}
 	else 
@@ -448,10 +468,7 @@ bool Image::copyImage(shared<Image> destination, uint32_t array_layer)
 		vkCmdCopyImage(Graphics::active.command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, *destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &image_copy_region);
 	}
 
-	//Transition destination image to general layout, which is the required layout for mapping the image memory later on.
 	destination->insertMemoryBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, destination_old_layout, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0);
-	
-	//Transition back the image after the blit is done.
 	insertMemoryBarrier(VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_MEMORY_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, old_layout, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, array_layer);
 
 	command_buffer.submitIdle();
@@ -554,6 +571,100 @@ size_t Image::channelCount(VkFormat format)
 	case VK_FORMAT_D24_UNORM_S8_UINT: return 1;
 	case VK_FORMAT_D32_SFLOAT_S8_UINT: return 1;
 	case VK_FORMAT_D32_SFLOAT: return 1;
+	case VK_FORMAT_B8G8R8_SRGB: return 3;
+	case VK_FORMAT_B8G8R8A8_SRGB: return 4;
+	case VK_FORMAT_B8G8R8_UNORM: return 3;
+	case VK_FORMAT_B8G8R8A8_UNORM: return 4;
+	}
+
+	SK_ERROR("Unsupported format specified: {0}.", format);
+	return 0;
+}
+
+Type Image::formatToType(VkFormat format)
+{
+	switch (format)
+	{
+	case VK_FORMAT_R8_SINT: return Type::BYTE;
+	case VK_FORMAT_R8_UINT: return Type::UBYTE;
+	case VK_FORMAT_R16_SINT: return Type::SHORT;
+	case VK_FORMAT_R16_UINT: return Type::USHORT;
+	case VK_FORMAT_R32_SINT: return Type::INT;
+	case VK_FORMAT_R32_UINT: return Type::UINT;
+	case VK_FORMAT_R32_SFLOAT: return Type::FLOAT;
+	case VK_FORMAT_R64_SFLOAT: return Type::DOUBLE;
+	case VK_FORMAT_R32G32_SFLOAT: return Type::VEC2;
+	case VK_FORMAT_R32G32B32_SFLOAT: return Type::VEC3;
+	case VK_FORMAT_R32G32B32A32_SFLOAT: return Type::VEC4;
+	case VK_FORMAT_R32G32_SINT: return Type::VEC2I;
+	case VK_FORMAT_R32G32B32_SINT: return Type::VEC3I;
+	case VK_FORMAT_R32G32B32A32_SINT: return Type::VEC4I;
+	case VK_FORMAT_R32G32_UINT: return Type::VEC2U;
+	case VK_FORMAT_R32G32B32_UINT:  return Type::VEC3U;
+	case VK_FORMAT_R32G32B32A32_UINT: return Type::VEC4U;
+	case VK_FORMAT_R64G64_SFLOAT: return Type::VEC2D;
+	case VK_FORMAT_R64G64B64_SFLOAT: return Type::VEC3D;
+	case VK_FORMAT_R64G64B64A64_SFLOAT: return Type::VEC4D;
+	case VK_FORMAT_R8_SRGB: return Type::FLOAT;
+	case VK_FORMAT_R8G8_SRGB: return Type::VEC2;
+	case VK_FORMAT_R8G8B8_SRGB: return Type::VEC3;
+	case VK_FORMAT_R8G8B8A8_SRGB: return Type::VEC4;
+	case VK_FORMAT_R8_UNORM: return Type::FLOAT;
+	case VK_FORMAT_R8G8_UNORM: return Type::VEC2;
+	case VK_FORMAT_R8G8B8_UNORM: return Type::VEC3;
+	case VK_FORMAT_R8G8B8A8_UNORM: return Type::VEC4;
+	case VK_FORMAT_D16_UNORM: return Type::UINT;
+	case VK_FORMAT_D16_UNORM_S8_UINT: return Type::UINT;
+	case VK_FORMAT_D24_UNORM_S8_UINT: return Type::UINT;
+	case VK_FORMAT_D32_SFLOAT_S8_UINT: return Type::FLOAT;
+	case VK_FORMAT_D32_SFLOAT: return Type::FLOAT;
+	case VK_FORMAT_B8G8R8_SRGB: return Type::VEC3;
+	case VK_FORMAT_B8G8R8A8_SRGB: return Type::VEC4;
+	case VK_FORMAT_B8G8R8_UNORM: return Type::VEC3;
+	case VK_FORMAT_B8G8R8A8_UNORM: return Type::VEC4;
+	}
+
+	SK_ERROR("Unsupported format specified: {0}.", format);
+	return Type(0);
+}
+
+size_t Image::formatSize(VkFormat format)
+{
+	switch (format)
+	{
+	case VK_FORMAT_R8_SINT: return 1;
+	case VK_FORMAT_R8_UINT: return 1;
+	case VK_FORMAT_R16_SINT: return 2;
+	case VK_FORMAT_R16_UINT: return 2;
+	case VK_FORMAT_R32_SINT: return 4;
+	case VK_FORMAT_R32_UINT: return 4;
+	case VK_FORMAT_R32_SFLOAT: return 4;
+	case VK_FORMAT_R64_SFLOAT: return 8;
+	case VK_FORMAT_R32G32_SFLOAT: return 8;
+	case VK_FORMAT_R32G32B32_SFLOAT: return 12;
+	case VK_FORMAT_R32G32B32A32_SFLOAT: return 16;
+	case VK_FORMAT_R32G32_SINT: return 8;
+	case VK_FORMAT_R32G32B32_SINT: return 12;
+	case VK_FORMAT_R32G32B32A32_SINT: return 16;
+	case VK_FORMAT_R32G32_UINT: return 8;
+	case VK_FORMAT_R32G32B32_UINT:  return 12;
+	case VK_FORMAT_R32G32B32A32_UINT: return 16;
+	case VK_FORMAT_R64G64_SFLOAT: return 128;
+	case VK_FORMAT_R64G64B64_SFLOAT: return 192;
+	case VK_FORMAT_R64G64B64A64_SFLOAT: return 256;
+	case VK_FORMAT_R8_SRGB: return 1;
+	case VK_FORMAT_R8G8_SRGB: return 2;
+	case VK_FORMAT_R8G8B8_SRGB: return 3;
+	case VK_FORMAT_R8G8B8A8_SRGB: return 4;
+	case VK_FORMAT_R8_UNORM: return 1;
+	case VK_FORMAT_R8G8_UNORM: return 2;
+	case VK_FORMAT_R8G8B8_UNORM: return 3;
+	case VK_FORMAT_R8G8B8A8_UNORM: return 4;
+	case VK_FORMAT_D16_UNORM: return 2;
+	case VK_FORMAT_D16_UNORM_S8_UINT: return 3;
+	case VK_FORMAT_D24_UNORM_S8_UINT: return 4;
+	case VK_FORMAT_D32_SFLOAT_S8_UINT: return 5;
+	case VK_FORMAT_D32_SFLOAT: return 4;
 	case VK_FORMAT_B8G8R8_SRGB: return 3;
 	case VK_FORMAT_B8G8R8A8_SRGB: return 4;
 	case VK_FORMAT_B8G8R8_UNORM: return 3;

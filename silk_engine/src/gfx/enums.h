@@ -65,14 +65,11 @@ class EnumInfo
 public:
 	static VkFormat type(Type type);
 	static VkFormat glTypeToVk(uint32_t gl_type);
-	static Type formatToType(VkFormat format);
 	static VkIndexType indexType(IndexType index_type);
 	static uint32_t apiVersion(APIVersion api_version);
 	static size_t size(Type type);
 	static size_t size(IndexType index_type);
 	static size_t count(Type type);
 	static size_t rows(Type type);
-	static size_t channelCount(VkFormat format);
-	static size_t formatSize(VkFormat format);
 	static bool needsStaging(VmaMemoryUsage usage);
 };

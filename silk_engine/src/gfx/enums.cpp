@@ -74,53 +74,6 @@ VkFormat EnumInfo::glTypeToVk(uint32_t gl_type)
 	return VkFormat(0);
 }
 
-Type EnumInfo::formatToType(VkFormat format)
-{
-	switch (format)
-	{
-	case VK_FORMAT_R8_SINT: return Type::BYTE;
-	case VK_FORMAT_R8_UINT: return Type::UBYTE;
-	case VK_FORMAT_R16_SINT: return Type::SHORT;
-	case VK_FORMAT_R16_UINT: return Type::USHORT;
-	case VK_FORMAT_R32_SINT: return Type::INT;
-	case VK_FORMAT_R32_UINT: return Type::UINT;
-	case VK_FORMAT_R32_SFLOAT: return Type::FLOAT;
-	case VK_FORMAT_R64_SFLOAT: return Type::DOUBLE;
-	case VK_FORMAT_R32G32_SFLOAT: return Type::VEC2;
-	case VK_FORMAT_R32G32B32_SFLOAT: return Type::VEC3;
-	case VK_FORMAT_R32G32B32A32_SFLOAT: return Type::VEC4;
-	case VK_FORMAT_R32G32_SINT: return Type::VEC2I;
-	case VK_FORMAT_R32G32B32_SINT: return Type::VEC3I;
-	case VK_FORMAT_R32G32B32A32_SINT: return Type::VEC4I;
-	case VK_FORMAT_R32G32_UINT: return Type::VEC2U;
-	case VK_FORMAT_R32G32B32_UINT:  return Type::VEC3U;
-	case VK_FORMAT_R32G32B32A32_UINT: return Type::VEC4U;
-	case VK_FORMAT_R64G64_SFLOAT: return Type::VEC2D;
-	case VK_FORMAT_R64G64B64_SFLOAT: return Type::VEC3D;
-	case VK_FORMAT_R64G64B64A64_SFLOAT: return Type::VEC4D;
-	case VK_FORMAT_R8_SRGB: return Type::FLOAT;
-	case VK_FORMAT_R8G8_SRGB: return Type::VEC2;
-	case VK_FORMAT_R8G8B8_SRGB: return Type::VEC3;
-	case VK_FORMAT_R8G8B8A8_SRGB: return Type::VEC4;
-	case VK_FORMAT_R8_UNORM: return Type::FLOAT;
-	case VK_FORMAT_R8G8_UNORM: return Type::VEC2;
-	case VK_FORMAT_R8G8B8_UNORM: return Type::VEC3;
-	case VK_FORMAT_R8G8B8A8_UNORM: return Type::VEC4;
-	case VK_FORMAT_D16_UNORM: return Type::UINT;
-	case VK_FORMAT_D16_UNORM_S8_UINT: return Type::UINT;
-	case VK_FORMAT_D24_UNORM_S8_UINT: return Type::UINT;
-	case VK_FORMAT_D32_SFLOAT_S8_UINT: return Type::FLOAT;
-	case VK_FORMAT_D32_SFLOAT: return Type::FLOAT;
-	case VK_FORMAT_B8G8R8_SRGB: return Type::VEC3;
-	case VK_FORMAT_B8G8R8A8_SRGB: return Type::VEC4;
-	case VK_FORMAT_B8G8R8_UNORM: return Type::VEC3;
-	case VK_FORMAT_B8G8R8A8_UNORM: return Type::VEC4;
-	}
-
-	//SK_ERROR("Unsupported format specified: {0}.", format);
-	return Type(0);
-}
-
 size_t EnumInfo::size(Type type)
 {
 	switch (type)
@@ -154,7 +107,7 @@ size_t EnumInfo::size(Type type)
 	case Type::MAT4D: return 128;
 	}
 
-	//SK_ERROR("Unsupported type specified: {0}.", type);
+	SK_ERROR("Unsupported type specified: {0}.", type);
 	return 0;
 }
 
@@ -166,7 +119,7 @@ size_t EnumInfo::size(IndexType index_type)
 	case IndexType::UINT32: return 4;
 	}
 
-	//SK_ERROR("Unsoppurted index type specified: {0}.", index_type);
+	SK_ERROR("Unsoppurted index type specified: {0}.", index_type);
 	return 0;
 }
 
@@ -203,7 +156,7 @@ size_t EnumInfo::count(Type type)
 	case Type::MAT4D: return 16;
 	}	
 	
-	//SK_ERROR("Unsupported type specified: {0}.", type);
+	SK_ERROR("Unsupported type specified: {0}.", type);
 	return 0;
 }
 
@@ -240,54 +193,7 @@ size_t EnumInfo::rows(Type type)
 	case Type::MAT4D: return 4;
 	}
 	
-	//SK_ERROR("Unsupported type specified: {0}.", type);
-	return 0;
-}
-
-size_t EnumInfo::formatSize(VkFormat format)
-{
-	switch (format)
-	{
-	case VK_FORMAT_R8_SINT: return 1;
-	case VK_FORMAT_R8_UINT: return 1;
-	case VK_FORMAT_R16_SINT: return 2;
-	case VK_FORMAT_R16_UINT: return 2;
-	case VK_FORMAT_R32_SINT: return 4;
-	case VK_FORMAT_R32_UINT: return 4;
-	case VK_FORMAT_R32_SFLOAT: return 4;
-	case VK_FORMAT_R64_SFLOAT: return 8;
-	case VK_FORMAT_R32G32_SFLOAT: return 8;
-	case VK_FORMAT_R32G32B32_SFLOAT: return 12;
-	case VK_FORMAT_R32G32B32A32_SFLOAT: return 16;
-	case VK_FORMAT_R32G32_SINT: return 8;
-	case VK_FORMAT_R32G32B32_SINT: return 12;
-	case VK_FORMAT_R32G32B32A32_SINT: return 16;
-	case VK_FORMAT_R32G32_UINT: return 8;
-	case VK_FORMAT_R32G32B32_UINT:  return 12;
-	case VK_FORMAT_R32G32B32A32_UINT: return 16;
-	case VK_FORMAT_R64G64_SFLOAT: return 128;
-	case VK_FORMAT_R64G64B64_SFLOAT: return 192;
-	case VK_FORMAT_R64G64B64A64_SFLOAT: return 256;
-	case VK_FORMAT_R8_SRGB: return 1;
-	case VK_FORMAT_R8G8_SRGB: return 2;
-	case VK_FORMAT_R8G8B8_SRGB: return 3;
-	case VK_FORMAT_R8G8B8A8_SRGB: return 4;
-	case VK_FORMAT_R8_UNORM: return 1;
-	case VK_FORMAT_R8G8_UNORM: return 2;
-	case VK_FORMAT_R8G8B8_UNORM: return 3;
-	case VK_FORMAT_R8G8B8A8_UNORM: return 4;
-	case VK_FORMAT_D16_UNORM: return 2;
-	case VK_FORMAT_D16_UNORM_S8_UINT: return 3;
-	case VK_FORMAT_D24_UNORM_S8_UINT: return 4;
-	case VK_FORMAT_D32_SFLOAT_S8_UINT: return 5;
-	case VK_FORMAT_D32_SFLOAT: return 4;
-	case VK_FORMAT_B8G8R8_SRGB: return 3;
-	case VK_FORMAT_B8G8R8A8_SRGB: return 4;
-	case VK_FORMAT_B8G8R8_UNORM: return 3;
-	case VK_FORMAT_B8G8R8A8_UNORM: return 4;
-	}
-
-	//SK_ERROR("Unsupported format specified: {0}.", format);
+	SK_ERROR("Unsupported type specified: {0}.", type);
 	return 0;
 }
 
@@ -314,7 +220,7 @@ VkIndexType EnumInfo::indexType(IndexType index_type)
 	case IndexType::UINT32: return VK_INDEX_TYPE_UINT32;
 	}
 
-	//SK_ERROR("Unsupported index type specified: {0}.", index_type);
+	SK_ERROR("Unsupported index type specified: {0}.", index_type);
 	return VkIndexType(0);
 }
 
@@ -327,6 +233,6 @@ uint32_t EnumInfo::apiVersion(APIVersion api_version)
 	case APIVersion::VULKAN_1_2: return VK_API_VERSION_1_2;
 	}
 
-	//SK_ERROR("Unsupported api version specified: {0}.", api_version);
+	SK_ERROR("Unsupported api version specified: {0}.", api_version);
 	return uint32_t(0);
 }

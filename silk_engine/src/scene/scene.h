@@ -4,7 +4,7 @@
 #include "instance.h"
 #include "light.h"
 #include "gfx/buffers/indirect_buffer.h"
-#include "gfx/buffers/storage_buffer.h"
+#include "gfx/buffers/uniform_buffer.h"
 #include "gfx/graphics.h"
 
 class Entity;
@@ -12,6 +12,21 @@ class Entity;
 class Scene
 {
 	friend class Entity;
+
+	static constexpr size_t MAX_LIGHTS = 64;
+
+	struct GlobalUniformData
+	{
+		glm::mat4 projection_view;
+		glm::vec3 camera_position;
+		float time;
+		glm::vec3 camera_direction;
+		float delta_time;
+		glm::uvec2 resolution;
+		uint32_t frame;
+		uint32_t light_count;
+		std::array<Light, MAX_LIGHTS> lights;
+	};
 public:
 	Scene();
 	~Scene();
@@ -44,9 +59,10 @@ private:
 private:
 	entt::registry registry;
 	std::vector<InstanceBatch> instance_batches;
-	shared<IndirectBuffer> indirect_buffer;
-	shared<DescriptorSet> global_descriptor_set;
-	std::array<Light, Graphics::MAX_LIGHTS> lights;
+	unique<IndirectBuffer> indirect_buffer;
+	unique<UniformBuffer> global_uniform_buffer;
+	DescriptorSet global_descriptor_set;
+	std::array<Light, MAX_LIGHTS> lights;
 	size_t light_index = 0;
 	bool lights_updated = false;
 };

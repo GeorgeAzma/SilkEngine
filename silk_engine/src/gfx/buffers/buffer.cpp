@@ -9,22 +9,30 @@
 Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_usage)
 	: size(size), needs_staging(EnumInfo::needsStaging(vma_usage))
 {
-	VkBufferCreateInfo buffer_info{};
-	buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	buffer_info.size = size;
-	buffer_info.usage = usage;
-	buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-	VmaAllocationCreateInfo allocation_create_info = {};
-	allocation_create_info.usage = vma_usage;
-	
-	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &buffer_info, &allocation_create_info, &buffer, &allocation, nullptr));
+	create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	create_info.size = size;
+	create_info.usage = usage;
+	create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	allocation_create_info.usage = vma_usage;	
+	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &create_info, &allocation_create_info, &buffer, &allocation, nullptr));
 }
 
 Buffer::~Buffer()
 {
 	delete[] data;
 	vmaDestroyBuffer(*Graphics::allocator, buffer, allocation);
+}
+
+void Buffer::resize(VkDeviceSize size)
+{
+	if (size == this->size)
+		return;
+	this->size = size;
+	delete[] data;
+	data = nullptr;
+	vmaDestroyBuffer(*Graphics::allocator, buffer, allocation);
+	create_info.size = size;
+	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &create_info, &allocation_create_info, &buffer, &allocation, nullptr));
 }
 
 void Buffer::map(void** data) const
