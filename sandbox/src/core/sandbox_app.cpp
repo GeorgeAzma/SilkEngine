@@ -5,7 +5,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     scene = makeUnique<Scene>(); 
     
     using namespace std::chrono_literals;
-    Timers::every(0.5s, 
+    Timers::every(100ms, 
         [this] 
         { 
             Window::setTitle(fmt::format("Vulkan - {0} FPS ({1:.4} ms)", int(1.0 / Time::dt), (Time::dt * 1000)));

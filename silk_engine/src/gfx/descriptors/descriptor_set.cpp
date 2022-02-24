@@ -41,19 +41,33 @@ void DescriptorSet::build()
 	allocation_info.pSetLayouts = &layout->layout;
 	
 	Graphics::vulkanAssert(vkAllocateDescriptorSets(*Graphics::logical_device, &allocation_info, &descriptor_set));
+	updated = false;
+	needs_update = true;
 
 	for (auto& write : write_descriptor_sets)
 		write.dstSet = descriptor_set;
 }
 
-void DescriptorSet::update() const
+void DescriptorSet::update()
+{
+	if (needs_update)
+		forceUpdate();
+}
+
+void DescriptorSet::forceUpdate()
 {
 	updated = true;
 	vkUpdateDescriptorSets(*Graphics::logical_device, write_descriptor_sets.size(), write_descriptor_sets.data(), 0, nullptr);
+	needs_update = false;
 }
 
-void DescriptorSet::bind(size_t first_set) const
+void DescriptorSet::bind(size_t first_set)
 {
+	if (!updated)
+		forceUpdate();
+	else
+		update();
+
 	vkCmdBindDescriptorSets(Graphics::active.command_buffer, Graphics::active.bind_point, Graphics::active.pipeline_layout, first_set, 1, &descriptor_set, 0, nullptr);
 }
 
@@ -62,6 +76,7 @@ void DescriptorSet::setImageInfo(size_t write_index, const std::vector<VkDescrip
 	SK_ASSERT(image_info.size() == write_descriptor_sets[write_index].descriptorCount, "Invalid image_info size: {0}, should be {1}", image_info.size(), write_descriptor_sets[write_index].descriptorCount);
 	this->image_infos[write_index] = image_info;
 	write_descriptor_sets[write_index].pImageInfo = this->image_infos[write_index].data();
+	needs_update = true;
 }
 
 void DescriptorSet::setBufferInfo(size_t write_index, const std::vector<VkDescriptorBufferInfo>& buffer_info)
@@ -69,6 +84,7 @@ void DescriptorSet::setBufferInfo(size_t write_index, const std::vector<VkDescri
 	SK_ASSERT(buffer_info.size() == write_descriptor_sets[write_index].descriptorCount, "Invalid buffer_info size: {0}, should be {1}", buffer_info.size(), write_descriptor_sets[write_index].descriptorCount);
 	this->buffer_infos[write_index] = buffer_info;
 	write_descriptor_sets[write_index].pBufferInfo = this->buffer_infos[write_index].data();
+	needs_update = true;
 }
 
 DescriptorSet::DescriptorSet(const DescriptorSet& other)
@@ -86,6 +102,7 @@ DescriptorSet& DescriptorSet::operator=(const DescriptorSet& other)
 	allocation_info.pSetLayouts = &layout->layout;
 
 	Graphics::vulkanAssert(vkAllocateDescriptorSets(*Graphics::logical_device, &allocation_info, &descriptor_set));
+	updated = false;
 
 	image_infos = other.image_infos;
 	buffer_infos = other.buffer_infos;
@@ -95,8 +112,8 @@ DescriptorSet& DescriptorSet::operator=(const DescriptorSet& other)
 		write_descriptor_sets[i].dstSet = descriptor_set;
 		write_descriptor_sets[i].pImageInfo = image_infos[i].data();
 		write_descriptor_sets[i].pBufferInfo = buffer_infos[i].data();
-
 	}
+	needs_update = true;
 
 	descriptor_layout_bindings = other.descriptor_layout_bindings;
 

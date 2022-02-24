@@ -12,9 +12,6 @@ class SwapChain : NonCopyable
     friend class PhysicalDevice;
 
 public:
-    static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
-
-public:
     SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain = {});
     ~SwapChain();
 
@@ -32,12 +29,10 @@ public:
     void recreate();
 
     void createFramebuffers();
-    void acquireNextImage();
-    void present();
+    void acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence = VK_NULL_HANDLE);
+    VkResult present(VkSemaphore wait_semaphore);
 
-    void beginFrame(size_t i = 0);
-    void beginRenderPass(size_t i = 0);
-    void endFrame(size_t i = 0);
+    void beginRenderPass();
     void endRenderPass();
     
 private:
@@ -51,12 +46,6 @@ private:
     VkPresentModeKHR present_mode;
     VkExtent2D extent;
     std::vector<shared<Framebuffer>> framebuffers;
-    std::vector<VkFence> in_flight_fences = std::vector<VkFence>(MAX_FRAMES_IN_FLIGHT);
-    std::vector<VkFence> images_in_flight;
-    std::vector<VkSemaphore> image_available_semaphores = std::vector<VkSemaphore>(MAX_FRAMES_IN_FLIGHT);
-    std::vector<VkSemaphore> render_finished_semaphores = std::vector<VkSemaphore>(MAX_FRAMES_IN_FLIGHT);
-    uint32_t current_frame = 0;
-    std::vector<shared<CommandBuffer>> command_buffers;
     uint32_t image_index = 0;
     shared<Image2D> msaa_image = nullptr;
     shared<Image2D> depth = nullptr;

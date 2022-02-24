@@ -3,6 +3,7 @@
 #include "scene/light.h"
 #include "enums.h"
 #include "utils/alarm.h"
+#include "buffers/command_buffer.h"
 
 class WindowResizeEvent;
 class Instance;
@@ -52,6 +53,9 @@ public:
 	static void cleanup();
 	static void update();
 
+	static void beginFrame();
+	static void endFrame();
+
 	static shared<CommandPool> getCommandPool();
 
 	static void screenshot(const std::string& file);
@@ -68,6 +72,10 @@ public:
 	static inline SwapChain* swap_chain = nullptr;
 	static inline DescriptorPool* descriptor_pool = nullptr;
 	static inline Alarm command_pool_purge_alarm = Alarm(5s);
+	static inline std::vector<unique<CommandBuffer>> command_buffers;
+	static inline VkFence previous_frame_finished = VK_NULL_HANDLE;
+	static inline VkSemaphore swap_chain_image_available = VK_NULL_HANDLE;
+	static inline VkSemaphore render_finished = VK_NULL_HANDLE;
 
 private:
 	static constexpr std::string stringifyResult(VkResult result);

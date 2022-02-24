@@ -37,14 +37,12 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 
 	render_pass = makeShared<RenderPass>();
 	render_pass->addSubpass()
-		.addAttachment(surface_format.format, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, {}, sample_count)
-		.addAttachment(depth_format, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, {}, sample_count)
-		.addAttachment(surface_format.format, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+		.addAttachment({ surface_format.format, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, {}, sample_count })
+		.addAttachment({ depth_format, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, {}, sample_count })
+		.addAttachment({ surface_format.format, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR })
 		.build();
 
 	create(old_swap_chain);
-
-	images_in_flight.resize(images.size(), VK_NULL_HANDLE);
 
 	VkSemaphoreCreateInfo semaphore_info{};
 	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -52,15 +50,6 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	VkFenceCreateInfo fence_info{};
 	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-	{
-		Graphics::vulkanAssert(vkCreateSemaphore(*Graphics::logical_device, &semaphore_info, nullptr, &image_available_semaphores[i]));
-		Graphics::vulkanAssert(vkCreateSemaphore(*Graphics::logical_device, &semaphore_info, nullptr, &render_finished_semaphores[i]));
-
-		Graphics::vulkanAssert(vkCreateFence(*Graphics::logical_device, &fence_info, nullptr, &in_flight_fences[i]));
-	}
-
 }
 
 void SwapChain::recreate()
@@ -93,56 +82,27 @@ void SwapChain::createFramebuffers()
 		framebuffers[i] = makeShared<Framebuffer>(*render_pass, std::vector<shared<Image2D>>{ msaa_image, depth, images[i] }, extent.width, extent.height);
 }
 
-void SwapChain::acquireNextImage()
+void SwapChain::acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence)
 {
-	vkWaitForFences(*Graphics::logical_device, 1, &in_flight_fences[current_frame], VK_TRUE, UINT64_MAX);
-	Graphics::vulkanAssert(vkAcquireNextImageKHR(*Graphics::logical_device, swap_chain, UINT64_MAX, image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index));
+	Graphics::vulkanAssert(vkAcquireNextImageKHR(*Graphics::logical_device, swap_chain, UINT64_MAX, signal_semaphore, signal_fence, &image_index));
 }
 
-void SwapChain::present()
+VkResult SwapChain::present(VkSemaphore wait_semaphore)
 {
-	//Check if previous frame is using this image
-	if (images_in_flight[image_index] != VK_NULL_HANDLE)
-		Graphics::vulkanAssert(vkWaitForFences(*Graphics::logical_device, 1, &images_in_flight[image_index], VK_TRUE, UINT64_MAX));
-	images_in_flight[image_index] = in_flight_fences[current_frame];
-
-	//Submit the command buffer
-	VkPipelineStageFlags wait_stage =  VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-	CommandBufferSubmitInfo submit_info{};
-	submit_info.fence = in_flight_fences[current_frame];
-	submit_info.signal_semaphores = { render_finished_semaphores[current_frame] };
-	submit_info.wait_semaphores = { image_available_semaphores[current_frame] };
-	submit_info.wait_stages = &wait_stage;
-	command_buffers[image_index]->submit(submit_info);
-
-	//Present
 	VkPresentInfoKHR present_info{};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-	present_info.waitSemaphoreCount = 1;
-	present_info.pWaitSemaphores = &render_finished_semaphores[current_frame];
 	present_info.swapchainCount = 1;
 	present_info.pSwapchains = &swap_chain;
 	present_info.pImageIndices = &image_index;
+	present_info.pWaitSemaphores = &wait_semaphore;
+	present_info.waitSemaphoreCount = wait_semaphore ? 1 : 0;
 
-	vkQueuePresentKHR(Graphics::logical_device->getPresentQueue(), &present_info);
-
-	current_frame = (current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
+	return vkQueuePresentKHR(Graphics::logical_device->getPresentQueue(), &present_info);
 }
 
-void SwapChain::beginFrame(size_t i)
+void SwapChain::beginRenderPass()
 {
-	command_buffers[i]->begin(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
-}
-
-void SwapChain::beginRenderPass(size_t i)
-{
-	render_pass->begin(*framebuffers[i]);
-}
-
-void SwapChain::endFrame(size_t i)
-{
-	command_buffers[i]->end();
+	render_pass->begin(*framebuffers[image_index]);
 }
 
 void SwapChain::endRenderPass()
@@ -226,10 +186,6 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	framebuffers.resize(images.size());
 
 	createFramebuffers();
-
-	command_buffers.resize(images.size());
-	for (auto& command_buffer : command_buffers)
-		command_buffer = makeShared<CommandBuffer>();
 }
 
 void SwapChain::destroy()
@@ -239,13 +195,5 @@ void SwapChain::destroy()
 
 SwapChain::~SwapChain()
 {
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-	{
-		vkDestroySemaphore(*Graphics::logical_device, render_finished_semaphores[i], nullptr);
-		vkDestroySemaphore(*Graphics::logical_device, image_available_semaphores[i], nullptr);
-
-		vkDestroyFence(*Graphics::logical_device, in_flight_fences[i], nullptr);
-	}
-
 	destroy();
 }

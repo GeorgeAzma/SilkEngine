@@ -1,6 +1,18 @@
 #pragma once
 
 
+struct AttachmentProps
+{
+	VkFormat format;
+	VkImageLayout layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; 
+	std::optional<VkClearValue> clear_value = {};
+	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
+	VkAttachmentLoadOp load_operation = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	VkAttachmentStoreOp store_operation = VK_ATTACHMENT_STORE_OP_STORE;
+	VkAttachmentLoadOp stencil_load_operation = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	VkAttachmentStoreOp stencil_store_operation = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+};
 struct Attachment
 {
 	enum class Type
@@ -25,7 +37,7 @@ class RenderPass : NonCopyable
 public:
 	~RenderPass();
 
-	RenderPass& addAttachment(VkFormat format, VkImageLayout image_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, std::optional<VkClearValue> clear_value = {}, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
+	RenderPass& addAttachment(const AttachmentProps& props);
 	RenderPass& addSubpass();
 
 	void build();

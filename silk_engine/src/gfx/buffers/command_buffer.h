@@ -16,7 +16,7 @@ public:
 	CommandBuffer(VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY, VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT);
 	~CommandBuffer();
 
-	void begin(VkCommandBufferUsageFlagBits usage = {});
+	void begin(VkCommandBufferUsageFlagBits usage = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 	void end();
 
 	void submit(const CommandBufferSubmitInfo& info = {});

@@ -8,6 +8,7 @@
 #include "utils/general_utils.h"
 #include "utils/time.h"
 #include "gfx/window/swap_chain.h"
+#include "utils/timers.h"
 
 Scene::Scene()
 {
@@ -28,7 +29,14 @@ Scene::Scene()
 	global_uniform_buffer = makeUnique<UniformBuffer>(sizeof(GlobalUniformData));
 	global_descriptor_set = *Resources::getShaderEffect("Lit 3D")->pipeline->getShader()->getDescriptorSets().at(0);
 	global_descriptor_set.setBufferInfo(0, { *global_uniform_buffer });
-	global_descriptor_set.update();
+
+	Timers::every(200ms, [] {
+		SK_INFO("Render stats: ");
+		SK_INFO("Instance batches: {0}", Graphics::stats.instance_batches);
+		SK_INFO("Instances: {0}", Graphics::stats.instances);
+		SK_INFO("Vertices: {0}", Graphics::stats.vertices);
+		SK_INFO("Indices: {0}", Graphics::stats.indices);
+		});
 }
 
 Scene::~Scene()
@@ -101,10 +109,9 @@ void Scene::onUpdate()
 		}
 	}  
 	if (any_needs_update)
-		indirect_buffer->setDataChecked(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand));
+		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand));
 
 	//Draw instances
-	Graphics::swap_chain->acquireNextImage();
 	const auto& white = Resources::getImage("White")->getDescriptorInfo();
 	for (auto& instance_batch : instance_batches)
 	{
@@ -115,20 +122,12 @@ void Scene::onUpdate()
 				descriptor_images[i] = *instance_batch.images[i];
 
 			size_t index = 0;
-			for (auto& descriptor_set : instance_batch.descriptor_sets) //Update descriptors for each swap chain image (Annoying gotta think of automata)
-			{
-				if (!descriptor_set[1].wasUpdated() || index == Graphics::swap_chain->getImageIndex())
-				{
-					descriptor_set[1].setImageInfo(0, descriptor_images);
-					descriptor_set[1].update();
-				}
-				++index;
-			}
+			instance_batch.descriptor_sets[1].setImageInfo(0, descriptor_images);
 			instance_batch.images_need_update = false;
 		}
 	}
-	Graphics::swap_chain->beginFrame(Graphics::swap_chain->getImageIndex());
-	Graphics::swap_chain->beginRenderPass(Graphics::swap_chain->getImageIndex());
+	Graphics::beginFrame();
+	Graphics::swap_chain->beginRenderPass();
 
 	size_t draw_index = 0;
 	for (auto& instance_batch : instance_batches)
@@ -141,8 +140,7 @@ void Scene::onUpdate()
 
 	//End draw
 	Graphics::swap_chain->endRenderPass();
-	Graphics::swap_chain->endFrame(Graphics::swap_chain->getImageIndex());
-	Graphics::swap_chain->present();
+	Graphics::endFrame();
 
 	Graphics::stats.instance_batches += instance_batches.size();
 	for (const auto& instance_batch : instance_batches)
@@ -151,11 +149,6 @@ void Scene::onUpdate()
 		Graphics::stats.vertices += instance_batch.instance->mesh->vertices.size() * instance_batch.instances.size();
 		Graphics::stats.indices += instance_batch.instance->mesh->indices.size() * instance_batch.instances.size();
 	}
-	SK_INFO("Render stats: ");
-	SK_INFO("Instance batches: {0}", Graphics::stats.instance_batches);
-	SK_INFO("Instances: {0}", Graphics::stats.instances);
-	SK_INFO("Vertices: {0}", Graphics::stats.vertices);
-	SK_INFO("Indices: {0}", Graphics::stats.indices);
 }
 
 void Scene::onStop()
@@ -213,9 +206,7 @@ void Scene::onTransformComponentUpdate(entt::registry& registry, entt::entity en
 		}
 	}
 	if (auto light_component = registry.try_get<LightComponent>(entity))
-	{
 		light_component->light_ptr->position = transform.transform * glm::vec4(light_component->light.position, 1);
-	}
 }
 
 void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
@@ -373,11 +364,9 @@ void Scene::addInstanceBatch(shared<RenderedInstance> instance, const InstanceDa
 
 	new_batch.instance_buffer = makeShared<VertexBuffer>(new_batch.instance_data.data(), Graphics::MAX_INSTANCES * sizeof(InstanceData), VMA_MEMORY_USAGE_CPU_TO_GPU);
 
-	new_batch.descriptor_sets.resize(Graphics::swap_chain->getImages().size());
-	for (auto& descriptor_sets : new_batch.descriptor_sets)
 		for (auto&& [set, descriptor_set] : new_batch.instance->material->pipeline->getShader()->getDescriptorSets())
 			if(set != 0) //0 is reserved as Global uniform buffer
-				descriptor_sets[set] = *descriptor_set;
+				new_batch.descriptor_sets[set] = *descriptor_set;
 		
 	
 	instance->instance_batch_index = instance_batches.size() - 1;
@@ -387,14 +376,10 @@ void Scene::addInstanceBatch(shared<RenderedInstance> instance, const InstanceDa
 void Scene::destroyMeshInstance(const RenderedInstance& instance)
 {
 	auto& instance_batch = instance_batches[instance.instance_batch_index];
-	instance_batch.needs_update = true;
 	
-	//This would be down near std::swaps but it's here because we don't wanna skip this with return statement which is below
 	instance_batch.instances.back()->instance_data_index = instance.instance_data_index;
 
-	instance_batch.removeImages(instance_batch.instance_data[instance.instance_data_index].image_index, instance.images.size());
-
-	if (instance_batch.instance_data.empty())
+	if (instance_batch.instance_data.size() - 1 == 0)
 	{
 		if (instance.instance_batch_index != instance_batches.size() - 1)
 		{
@@ -406,6 +391,10 @@ void Scene::destroyMeshInstance(const RenderedInstance& instance)
 		instance_batches.pop_back();
 		return;
 	}
+
+	instance_batch.removeImages(instance_batch.instance_data[instance.instance_data_index].image_index, instance.images.size());
+
+	instance_batch.needs_update = true;
 
 	std::swap(instance_batch.instance_data[instance.instance_data_index], instance_batch.instance_data.back());
 	instance_batch.instance_data.pop_back();

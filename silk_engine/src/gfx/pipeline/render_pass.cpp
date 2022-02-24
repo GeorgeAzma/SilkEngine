@@ -9,29 +9,25 @@ RenderPass::~RenderPass()
     vkDestroyRenderPass(*Graphics::logical_device, render_pass, nullptr);
 }
 
-RenderPass& RenderPass::addAttachment(VkFormat format, VkImageLayout image_layout, std::optional<VkClearValue> clear_value, VkSampleCountFlagBits samples)
+RenderPass& RenderPass::addAttachment(const AttachmentProps& props)
 {
     VkAttachmentDescription attachment_description{};
-    attachment_description.format = format;
-    attachment_description.samples = samples;
+    attachment_description.format = props.format;
+    attachment_description.samples = props.samples;
     attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    attachment_description.finalLayout = image_layout;
+    attachment_description.finalLayout = props.layout;
 
-    if (samples != VK_SAMPLE_COUNT_1_BIT)
+    if (props.samples != VK_SAMPLE_COUNT_1_BIT)
     {
         subpasses.back().multisampled = true;
     }
 
     Attachment attachment{};
     Attachment::Type type;
-    if (clear_value)
-        attachment.clear_value = *clear_value;
-    else
-        attachment.clear_value.color = { 0.0f, 0.0f, 0.0f, 1.0f };
     attachment.description = attachment_description;
     
     VkAttachmentReference attachment_reference{};
@@ -41,7 +37,7 @@ RenderPass& RenderPass::addAttachment(VkFormat format, VkImageLayout image_layou
         attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         type = Attachment::Type::DEPTH_STENCIL;
     }
-    else if (subpasses.back().multisampled && image_layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+    else if (subpasses.back().multisampled && props.layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
     {
         attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         type = Attachment::Type::RESOLVE;
@@ -55,9 +51,9 @@ RenderPass& RenderPass::addAttachment(VkFormat format, VkImageLayout image_layou
     attachment.type = type;
 
     if (type == Attachment::Type::DEPTH_STENCIL)
-        attachment.clear_value.depthStencil = { 1.0f, 0 };
+        attachment.clear_value.depthStencil = props.clear_value ? props.clear_value->depthStencil : VkClearDepthStencilValue{ 1.0f, 0 };
     else
-        attachment.clear_value.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+        attachment.clear_value.color = props.clear_value ? props.clear_value->color : VkClearColorValue{ 0.0f, 0.0f, 0.0f, 1.0f };
     
     subpasses.back().attachments.emplace_back(std::move(attachment));
    

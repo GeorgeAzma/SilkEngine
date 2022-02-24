@@ -1,15 +1,17 @@
 #include "instance.h"
 #include "gfx/graphics.h"
 #include "gfx/window/swap_chain.h"
+#include "gfx/devices/logical_device.h"
 
 void InstanceBatch::bind()
 {
 	instance->material->pipeline->bind();
-	for (auto& descriptor_set : descriptor_sets[Graphics::swap_chain->getImageIndex()])
+	for (auto& descriptor_set : descriptor_sets)
 		descriptor_set.second.bind(descriptor_set.first);
 	instance->mesh->vertex_array->bind();
 	instance_buffer->bind(1);
 }
+
 uint32_t InstanceBatch::addImages(const std::vector<shared<Image2D>>& new_images)
 {
 	SK_ASSERT(new_images.size(), "You should specify more than 0 images to add");

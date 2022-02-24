@@ -37,12 +37,30 @@ void Graphics::init()
 
 	swap_chain = new SwapChain(); //16ms
 
+	command_buffers.resize(swap_chain->getImages().size());
+	for (auto& command_buffer : command_buffers)
+		command_buffer = makeUnique<CommandBuffer>();
+
+	VkFenceCreateInfo fence_info{};
+	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+	Graphics::vulkanAssert(vkCreateFence(*Graphics::logical_device, &fence_info, nullptr, &previous_frame_finished));
+
+	VkSemaphoreCreateInfo semaphore_info{};
+	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	Graphics::vulkanAssert(vkCreateSemaphore(*Graphics::logical_device, &semaphore_info, nullptr, &swap_chain_image_available));
+	Graphics::vulkanAssert(vkCreateSemaphore(*Graphics::logical_device, &semaphore_info, nullptr, &render_finished));
+
 	Font::init();
 }
 
 void Graphics::cleanup() //25ms
 {
 	Font::cleanup();
+	vkDestroyFence(*Graphics::logical_device, previous_frame_finished, nullptr);
+	vkDestroySemaphore(*Graphics::logical_device, swap_chain_image_available, nullptr);
+	vkDestroySemaphore(*Graphics::logical_device, render_finished, nullptr);
+	command_buffers.clear();
 	delete swap_chain;
 	delete descriptor_pool;
 	command_pools.clear();
@@ -72,6 +90,26 @@ void Graphics::update()
 			++it;
 		}
 	}
+}
+
+void Graphics::beginFrame()
+{
+	Graphics::vulkanAssert(vkWaitForFences(*logical_device, 1, &previous_frame_finished, VK_TRUE, UINT64_MAX));
+	Graphics::vulkanAssert(vkResetFences(*logical_device, 1, &previous_frame_finished));
+	swap_chain->acquireNextImage(swap_chain_image_available);
+	command_buffers[swap_chain->getImageIndex()]->begin();
+}
+
+void Graphics::endFrame()
+{
+	CommandBufferSubmitInfo submit_info{};
+	VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	submit_info.wait_stages = &wait_stage;
+	submit_info.wait_semaphores = { swap_chain_image_available };
+	submit_info.signal_semaphores = { render_finished };
+	submit_info.fence = previous_frame_finished;
+	command_buffers[swap_chain->getImageIndex()]->submit(submit_info);
+	Graphics::vulkanAssert(swap_chain->present(render_finished));
 }
 
 shared<CommandPool> Graphics::getCommandPool()
@@ -122,7 +160,6 @@ void Graphics::screenshot(const std::string& file)
 	compute->bind();
 	
 	(*compute->getShader()->getDescriptorSets().at(0)).setBufferInfo(0, { image_storage });
-	(*compute->getShader()->getDescriptorSets().at(0)).update();
 	(*compute->getShader()->getDescriptorSets().at(0)).bind();
 	compute->dispatch(width * height);
 	
