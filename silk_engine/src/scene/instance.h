@@ -56,6 +56,8 @@ struct InstanceBatch
 	std::vector<uint32_t> image_owners;
 	std::unordered_map<uint32_t, DescriptorSet> descriptor_sets;
 
+	~InstanceBatch();
+
 	void bind();
 	uint32_t addImages(const std::vector<shared<Image2D>>& new_images);
 	void removeImages(size_t index, size_t count) 

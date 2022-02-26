@@ -22,44 +22,38 @@
 void Graphics::init()
 {
 	SK_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
-	//These most likely won't change
-	instance = new Instance(); //70ms
-	surface = new Surface(); //0.05ms
-	physical_device = new PhysicalDevice(); //10ms
-	logical_device = new LogicalDevice(); //80ms
+
+	instance = new Instance();
+	surface = new Surface();
+	physical_device = new PhysicalDevice();
+	logical_device = new LogicalDevice();
 	allocator = new Allocator();
 
 	descriptor_pool = new DescriptorPool();
-	descriptor_pool->addSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 64)
-		.addSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 64)
-		.addSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 64)
+	descriptor_pool->addSize(vk::DescriptorType::eUniformBuffer, 64)
+		.addSize(vk::DescriptorType::eCombinedImageSampler, 64)
+		.addSize(vk::DescriptorType::eStorageBuffer, 64)
 		.setMaxSets(1024).build();
 
-	swap_chain = new SwapChain(); //16ms
+	swap_chain = new SwapChain();
 
 	command_buffers.resize(swap_chain->getImages().size());
 	for (auto& command_buffer : command_buffers)
 		command_buffer = makeUnique<CommandBuffer>();
 
-	VkFenceCreateInfo fence_info{};
-	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-	Graphics::vulkanAssert(vkCreateFence(*Graphics::logical_device, &fence_info, nullptr, &previous_frame_finished));
-
-	VkSemaphoreCreateInfo semaphore_info{};
-	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-	Graphics::vulkanAssert(vkCreateSemaphore(*Graphics::logical_device, &semaphore_info, nullptr, &swap_chain_image_available));
-	Graphics::vulkanAssert(vkCreateSemaphore(*Graphics::logical_device, &semaphore_info, nullptr, &render_finished));
+	previous_frame_finished = Graphics::logical_device->createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
+	swap_chain_image_available = Graphics::logical_device->createSemaphore({});
+	render_finished = Graphics::logical_device->createSemaphore({});
 
 	Font::init();
 }
 
-void Graphics::cleanup() //25ms
+void Graphics::cleanup()
 {
 	Font::cleanup();
-	vkDestroyFence(*Graphics::logical_device, previous_frame_finished, nullptr);
-	vkDestroySemaphore(*Graphics::logical_device, swap_chain_image_available, nullptr);
-	vkDestroySemaphore(*Graphics::logical_device, render_finished, nullptr);
+	Graphics::logical_device->destroyFence(previous_frame_finished);
+	Graphics::logical_device->destroySemaphore(swap_chain_image_available);
+	Graphics::logical_device->destroySemaphore(render_finished);
 	command_buffers.clear();
 	delete swap_chain;
 	delete descriptor_pool;
@@ -94,8 +88,8 @@ void Graphics::update()
 
 void Graphics::beginFrame()
 {
-	Graphics::vulkanAssert(vkWaitForFences(*logical_device, 1, &previous_frame_finished, VK_TRUE, UINT64_MAX));
-	Graphics::vulkanAssert(vkResetFences(*logical_device, 1, &previous_frame_finished));
+	logical_device->waitForFences({ previous_frame_finished }, VK_TRUE, UINT64_MAX);
+	logical_device->resetFences({ previous_frame_finished });
 	swap_chain->acquireNextImage(swap_chain_image_available);
 	command_buffers[swap_chain->getImageIndex()]->begin();
 }
@@ -103,7 +97,7 @@ void Graphics::beginFrame()
 void Graphics::endFrame()
 {
 	CommandBufferSubmitInfo submit_info{};
-	VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	vk::PipelineStageFlags wait_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 	submit_info.wait_stages = &wait_stage;
 	submit_info.wait_semaphores = { swap_chain_image_available };
 	submit_info.signal_semaphores = { render_finished };
@@ -134,27 +128,27 @@ void Graphics::screenshot(const std::string& file)
 	props.height = height;
 	props.create_sampler = false;
 	props.create_view = false;
-	props.layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-	props.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+	props.layout = vk::ImageLayout::eTransferDstOptimal;
+	props.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc;
 	props.memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
 	props.format = swap_chain->getSurfaceFormat().format;
-	props.tiling = VK_IMAGE_TILING_OPTIMAL;
+	props.tiling = vk::ImageTiling::eOptimal;
 	props.mipmap = false;
 	props.sampler_props.anisotropy = false;
 	shared<Image2D> destination = makeShared<Image2D>(props);
 	auto image = swap_chain->getActiveImage();
 	image->copyImage(destination);
-	destination->transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+	destination->transitionLayout(vk::ImageLayout::eTransferSrcOptimal);
 	t1.stop();
 
 	DebugTimer t2("Change layout to RGBA");
 
-	StorageBuffer image_storage(destination->getSize(), VMA_MEMORY_USAGE_GPU_TO_CPU, VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+	StorageBuffer image_storage(destination->getSize(), VMA_MEMORY_USAGE_GPU_TO_CPU, vk::BufferUsageFlagBits::eTransferDst);
 	destination->copyToBuffer(image_storage);
 
 	t2.stop();
-	CommandBuffer command_buffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_QUEUE_COMPUTE_BIT);
-	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);	
+	CommandBuffer command_buffer(vk::CommandBufferLevel::ePrimary, vk::QueueFlagBits::eCompute);
+	command_buffer.begin();	
 
 	auto compute = Resources::getComputeShaderEffect("BGRA To RGBA")->pipeline;
 	compute->bind();
@@ -175,64 +169,7 @@ void Graphics::screenshot(const std::string& file)
 	SK_TRACE("Screenshot created: at {0}", file);
 }
 
-void Graphics::vulkanAssert(VkResult result)
+void Graphics::vulkanAssert(vk::Result result)
 {
-	SK_ASSERT(result == VK_SUCCESS, std::string("Vulkan: ") + stringifyResult(result));
-}
-
-constexpr std::string Graphics::stringifyResult(VkResult result)
-{
-	switch (result) 
-	{
-	case VK_SUCCESS:
-		return "Success";
-	case VK_NOT_READY:
-		return "A fence or query has not yet completed";
-	case VK_TIMEOUT:
-		return "A wait operation has not completed in the specified time";
-	case VK_EVENT_SET:
-		return "An event is signaled";
-	case VK_EVENT_RESET:
-		return "An event is unsignaled";
-	case VK_INCOMPLETE:
-		return "A return array was too small for the result";
-	case VK_ERROR_OUT_OF_HOST_MEMORY:
-		return "Out of host memory";
-	case VK_ERROR_OUT_OF_DEVICE_MEMORY:
-		return "Out of device memory";
-	case VK_ERROR_INITIALIZATION_FAILED:
-		return "Initialization of an object could not be completed for implementation-specific reasons";
-	case VK_ERROR_DEVICE_LOST:
-		return "The logical or physical device has been lost";
-	case VK_ERROR_MEMORY_MAP_FAILED:
-		return "Mapping of a memory object has failed";
-	case VK_ERROR_LAYER_NOT_PRESENT:
-		return "A requested layer is not present or could not be loaded";
-	case VK_ERROR_EXTENSION_NOT_PRESENT:
-		return "A requested extension is not supported";
-	case VK_ERROR_FEATURE_NOT_PRESENT:
-		return "A requested feature is not supported";
-	case VK_ERROR_INCOMPATIBLE_DRIVER:
-		return "The requested version of Vulkan is not supported by the driver or is otherwise incompatible";
-	case VK_ERROR_TOO_MANY_OBJECTS:
-		return "Too many objects of the type have already been created";
-	case VK_ERROR_FORMAT_NOT_SUPPORTED:
-		return "A requested format is not supported on this device";
-	case VK_ERROR_SURFACE_LOST_KHR:
-		return "A surface is no longer available";
-	case VK_ERROR_OUT_OF_POOL_MEMORY:
-		return "A allocation failed due to having no more space in the descriptor pool";
-	case VK_SUBOPTIMAL_KHR:
-		return "A swapchain no longer matches the surface properties exactly, but can still be used";
-	case VK_ERROR_OUT_OF_DATE_KHR:
-		return "A surface has changed in such a way that it is no longer compatible with the swapchain";
-	case VK_ERROR_INCOMPATIBLE_DISPLAY_KHR:
-		return "The display used by a swapchain does not use the same presentable image layout";
-	case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:
-		return "The requested window is already connected to a VkSurfaceKHR, or to some other non-Vulkan API";
-	case VK_ERROR_VALIDATION_FAILED_EXT:
-		return "A validation layer found an error";
-	default:
-		return "Unknown Vulkan error";
-	}
+	SK_ASSERT(result == vk::Result::eSuccess, std::string("Vulkan: ") + EnumInfo::stringifyResult(result));
 }

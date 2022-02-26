@@ -3,32 +3,27 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/allocators/command_pool.h"
 
-CommandBuffer::CommandBuffer(VkCommandBufferLevel level, VkQueueFlagBits queue_type)
+CommandBuffer::CommandBuffer(vk::CommandBufferLevel level, vk::QueueFlagBits queue_type)
 	: level(level), queue_type(queue_type), pool(Graphics::getCommandPool())
 {
-	VkCommandBufferAllocateInfo allocation_info{};
-	allocation_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocation_info.level = level;
-	allocation_info.commandPool = *Graphics::getCommandPool();
-	allocation_info.commandBufferCount = 1;
-
-	Graphics::vulkanAssert(vkAllocateCommandBuffers(*Graphics::logical_device, &allocation_info, &command_buffer));
+	vk::CommandBufferAllocateInfo allocate_info{};
+	allocate_info.level = level;
+	allocate_info.commandPool = *Graphics::getCommandPool();
+	allocate_info.commandBufferCount = 1;
+	Graphics::logical_device->allocateCommandBuffers(allocate_info);
 }
 
 CommandBuffer::~CommandBuffer()
 {
-	vkFreeCommandBuffers(*Graphics::logical_device, *Graphics::getCommandPool(), 1, &command_buffer);
+	Graphics::logical_device->freeCommandBuffers(*Graphics::getCommandPool(), { command_buffer });
 }
 
-void CommandBuffer::begin(VkCommandBufferUsageFlagBits usage)
+void CommandBuffer::begin(vk::CommandBufferUsageFlagBits usage)
 {
 	if (Graphics::active.command_buffer == command_buffer)
 		return;
-	VkCommandBufferBeginInfo begin_info{};
-	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	begin_info.flags = usage;
 
-	Graphics::vulkanAssert(vkBeginCommandBuffer(command_buffer, &begin_info));
+	command_buffer.begin(vk::CommandBufferBeginInfo(usage));
 	Graphics::active.command_buffer = command_buffer;
 }
 
@@ -37,7 +32,7 @@ void CommandBuffer::end()
 	if (Graphics::active.command_buffer != command_buffer)
 		return;
 
-	Graphics::vulkanAssert(vkEndCommandBuffer(command_buffer)); 
+	command_buffer.end();
 	Graphics::active.command_buffer = VK_NULL_HANDLE;
 	recorded = true;
 }
@@ -48,8 +43,7 @@ void CommandBuffer::submit(const CommandBufferSubmitInfo& info)
 	if (!recorded)
 		return;
 
-	VkSubmitInfo submit_info{};
-	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	vk::SubmitInfo submit_info{};
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &command_buffer;
 
@@ -61,9 +55,9 @@ void CommandBuffer::submit(const CommandBufferSubmitInfo& info)
 	submit_info.pSignalSemaphores = info.signal_semaphores.data();
 
 	if (info.fence != VK_NULL_HANDLE)
-		Graphics::vulkanAssert(vkResetFences(*Graphics::logical_device, 1, &info.fence));
+		Graphics::logical_device->resetFences({ info.fence });
 	
-	Graphics::vulkanAssert(vkQueueSubmit(getQueue(), 1, &submit_info, info.fence));
+	getQueue().submit({ submit_info }, info.fence);
 }
 
 void CommandBuffer::submitIdle()
@@ -72,37 +66,27 @@ void CommandBuffer::submitIdle()
 	if (!recorded)
 		return;
 
-	VkSubmitInfo submit_info{};
-	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	vk::SubmitInfo submit_info{};
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &command_buffer;
 
-	VkFenceCreateInfo fence_info = {};
-	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	vk::Fence fence = Graphics::logical_device->createFence({});
+	Graphics::logical_device->resetFences({ fence });
 
-	VkFence fence;
-
-	Graphics::vulkanAssert(vkCreateFence(*Graphics::logical_device, &fence_info, nullptr, &fence));
-	Graphics::vulkanAssert(vkResetFences(*Graphics::logical_device, 1, &fence));
-
-	Graphics::vulkanAssert(vkQueueSubmit(getQueue(), 1, &submit_info, fence));
+	getQueue().submit({ submit_info }, fence);	
+	Graphics::logical_device->waitForFences({ fence });
 	
-	Graphics::vulkanAssert(vkWaitForFences(*Graphics::logical_device, 1, &fence, VK_TRUE, std::numeric_limits<uint64_t>::max()));
-	
-	vkDestroyFence(*Graphics::logical_device, fence, nullptr);
+	Graphics::logical_device->destroyFence(fence);
 }
 
-VkQueue CommandBuffer::getQueue() const
+vk::Queue CommandBuffer::getQueue() const
 {
 	switch (queue_type) 
 	{
-	case VK_QUEUE_GRAPHICS_BIT:
-		return Graphics::logical_device->getGraphicsQueue(); 
-	case VK_QUEUE_TRANSFER_BIT:
-		return Graphics::logical_device->getTransferQueue();
-	case VK_QUEUE_COMPUTE_BIT:
-		return Graphics::logical_device->getComputeQueue();
-	default:
-		return Graphics::logical_device->getGraphicsQueue(); //Or nullptr
+	case vk::QueueFlagBits::eGraphics: return Graphics::logical_device->getGraphicsQueue(); 
+	case vk::QueueFlagBits::eTransfer: return Graphics::logical_device->getTransferQueue();
+	case vk::QueueFlagBits::eCompute: return Graphics::logical_device->getComputeQueue();
 	}
+
+	return Graphics::logical_device->getGraphicsQueue(); //Or nullptr
 }

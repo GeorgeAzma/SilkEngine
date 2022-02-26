@@ -4,17 +4,12 @@
 
 DescriptorPool::~DescriptorPool()
 {
-	vkDestroyDescriptorPool(*Graphics::logical_device, descriptor_pool, nullptr);
+	Graphics::logical_device->destroyDescriptorPool(descriptor_pool);
 }
 
-DescriptorPool& DescriptorPool::addSize(VkDescriptorType type, uint32_t count)
+DescriptorPool& DescriptorPool::addSize(vk::DescriptorType type, uint32_t count)
 {
-	VkDescriptorPoolSize size{};
-	size.type = type;
-	size.descriptorCount = count;
-
-	sizes.emplace_back(std::move(size));
-
+	sizes.emplace_back(type, count);
 	return *this;
 }
 
@@ -26,11 +21,9 @@ DescriptorPool& DescriptorPool::setMaxSets(uint32_t count)
 
 void DescriptorPool::build()
 {
-	VkDescriptorPoolCreateInfo create_info{};
-	create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	create_info.poolSizeCount = sizes.size();
-	create_info.pPoolSizes = sizes.data();
-	create_info.maxSets = max_sets;
-
-	Graphics::vulkanAssert(vkCreateDescriptorPool(*Graphics::logical_device, &create_info, nullptr, &descriptor_pool));
+	vk::DescriptorPoolCreateInfo ci{};
+	ci.poolSizeCount = sizes.size();
+	ci.pPoolSizes = sizes.data();
+	ci.maxSets = max_sets;
+	Graphics::logical_device->createDescriptorPool(ci);
 }

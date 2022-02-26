@@ -14,8 +14,8 @@ class Shader : NonCopyable
 		uint32_t count = 0;
 		uint32_t set = 0;
 		uint32_t binding = 0;
-		VkShaderStageFlags stage_flags;
-		VkDescriptorType type;
+		vk::ShaderStageFlags stage_flags;
+		vk::DescriptorType type;
 	};
 
 	class Includer : public shaderc::CompileOptions::IncluderInterface
@@ -78,8 +78,8 @@ public:
     void compile(const std::vector<Define>& defines = {});
 
 	const std::unordered_map<uint32_t, shared<DescriptorSet>>& getDescriptorSets() const { return descriptor_sets; }
-	const std::vector<VkPushConstantRange>& getPushConstants() const { return push_constants; }
-	const std::vector<VkPipelineShaderStageCreateInfo>& getPipelineShaderStageInfos() const { return pipeline_shader_stage_infos; }
+	const std::vector<vk::PushConstantRange>& getPushConstants() const { return push_constants; }
+	const std::vector<vk::PipelineShaderStageCreateInfo>& getPipelineShaderStageInfos() const { return pipeline_shader_stage_infos; }
 	const glm::uvec3& getLocalSize() const 
 	{ 
 		SK_ASSERT(local_size != glm::uvec3(0), "Shader had invalid local size, make sure you are using a compute shader with right local_size."); 
@@ -89,25 +89,25 @@ public:
 public:
 	static shaderc_shader_kind shadercType(Type shader_type);
 	static shaderc_env_version shadercApiVersion(APIVersion api_version);
-    static VkShaderStageFlagBits getVulkanType(Type shader_type);
+    static vk::ShaderStageFlagBits getVulkanType(Type shader_type);
     static Type getStringType(const std::string& shader_string);
     static std::string getTypeFileExtension(Type shader_type);
 
 private:
 	std::unordered_map<uint32_t, std::string> parse(const  std::filesystem::path& file);
-	VkShaderModule createShaderModule(const std::vector<uint32_t>& source) const;
+	vk::ShaderModule createShaderModule(const std::vector<uint32_t>& source) const;
     
 	//Reflection
-	void loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, VkShaderStageFlagBits stage_flag, VkDescriptorType type);
-	void loadPushConstant(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, VkShaderStageFlagBits stage_flag);
+	void loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, vk::ShaderStageFlags stage_flag, vk::DescriptorType type);
+	void loadPushConstant(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, vk::ShaderStageFlags stage_flag);
 
 private:
 	std::filesystem::path file;
-    std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_infos;
+    std::vector<vk::PipelineShaderStageCreateInfo> pipeline_shader_stage_infos;
 	
 	//Reflection data
 	glm::uvec3 local_size = glm::vec3(0);
 	std::unordered_map<uint32_t, shared<DescriptorSet>> descriptor_sets;
-    std::vector<VkPushConstantRange> push_constants;
+    std::vector<vk::PushConstantRange> push_constants;
 	std::vector<Resource> resources;
 };

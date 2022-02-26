@@ -5,10 +5,10 @@
 class Buffer : NonCopyable
 {
 public:
-	Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_usage);
+	Buffer(vk::DeviceSize size, vk::BufferUsageFlags usage, VmaMemoryUsage vma_usage);
 	virtual ~Buffer();
 
-	void resize(VkDeviceSize size);
+	void resize(vk::DeviceSize size);
 
 	void map(void** data) const;
 	void unmap() const;
@@ -18,24 +18,24 @@ public:
 
 	void getData(void* data, size_t size = 0) const;
 	bool isMapped() const { return mapped; }
-	VkDeviceSize getSize() const { return size; }
+	vk::DeviceSize getSize() const { return size; }
 
 	VmaAllocation getAllocation() const { return allocation; }
-	operator VkDescriptorBufferInfo () const { return { buffer, 0, size }; }
-	operator const VkBuffer& () const { return buffer; }
+	operator vk::DescriptorBufferInfo () const { return { buffer, 0, size }; }
+	operator const vk::Buffer& () const { return buffer; }
 
 public:
-	static void copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDeviceSize dst_offset = 0, VkDeviceSize src_offset = 0);
+	static void copy(vk::Buffer destination, vk::Buffer source, vk::DeviceSize size, vk::DeviceSize dst_offset = 0, vk::DeviceSize src_offset = 0);
 
 protected:
-	static void insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDeviceSize offset, VkDeviceSize size);
+	static void insertMemoryBarrier(const vk::Buffer& buffer, vk::AccessFlags source_access_mask, vk::AccessFlags destination_access_mask, vk::PipelineStageFlags source_stage_mask, vk::PipelineStageFlags destination_stage_mask, vk::DeviceSize offset, vk::DeviceSize size);
 
 protected:
-	VkBuffer buffer;
-	VkDeviceSize size;
+	vk::Buffer buffer;
+	vk::DeviceSize size;
 
 private:
-	VkBufferCreateInfo create_info{};
+	vk::BufferCreateInfo ci{};
 	VmaAllocationCreateInfo allocation_create_info{};
 	VmaAllocation allocation;
 	uint8_t* data = nullptr;

@@ -4,44 +4,43 @@
 #include "gfx/enums.h"
 #include "gfx/devices/logical_device.h"
 
-ImageView::ImageView(VkImage image, VkFormat format, uint32_t mip_levels, size_t layer_count, ImageViewType view_type)
+ImageView::ImageView(vk::Image image, vk::Format format, uint32_t mip_levels, size_t layer_count, ImageViewType view_type)
 {
-	VkImageViewCreateInfo view_info{};
-	view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	view_info.image = image;
-	VkImageViewType image_view_type;
+	vk::ImageViewCreateInfo ci{};
+	ci.image = image;
+	vk::ImageViewType image_view_type;
 	switch (view_type)
 	{
+		using enum vk::ImageViewType;
 	case ImageViewType::IMAGE1D:
-		image_view_type = layer_count == 1 ? VK_IMAGE_VIEW_TYPE_1D : VK_IMAGE_VIEW_TYPE_1D_ARRAY;
+		image_view_type = layer_count == 1 ? e1D : e1DArray;
 		break;
 	case ImageViewType::IMAGE2D:
-		image_view_type = layer_count == 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+		image_view_type = layer_count == 1 ? e2D : e2DArray;
 		break;
 	case ImageViewType::IMAGE3D:
 		SK_ASSERT(layer_count == 1, "Layer count({0}) can't be more than 1 for 3D images", layer_count);
-		image_view_type = VK_IMAGE_VIEW_TYPE_3D;
+		image_view_type = e3D;
 		break;
 	case ImageViewType::CUBEMAP:
-		image_view_type = layer_count == 1 ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
+		image_view_type = layer_count == 1 ? eCube : eCubeArray;
 		break;
 	default:
 		SK_ERROR("Invalid view type: {0}", view_type);
 		break;
 	}
-	view_info.viewType = image_view_type;
-	view_info.format = format;
-	view_info.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
-	view_info.subresourceRange.aspectMask = Image::getAspectFlags(format);
-	view_info.subresourceRange.baseMipLevel = 0;
-	view_info.subresourceRange.levelCount = mip_levels;
-	view_info.subresourceRange.baseArrayLayer = 0;
-	view_info.subresourceRange.layerCount = layer_count;
-
-	Graphics::vulkanAssert(vkCreateImageView(*Graphics::logical_device, &view_info, nullptr, &image_view));
+	ci.viewType = image_view_type;
+	ci.format = format;
+	ci.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
+	ci.subresourceRange.aspectMask = Image::getAspectFlags(format);
+	ci.subresourceRange.baseMipLevel = 0;
+	ci.subresourceRange.levelCount = mip_levels;
+	ci.subresourceRange.baseArrayLayer = 0;
+	ci.subresourceRange.layerCount = layer_count;
+	image_view = Graphics::logical_device->createImageView(ci);
 }
 
 ImageView::~ImageView()
 {
-	vkDestroyImageView(*Graphics::logical_device, image_view, nullptr);
+	Graphics::logical_device->destroyImageView(image_view);
 }

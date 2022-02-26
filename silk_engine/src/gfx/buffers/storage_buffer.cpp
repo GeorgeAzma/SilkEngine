@@ -1,8 +1,8 @@
 #include "storage_buffer.h"
 
-StorageBuffer::StorageBuffer(VkDeviceSize size, VmaMemoryUsage memory_usage, VkBufferUsageFlags usage_flags)
+StorageBuffer::StorageBuffer(vk::DeviceSize size, VmaMemoryUsage memory_usage, vk::BufferUsageFlags usage_flags)
 	: Buffer(size, 
-		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | usage_flags,
+		vk::BufferUsageFlagBits::eStorageBuffer | usage_flags,
 		memory_usage)
 {
 }

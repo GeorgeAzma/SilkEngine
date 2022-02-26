@@ -1,15 +1,13 @@
 #pragma once
 
-class WindowResizeEvent;
-
 class Surface : NonCopyable
 {
 public:
 	Surface();
 	~Surface();
 
-	operator const VkSurfaceKHR& () const { return surface; }
+	operator const vk::SurfaceKHR& () const { return surface; }
 
 private:
-	VkSurfaceKHR surface;
+	vk::SurfaceKHR surface;
 };

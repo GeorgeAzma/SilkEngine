@@ -18,7 +18,7 @@ public:
 	static shared<ComputeShaderEffect> getComputeShaderEffect(const std::string& name);
 	static shared<Image2D> getImage(const std::string& name);
 	//@return descriptor layout from the cache, if it doesn't exist creates new one
-	static shared<DescriptorSetLayout> getDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
+	static shared<DescriptorSetLayout> getDescriptorSetLayout(const std::vector<vk::DescriptorSetLayoutBinding>& bindings);
 	static shared<Font> getFont(const std::string& path);
 
 	static void addMesh(const std::string& name, shared<Mesh> mesh);
@@ -41,7 +41,7 @@ private:
 	static inline std::unordered_map<std::string, shared<Font>> fonts;
 	struct DescriptorSetLayoutInfo
 	{
-		std::vector<VkDescriptorSetLayoutBinding> bindings; 
+		std::vector<vk::DescriptorSetLayoutBinding> bindings;
 
 		bool operator==(const DescriptorSetLayoutInfo& other) const;
 		size_t hash() const;

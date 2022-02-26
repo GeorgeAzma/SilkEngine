@@ -5,5 +5,5 @@
 class IndirectBuffer : public Buffer
 {
 public:
-	IndirectBuffer(VkDeviceSize size);
+	IndirectBuffer(vk::DeviceSize size);
 };

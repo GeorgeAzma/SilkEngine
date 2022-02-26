@@ -6,10 +6,10 @@
 class IndexBuffer : public Buffer
 {
 public:
-	IndexBuffer(const void* data, VkDeviceSize count, IndexType index_type = IndexType::UINT32, VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY);
+	IndexBuffer(const void* data, vk::DeviceSize count, IndexType index_type = IndexType::UINT32, VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY);
 
 	void bind();
 
 private:
-	VkIndexType index_type;
+	vk::IndexType index_type;
 };

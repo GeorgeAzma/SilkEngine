@@ -5,14 +5,14 @@ class DescriptorPool : NonCopyable
 public:
 	~DescriptorPool();
 
-	DescriptorPool& addSize(VkDescriptorType type, uint32_t count);
+	DescriptorPool& addSize(vk::DescriptorType type, uint32_t count);
 	DescriptorPool& setMaxSets(uint32_t count);
 	void build();
 
-	operator const VkDescriptorPool& () { return descriptor_pool; }
+	operator const vk::DescriptorPool& () const { return descriptor_pool; }
 
 private:
-	VkDescriptorPool descriptor_pool;
-	std::vector<VkDescriptorPoolSize> sizes;
+	vk::DescriptorPool descriptor_pool;
+	std::vector<vk::DescriptorPoolSize> sizes;
 	uint32_t max_sets = 0;
 };

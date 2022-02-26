@@ -5,5 +5,5 @@
 class UniformBuffer : public Buffer //includes setData(const void* data)
 {
 public:
-	UniformBuffer(VkDeviceSize size);
+	UniformBuffer(vk::DeviceSize size);
 };

@@ -2,12 +2,9 @@
 
 #include "shader.h"
 
-class WindowResizeEvent;
-
 class Pipeline : NonCopyable
 {
 public:
-	Pipeline();
 	~Pipeline();
 
 	void recreate()
@@ -17,22 +14,21 @@ public:
 	}
 
 	shared<Shader> getShader() { return shader; }
-	const VkPipelineLayout& getLayout() const { return pipeline_layout; }
-	operator const VkPipeline& () const { return pipeline; }
+	const vk::PipelineLayout& getLayout() const { return pipeline_layout; }
+	operator const vk::Pipeline& () const { return pipeline; }
 
 protected:
 	void destroy();
 	virtual void create() = 0;
-	virtual void onWindowResize(const WindowResizeEvent& e) { recreate(); }
 
 protected:
-	VkPipelineCache cache;
-	VkPipeline pipeline;
-	VkPipelineLayout pipeline_layout;
+	vk::PipelineCache cache;
+	vk::Pipeline pipeline;
+	vk::PipelineLayout pipeline_layout;
 
-	VkPipelineLayoutCreateInfo pipeline_layout_info{};
-	std::vector<VkPushConstantRange> push_constant_ranges;
-	std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
+	vk::PipelineLayoutCreateInfo pipeline_layout_info{};
+	std::vector<vk::PushConstantRange> push_constant_ranges;
+	std::vector<vk::DescriptorSetLayout> descriptor_set_layouts;
 	shared<Shader> shader = nullptr;
-	std::vector<VkPipelineShaderStageCreateInfo> shader_stage_infos;
+	std::vector<vk::PipelineShaderStageCreateInfo> shader_stage_infos;
 };

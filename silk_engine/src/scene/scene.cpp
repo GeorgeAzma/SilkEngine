@@ -17,15 +17,15 @@ Scene::Scene()
 	registry.on_construct<MeshComponent>().connect<&Scene::onMeshComponentCreate>(this);
 	registry.on_construct<ModelComponent>().connect<&Scene::onModelComponentCreate>(this);
 	registry.on_construct<LightComponent>().connect<&Scene::onLightComponentCreate>(this);
-	registry.on_update<TransformComponent>().connect<&Scene::onTransformComponentUpdate>(this);	
+	registry.on_update<TransformComponent>().connect<&Scene::onTransformComponentUpdate>(this);
 	registry.on_destroy<MeshComponent>().connect<&Scene::onMeshComponentDestroy>(this);
 	registry.on_destroy<ModelComponent>().connect<&Scene::onModelComponentDestroy>(this);
 	registry.on_destroy<LightComponent>().connect<&Scene::onLightComponentDestroy>(this);
-	
+
 	instance_batches.reserve(Graphics::MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
 
-	indirect_buffer = makeUnique<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
-	
+	indirect_buffer = makeUnique<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(vk::DrawIndexedIndirectCommand));
+
 	global_uniform_buffer = makeUnique<UniformBuffer>(sizeof(GlobalUniformData));
 	global_descriptor_set = *Resources::getShaderEffect("Lit 3D")->pipeline->getShader()->getDescriptorSets().at(0);
 	global_descriptor_set.setBufferInfo(0, { *global_uniform_buffer });
@@ -93,7 +93,7 @@ void Scene::onUpdate()
 
 	//Drawing	
 	bool any_needs_update = false;
-	static std::vector<VkDrawIndexedIndirectCommand> draw_commands;
+	static std::vector<vk::DrawIndexedIndirectCommand> draw_commands;
 	draw_commands.resize(instance_batches.size());
 	for (size_t i = 0; i < instance_batches.size(); ++i)
 	{
@@ -101,15 +101,15 @@ void Scene::onUpdate()
 		{
 			instance_batches[i].instance_buffer->setData(instance_batches[i].instance_data.data(), instance_batches[i].instance_data.size() * sizeof(InstanceData));
 			instance_batches[i].needs_update = false;
-			VkDrawIndexedIndirectCommand draw_command{};
+			vk::DrawIndexedIndirectCommand draw_command{};
 			draw_command.instanceCount = instance_batches[i].instance_data.size();
 			draw_command.indexCount = instance_batches[i].instance->mesh->indices.size();
 			draw_commands[i] = std::move(draw_command);
 			any_needs_update = true;
 		}
-	}  
+	}
 	if (any_needs_update)
-		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand));
+		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(vk::DrawIndexedIndirectCommand));
 
 	//Draw instances
 	const auto& white = Resources::getImage("White")->getDescriptorInfo();
@@ -117,7 +117,7 @@ void Scene::onUpdate()
 	{
 		if (instance_batch.images_need_update)
 		{
-			std::vector<VkDescriptorImageInfo> descriptor_images(Graphics::MAX_IMAGE_SLOTS, white);
+			std::vector<vk::DescriptorImageInfo> descriptor_images(Graphics::MAX_IMAGE_SLOTS, white);
 			for (size_t i = 0; i < instance_batch.images.size(); ++i)
 				descriptor_images[i] = *instance_batch.images[i];
 
@@ -134,7 +134,7 @@ void Scene::onUpdate()
 	{
 		instance_batch.bind();
 		global_descriptor_set.bind(0);
-		vkCmdDrawIndexedIndirect(Graphics::active.command_buffer, *indirect_buffer, draw_index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
+		Graphics::active.command_buffer.drawIndexedIndirect(*indirect_buffer, draw_index * sizeof(vk::DrawIndexedIndirectCommand), 1, sizeof(vk::DrawIndexedIndirectCommand));
 		++draw_index;
 	}
 
@@ -191,7 +191,7 @@ void Scene::onTransformComponentUpdate(entt::registry& registry, entt::entity en
 {
 	//TODO: Figure out how to get rid of all the stupid transform component child checks (IDEA: have ParentComponent which takes 2 template arguments parent and child, whenever parent component gets updated it calls onTransformUpdate of child component, it's messy but better performance)
 	TransformComponent& transform = registry.get<TransformComponent>(entity);
-	
+
 	if (auto mesh_component = registry.try_get<MeshComponent>(entity))
 	{
 		instance_batches[mesh_component->instance->instance_batch_index].instance_data[mesh_component->instance->instance_data_index].transform = transform;
@@ -212,7 +212,7 @@ void Scene::onTransformComponentUpdate(entt::registry& registry, entt::entity en
 void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
 {
 	MeshComponent& mesh_component = registry.get<MeshComponent>(entity);
-	
+
 	InstanceData instance_data{};
 
 	if (auto transform = registry.try_get<TransformComponent>(entity))
@@ -222,7 +222,7 @@ void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
 		instance_data.color = *color;
 
 	mesh_component.instance = makeShared<RenderedInstance>(mesh_component.mesh);
-	
+
 	if (auto material = registry.try_get<MaterialComponent>(entity))
 		mesh_component.instance->material = material->material;
 
@@ -280,7 +280,7 @@ void Scene::onLightComponentCreate(entt::registry& registry, entt::entity entity
 	LightComponent& light_component = registry.get<LightComponent>(entity);
 	light_component.light_ptr = &lights[light_index];
 	lights[light_index] = light_component;
-	if(auto transform = registry.try_get<TransformComponent>(entity))
+	if (auto transform = registry.try_get<TransformComponent>(entity))
 		lights[light_index].position = transform->transform * glm::vec4(light_component.light.position, 1);
 	++light_index;
 }
@@ -288,7 +288,7 @@ void Scene::onLightComponentCreate(entt::registry& registry, entt::entity entity
 void Scene::onLightComponentDestroy(entt::registry& registry, entt::entity entity)
 {
 	LightComponent& light_component = registry.get<LightComponent>(entity);
-	
+
 	for (size_t i = 0; i < light_index; ++i)
 	{
 		if (light_component == lights[i])
@@ -328,7 +328,7 @@ void Scene::createMeshInstance(shared<RenderedInstance> instance, const Instance
 		}
 	}
 
-	if(need_new_instance_batch)
+	if (need_new_instance_batch)
 		addInstanceBatch(instance, instance_data);
 
 	if (instance->images.size())
@@ -364,11 +364,11 @@ void Scene::addInstanceBatch(shared<RenderedInstance> instance, const InstanceDa
 
 	new_batch.instance_buffer = makeShared<VertexBuffer>(new_batch.instance_data.data(), Graphics::MAX_INSTANCES * sizeof(InstanceData), VMA_MEMORY_USAGE_CPU_TO_GPU);
 
-		for (auto&& [set, descriptor_set] : new_batch.instance->material->pipeline->getShader()->getDescriptorSets())
-			if(set != 0) //0 is reserved as Global uniform buffer
-				new_batch.descriptor_sets[set] = *descriptor_set;
-		
-	
+	for (auto&& [set, descriptor_set] : new_batch.instance->material->pipeline->getShader()->getDescriptorSets())
+		if (set != 0) //0 is reserved as Global uniform buffer
+			new_batch.descriptor_sets[set] = *descriptor_set;
+
+
 	instance->instance_batch_index = instance_batches.size() - 1;
 	instance->instance_data_index = instance_batches.back().instance_data.size() - 1;
 }
@@ -376,7 +376,7 @@ void Scene::addInstanceBatch(shared<RenderedInstance> instance, const InstanceDa
 void Scene::destroyMeshInstance(const RenderedInstance& instance)
 {
 	auto& instance_batch = instance_batches[instance.instance_batch_index];
-	
+
 	instance_batch.instances.back()->instance_data_index = instance.instance_data_index;
 
 	if (instance_batch.instance_data.size() - 1 == 0)
@@ -384,6 +384,7 @@ void Scene::destroyMeshInstance(const RenderedInstance& instance)
 		if (instance.instance_batch_index != instance_batches.size() - 1)
 		{
 			InstanceBatch* last_batch = &instance_batch;
+			instance_batches.back().needs_update = true; //Instance batches data got swapped around so this forces to also update instance_batch draw commands buffer
 			std::swap(instance_batch, instance_batches.back());
 			for (size_t j = 0; j < last_batch->instances.size(); ++j)
 				last_batch->instances[j]->instance_batch_index = instance_batches.back().instance->instance_batch_index;

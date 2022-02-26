@@ -2,10 +2,10 @@
 #include "staging_buffer.h"
 #include "gfx/graphics.h"
 
-IndexBuffer::IndexBuffer(const void* data, VkDeviceSize count, IndexType index_type, VmaMemoryUsage memory_usage)
+IndexBuffer::IndexBuffer(const void* data, vk::DeviceSize count, IndexType index_type, VmaMemoryUsage memory_usage)
 	: Buffer(count * EnumInfo::size(index_type),
-		VK_BUFFER_USAGE_TRANSFER_DST_BIT |
-		VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
+		vk::BufferUsageFlagBits::eTransferDst |
+		vk::BufferUsageFlagBits::eIndexBuffer,
 		memory_usage),
 	index_type(EnumInfo::indexType(index_type))
 {
@@ -14,5 +14,5 @@ IndexBuffer::IndexBuffer(const void* data, VkDeviceSize count, IndexType index_t
 
 void IndexBuffer::bind()
 {
-	vkCmdBindIndexBuffer(Graphics::active.command_buffer, *this, 0, index_type);
+	Graphics::active.command_buffer.bindIndexBuffer(buffer, 0, index_type);
 }

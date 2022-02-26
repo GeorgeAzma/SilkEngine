@@ -36,8 +36,8 @@ public:
     static void setX(int x);
     static void setY(int y);
     static void setPosition(const glm::ivec2 &position);
-    static void setWidth(unsigned int width);
-    static void setHeight(unsigned int height);
+    static void setWidth(int width);
+    static void setHeight(int height);
     static void setSize(const glm::uvec2 &size);
     static void setTitle(const std::string& title);
     static void align(WindowAlignment a = WindowAlignment::CENTER);

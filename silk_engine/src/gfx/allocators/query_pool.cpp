@@ -3,32 +3,31 @@
 #include "utils/math.h"
 #include "gfx/devices/logical_device.h"
 
-QueryPool::QueryPool(VkQueryType query_type, VkQueryPipelineStatisticFlags pipeline_statistic_flags)
+QueryPool::QueryPool(vk::QueryType query_type, vk::QueryPipelineStatisticFlags pipeline_statistic_flags)
 	: query_type(query_type), pipeline_statistic_flags()
 {
-	VkQueryPoolCreateInfo create_info{};
-	create_info.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
-	create_info.queryType = query_type;
-	create_info.queryCount = 1;
-	create_info.pipelineStatistics = pipeline_statistic_flags;
+	vk::QueryPoolCreateInfo ci{};
+	ci.queryType = query_type;
+	ci.queryCount = 1;
+	ci.pipelineStatistics = pipeline_statistic_flags;
 
-	Graphics::vulkanAssert(vkCreateQueryPool(*Graphics::logical_device, &create_info, nullptr, &query_pool));
+	Graphics::logical_device->createQueryPool(ci);
 }
 
 QueryPool::~QueryPool()
 {
-	vkDestroyQueryPool(*Graphics::logical_device, query_pool, nullptr);
+	Graphics::logical_device->destroyQueryPool(query_pool);
 }
 
 void QueryPool::begin(uint32_t index)
 {
-	vkResetQueryPool(*Graphics::logical_device, query_pool, index, 1);
-	vkCmdBeginQuery(Graphics::active.command_buffer, query_pool, index, VK_QUERY_CONTROL_PRECISE_BIT);
+	Graphics::logical_device->resetQueryPool(query_pool, index, 1);
+	Graphics::active.command_buffer.beginQuery(query_pool, index, vk::QueryControlFlagBits::ePrecise);
 }
 
 void QueryPool::end(uint32_t index)
 {
-	vkCmdEndQuery(Graphics::active.command_buffer, query_pool, index);
+	Graphics::active.command_buffer.endQuery(query_pool, index);
 }
 
 std::vector<uint64_t> QueryPool::getResults()
@@ -37,22 +36,22 @@ std::vector<uint64_t> QueryPool::getResults()
 
 	switch (query_type)
 	{
-	case VK_QUERY_TYPE_OCCLUSION:
+	case vk::QueryType::eOcclusion:
 		data_count = 1;
 		break;
-	case VK_QUERY_TYPE_PIPELINE_STATISTICS:
+	case vk::QueryType::ePipelineStatistics:
 		data_count = math::getEnabledFlagsCount(pipeline_statistic_flags);		
 		break;
-	case VK_QUERY_TYPE_TIMESTAMP:
+	case vk::QueryType::eTimestamp:
 		data_count = 1;
 		break;
 	}
 
 	uint32_t data_size = data_count * sizeof(uint64_t);
 
-	std::vector<uint64_t> results(data_count);
-	vkGetQueryPoolResults(*Graphics::logical_device, query_pool, 0, 1, data_size, results.data(), data_size, VK_QUERY_RESULT_PARTIAL_BIT | VK_QUERY_RESULT_64_BIT);
-	vkQueueWaitIdle(Graphics::logical_device->getGraphicsQueue());
+	std::vector<uint64_t> results;
+	results = Graphics::logical_device->getQueryPoolResults<std::vector<uint64_t>>(query_pool, 0, 1, data_size, data_size, vk::QueryResultFlagBits::e64 | vk::QueryResultFlagBits::ePartial);
+	Graphics::logical_device->getGraphicsQueue().waitIdle();
 
 	return results;
 }

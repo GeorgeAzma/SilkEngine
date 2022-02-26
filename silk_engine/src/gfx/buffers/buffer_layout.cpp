@@ -44,13 +44,13 @@ BufferLayout::BufferLayout(const std::initializer_list<BufferElement>& elements)
 	binding_descriptions.emplace_back();
 	binding_descriptions[0].binding = 0;
 	binding_descriptions[0].stride = offset;
-	binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	binding_descriptions[0].inputRate = vk::VertexInputRate::eVertex;
 
 	if (is_instanced)
 	{
 		binding_descriptions.emplace_back();
 		binding_descriptions[1].binding = 1;
 		binding_descriptions[1].stride = instance_offset;
-		binding_descriptions[1].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+		binding_descriptions[1].inputRate = vk::VertexInputRate::eInstance;
 	}
 }

@@ -4,34 +4,34 @@
 
 struct CommandBufferSubmitInfo
 {
-	VkFence fence = VK_NULL_HANDLE;
-	std::vector<VkSemaphore> wait_semaphores = {};
-	std::vector<VkSemaphore> signal_semaphores = {};
-	VkPipelineStageFlags* wait_stages = nullptr;
+	vk::Fence fence = VK_NULL_HANDLE;
+	std::vector<vk::Semaphore> wait_semaphores = {};
+	std::vector<vk::Semaphore> signal_semaphores = {};
+	vk::PipelineStageFlags* wait_stages = nullptr;
 };
 
 class CommandBuffer : NonCopyable
 {
 public:
-	CommandBuffer(VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY, VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT);
+	CommandBuffer(vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary, vk::QueueFlagBits queue_type = vk::QueueFlagBits::eGraphics);
 	~CommandBuffer();
 
-	void begin(VkCommandBufferUsageFlagBits usage = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+	void begin(vk::CommandBufferUsageFlagBits usage = vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 	void end();
 
 	void submit(const CommandBufferSubmitInfo& info = {});
 	void submitIdle();
 
 	bool wasRecorded() const { return recorded; }
-	operator const VkCommandBuffer& () const { return command_buffer; }
+	operator const vk::CommandBuffer& () const { return command_buffer; }
 
 private:
-	VkQueue getQueue() const;
+	vk::Queue getQueue() const;
 
 private:
-	VkCommandBuffer command_buffer;
-	VkCommandBufferLevel level;
-	VkQueueFlagBits queue_type;
+	vk::CommandBuffer command_buffer;
+	vk::CommandBufferLevel level;
+	vk::QueueFlagBits queue_type;
 	shared<CommandPool> pool;
 	bool recorded = false;
 };

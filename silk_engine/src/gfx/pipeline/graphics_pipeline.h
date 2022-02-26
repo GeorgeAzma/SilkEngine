@@ -9,10 +9,10 @@ class GraphicsPipeline : public Pipeline
 public:
 	GraphicsPipeline& setShader(shared<Shader> shader);
 	GraphicsPipeline& setVertexLayout(const BufferLayout& layout);
-	GraphicsPipeline& setSampleCount(VkSampleCountFlagBits sample_count);
-	GraphicsPipeline& setRenderPass(VkRenderPass render_pass);
+	GraphicsPipeline& setSampleCount(vk::SampleCountFlagBits sample_count);
+	GraphicsPipeline& setRenderPass(vk::RenderPass render_pass);
 	GraphicsPipeline& setSubpass(uint32_t subpass);
-	GraphicsPipeline& addDynamicState(VkDynamicState dynamic_state);
+	GraphicsPipeline& addDynamicState(vk::DynamicState dynamic_state);
 	GraphicsPipeline& enable(EnableTag tag);
 
 	void build();
@@ -22,18 +22,18 @@ private:
 	void create() override;
 
 private:
-	std::vector<VkDynamicState> dynamic_states;
-	VkPipelineVertexInputStateCreateInfo vertex_input_info{};
-	VkPipelineRasterizationStateCreateInfo rasterizer{};
-	VkPipelineMultisampleStateCreateInfo multisampling{};
-	VkPipelineDepthStencilStateCreateInfo depth_stencil_info{};
-	VkPipelineColorBlendAttachmentState color_blend_attachment{};
-	VkPipelineColorBlendStateCreateInfo color_blending{};
-	VkPipelineViewportStateCreateInfo viewport_info{};
-	VkPipelineInputAssemblyStateCreateInfo input_assembly_info{};
-	VkPipelineDynamicStateCreateInfo dynamic_state{};
-	VkRenderPass render_pass = VK_NULL_HANDLE;
+	std::vector<vk::DynamicState> dynamic_states;
+	vk::PipelineVertexInputStateCreateInfo vertex_input_info{};
+	vk::PipelineRasterizationStateCreateInfo rasterizer{};
+	vk::PipelineMultisampleStateCreateInfo multisampling{};
+	vk::PipelineDepthStencilStateCreateInfo depth_stencil_info{};
+	vk::PipelineColorBlendAttachmentState color_blend_attachment{};
+	vk::PipelineColorBlendStateCreateInfo color_blending{};
+	vk::PipelineViewportStateCreateInfo viewport_info{};
+	vk::PipelineInputAssemblyStateCreateInfo input_assembly_info{};
+	vk::PipelineDynamicStateCreateInfo dynamic_state{};
+	vk::RenderPass render_pass = VK_NULL_HANDLE;
 	uint32_t subpass = 0;
 	BufferLayout layout = {};
-	VkGraphicsPipelineCreateInfo create_info{};
+	vk::GraphicsPipelineCreateInfo ci{};
 };

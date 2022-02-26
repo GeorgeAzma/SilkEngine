@@ -19,8 +19,8 @@ void Resources::init()
         Image2DProps image_props{};
         image_props.width = 1;
         image_props.height = 1;
-        image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
-        image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
+        image_props.sampler_props.min_filter = vk::Filter::eNearest;
+        image_props.sampler_props.mag_filter = vk::Filter::eNearest;
         image_props.sampler_props.linear_mipmap = false;
         image_props.sampler_props.anisotropy = false;
         image_props.mipmap = false;
@@ -34,12 +34,12 @@ void Resources::init()
         image_props = {};
         image_props.width = 2;
         image_props.height = 2;
-        image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
-        image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
+        image_props.sampler_props.min_filter = vk::Filter::eNearest;
+        image_props.sampler_props.mag_filter = vk::Filter::eNearest;
         image_props.sampler_props.linear_mipmap = false;
         image_props.sampler_props.anisotropy = false;
-        image_props.sampler_props.u_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        image_props.sampler_props.v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        image_props.sampler_props.u_wrap = vk::SamplerAddressMode::eClampToEdge;
+        image_props.sampler_props.v_wrap = vk::SamplerAddressMode::eClampToEdge;
         image_props.mipmap = false;       
         constexpr glm::u8vec4 null_data[4] = { { 0, 0, 0, 255 }, { 255, 0, 255, 255 }, { 255, 0, 255, 255 }, { 0, 0, 0, 255 } };
         image_props.data = null_data;
@@ -135,7 +135,7 @@ shared<Image2D> Resources::getImage(const std::string& name)
     return it == images.end() ? nullptr : it->second;
 }
 
-shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<vk::DescriptorSetLayoutBinding>& bindings)
 {
     auto layout = descriptor_set_layouts.find({ bindings });
     if (layout != descriptor_set_layouts.end())
@@ -212,9 +212,9 @@ size_t Resources::DescriptorSetLayoutInfo::hash() const
 {
     size_t result = std::hash<size_t>()(bindings.size());
 
-    for (const VkDescriptorSetLayoutBinding& b : bindings)
+    for (const vk::DescriptorSetLayoutBinding& b : bindings)
     {
-        size_t binding_hash = b.binding | b.descriptorType << 8 | b.descriptorCount << 16 | b.stageFlags << 24;
+        size_t binding_hash = b.binding | (VkDescriptorType(b.descriptorType) << 8) | (uint32_t(b.descriptorCount) << 16) | (VkShaderStageFlags(b.stageFlags) << 24);
         result ^= std::hash<size_t>()(binding_hash);
     }
 

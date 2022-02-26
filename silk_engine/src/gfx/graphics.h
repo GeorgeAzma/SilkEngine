@@ -42,11 +42,11 @@ public:
 	} stats{};
 	static inline struct Active
 	{
-		VkPipeline pipeline = VK_NULL_HANDLE;
-		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
-		VkPipelineBindPoint bind_point = VK_PIPELINE_BIND_POINT_MAX_ENUM;
-		VkCommandBuffer command_buffer = VK_NULL_HANDLE;
-		VkRenderPass render_pass = VK_NULL_HANDLE;
+		vk::Pipeline pipeline = VK_NULL_HANDLE;
+		vk::PipelineLayout pipeline_layout = VK_NULL_HANDLE;
+		vk::PipelineBindPoint bind_point = VK_PIPELINE_BIND_POINT_MAX_ENUM;
+		vk::CommandBuffer command_buffer = VK_NULL_HANDLE;
+		vk::RenderPass render_pass = VK_NULL_HANDLE;
 	} active{};
 public:
 	static void init();
@@ -60,7 +60,7 @@ public:
 
 	static void screenshot(const std::string& file);
 
-	static void vulkanAssert(VkResult result);
+	static void vulkanAssert(vk::Result result);
 
 public:
 	static inline Instance* instance = nullptr;
@@ -78,5 +78,5 @@ public:
 	static inline VkSemaphore render_finished = VK_NULL_HANDLE;
 
 private:
-	static constexpr std::string stringifyResult(VkResult result);
+	static constexpr std::string stringifyResult(vk::Result result);
 };

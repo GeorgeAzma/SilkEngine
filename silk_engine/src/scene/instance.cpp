@@ -3,6 +3,11 @@
 #include "gfx/window/swap_chain.h"
 #include "gfx/devices/logical_device.h"
 
+InstanceBatch::~InstanceBatch()
+{
+	Graphics::logical_device->waitIdle();
+}
+
 void InstanceBatch::bind()
 {
 	instance->material->pipeline->bind();

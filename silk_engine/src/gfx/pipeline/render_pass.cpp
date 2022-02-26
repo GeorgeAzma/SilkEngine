@@ -6,54 +6,52 @@
 
 RenderPass::~RenderPass()
 {
-    vkDestroyRenderPass(*Graphics::logical_device, render_pass, nullptr);
+    Graphics::logical_device->destroyRenderPass(render_pass);
 }
 
 RenderPass& RenderPass::addAttachment(const AttachmentProps& props)
 {
-    VkAttachmentDescription attachment_description{};
+    vk::AttachmentDescription attachment_description{};
     attachment_description.format = props.format;
     attachment_description.samples = props.samples;
-    attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    attachment_description.loadOp = props.load_operation;
+    attachment_description.storeOp = props.store_operation;
+    attachment_description.stencilLoadOp = props.stencil_load_operation;
+    attachment_description.stencilStoreOp = props.stencil_store_operation;
+    attachment_description.initialLayout = props.initial_layout;
     attachment_description.finalLayout = props.layout;
 
-    if (props.samples != VK_SAMPLE_COUNT_1_BIT)
-    {
+    if (props.samples != vk::SampleCountFlagBits::e1)
         subpasses.back().multisampled = true;
-    }
 
     Attachment attachment{};
     Attachment::Type type;
     attachment.description = attachment_description;
     
-    VkAttachmentReference attachment_reference{};
+    vk::AttachmentReference attachment_reference{};
     attachment_reference.attachment = subpasses.back().attachments.size();
     if (Image::hasDepth(attachment_description.format) || Image::hasStencil(attachment_description.format))
     {
-        attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        attachment_reference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
         type = Attachment::Type::DEPTH_STENCIL;
     }
-    else if (subpasses.back().multisampled && props.layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+    else if (subpasses.back().multisampled && props.layout == vk::ImageLayout::ePresentSrcKHR)
     {
-        attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        attachment_reference.layout = vk::ImageLayout::eColorAttachmentOptimal;
         type = Attachment::Type::RESOLVE;
     }
     else
     {
-        attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        attachment_reference.layout = vk::ImageLayout::eColorAttachmentOptimal;
         type = Attachment::Type::COLOR;
     }
     attachment.reference = attachment_reference;
     attachment.type = type;
 
     if (type == Attachment::Type::DEPTH_STENCIL)
-        attachment.clear_value.depthStencil = props.clear_value ? props.clear_value->depthStencil : VkClearDepthStencilValue{ 1.0f, 0 };
+        attachment.clear_value.depthStencil = props.clear_value ? props.clear_value->depthStencil : vk::ClearDepthStencilValue(1.0f, 0);
     else
-        attachment.clear_value.color = props.clear_value ? props.clear_value->color : VkClearColorValue{ 0.0f, 0.0f, 0.0f, 1.0f };
+        attachment.clear_value.color = props.clear_value ? props.clear_value->color : vk::ClearColorValue({ 0.0f, 0.0f, 0.0f, 1.0f });
     
     subpasses.back().attachments.emplace_back(std::move(attachment));
    
@@ -67,7 +65,7 @@ RenderPass& RenderPass::addSubpass()
     if (subpasses.size() > 1)
     {
         auto& last_subpass = subpasses[subpasses.size() - 2];
-        std::vector<VkAttachmentReference> input_attachment_references(last_subpass.attachments.size());
+        std::vector<vk::AttachmentReference> input_attachment_references(last_subpass.attachments.size());
         for (size_t i = 0; i < last_subpass.attachments.size(); ++i)
             input_attachment_references[i] = last_subpass.attachments[i].reference;
         subpasses.back().input_attachment_references = std::move(input_attachment_references);
@@ -78,14 +76,14 @@ RenderPass& RenderPass::addSubpass()
 
 void RenderPass::build()
 {
-    std::vector<VkAttachmentDescription> attachments;
-    std::vector<VkSubpassDescription> subpass_descriptions(subpasses.size());
-    std::vector<VkSubpassDependency> subpass_dependencies(subpasses.size());
+    std::vector<vk::AttachmentDescription> attachments;
+    std::vector<vk::SubpassDescription> subpass_descriptions(subpasses.size());
+    std::vector<vk::SubpassDependency> subpass_dependencies(subpasses.size());
 
     //We need these alive for till this function finishes
-    std::vector<std::vector<VkAttachmentReference>> color_attachment_references(subpasses.size());
-    std::vector<VkAttachmentReference> depth_stencil_attachment_references(subpasses.size());
-    std::vector<VkAttachmentReference> resolve_attachment_references(subpasses.size());
+    std::vector<std::vector<vk::AttachmentReference>> color_attachment_references(subpasses.size());
+    std::vector<vk::AttachmentReference> depth_stencil_attachment_references(subpasses.size());
+    std::vector<vk::AttachmentReference> resolve_attachment_references(subpasses.size());
 
     for (size_t i = 0; i < subpasses.size(); ++i)
     {
@@ -107,8 +105,8 @@ void RenderPass::build()
             attachments.emplace_back(attachment.description);
         }
 
-        VkSubpassDescription subpass_description{};
-        subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        vk::SubpassDescription subpass_description{};
+        subpass_description.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
         subpass_description.inputAttachmentCount = subpasses[i].input_attachment_references.size();
         subpass_description.pInputAttachments = subpasses[i].input_attachment_references.data();
         subpass_description.colorAttachmentCount = color_attachment_references[i].size();
@@ -118,55 +116,52 @@ void RenderPass::build()
         subpass_descriptions[i] = std::move(subpass_description);
 
         //TODO:
-        VkSubpassDependency subpass_dependency{};
+        vk::SubpassDependency subpass_dependency{};
         subpass_dependency.srcSubpass = i ? (i - 1) : VK_SUBPASS_EXTERNAL;
         subpass_dependency.dstSubpass = i;
-        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        subpass_dependency.srcAccessMask = 0;
-        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        subpass_dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests;
+        subpass_dependency.srcAccessMask = vk::AccessFlagBits::eNone;
+        subpass_dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests;
+        subpass_dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
         subpass_dependencies[i] = std::move(subpass_dependency);
     }
     
-    VkRenderPassCreateInfo create_info{};
-    create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    create_info.attachmentCount = attachments.size();
-    create_info.pAttachments = attachments.data();
-    create_info.subpassCount = subpass_descriptions.size();
-    create_info.pSubpasses = subpass_descriptions.data();
-    create_info.dependencyCount = subpass_dependencies.size();
-    create_info.pDependencies = subpass_dependencies.data();
-    
-    Graphics::vulkanAssert(vkCreateRenderPass(*Graphics::logical_device, &create_info, nullptr, &render_pass));
+    vk::RenderPassCreateInfo ci{};
+    ci.attachmentCount = attachments.size();
+    ci.pAttachments = attachments.data();
+    ci.subpassCount = subpass_descriptions.size();
+    ci.pSubpasses = subpass_descriptions.data();
+    ci.dependencyCount = subpass_dependencies.size();
+    ci.pDependencies = subpass_dependencies.data();
+    render_pass = Graphics::logical_device->createRenderPass(ci);
 }
 
-void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_contents)
+void RenderPass::begin(vk::Framebuffer framebuffer, vk::SubpassContents subpass_contents)
 {
     if (Graphics::active.render_pass == render_pass)
         return;
 
-    VkRenderPassBeginInfo render_pass_begin_info{};
-    render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    render_pass_begin_info.renderPass = render_pass;
-    render_pass_begin_info.framebuffer = framebuffer;
+    vk::RenderPassBeginInfo begin_info{};
+    begin_info.renderPass = render_pass;
+    begin_info.framebuffer = framebuffer;
 
-    render_pass_begin_info.renderArea.offset = { 0, 0 };
-    render_pass_begin_info.renderArea.extent = Graphics::swap_chain->getExtent();
+    begin_info.renderArea.offset = vk::Offset2D(0, 0);
+    begin_info.renderArea.extent = Graphics::swap_chain->getExtent();
 
-    std::vector<VkClearValue> clear_values(subpasses.back().attachments.size());
+    std::vector<vk::ClearValue> clear_values(subpasses.back().attachments.size());
     for (size_t i = 0; i < clear_values.size(); ++i)
         clear_values[i] = subpasses.back().attachments[i].clear_value;
 
-    render_pass_begin_info.clearValueCount = clear_values.size();
-    render_pass_begin_info.pClearValues = clear_values.data();
+    begin_info.clearValueCount = clear_values.size();
+    begin_info.pClearValues = clear_values.data();
 
-    vkCmdBeginRenderPass(Graphics::active.command_buffer, &render_pass_begin_info, subpass_contents);
+    Graphics::active.command_buffer.beginRenderPass(begin_info, subpass_contents);
     Graphics::active.render_pass = render_pass;
 }
 
-void RenderPass::nextSubpass()
+void RenderPass::nextSubpass(vk::SubpassContents subpass_contents)
 {
-    vkCmdNextSubpass(Graphics::active.command_buffer, VK_SUBPASS_CONTENTS_INLINE);
+    Graphics::active.command_buffer.nextSubpass(subpass_contents);
 }
 
 void RenderPass::end()
@@ -174,12 +169,12 @@ void RenderPass::end()
     if (Graphics::active.render_pass != render_pass)
         return;
 
-    vkCmdEndRenderPass(Graphics::active.command_buffer);
+    Graphics::active.command_buffer.endRenderPass();
 
     Graphics::active.render_pass = VK_NULL_HANDLE;
-    if (Graphics::active.bind_point == VK_PIPELINE_BIND_POINT_GRAPHICS)
+    if (Graphics::active.bind_point == vk::PipelineBindPoint::eGraphics)
     {
         Graphics::active.pipeline = VK_NULL_HANDLE;
-        Graphics::active.bind_point = VK_PIPELINE_BIND_POINT_MAX_ENUM;
+        Graphics::active.bind_point = vk::PipelineBindPoint(VK_PIPELINE_BIND_POINT_MAX_ENUM);
     }
 }

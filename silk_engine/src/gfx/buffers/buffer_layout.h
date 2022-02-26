@@ -13,10 +13,10 @@ class BufferLayout
 public:
 	BufferLayout(const std::initializer_list<BufferElement>& elements = {});
 
-	const std::vector<VkVertexInputBindingDescription>& getBindingDescriptions() const { return binding_descriptions; };
-	const std::vector<VkVertexInputAttributeDescription>& getAttributeDescriptions() const { return attribute_descriptions; };
+	const std::vector<vk::VertexInputBindingDescription>& getBindingDescriptions() const { return binding_descriptions; };
+	const std::vector<vk::VertexInputAttributeDescription>& getAttributeDescriptions() const { return attribute_descriptions; };
 private:
-	std::vector<VkVertexInputBindingDescription> binding_descriptions;
-	std::vector<VkVertexInputAttributeDescription> attribute_descriptions;
-	std::vector< VkVertexInputBindingDivisorDescriptionEXT> instance_descriptions;
+	std::vector<vk::VertexInputBindingDescription> binding_descriptions;
+	std::vector<vk::VertexInputAttributeDescription> attribute_descriptions;
+	std::vector<vk::VertexInputBindingDivisorDescriptionEXT> instance_descriptions;
 };

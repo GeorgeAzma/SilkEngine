@@ -206,7 +206,7 @@ void Window::setPosition(const glm::ivec2 &position)
     glfwSetWindowPos(window, data.x, data.y);
 }
 
-void Window::setWidth(unsigned int width)
+void Window::setWidth(int width)
 {
     if (width == data.width)
         return;
@@ -215,7 +215,7 @@ void Window::setWidth(unsigned int width)
     glfwSetWindowSize(window, data.width, data.height);
 }
 
-void Window::setHeight(unsigned int height)
+void Window::setHeight(int height)
 {
     if (height == data.height)
         return;

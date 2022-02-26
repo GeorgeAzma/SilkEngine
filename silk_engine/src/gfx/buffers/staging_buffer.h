@@ -5,6 +5,6 @@
 class StagingBuffer : public Buffer
 {
 public:
-	StagingBuffer(const void* data, VkDeviceSize size);
-	void copy(VkBuffer destination, VkDeviceSize offset = 0) const;
+	StagingBuffer(const void* data, vk::DeviceSize size);
+	void copy(vk::Buffer destination, vk::DeviceSize offset = 0) const;
 };

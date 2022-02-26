@@ -31,7 +31,6 @@ string(SUBSTRING ${Vulkan_LIBRARIES} 0 ${Vulkan_PATH_POS} VULKAN_PATH)
 list(APPEND EXTRA_LIBS 
     ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}shaderc_combined$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-core$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-glsl$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
 )
 
 #spdlog
@@ -230,7 +229,7 @@ silk_engine/src/core/base.h
 <GLM/glm.hpp>
 <GLM/gtc/matrix_transform.hpp>
 <GLM/gtx/quaternion.hpp>
-<vulkan/vulkan.h>
+<vulkan/vulkan.hpp>
 <GLFW/glfw3.h>
 <entt/entt.hpp>
 <semaphore>
