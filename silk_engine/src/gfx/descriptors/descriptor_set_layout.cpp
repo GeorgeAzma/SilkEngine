@@ -26,7 +26,7 @@ void DescriptorSetLayout::build()
 	vk::DescriptorSetLayoutCreateInfo layout_info{};
 	layout_info.bindingCount = bindings_vector.size();
 	layout_info.pBindings = bindings_vector.data();
-	Graphics::logical_device->createDescriptorSetLayout(layout_info);
+	layout = Graphics::logical_device->createDescriptorSetLayout(layout_info);
 }
 
 DescriptorSetLayout::~DescriptorSetLayout()

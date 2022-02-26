@@ -25,5 +25,5 @@ void DescriptorPool::build()
 	ci.poolSizeCount = sizes.size();
 	ci.pPoolSizes = sizes.data();
 	ci.maxSets = max_sets;
-	Graphics::logical_device->createDescriptorPool(ci);
+	descriptor_pool = Graphics::logical_device->createDescriptorPool(ci);
 }

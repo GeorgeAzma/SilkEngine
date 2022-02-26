@@ -28,6 +28,7 @@ class Shader : NonCopyable
 		{
 			const std::string name = std::string("data/shaders/") + requested_source;
 			const std::string contents = File::read(name);
+			SK_INFO(contents);
 
 			auto container = new std::array<std::string, 2>;
 			(*container)[0] = name;

@@ -29,10 +29,10 @@ void Shader::compile(const std::vector<Define>& defines)
 	options.SetTargetEnvironment(shaderc_target_env_vulkan, shadercApiVersion(Graphics::API_VERSION));
 	options.SetForcedVersionProfile(450, shaderc_profile_core);
 	options.AddMacroDefinition("MAX_IMAGE_SLOTS", std::to_string(Graphics::MAX_IMAGE_SLOTS));
+	options.SetIncluder(std::make_unique<Includer>());
 #ifdef SK_ENABLE_DEBUG_OUTPUT
 	options.SetGenerateDebugInfo();
 #endif
-	options.SetIncluder(std::make_unique<Includer>());
 	for (auto& define : defines)
 		options.AddMacroDefinition(define.name, define.value);
 	options.SetOptimizationLevel(shaderc_optimization_level_performance);
@@ -61,9 +61,9 @@ void Shader::compile(const std::vector<Define>& defines)
 		{
 			auto preprocess_result = compiler.PreprocessGlsl(source, shadercType((Type)type), path.string().c_str(), options);
 			SK_ASSERT(preprocess_result.GetCompilationStatus() == shaderc_compilation_status_success, preprocess_result.GetErrorMessage());
-			std::string preprocessed_source(preprocess_result.cbegin(), preprocess_result.cend());
+			std::string preprocessed_source(preprocess_result.begin());
 
-			auto compilation_result = compiler.CompileGlslToSpv(preprocessed_source, shadercType((Type)type), path.string().c_str(), options);
+			shaderc::SpvCompilationResult compilation_result = compiler.CompileGlslToSpv(preprocessed_source, shadercType((Type)type), path.string().c_str(), options);
 			SK_ASSERT(compilation_result.GetCompilationStatus() == shaderc_compilation_status_success, compilation_result.GetErrorMessage());
 			shader_binaries[type] = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend());
 
@@ -150,7 +150,7 @@ std::unordered_map<uint32_t, std::string> Shader::parse(const std::filesystem::p
 
 	std::string source = File::read(file);
 
-	constexpr char type_token[] = "#type";
+	constexpr const char* type_token = "#type";
 	size_t type_token_length = strlen(type_token);
 	size_t pos = source.find(type_token, 0);
 	while (pos != std::string::npos)

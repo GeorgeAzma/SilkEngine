@@ -10,7 +10,7 @@ CommandBuffer::CommandBuffer(vk::CommandBufferLevel level, vk::QueueFlagBits que
 	allocate_info.level = level;
 	allocate_info.commandPool = *Graphics::getCommandPool();
 	allocate_info.commandBufferCount = 1;
-	Graphics::logical_device->allocateCommandBuffers(allocate_info);
+	command_buffer = Graphics::logical_device->allocateCommandBuffers(allocate_info).front();
 }
 
 CommandBuffer::~CommandBuffer()

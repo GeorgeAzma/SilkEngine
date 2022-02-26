@@ -11,7 +11,7 @@ QueryPool::QueryPool(vk::QueryType query_type, vk::QueryPipelineStatisticFlags p
 	ci.queryCount = 1;
 	ci.pipelineStatistics = pipeline_statistic_flags;
 
-	Graphics::logical_device->createQueryPool(ci);
+	query_pool = Graphics::logical_device->createQueryPool(ci);
 }
 
 QueryPool::~QueryPool()
