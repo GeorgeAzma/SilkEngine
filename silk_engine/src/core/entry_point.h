@@ -12,12 +12,17 @@ int main(int argc, char **argv)
     {
         auto app = createApp({ argc, argv });
         app->run();
-        Graphics::vulkanAssert(vkDeviceWaitIdle(*Graphics::logical_device));
+        Graphics::logical_device->waitIdle();
         delete app;
     }
     catch (const std::exception &e)
     {
-        std::cerr << e.what() << std::endl;
+        SK_ERROR(e.what());
+        return EXIT_FAILURE;
+    }
+    catch (...)
+    {
+        SK_ERROR("Unknown error has occurred");
         return EXIT_FAILURE;
     }
 

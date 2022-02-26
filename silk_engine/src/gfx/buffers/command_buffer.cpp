@@ -54,7 +54,7 @@ void CommandBuffer::submit(const CommandBufferSubmitInfo& info)
 	submit_info.signalSemaphoreCount = info.signal_semaphores.size();
 	submit_info.pSignalSemaphores = info.signal_semaphores.data();
 
-	if (info.fence != VK_NULL_HANDLE)
+	if ((const VkFence&)info.fence != VK_NULL_HANDLE)
 		Graphics::logical_device->resetFences({ info.fence });
 	
 	getQueue().submit({ submit_info }, info.fence);

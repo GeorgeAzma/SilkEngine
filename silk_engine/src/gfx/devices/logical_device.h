@@ -13,7 +13,7 @@ public:
 	void destroyQueryPool(vk::QueryPool query_pool) const;
 	void resetQueryPool(vk::QueryPool query_pool, uint32_t first_query = 0, uint32_t query_count = 1) const;
 	template<typename T>
-	T getQueryPoolResults(vk::QueryPool query_pool, uint32_t first_query, uint32_t query_count, size_t data_size, vk::DeviceSize stride, vk::QueryResultFlags query_result_flags) const 
+	auto getQueryPoolResults(vk::QueryPool query_pool, uint32_t first_query, uint32_t query_count, size_t data_size, vk::DeviceSize stride, vk::QueryResultFlags query_result_flags) const 
 	{
 		return logical_device.getQueryPoolResults<T>(query_pool, first_query, query_count, data_size, stride, query_result_flags);
 	}
@@ -24,7 +24,7 @@ public:
 	void destroyFence(vk::Fence fence) const;
 	vk::Semaphore createSemaphore(const vk::SemaphoreCreateInfo& semaphore_info) const;
 	void destroySemaphore(vk::Semaphore semaphore) const;
-	void waitForFences(const std::vector<vk::Fence>& fences, vk::Bool32 wait_all = VK_TRUE, uint64_t timeout = UINT64_MAX) const;
+	vk::Result waitForFences(const std::vector<vk::Fence>& fences, vk::Bool32 wait_all = VK_TRUE, uint64_t timeout = UINT64_MAX) const;
 	vk::Framebuffer createFramebuffer(const vk::FramebufferCreateInfo& framebuffer_info) const;
 	void destroyFramebuffer(vk::Framebuffer framebuffer) const;
 	vk::DescriptorPool createDescriptorPool(const vk::DescriptorPoolCreateInfo& descriptor_pool_info) const;

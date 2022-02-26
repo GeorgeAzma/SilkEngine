@@ -86,7 +86,7 @@ Instance::Instance()
     using enum vk::DebugUtilsMessageSeverityFlagBitsEXT;
     using enum vk::DebugUtilsMessageTypeFlagBitsEXT;
     vk::DebugUtilsMessengerCreateInfoEXT debug_messenger_ci{};
-    debug_messenger_ci.messageSeverity = eError | eWarning | eInfo | eVerbose;
+    debug_messenger_ci.messageSeverity = eError | eWarning;
     debug_messenger_ci.messageType = eGeneral | eValidation | ePerformance;
     debug_messenger_ci.pfnUserCallback = debugCallback;
 #endif

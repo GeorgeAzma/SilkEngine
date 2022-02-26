@@ -51,7 +51,7 @@ RenderPass& RenderPass::addAttachment(const AttachmentProps& props)
     if (type == Attachment::Type::DEPTH_STENCIL)
         attachment.clear_value.depthStencil = props.clear_value ? props.clear_value->depthStencil : vk::ClearDepthStencilValue(1.0f, 0);
     else
-        attachment.clear_value.color = props.clear_value ? props.clear_value->color : vk::ClearColorValue({ 0.0f, 0.0f, 0.0f, 1.0f });
+        attachment.clear_value.color = props.clear_value ? props.clear_value->color : vk::ClearColorValue(std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f});
     
     subpasses.back().attachments.emplace_back(std::move(attachment));
    

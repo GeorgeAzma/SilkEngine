@@ -116,9 +116,9 @@ void LogicalDevice::destroySemaphore(vk::Semaphore semaphore) const
 	logical_device.destroySemaphore(semaphore);
 }
 
-void LogicalDevice::waitForFences(const std::vector<vk::Fence>& fences, vk::Bool32 wait_all, uint64_t timeout) const
+vk::Result LogicalDevice::waitForFences(const std::vector<vk::Fence>& fences, vk::Bool32 wait_all, uint64_t timeout) const
 {
-	logical_device.waitForFences(fences, wait_all, timeout); 
+	return logical_device.waitForFences(fences, wait_all, timeout); 
 }
 
 vk::Framebuffer LogicalDevice::createFramebuffer(const vk::FramebufferCreateInfo& framebuffer_info) const

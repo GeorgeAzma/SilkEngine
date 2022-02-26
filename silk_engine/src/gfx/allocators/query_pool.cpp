@@ -40,7 +40,7 @@ std::vector<uint64_t> QueryPool::getResults()
 		data_count = 1;
 		break;
 	case vk::QueryType::ePipelineStatistics:
-		data_count = math::getEnabledFlagsCount(pipeline_statistic_flags);		
+		data_count = math::getEnabledFlagsCount((const VkQueryPipelineStatisticFlags&)pipeline_statistic_flags);		
 		break;
 	case vk::QueryType::eTimestamp:
 		data_count = 1;
@@ -49,8 +49,7 @@ std::vector<uint64_t> QueryPool::getResults()
 
 	uint32_t data_size = data_count * sizeof(uint64_t);
 
-	std::vector<uint64_t> results;
-	results = Graphics::logical_device->getQueryPoolResults<std::vector<uint64_t>>(query_pool, 0, 1, data_size, data_size, vk::QueryResultFlagBits::e64 | vk::QueryResultFlagBits::ePartial);
+	std::vector<uint64_t> results = Graphics::logical_device->getQueryPoolResults<uint64_t>(query_pool, 0, 1, data_size, data_size, vk::QueryResultFlagBits::e64 | vk::QueryResultFlagBits::ePartial);
 	Graphics::logical_device->getGraphicsQueue().waitIdle();
 
 	return results;

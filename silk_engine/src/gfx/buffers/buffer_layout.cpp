@@ -16,7 +16,7 @@ BufferLayout::BufferLayout(const std::initializer_list<BufferElement>& elements)
 		size_t rows = actual_rows + ((size % sizeof(glm::vec4)) > 0);
 		for (size_t i = 0; i < rows; ++i)
 		{
-			VkVertexInputAttributeDescription attribute_description{};
+			vk::VertexInputAttributeDescription attribute_description{};
 			attribute_description.format = EnumInfo::type(element.type);
 			attribute_description.location = location;
 

@@ -15,7 +15,7 @@ Buffer::Buffer(vk::DeviceSize size, vk::BufferUsageFlags usage, VmaMemoryUsage v
 	allocation_create_info.usage = vma_usage;	
 	const VkBufferCreateInfo& vk_ci = (const VkBufferCreateInfo&)ci;
 	VkBuffer& vk_buffer = (VkBuffer&)buffer;
-	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &vk_ci, &allocation_create_info, &vk_buffer, &allocation, nullptr));
+	Graphics::vulkanAssert(vk::Result(vmaCreateBuffer(*Graphics::allocator, &vk_ci, &allocation_create_info, &vk_buffer, &allocation, nullptr)));
 }
 
 Buffer::~Buffer()
@@ -35,7 +35,7 @@ void Buffer::resize(vk::DeviceSize size)
 	ci.size = size;
 	const VkBufferCreateInfo& vk_ci = (const VkBufferCreateInfo&)ci;
 	VkBuffer& vk_buffer = (VkBuffer&)buffer;
-	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &vk_ci, &allocation_create_info, &vk_buffer, &allocation, nullptr));
+	Graphics::vulkanAssert(vk::Result(vmaCreateBuffer(*Graphics::allocator, &vk_ci, &allocation_create_info, &vk_buffer, &allocation, nullptr)));
 }
 
 void Buffer::map(void** data) const

@@ -71,7 +71,7 @@ void Image::create(const ImageProps& props)
 
 		const VkImageCreateInfo& vk_ci = (const VkImageCreateInfo&)ci;
 		VkImage& vk_image = (VkImage&)image;
-		Graphics::vulkanAssert(vmaCreateImage(*Graphics::allocator, &vk_ci, &allocation_info, &vk_image, &allocation, nullptr));
+		Graphics::vulkanAssert(vk::Result(vmaCreateImage(*Graphics::allocator, &vk_ci, &allocation_info, &vk_image, &allocation, nullptr)));
 	}
 
 	if (staging_buffer.get() != nullptr)
