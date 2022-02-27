@@ -11,11 +11,18 @@ class Shader : NonCopyable
 	struct Resource
 	{
 		size_t id;
-		uint32_t count = 0;
-		uint32_t set = 0;
-		uint32_t binding = 0;
+		uint32_t count;
+		uint32_t set;
+		uint32_t binding;
 		vk::ShaderStageFlags stage_flags;
 		vk::DescriptorType type;
+		std::string name;
+	};
+
+	struct ResourceLocation
+	{
+		uint32_t set;
+		uint32_t write_index;
 	};
 
 	class Includer : public shaderc::CompileOptions::IncluderInterface
@@ -28,7 +35,6 @@ class Shader : NonCopyable
 		{
 			const std::string name = std::string("data/shaders/") + requested_source;
 			const std::string contents = File::read(name);
-			SK_INFO(contents);
 
 			auto container = new std::array<std::string, 2>;
 			(*container)[0] = name;
@@ -78,6 +84,9 @@ public:
 
     void compile(const std::vector<Define>& defines = {});
 
+	void set(const std::string& resource_name, const std::vector<vk::DescriptorBufferInfo>& buffer_infos);
+	void set(const std::string& resource_name, const std::vector<vk::DescriptorImageInfo>& image_infos);
+
 	const std::unordered_map<uint32_t, shared<DescriptorSet>>& getDescriptorSets() const { return descriptor_sets; }
 	const std::vector<vk::PushConstantRange>& getPushConstants() const { return push_constants; }
 	const std::vector<vk::PipelineShaderStageCreateInfo>& getPipelineShaderStageInfos() const { return pipeline_shader_stage_infos; }
@@ -111,4 +120,5 @@ private:
 	std::unordered_map<uint32_t, shared<DescriptorSet>> descriptor_sets;
     std::vector<vk::PushConstantRange> push_constants;
 	std::vector<Resource> resources;
+	std::unordered_map<std::string, ResourceLocation> resource_locations;
 };

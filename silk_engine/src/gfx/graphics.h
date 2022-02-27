@@ -20,7 +20,7 @@ class Graphics
 {
 public:
 	static constexpr size_t MAX_INSTANCE_BATCHES = 65536;
-	static constexpr size_t MAX_INSTANCES = 16384;
+	static constexpr size_t MAX_INSTANCES = 65536;
 	static constexpr size_t MAX_IMAGE_SLOTS = 64; //Can be more
 	static constexpr APIVersion API_VERSION = APIVersion::VULKAN_1_2;
 
@@ -48,6 +48,7 @@ public:
 		vk::CommandBuffer command_buffer = VK_NULL_HANDLE;
 		vk::RenderPass render_pass = VK_NULL_HANDLE;
 	} active{};
+
 public:
 	static void init();
 	static void cleanup();
@@ -72,11 +73,8 @@ public:
 	static inline SwapChain* swap_chain = nullptr;
 	static inline DescriptorPool* descriptor_pool = nullptr;
 	static inline Alarm command_pool_purge_alarm = Alarm(5s);
-	static inline std::vector<unique<CommandBuffer>> command_buffers;
+	static inline CommandBuffer* command_buffer = nullptr;
 	static inline VkFence previous_frame_finished = VK_NULL_HANDLE;
 	static inline VkSemaphore swap_chain_image_available = VK_NULL_HANDLE;
 	static inline VkSemaphore render_finished = VK_NULL_HANDLE;
-
-private:
-	static constexpr std::string stringifyResult(vk::Result result);
 };

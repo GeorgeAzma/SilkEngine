@@ -48,8 +48,6 @@ void Application::pushOverlay(Layer *layer)
 
 void Application::run()
 {
-    using namespace std::chrono_literals;
-   
     while (running)
     {
         update();

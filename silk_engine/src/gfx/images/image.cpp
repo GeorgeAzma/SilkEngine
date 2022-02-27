@@ -2,7 +2,6 @@
 #include "gfx/graphics.h"
 #include "gfx/buffers/buffer.h"
 #include "gfx/enums.h"
-#include "gfx/buffers/command_buffer.h"
 #include "gfx/devices/physical_device.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/window/swap_chain.h"
@@ -117,62 +116,88 @@ void Image::transitionLayout(vk::ImageLayout new_layout)
 	barrier.subresourceRange.levelCount = mip_levels;
 	barrier.subresourceRange.baseArrayLayer = 0;
 	barrier.subresourceRange.layerCount = props.array_layers;
+	barrier.srcAccessMask = vk::AccessFlags(0);
+	barrier.dstAccessMask = vk::AccessFlags(0);
 
+	// TODO: this pipeline barrier code was written by total noob, check if it's correct
 	// Source access mask controls actions that have to be finished on the old layout before it will be transitioned to the new layout.
+	vk::PipelineStageFlags source_stage = vk::PipelineStageFlagBits::eAllCommands;
+	vk::PipelineStageFlags destination_stage = vk::PipelineStageFlagBits::eAllCommands;
 	switch (barrier.oldLayout)
 	{
-	case vk::ImageLayout::eUndefined:
-		barrier.srcAccessMask = vk::AccessFlags(0);
-		break;
-	case vk::ImageLayout::ePreinitialized:
-		barrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
-		break;
-	case vk::ImageLayout::eColorAttachmentOptimal:
-		barrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-		break;
-	case vk::ImageLayout::eDepthStencilAttachmentOptimal:
-		barrier.srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
-		break;
-	case vk::ImageLayout::eTransferSrcOptimal:
-		barrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
-		break;
-	case vk::ImageLayout::eTransferDstOptimal:
-		barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-		break;
-	case vk::ImageLayout::eShaderReadOnlyOptimal:
-		barrier.srcAccessMask = vk::AccessFlagBits::eShaderRead;
-		break;
-	default:
-		SK_ERROR("Unsupported image layout transition source: {0}", barrier.oldLayout);
-		break;
+		case vk::ImageLayout::eUndefined:
+			source_stage = vk::PipelineStageFlagBits::eTopOfPipe;
+			break;
+		case vk::ImageLayout::eGeneral:
+			source_stage = vk::PipelineStageFlagBits::eHost;
+			break;
+		case vk::ImageLayout::ePreinitialized:
+			barrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
+			source_stage = vk::PipelineStageFlagBits::eHost;
+			break;
+		case vk::ImageLayout::eTransferDstOptimal:
+			barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+			source_stage = vk::PipelineStageFlagBits::eTransfer;
+			break;
+		case vk::ImageLayout::eTransferSrcOptimal:
+			barrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
+			source_stage = vk::PipelineStageFlagBits::eTransfer;
+			break;
+		case vk::ImageLayout::eColorAttachmentOptimal:
+			barrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+			source_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+			break;
+		case vk::ImageLayout::eDepthStencilAttachmentOptimal:
+			barrier.srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+			source_stage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
+			break;
+		case vk::ImageLayout::eShaderReadOnlyOptimal:
+			barrier.srcAccessMask = vk::AccessFlagBits::eShaderRead;
+			source_stage = vk::PipelineStageFlagBits::eFragmentShader;
+			break;
+		default:
+			SK_ERROR("Unsupported image layout transition source: {0}", barrier.oldLayout);
+			break;
 	}
 
 	// Destination access mask controls the dependency for the new image layout.
 	switch (new_layout)
 	{
-	case vk::ImageLayout::eTransferDstOptimal:
-		barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
-		break;
-	case vk::ImageLayout::eTransferSrcOptimal:
-		barrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
-		break;
-	case vk::ImageLayout::eColorAttachmentOptimal:
-		barrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-		break;
-	case vk::ImageLayout::eDepthStencilAttachmentOptimal:
-		barrier.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
-		break;
-	case vk::ImageLayout::eShaderReadOnlyOptimal:
-		if (barrier.srcAccessMask == vk::AccessFlags(0))
-			barrier.srcAccessMask = vk::AccessFlagBits::eHostWrite | vk::AccessFlagBits::eTransferWrite;
-
-		barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
-		break;
-	default:
-		SK_ERROR("Unsupported image layout transition destination: {0}", barrier.oldLayout);
-		break;
+		case vk::ImageLayout::eUndefined:
+			destination_stage = vk::PipelineStageFlagBits::eTopOfPipe;
+			break;
+		case vk::ImageLayout::eGeneral:
+			destination_stage = vk::PipelineStageFlagBits::eHost;
+			break;
+		case vk::ImageLayout::ePreinitialized:
+			barrier.dstAccessMask = vk::AccessFlagBits::eHostWrite;
+			destination_stage = vk::PipelineStageFlagBits::eHost;
+			break;
+		case vk::ImageLayout::eTransferDstOptimal:
+			barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+			destination_stage = vk::PipelineStageFlagBits::eTransfer;
+			break;
+		case vk::ImageLayout::eTransferSrcOptimal:
+			barrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+			destination_stage = vk::PipelineStageFlagBits::eTransfer;
+			break;
+		case vk::ImageLayout::eColorAttachmentOptimal:
+			barrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+			destination_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+			break;
+		case vk::ImageLayout::eDepthStencilAttachmentOptimal:
+			barrier.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+			destination_stage = vk::PipelineStageFlagBits::eEarlyFragmentTests; 
+			break;
+		case vk::ImageLayout::eShaderReadOnlyOptimal:
+			barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+			destination_stage = vk::PipelineStageFlagBits::eFragmentShader;
+			break;
+		default:
+			SK_ERROR("Unsupported image layout transition destination: {0}", barrier.oldLayout);
+			break;
 	}
-	Graphics::active.command_buffer.pipelineBarrier(vk::PipelineStageFlagBits::eAllCommands, vk::PipelineStageFlagBits::eAllCommands, vk::DependencyFlags(0), {}, {}, { barrier });
+	Graphics::active.command_buffer.pipelineBarrier(source_stage, destination_stage, vk::DependencyFlags(0), {}, {}, { barrier });
 
 	command_buffer.submitIdle();
 
@@ -190,7 +215,7 @@ void Image::insertMemoryBarrier(vk::AccessFlags source_access_mask, vk::AccessFl
 bool Image::isFeatureSupported(vk::FormatFeatureFlags feature) const
 {
 	vk::FormatProperties format_properties = Graphics::physical_device->getFormatProperties(props.format);
-	const auto& features = (props.tiling == vk::ImageTiling::eOptimal) ? format_properties.optimalTilingFeatures : format_properties.linearTilingFeatures;
+	const vk::FormatFeatureFlags& features = (props.tiling == vk::ImageTiling::eOptimal) ? format_properties.optimalTilingFeatures : format_properties.linearTilingFeatures;
 	return bool(features & feature);
 }
 
@@ -279,7 +304,7 @@ void Image::generateMipmaps()
 
 	CommandBuffer command_buffer{};
 	command_buffer.begin();
-	
+
 	vk::ImageMemoryBarrier barrier{};
 	barrier.image = image;
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -412,7 +437,6 @@ bool Image::copyImage(shared<Image> destination, uint32_t array_layer)
 	//Do the actual blit from the swapchain image to our host visible destination image.
 	CommandBuffer command_buffer;
 	command_buffer.begin();
-
 	auto destination_old_layout = destination->getDescriptorInfo().imageLayout;
 	destination->insertMemoryBarrier(vk::AccessFlagBits::eNone, vk::AccessFlagBits::eTransferWrite, destination_old_layout, vk::ImageLayout::eTransferDstOptimal, vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, 0, 0);
 	auto old_layout = descriptor_image_info.imageLayout;

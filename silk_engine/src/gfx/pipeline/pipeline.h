@@ -13,6 +13,8 @@ public:
 		create();
 	}
 
+	void addConstant(void* data, size_t size);
+
 	shared<Shader> getShader() { return shader; }
 	const vk::PipelineLayout& getLayout() const { return pipeline_layout; }
 	operator const vk::Pipeline& () const { return pipeline; }

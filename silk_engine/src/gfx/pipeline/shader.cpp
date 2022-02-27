@@ -92,7 +92,7 @@ void Shader::compile(const std::vector<Define>& defines)
 			auto stage_flag = getVulkanType((Type)type);
 			spirv_cross::Compiler spirv_compiler(binary);
 			spirv_cross::ShaderResources shader_resources = spirv_compiler.get_shader_resources();
-
+			
 			for (const spirv_cross::Resource& sampled_image : shader_resources.sampled_images)
 				loadResource(sampled_image, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eCombinedImageSampler);
 
@@ -126,8 +126,14 @@ void Shader::compile(const std::vector<Define>& defines)
 				local_size = glm::max(local_size, glm::uvec3(1));
 		}
 
+		uint32_t write_index = 0;
 		for (const auto& resource : this->resources)
-			descriptor_sets.at(resource.set)->add(resource.binding, resource.count, resource.type, resource.stage_flags);
+		{
+			auto& set = descriptor_sets.at(resource.set);
+			set->add(resource.binding, resource.count, resource.type, resource.stage_flags);
+			resource_locations.emplace(resource.name, ResourceLocation{ resource.set, write_index });
+			++write_index;
+		}
 	
 		for (auto& descriptor_set : descriptor_sets)
 			descriptor_set.second->build();
@@ -136,6 +142,18 @@ void Shader::compile(const std::vector<Define>& defines)
 #undef SK_WEIRD_ERROR_FIX
 
 	SK_TRACE("Shader loaded: {0}", path);
+}
+
+void Shader::set(const std::string& resource_name, const std::vector<vk::DescriptorBufferInfo>& buffer_infos)
+{
+	auto& resource_location = resource_locations.at(resource_name);
+	descriptor_sets.at(resource_location.set)->setBufferInfo(resource_location.write_index, buffer_infos);
+}
+
+void Shader::set(const std::string& resource_name, const std::vector<vk::DescriptorImageInfo>& image_infos)
+{
+	auto& resource_location = resource_locations.at(resource_name);
+	descriptor_sets.at(resource_location.set)->setImageInfo(resource_location.write_index, image_infos);
 }
 
 Shader::~Shader()
@@ -213,8 +231,9 @@ void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spi
 		.set = set,
 		.binding = binding,
 		.stage_flags = stage_flag,
-		.type = type
-	};
+		.type = type,
+		.name = compiler.get_name(spirv_resource.id)
+	}; 
 	this->resources.emplace_back(std::move(resource));
 }
 

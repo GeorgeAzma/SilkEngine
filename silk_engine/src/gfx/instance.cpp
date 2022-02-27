@@ -1,5 +1,6 @@
 #include "instance.h"
 #include "graphics.h"
+#include <GLFW/glfw3.h>
 
 // Custom debug callback, when error/warning... 
 // occures this function is called with the error message 

@@ -167,7 +167,7 @@ list(APPEND EXTRA_LIBS "assimp$<$<CONFIG:DEBUG>:d>" "$<IF:$<CONFIG:Debug>,zlibst
 
 #Sub dirs
 ############################__SILK ENGINE__#####################################
-file(GLOB_RECURSE SILK_ENGINE_SOURCES "silk_engine/src/*.cpp")
+file(GLOB_RECURSE SILK_ENGINE_SOURCES "silk_engine/src/*.cpp" "silk_engine/src/*.h")
 
 #Create SilkEngine.lib
 add_library(SilkEngine STATIC ${SILK_ENGINE_SOURCES})
@@ -238,8 +238,6 @@ silk_engine/src/core/base.h
 <GLM/glm.hpp>
 <GLM/gtc/matrix_transform.hpp>
 <GLM/gtx/quaternion.hpp>
-<vulkan/vulkan.hpp>
-<GLFW/glfw3.h>
 <entt/entt.hpp>
 <semaphore>
 <future>
@@ -254,7 +252,7 @@ silk_engine/src/utils/thread_pool.h)
 target_link_libraries(SilkEngine ${EXTRA_LIBS})
 
 ############################__SANDBOX__#####################################
-file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp")
+file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp" "sandbox/src/*.h")
 
 add_executable(Sandbox ${SANDBOX_SOURCES})
 

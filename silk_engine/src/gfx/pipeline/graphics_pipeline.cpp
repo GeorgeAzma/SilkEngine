@@ -11,7 +11,7 @@ GraphicsPipeline& GraphicsPipeline::setShader(shared<Shader> shader)
 		shader_stage_infos.emplace_back(pipeline_shader_stage_info);
 	ci.stageCount = shader_stage_infos.size();
 	ci.pStages = shader_stage_infos.data();
-
+	
 	push_constant_ranges = shader->getPushConstants();
 	descriptor_set_layouts.clear();
 	for (auto&& [set, descriptor_set] : shader->getDescriptorSets())

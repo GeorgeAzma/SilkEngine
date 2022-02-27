@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gfx/allocators/allocator.h"
+#include <vulkan/vulkan.hpp>
 
 class Buffer : NonCopyable
 {

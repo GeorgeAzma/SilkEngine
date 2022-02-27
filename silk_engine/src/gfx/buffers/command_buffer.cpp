@@ -8,17 +8,17 @@ CommandBuffer::CommandBuffer(vk::CommandBufferLevel level, vk::QueueFlagBits que
 {
 	vk::CommandBufferAllocateInfo allocate_info{};
 	allocate_info.level = level;
-	allocate_info.commandPool = *Graphics::getCommandPool();
+	allocate_info.commandPool = *pool;
 	allocate_info.commandBufferCount = 1;
 	command_buffer = Graphics::logical_device->allocateCommandBuffers(allocate_info).front();
 }
 
 CommandBuffer::~CommandBuffer()
 {
-	Graphics::logical_device->freeCommandBuffers(*Graphics::getCommandPool(), { command_buffer });
+	Graphics::logical_device->freeCommandBuffers(*pool, { command_buffer });
 }
 
-void CommandBuffer::begin(vk::CommandBufferUsageFlagBits usage)
+void CommandBuffer::begin(vk::CommandBufferUsageFlags usage)
 {
 	if (Graphics::active.command_buffer == command_buffer)
 		return;

@@ -29,6 +29,8 @@ void Graphics::init()
 	logical_device = new LogicalDevice();
 	allocator = new Allocator();
 
+	command_buffer = new CommandBuffer();
+
 	descriptor_pool = new DescriptorPool();
 	descriptor_pool->addSize(vk::DescriptorType::eUniformBuffer, 64)
 		.addSize(vk::DescriptorType::eCombinedImageSampler, 64)
@@ -36,10 +38,6 @@ void Graphics::init()
 		.setMaxSets(1024).build();
 
 	swap_chain = new SwapChain();
-
-	command_buffers.resize(swap_chain->getImages().size());
-	for (auto& command_buffer : command_buffers)
-		command_buffer = makeUnique<CommandBuffer>();
 
 	previous_frame_finished = Graphics::logical_device->createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
 	swap_chain_image_available = Graphics::logical_device->createSemaphore({});
@@ -54,7 +52,7 @@ void Graphics::cleanup()
 	Graphics::logical_device->destroyFence(previous_frame_finished);
 	Graphics::logical_device->destroySemaphore(swap_chain_image_available);
 	Graphics::logical_device->destroySemaphore(render_finished);
-	command_buffers.clear();
+	delete command_buffer;
 	delete swap_chain;
 	delete descriptor_pool;
 	command_pools.clear();
@@ -91,7 +89,7 @@ void Graphics::beginFrame()
 	logical_device->waitForFences({ previous_frame_finished }, VK_TRUE, UINT64_MAX);
 	logical_device->resetFences({ previous_frame_finished });
 	swap_chain->acquireNextImage(swap_chain_image_available);
-	command_buffers[swap_chain->getImageIndex()]->begin();
+	command_buffer->begin();
 }
 
 void Graphics::endFrame()
@@ -102,7 +100,7 @@ void Graphics::endFrame()
 	submit_info.wait_semaphores = { swap_chain_image_available };
 	submit_info.signal_semaphores = { render_finished };
 	submit_info.fence = previous_frame_finished;
-	command_buffers[swap_chain->getImageIndex()]->submit(submit_info);
+	command_buffer->submit(submit_info);
 	Graphics::vulkanAssert(swap_chain->present(render_finished));
 }
 
@@ -132,38 +130,39 @@ void Graphics::screenshot(const std::string& file)
 	props.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc;
 	props.memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
 	props.format = swap_chain->getSurfaceFormat().format;
-	props.tiling = vk::ImageTiling::eOptimal;
+	props.tiling = vk::ImageTiling::eLinear;
 	props.mipmap = false;
 	props.sampler_props.anisotropy = false;
 	shared<Image2D> destination = makeShared<Image2D>(props);
 	auto image = swap_chain->getActiveImage();
-	image->copyImage(destination);
-	destination->transitionLayout(vk::ImageLayout::eTransferSrcOptimal);
+	bool blit_supported = image->copyImage(destination);
 	t1.stop();
 
-	DebugTimer t2("Change layout to RGBA");
+	if (!blit_supported)
+	{
+		DebugTimer t2("Change layout to RGBA");
+		StorageBuffer image_storage(destination->getSize(), VMA_MEMORY_USAGE_GPU_TO_CPU, vk::BufferUsageFlagBits::eTransferDst);
+		destination->copyToBuffer(image_storage);
 
-	StorageBuffer image_storage(destination->getSize(), VMA_MEMORY_USAGE_GPU_TO_CPU, vk::BufferUsageFlagBits::eTransferDst);
-	destination->copyToBuffer(image_storage);
+		auto compute = Resources::getComputeShaderEffect("BGRA To RGBA")->pipeline;
+		compute->bind();
+		compute->getShader()->set("image", { image_storage });
+		compute->getShader()->getDescriptorSets().at(0)->bind();
+		compute->dispatch(width * height);
 
-	t2.stop();
-	CommandBuffer command_buffer(vk::CommandBufferLevel::ePrimary, vk::QueueFlagBits::eCompute);
-	command_buffer.begin();	
-
-	auto compute = Resources::getComputeShaderEffect("BGRA To RGBA")->pipeline;
-	compute->bind();
-	
-	(*compute->getShader()->getDescriptorSets().at(0)).setBufferInfo(0, { image_storage });
-	(*compute->getShader()->getDescriptorSets().at(0)).bind();
-	compute->dispatch(width * height);
-	
-	command_buffer.submitIdle();
-
-	void* buffer_data;
-	image_storage.map(&buffer_data);
-	stbi_write_png(file.c_str(), width, height, channels, buffer_data, 0);
-	image_storage.unmap();
-
+		t2.stop();
+		
+		void* buffer_data;
+		image_storage.map(&buffer_data);
+		stbi_write_png(file.c_str(), width, height, channels, buffer_data, 0);
+		image_storage.unmap();
+	}
+	else
+	{
+		std::vector<uint8_t> image_data(destination->getSize());
+		destination->getData(image_data.data());
+		stbi_write_png(file.c_str(), width, height, channels, image_data.data(), 0);
+	}
 	t0.stop();
 	
 	SK_TRACE("Screenshot created: at {0}", file);

@@ -234,7 +234,7 @@ public:
 	static void align4(Bitmap& image);
 
 	void setData(void* data, uint32_t base_array_layer = 0, uint32_t array_layers = 1);
-	void getData(void* data, uint32_t base_array_layer = 0, uint32_t array_layers = 0);
+	void getData(void* data, uint32_t base_array_layer = 0, uint32_t array_layers = 1);
 	bool copyImage(shared<Image> destination, uint32_t array_layer = 0);
 	void transitionLayout(vk::ImageLayout new_layout);
 	void insertMemoryBarrier(vk::AccessFlags source_access_mask, vk::AccessFlags destination_access_mask, vk::ImageLayout old_layout, vk::ImageLayout new_layout, vk::PipelineStageFlags source_stage_mask = vk::PipelineStageFlagBits::eAllCommands, vk::PipelineStageFlags destination_stage_mask = vk::PipelineStageFlagBits::eAllCommands, uint32_t base_mip_level = 0, uint32_t base_array_layer = 0);
