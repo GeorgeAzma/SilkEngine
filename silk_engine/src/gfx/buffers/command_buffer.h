@@ -34,4 +34,6 @@ private:
 	vk::QueueFlagBits queue_type;
 	shared<CommandPool> pool;
 	bool recorded = false;
+	bool running = false;
+	bool is_primary = false;
 };

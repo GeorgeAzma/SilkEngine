@@ -33,7 +33,7 @@ void Graphics::init()
 
 	descriptor_pool = new DescriptorPool();
 	descriptor_pool->addSize(vk::DescriptorType::eUniformBuffer, 64)
-		.addSize(vk::DescriptorType::eCombinedImageSampler, 64)
+		.addSize(vk::DescriptorType::eCombinedImageSampler, 256)
 		.addSize(vk::DescriptorType::eStorageBuffer, 64)
 		.setMaxSets(1024).build();
 
@@ -144,12 +144,14 @@ void Graphics::screenshot(const std::string& file)
 		StorageBuffer image_storage(destination->getSize(), VMA_MEMORY_USAGE_GPU_TO_CPU, vk::BufferUsageFlagBits::eTransferDst);
 		destination->copyToBuffer(image_storage);
 
+		CommandBuffer command_buffer;
+		command_buffer.begin();
 		auto compute = Resources::getComputeShaderEffect("BGRA To RGBA")->pipeline;
 		compute->bind();
 		compute->getShader()->set("image", { image_storage });
 		compute->getShader()->getDescriptorSets().at(0)->bind();
 		compute->dispatch(width * height);
-
+		command_buffer.submitIdle();
 		t2.stop();
 		
 		void* buffer_data;

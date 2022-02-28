@@ -30,7 +30,7 @@ public:
     void acquireNextImage(vk::Semaphore signal_semaphore, vk::Fence signal_fence = VK_NULL_HANDLE);
     vk::Result present(vk::Semaphore wait_semaphore);
 
-    void beginRenderPass();
+    void beginRenderPass(vk::SubpassContents subpass_contents = vk::SubpassContents::eInline);
     void endRenderPass();
     
 private:

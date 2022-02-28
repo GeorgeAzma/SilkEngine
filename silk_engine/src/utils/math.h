@@ -33,4 +33,10 @@ namespace math
 
 		return enabled_count;
 	}
+
+	template<typename T = float>
+	T lerp(const T& a, const T& b, float k)
+	{
+		return a + (b - a) * (T)k;
+	}
 };

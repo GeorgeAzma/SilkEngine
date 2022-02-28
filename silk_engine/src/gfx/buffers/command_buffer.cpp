@@ -11,6 +11,7 @@ CommandBuffer::CommandBuffer(vk::CommandBufferLevel level, vk::QueueFlagBits que
 	allocate_info.commandPool = *pool;
 	allocate_info.commandBufferCount = 1;
 	command_buffer = Graphics::logical_device->allocateCommandBuffers(allocate_info).front();
+	is_primary = (level == vk::CommandBufferLevel::ePrimary);
 }
 
 CommandBuffer::~CommandBuffer()
@@ -20,21 +21,37 @@ CommandBuffer::~CommandBuffer()
 
 void CommandBuffer::begin(vk::CommandBufferUsageFlags usage)
 {
-	if (Graphics::active.command_buffer == command_buffer)
+	if (running)
 		return;
 
-	command_buffer.begin(vk::CommandBufferBeginInfo(usage));
+	vk::CommandBufferInheritanceInfo inheritance_info{};
+	if (usage & vk::CommandBufferUsageFlagBits::eRenderPassContinue)
+	{
+		inheritance_info.renderPass = Graphics::active.render_pass;
+		inheritance_info.subpass = Graphics::active.subpass;
+		inheritance_info.framebuffer = Graphics::active.framebuffer;
+		//inheritance_info.occlusionQueryEnable = ; //TODO:
+		//inheritance_info.pipelineStatistics = ;  //TODO:
+	}
+
+	command_buffer.begin(vk::CommandBufferBeginInfo(usage, &inheritance_info));
 	Graphics::active.command_buffer = command_buffer;
+	if(is_primary)
+		Graphics::active.primary_command_buffer = command_buffer;
+	running = true;
 }
 
 void CommandBuffer::end()
 {
-	if (Graphics::active.command_buffer != command_buffer)
+	if (!running)
 		return;
 
 	command_buffer.end();
 	Graphics::active.command_buffer = VK_NULL_HANDLE;
+	if (is_primary)
+		Graphics::active.primary_command_buffer = command_buffer;
 	recorded = true;
+	running = false;
 }
 
 void CommandBuffer::submit(const CommandBufferSubmitInfo& info)
@@ -46,7 +63,7 @@ void CommandBuffer::submit(const CommandBufferSubmitInfo& info)
 	vk::SubmitInfo submit_info{};
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &command_buffer;
-
+	
 	submit_info.pWaitDstStageMask = info.wait_stages;
 	submit_info.waitSemaphoreCount = info.wait_semaphores.size();
 	submit_info.pWaitSemaphores = info.wait_semaphores.data();

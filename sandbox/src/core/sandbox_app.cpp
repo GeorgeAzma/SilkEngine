@@ -18,7 +18,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
     auto rectangle = Resources::getMesh("Rectangle");
     auto circle = Resources::getMesh("Circle");
-    entities.resize(5);
+    entities.resize(1000);
     for (size_t i = 0; i < entities.size(); ++i)
     {
         entities[i] = scene->createEntity();
@@ -46,6 +46,7 @@ void SandboxApp::onUpdate()
     {
         entities.emplace_back(scene->createEntity());
         //entities.back()->addComponent<MaterialComponent>(Resources::getShaderEffect("3D"));
+        entities.back()->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         entities.back()->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float()) * 20.0f));
         entities.back()->addComponent<ModelComponent>(Resources::getModel("Backpack"));
         Light light{};
@@ -53,12 +54,13 @@ void SandboxApp::onUpdate()
         entities.back()->addComponent<LightComponent>(light);
     }
 
-    //Resources::pool.forEach(entities.size(), 
-    //    [&](size_t i) 
-    //    {
-    //        entities[i]->updateComponent<TransformComponent>([](TransformComponent& transform) {});
-    //    });
-    //Resources::pool.wait();
+    Resources::pool.forEach(entities.size(), 
+        [&](size_t i) 
+        {
+            entities[i]->updateComponent<TransformComponent>([](TransformComponent& transform) {});
+            entities[i]->updateComponent<ColorComponent>([](ColorComponent& color) { color.color = glm::vec4(RNG::Float(), RNG::Float(), RNG::Float(), 1.0f); });
+        });
+    Resources::pool.wait();
 
     scene->onUpdate();
 }

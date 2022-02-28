@@ -157,11 +157,16 @@ void RenderPass::begin(vk::Framebuffer framebuffer, vk::SubpassContents subpass_
 
     Graphics::active.command_buffer.beginRenderPass(begin_info, subpass_contents);
     Graphics::active.render_pass = render_pass;
+    current_subpass = 0;
+    Graphics::active.subpass = current_subpass;
+    Graphics::active.framebuffer = framebuffer;
 }
 
 void RenderPass::nextSubpass(vk::SubpassContents subpass_contents)
 {
     Graphics::active.command_buffer.nextSubpass(subpass_contents);
+    ++current_subpass;
+    Graphics::active.subpass = current_subpass;
 }
 
 void RenderPass::end()
@@ -172,6 +177,8 @@ void RenderPass::end()
     Graphics::active.command_buffer.endRenderPass();
 
     Graphics::active.render_pass = VK_NULL_HANDLE;
+    Graphics::active.subpass = 0;
+    Graphics::active.framebuffer = VK_NULL_HANDLE;
     if (Graphics::active.bind_point == vk::PipelineBindPoint::eGraphics)
     {
         Graphics::active.pipeline = VK_NULL_HANDLE;

@@ -92,9 +92,9 @@ vk::Result SwapChain::present(vk::Semaphore wait_semaphore)
 	return Graphics::logical_device->getPresentQueue().presentKHR(present_info);
 }
 
-void SwapChain::beginRenderPass()
+void SwapChain::beginRenderPass(vk::SubpassContents subpass_contents)
 {
-	render_pass->begin(*framebuffers[image_index]);
+	render_pass->begin(*framebuffers[image_index], subpass_contents);
 }
 
 void SwapChain::endRenderPass()

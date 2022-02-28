@@ -18,6 +18,7 @@ Scene::Scene()
 	registry.on_construct<ModelComponent>().connect<&Scene::onModelComponentCreate>(this);
 	registry.on_construct<LightComponent>().connect<&Scene::onLightComponentCreate>(this);
 	registry.on_update<TransformComponent>().connect<&Scene::onTransformComponentUpdate>(this);
+	registry.on_update<ColorComponent>().connect<&Scene::onColorComponentUpdate>(this);
 	registry.on_destroy<MeshComponent>().connect<&Scene::onMeshComponentDestroy>(this);
 	registry.on_destroy<ModelComponent>().connect<&Scene::onModelComponentDestroy>(this);
 	registry.on_destroy<LightComponent>().connect<&Scene::onLightComponentDestroy>(this);
@@ -126,9 +127,9 @@ void Scene::onUpdate()
 			instance_batch.images_need_update = false;
 		}
 	}
+
 	Graphics::beginFrame();
 	Graphics::swap_chain->beginRenderPass();
-
 	size_t draw_index = 0;
 	for (auto& instance_batch : instance_batches)
 	{
@@ -157,6 +158,7 @@ void Scene::onStop()
 	registry.on_construct<ModelComponent>().disconnect<&Scene::onModelComponentCreate>(this);
 	registry.on_construct<LightComponent>().disconnect<&Scene::onLightComponentCreate>(this);
 	registry.on_update<TransformComponent>().disconnect<&Scene::onTransformComponentUpdate>(this);
+	registry.on_update<ColorComponent>().disconnect<&Scene::onColorComponentUpdate>(this);
 	registry.on_destroy<MeshComponent>().disconnect<&Scene::onMeshComponentDestroy>(this);
 	registry.on_destroy<ModelComponent>().disconnect<&Scene::onModelComponentDestroy>(this);
 	registry.on_destroy<LightComponent>().disconnect<&Scene::onLightComponentDestroy>(this);
@@ -189,7 +191,7 @@ void Scene::onWindowResize(const WindowResizeEvent& e)
 
 void Scene::onTransformComponentUpdate(entt::registry& registry, entt::entity entity)
 {
-	//TODO: Figure out how to get rid of all the stupid transform component child checks (IDEA: have ParentComponent which takes 2 template arguments parent and child, whenever parent component gets updated it calls onTransformUpdate of child component, it's messy but better performance)
+	//TODO: Figure out how to get rid of all the stupid transform component child checks (It can be solved via Event system, but for now with this little components this method is faster)
 	TransformComponent& transform = registry.get<TransformComponent>(entity);
 
 	if (auto mesh_component = registry.try_get<MeshComponent>(entity))
@@ -207,6 +209,25 @@ void Scene::onTransformComponentUpdate(entt::registry& registry, entt::entity en
 	}
 	if (auto light_component = registry.try_get<LightComponent>(entity))
 		light_component->light_ptr->position = transform.transform * glm::vec4(light_component->light.position, 1);
+}
+
+void Scene::onColorComponentUpdate(entt::registry& registry, entt::entity entity)
+{
+	ColorComponent& color = registry.get<ColorComponent>(entity);
+
+	if (auto mesh_component = registry.try_get<MeshComponent>(entity))
+	{
+		instance_batches[mesh_component->instance->instance_batch_index].instance_data[mesh_component->instance->instance_data_index].color = color;
+		instance_batches[mesh_component->instance->instance_batch_index].needs_update = true;
+	}
+	if (auto model_component = registry.try_get<ModelComponent>(entity))
+	{
+		for (size_t i = 0; i < model_component->instances.size(); ++i)
+		{
+			instance_batches[model_component->instances[i]->instance_batch_index].instance_data[model_component->instances[i]->instance_data_index].color = color;
+			instance_batches[model_component->instances[i]->instance_batch_index].needs_update = true;
+		}
+	}
 }
 
 void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)

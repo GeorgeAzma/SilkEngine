@@ -46,7 +46,10 @@ public:
 		vk::PipelineLayout pipeline_layout = VK_NULL_HANDLE;
 		vk::PipelineBindPoint bind_point = vk::PipelineBindPoint(VK_PIPELINE_BIND_POINT_MAX_ENUM);
 		vk::CommandBuffer command_buffer = VK_NULL_HANDLE;
+		vk::CommandBuffer primary_command_buffer = VK_NULL_HANDLE;
 		vk::RenderPass render_pass = VK_NULL_HANDLE;
+		uint32_t subpass = 0;
+		vk::Framebuffer framebuffer = VK_NULL_HANDLE;
 	} active{};
 
 public:

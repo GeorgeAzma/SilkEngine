@@ -15,6 +15,10 @@ int main(int argc, char **argv)
         Graphics::logical_device->waitIdle();
         delete app;
     }
+    catch (const vk::SystemError& err) 
+    {
+        SK_ERROR(err.what());
+    }
     catch (const std::exception &e)
     {
         SK_ERROR(e.what());

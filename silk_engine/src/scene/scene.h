@@ -39,6 +39,7 @@ public:
 	void removeEntity(const entt::entity& entity);
 
 	void onTransformComponentUpdate(entt::registry& registry, entt::entity entity);
+	void onColorComponentUpdate(entt::registry& registry, entt::entity entity);
 
 private:
 	void onWindowResize(const WindowResizeEvent& e);
