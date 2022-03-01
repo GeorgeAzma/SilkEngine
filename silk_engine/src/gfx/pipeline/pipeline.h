@@ -26,6 +26,14 @@ public:
 	operator const vk::Pipeline& () const { return pipeline; }
 
 protected:
+	struct StageSpecializationInfo
+	{
+		vk::SpecializationInfo specialization_info;
+		std::vector<uint8_t> constant_data;
+		std::vector<vk::SpecializationMapEntry> entries;
+	};
+
+protected:
 	void destroy();
 	virtual void create() = 0;
 
@@ -39,4 +47,5 @@ protected:
 	std::vector<vk::DescriptorSetLayout> descriptor_set_layouts;
 	shared<Shader> shader = nullptr;
 	std::vector<vk::PipelineShaderStageCreateInfo> shader_stage_infos;
+	std::vector<StageSpecializationInfo> stage_specialization_infos{};
 };

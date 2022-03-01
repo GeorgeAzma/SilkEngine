@@ -6,12 +6,6 @@
 
 class GraphicsPipeline : public Pipeline
 {
-	struct StageSpecializationInfo
-	{
-		vk::SpecializationInfo specialization_info;
-		std::vector<uint8_t> constant_data;
-		std::vector<vk::SpecializationMapEntry> entries;
-	};
 public:
 	GraphicsPipeline& setShader(shared<Shader> shader, const std::vector<Constant>& constants = {});
 	GraphicsPipeline& setVertexLayout(const BufferLayout& layout);
@@ -29,7 +23,6 @@ private:
 
 private:
 	std::vector<vk::DynamicState> dynamic_states{};
-	std::vector<StageSpecializationInfo> stage_specialization_infos{};
 	vk::PipelineVertexInputStateCreateInfo vertex_input_info{};
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	vk::PipelineMultisampleStateCreateInfo multisampling{};

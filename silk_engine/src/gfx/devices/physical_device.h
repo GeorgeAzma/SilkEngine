@@ -1,7 +1,6 @@
 #pragma once
 
 #include <optional>
-#include <vulkan/vulkan.hpp>
 
 struct QueueFamilyIndices
 {

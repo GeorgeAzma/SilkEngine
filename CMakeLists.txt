@@ -242,6 +242,7 @@ silk_engine/src/core/base.h
 <semaphore>
 <future>
 <concepts>
+<vulkan/vulkan.hpp>
 silk_engine/src/core/log.h
 silk_engine/src/io/file.h
 silk_engine/src/utils/math.h

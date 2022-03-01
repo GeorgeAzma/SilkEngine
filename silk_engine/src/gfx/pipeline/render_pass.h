@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
-
 struct AttachmentProps
 {
 	vk::Format format = vk::Format::eB8G8R8A8Unorm;

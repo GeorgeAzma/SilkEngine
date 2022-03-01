@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
-
 enum class ImageViewType
 {
 	IMAGE1D,
