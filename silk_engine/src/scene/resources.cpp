@@ -67,22 +67,24 @@ void Resources::init()
 
     //MATERIALS
     {
+        auto shader = makeShared<Shader>("3D");
         shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
         graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
             .enable(EnableTag::DEPTH_TEST)
             .enable(EnableTag::DEPTH_WRITE)
-            .setShader(makeShared<Shader>("3D", std::vector<Shader::Define>{ {"LIT", "1"} }))
+            .setShader(shader)
             .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
             .setSampleCount(Graphics::swap_chain->getSampleCount())
             .setRenderPass(Graphics::swap_chain->getRenderPass())
             .build();
         addShaderEffect("Lit 3D", makeShared<ShaderEffect>(graphics_pipeline));
 
+        vk::Bool32 lit = false;
         graphics_pipeline = makeShared<GraphicsPipeline>();
         graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
             .enable(EnableTag::DEPTH_TEST)
             .enable(EnableTag::DEPTH_WRITE)
-            .setShader(makeShared<Shader>("3D", std::vector<Shader::Define>{ {"LIT", "0"} }))
+            .setShader(shader, { { "lit", &lit, sizeof(vk::Bool32) }})
             .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
             .setSampleCount(Graphics::swap_chain->getSampleCount())
             .setRenderPass(Graphics::swap_chain->getRenderPass())

@@ -3,12 +3,51 @@
 #include "gfx/window/swap_chain.h"
 #include "gfx/devices/logical_device.h"
 
-GraphicsPipeline& GraphicsPipeline::setShader(shared<Shader> shader)
+GraphicsPipeline& GraphicsPipeline::setShader(shared<Shader> shader, const std::vector<Constant>& constants)
 {
 	this->shader = shader;
 	shader_stage_infos.clear();
-	for (const auto& pipeline_shader_stage_info : shader->getPipelineShaderStageInfos())
-		shader_stage_infos.emplace_back(pipeline_shader_stage_info);
+	shader_stage_infos.reserve(shader->getStages().size());
+	stage_specialization_infos.clear();
+	stage_specialization_infos.reserve(shader->getStages().size());
+
+	for (const auto& stage : shader->getStages())
+	{
+		stage_specialization_infos.emplace_back();
+		StageSpecializationInfo& stage_specialization_info = stage_specialization_infos.back();
+		stage_specialization_info.entries.reserve(constants.size());
+
+		for (const auto& constant : constants)
+		{
+			const auto& shader_constant = shader->getConstants().at(constant.name);
+			if (!(shader_constant.stage & stage.stage))
+				continue;
+		
+			size_t old_size = stage_specialization_info.constant_data.size();
+			vk::SpecializationMapEntry entry{};
+			entry.constantID = shader_constant.id;
+			entry.offset = old_size;
+			entry.size = constant.size;
+			stage_specialization_info.entries.emplace_back(std::move(entry));
+			stage_specialization_info.constant_data.resize(old_size + constant.size);
+			std::memcpy(stage_specialization_info.constant_data.data() + old_size, constant.data, constant.size);
+		}
+		
+		vk::SpecializationInfo specialization_info{};
+		specialization_info.mapEntryCount = stage_specialization_info.entries.size();
+		specialization_info.pMapEntries = stage_specialization_info.entries.data();
+		specialization_info.dataSize = stage_specialization_info.constant_data.size();
+		specialization_info.pData = stage_specialization_info.constant_data.data();
+		stage_specialization_info.specialization_info = std::move(specialization_info);
+
+		vk::PipelineShaderStageCreateInfo shader_stage_info{};
+		shader_stage_info.stage = stage.stage;
+		shader_stage_info.module = stage.module;
+		shader_stage_info.pName = "main";
+		shader_stage_info.pSpecializationInfo = &stage_specialization_info.specialization_info;
+		shader_stage_infos.emplace_back(std::move(shader_stage_info));
+	}
+
 	ci.stageCount = shader_stage_infos.size();
 	ci.pStages = shader_stage_infos.data();
 	

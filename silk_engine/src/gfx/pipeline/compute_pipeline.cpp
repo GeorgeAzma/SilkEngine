@@ -2,11 +2,38 @@
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
 
-ComputePipeline::ComputePipeline(shared<Shader> shader)
+ComputePipeline::ComputePipeline(shared<Shader> shader, const std::vector<Constant>& constants)
 {
 	this->shader = shader;
-	shader_stage_infos.resize(1);
-	shader_stage_infos[0] = shader->getPipelineShaderStageInfos().back();
+
+	//std::vector<uint8_t> constant_data;
+	//std::vector<vk::SpecializationMapEntry> entries(constants.size());
+	//for (const auto& constant : constants)
+	//{
+	//	const auto& shader_constant = shader->getConstants().at(constant.name);
+	//	size_t old_size = constant_data.size();
+	//	vk::SpecializationMapEntry entry{};
+	//	entry.constantID = shader_constant.id;
+	//	entry.offset = old_size;
+	//	entry.size = constant.size;
+	//	entries.emplace_back(std::move(entry));
+	//	constant_data.resize(old_size + constant.size);
+	//	std::memcpy(constant_data.data() + old_size, constant.data, constant.size);
+	//}
+
+	//vk::SpecializationInfo specialization_info{};
+	//specialization_info.mapEntryCount = entries.size();
+	//specialization_info.pMapEntries = entries.data();
+	//specialization_info.dataSize = constant_data.size();
+	//specialization_info.pData = constant_data.data();
+
+	vk::PipelineShaderStageCreateInfo shader_stage_info{};
+	shader_stage_info.stage = vk::ShaderStageFlagBits::eCompute;
+	shader_stage_info.module = shader->getStages().front().module;
+	shader_stage_info.pName = "main";
+	//shader_stage_info.pSpecializationInfo = &specialization_info;
+	shader_stage_infos.emplace_back(std::move(shader_stage_info));
+
 	ci.stage = shader_stage_infos[0];
 
 	push_constant_ranges = shader->getPushConstants(); 

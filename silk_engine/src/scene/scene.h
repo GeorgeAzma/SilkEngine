@@ -13,8 +13,10 @@ class Scene
 {
 	friend class Entity;
 
+public:
 	static constexpr size_t MAX_LIGHTS = 64;
 
+public:
 	struct GlobalUniformData
 	{
 		glm::mat4 projection_view;
@@ -27,6 +29,7 @@ class Scene
 		uint32_t light_count;
 		std::array<Light, MAX_LIGHTS> lights;
 	};
+
 public:
 	Scene();
 	~Scene();
@@ -62,7 +65,6 @@ private:
 	std::vector<InstanceBatch> instance_batches;
 	unique<IndirectBuffer> indirect_buffer;
 	unique<UniformBuffer> global_uniform_buffer;
-	DescriptorSet global_descriptor_set;
 	std::array<Light, MAX_LIGHTS> lights;
 	size_t light_index = 0;
 	bool lights_updated = false;

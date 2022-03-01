@@ -28,8 +28,6 @@ Scene::Scene()
 	indirect_buffer = makeUnique<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(vk::DrawIndexedIndirectCommand));
 
 	global_uniform_buffer = makeUnique<UniformBuffer>(sizeof(GlobalUniformData));
-	global_descriptor_set = *Resources::getShaderEffect("Lit 3D")->pipeline->getShader()->getDescriptorSets().at(0);
-	global_descriptor_set.setBufferInfo(0, { *global_uniform_buffer });
 
 	Timers::every(200ms, [] {
 		SK_INFO("Render stats: ");
@@ -90,7 +88,7 @@ void Scene::onUpdate()
 	global_uniform_data.light_count = light_index;
 	global_uniform_data.lights = lights;
 
-	global_uniform_buffer->setDataChecked(&global_uniform_data, sizeof(GlobalUniformData));
+	global_uniform_buffer->setData(&global_uniform_data, sizeof(GlobalUniformData));
 
 	//Drawing	
 	bool any_needs_update = false;
@@ -116,6 +114,8 @@ void Scene::onUpdate()
 	const auto& white = Resources::getImage("White")->getDescriptorInfo();
 	for (auto& instance_batch : instance_batches)
 	{
+		instance_batch.descriptor_sets[0].setBufferInfo(0, { *global_uniform_buffer	}); //TODO: Global data doesn't have to update for each batch
+
 		if (instance_batch.images_need_update)
 		{
 			std::vector<vk::DescriptorImageInfo> descriptor_images(Graphics::MAX_IMAGE_SLOTS, white);
@@ -134,7 +134,6 @@ void Scene::onUpdate()
 	for (auto& instance_batch : instance_batches)
 	{
 		instance_batch.bind();
-		global_descriptor_set.bind(0);
 		Graphics::active.command_buffer.drawIndexedIndirect(*indirect_buffer, draw_index * sizeof(vk::DrawIndexedIndirectCommand), 1, sizeof(vk::DrawIndexedIndirectCommand));
 		++draw_index;
 	}
@@ -386,8 +385,7 @@ void Scene::addInstanceBatch(shared<RenderedInstance> instance, const InstanceDa
 	new_batch.instance_buffer = makeShared<VertexBuffer>(new_batch.instance_data.data(), Graphics::MAX_INSTANCES * sizeof(InstanceData), VMA_MEMORY_USAGE_CPU_TO_GPU);
 
 	for (auto&& [set, descriptor_set] : new_batch.instance->material->pipeline->getShader()->getDescriptorSets())
-		if (set != 0) //0 is reserved as Global uniform buffer
-			new_batch.descriptor_sets[set] = *descriptor_set;
+		new_batch.descriptor_sets[set] = *descriptor_set;
 
 
 	instance->instance_batch_index = instance_batches.size() - 1;

@@ -6,6 +6,7 @@
 #include "scene/resources.h"
 #include "utils/string.h"
 #include <spirv_cross/spirv_reflect.hpp>
+#include "scene/scene.h"
 
 Shader::Shader(const std::filesystem::path& file, const std::vector<Define>& defines)
 	: file(file)
@@ -16,9 +17,9 @@ Shader::Shader(const std::filesystem::path& file, const std::vector<Define>& def
 void Shader::compile(const std::vector<Define>& defines)
 {
 	bool resources_was_compiled = resources.size();
-	for (auto& pipeline_shader_stage_info : pipeline_shader_stage_infos)
-		Graphics::logical_device->destroyShaderModule(pipeline_shader_stage_info.module);
-	pipeline_shader_stage_infos.clear();
+	for (const auto& stage : stages)
+		Graphics::logical_device->destroyShaderModule(stage.module);
+	stages.clear();
 
 	std::string defines_str = "";
 	for (const auto& define : defines)
@@ -29,6 +30,13 @@ void Shader::compile(const std::vector<Define>& defines)
 	options.SetTargetEnvironment(shaderc_target_env_vulkan, shadercApiVersion(Graphics::API_VERSION));
 	options.SetForcedVersionProfile(450, shaderc_profile_core);
 	options.AddMacroDefinition("MAX_IMAGE_SLOTS", std::to_string(Graphics::MAX_IMAGE_SLOTS));
+	options.AddMacroDefinition("MAX_LIGHTS", std::to_string(Scene::MAX_LIGHTS));
+	options.AddMacroDefinition("DIFFUSE_TEXTURE", "0");
+	options.AddMacroDefinition("NORMAL_TEXTURE", "1");
+	options.AddMacroDefinition("AO_TEXTURE", "2");
+	options.AddMacroDefinition("HEIGHT_TEXTURE", "3");
+	options.AddMacroDefinition("SPECULAR_TEXTURE", "4");
+	options.AddMacroDefinition("EMMISIVE_TEXTURE", "5");
 	options.SetIncluder(std::make_unique<Includer>());
 #ifdef SK_ENABLE_DEBUG_OUTPUT
 	options.SetGenerateDebugInfo();
@@ -40,10 +48,13 @@ void Shader::compile(const std::vector<Define>& defines)
 	std::filesystem::path path = (std::filesystem::path("data/shaders") / file).string() + ".glsl";
 	std::filesystem::path cache_path = (std::filesystem::path("data/cache/shaders") / file).string() + defines_str + ".glsl";
 	std::unordered_map<uint32_t, std::string> shader_sources = parse(path);
-	std::unordered_map<uint32_t, std::vector<uint32_t>> shader_binaries;
 
 	for (auto&& [type, source] : shader_sources)
 	{
+		stages.emplace_back();
+		auto& stage = stages.back();
+		stage.stage = getVulkanType((Type)type);
+
 		std::string file_cache_path = cache_path.string() + getTypeFileExtension((Type)type) + ".spv";
 //#ifndef SK_ENABLE_DEBUG_OUTPUT
 		std::ifstream in(file_cache_path, std::ios::ate | std::ios::binary);
@@ -51,8 +62,8 @@ void Shader::compile(const std::vector<Define>& defines)
 		{
 			size_t size = in.tellg();
 			in.seekg(0);
-			shader_binaries[type].resize(size / sizeof(uint32_t));
-			in.read((char*)shader_binaries[type].data(), size);
+			stage.binary.resize(size / sizeof(uint32_t));
+			in.read((char*)stage.binary.data(), size);
 
 			SK_TRACE("Shader cache loaded: {0}", file_cache_path);
 		}
@@ -65,31 +76,29 @@ void Shader::compile(const std::vector<Define>& defines)
 
 			shaderc::SpvCompilationResult compilation_result = compiler.CompileGlslToSpv(preprocessed_source, shadercType((Type)type), path.string().c_str(), options);
 			SK_ASSERT(compilation_result.GetCompilationStatus() == shaderc_compilation_status_success, compilation_result.GetErrorMessage());
-			shader_binaries[type] = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend());
+			stage.binary = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend());
 
 			std::ofstream out(file_cache_path, std::ios::binary | std::ios::trunc);
 			SK_ASSERT(out.is_open(), "Couldn't create shader cache file: {0}", file_cache_path);
-			out.write((const char*)shader_binaries[type].data(), shader_binaries[type].size() * sizeof(uint32_t));
+			out.write((const char*)stage.binary.data(), stage.binary.size() * sizeof(uint32_t));
 		
 			SK_TRACE("Shader cache created: {0}", file_cache_path);
 		}
-		
-		vk::PipelineShaderStageCreateInfo pipeline_shader_stage_info{};
-		pipeline_shader_stage_info.stage = getVulkanType((Type)type);
-		pipeline_shader_stage_info.module = createShaderModule(shader_binaries[type]);
-		pipeline_shader_stage_info.pName = "main";
-		
 
-		pipeline_shader_stage_infos.emplace_back(std::move(pipeline_shader_stage_info));
+		vk::ShaderModuleCreateInfo ci{};
+		ci.codeSize = stage.binary.size() * sizeof(uint32_t);
+		ci.pCode = stage.binary.data();
+		stage.module = Graphics::logical_device->createShaderModule(ci);
 	}
 
 #define SK_WEIRD_ERROR_FIX 1 //If you have error in this file, set this to 0, compile (you will get an error), set it back to 1, recompile (IDK why this works, help), if it still doesn't work retry couple times
 #if SK_WEIRD_ERROR_FIX
 	if (!resources_was_compiled)
 	{
-		for (auto&& [type, binary] : shader_binaries)
+		for (const auto& stage : stages)
 		{
-			auto stage_flag = getVulkanType((Type)type);
+			const auto& binary = stage.binary;
+			auto stage_flag = stage.stage;
 			spirv_cross::Compiler spirv_compiler(binary);
 			spirv_cross::ShaderResources shader_resources = spirv_compiler.get_shader_resources();
 			
@@ -117,6 +126,13 @@ void Shader::compile(const std::vector<Define>& defines)
 			for (const spirv_cross::Resource& push_constant : shader_resources.push_constant_buffers)
 				loadPushConstant(push_constant, spirv_compiler, shader_resources, stage_flag);
 
+			auto constants = spirv_compiler.get_specialization_constants();
+			for (auto& constant : constants)
+			{
+				auto& shader_constant = this->constants[spirv_compiler.get_name(constant.id)];
+				shader_constant = { constant.constant_id, shader_constant.stage | stage_flag };
+			}
+
 			//Local size reflection
 			local_size = glm::uvec3(0);
 			local_size[0] = spirv_compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 0);
@@ -130,7 +146,7 @@ void Shader::compile(const std::vector<Define>& defines)
 		for (const auto& resource : this->resources)
 		{
 			auto& set = descriptor_sets.at(resource.set);
-			set->add(resource.binding, resource.count, resource.type, resource.stage_flags);
+			set->add(resource.binding, resource.count, resource.type, resource.stage);
 			resource_locations.emplace(resource.name, ResourceLocation{ resource.set, write_index });
 			++write_index;
 		}
@@ -158,8 +174,8 @@ void Shader::set(const std::string& resource_name, const std::vector<vk::Descrip
 
 Shader::~Shader()
 {
-	for (auto& pipeline_shader_stage_info : pipeline_shader_stage_infos)
-		Graphics::logical_device->destroyShaderModule(pipeline_shader_stage_info.module);
+	for (const auto& stage : stages)
+		Graphics::logical_device->destroyShaderModule(stage.module);
 }
 
 std::unordered_map<uint32_t, std::string> Shader::parse(const std::filesystem::path& file)
@@ -188,18 +204,7 @@ std::unordered_map<uint32_t, std::string> Shader::parse(const std::filesystem::p
 	return shader_sources;
 }
 
-vk::ShaderModule Shader::createShaderModule(const std::vector<uint32_t>& source) const
-{
-	vk::ShaderModuleCreateInfo ci{};
-	ci.codeSize = source.size() * sizeof(uint32_t);
-	ci.pCode = source.data();
-
-	vk::ShaderModule shader_module = Graphics::logical_device->createShaderModule(ci);
-
-	return shader_module;
-}
-
-void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, vk::ShaderStageFlags stage_flag, vk::DescriptorType type)
+void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, vk::ShaderStageFlags stage, vk::DescriptorType type)
 {
 	const spirv_cross::SPIRType& spir_type = compiler.get_type(spirv_resource.type_id);
 
@@ -207,7 +212,7 @@ void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spi
 	{
 		if (resource.id == spir_type.basetype)
 		{
-			resource.stage_flags |= stage_flag;
+			resource.stage |= stage;
 			return;
 		}
 	}
@@ -224,20 +229,18 @@ void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spi
 	if (!count)
 		count = 1;
 
-	Resource resource
-	{
-		.id = (size_t)spir_type.basetype,
-		.count = count,
-		.set = set,
-		.binding = binding,
-		.stage_flags = stage_flag,
-		.type = type,
-		.name = compiler.get_name(spirv_resource.id)
-	}; 
+	Resource resource{};
+	resource.id = (size_t)spir_type.basetype;
+	resource.count = count;
+	resource.set = set;
+	resource.binding = binding;
+	resource.stage = stage;
+	resource.type = type;
+	resource.name = compiler.get_name(spirv_resource.id);
 	this->resources.emplace_back(std::move(resource));
 }
 
-void Shader::loadPushConstant(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, vk::ShaderStageFlags stage_flag)
+void Shader::loadPushConstant(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, vk::ShaderStageFlags stage)
 {
 	auto ranges = compiler.get_active_buffer_ranges(resources.push_constant_buffers.front().id);
 	for (auto& range : ranges)
@@ -246,14 +249,14 @@ void Shader::loadPushConstant(const spirv_cross::Resource& spirv_resource, const
 		{
 			if (push_constant.size == range.range && push_constant.offset == range.offset)
 			{
-				push_constant.stageFlags |= stage_flag;
+				push_constant.stageFlags |= stage;
 				return;
 			}
 		}
 		vk::PushConstantRange push_constant_range{};
 		push_constant_range.offset = range.offset;
 		push_constant_range.size = range.range;
-		push_constant_range.stageFlags = stage_flag;
+		push_constant_range.stageFlags = stage;
 		push_constants.emplace_back(std::move(push_constant_range));
 	}
 }

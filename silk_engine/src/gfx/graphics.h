@@ -40,7 +40,7 @@ public:
 			indices = 0;
 		}
 	} stats{};
-	static inline struct Active
+	static inline struct Active //TODO: state system does not support multithreading, think of something else later
 	{
 		vk::Pipeline pipeline = VK_NULL_HANDLE;
 		vk::PipelineLayout pipeline_layout = VK_NULL_HANDLE;

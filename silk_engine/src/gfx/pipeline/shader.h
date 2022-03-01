@@ -14,7 +14,7 @@ class Shader : NonCopyable
 		uint32_t count;
 		uint32_t set;
 		uint32_t binding;
-		vk::ShaderStageFlags stage_flags;
+		vk::ShaderStageFlags stage;
 		vk::DescriptorType type;
 		std::string name;
 	};
@@ -60,6 +60,19 @@ class Shader : NonCopyable
 		};
 	};
 
+	struct PerStageData
+	{
+		vk::ShaderStageFlagBits stage;
+		std::vector<uint32_t> binary;
+		vk::ShaderModule module;
+	};
+
+	struct Constant
+	{
+		uint32_t id = 0;
+		vk::ShaderStageFlags stage = vk::ShaderStageFlags(0);
+	};
+
 public:
 	enum class Type : uint32_t
 	{
@@ -89,7 +102,8 @@ public:
 
 	const std::unordered_map<uint32_t, shared<DescriptorSet>>& getDescriptorSets() const { return descriptor_sets; }
 	const std::vector<vk::PushConstantRange>& getPushConstants() const { return push_constants; }
-	const std::vector<vk::PipelineShaderStageCreateInfo>& getPipelineShaderStageInfos() const { return pipeline_shader_stage_infos; }
+	const std::unordered_map<std::string, Constant>& getConstants() const { return constants; }
+	const std::vector<PerStageData>& getStages() const { return stages; }
 	const glm::uvec3& getLocalSize() const 
 	{ 
 		SK_ASSERT(local_size != glm::uvec3(0), "Shader had invalid local size, make sure you are using a compute shader with right local_size."); 
@@ -105,15 +119,13 @@ public:
 
 private:
 	std::unordered_map<uint32_t, std::string> parse(const  std::filesystem::path& file);
-	vk::ShaderModule createShaderModule(const std::vector<uint32_t>& source) const;
     
 	//Reflection
-	void loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, vk::ShaderStageFlags stage_flag, vk::DescriptorType type);
-	void loadPushConstant(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, vk::ShaderStageFlags stage_flag);
+	void loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, vk::ShaderStageFlags stage, vk::DescriptorType type);
+	void loadPushConstant(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, vk::ShaderStageFlags stage);
 
 private:
 	std::filesystem::path file;
-    std::vector<vk::PipelineShaderStageCreateInfo> pipeline_shader_stage_infos;
 	
 	//Reflection data
 	glm::uvec3 local_size = glm::vec3(0);
@@ -121,4 +133,6 @@ private:
     std::vector<vk::PushConstantRange> push_constants;
 	std::vector<Resource> resources;
 	std::unordered_map<std::string, ResourceLocation> resource_locations;
+	std::unordered_map<std::string, Constant> constants;
+	std::vector<PerStageData> stages;
 };

@@ -119,7 +119,7 @@ void Graphics::screenshot(const std::string& file)
 	int height = swap_chain->getExtent().height;
 	int channels = Image::channelCount(swap_chain->getSurfaceFormat().format);
 	size_t pixels = width * height;
-
+	 
 	DebugTimer t1("Create/Copy Image");
 	Image2DProps props{};
 	props.width = width;

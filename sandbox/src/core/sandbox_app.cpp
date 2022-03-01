@@ -45,7 +45,7 @@ void SandboxApp::onUpdate()
     if (Input::isKeyPressed(Keys::Z))
     {
         entities.emplace_back(scene->createEntity());
-        //entities.back()->addComponent<MaterialComponent>(Resources::getShaderEffect("3D"));
+        entities.back()->addComponent<MaterialComponent>(Resources::getShaderEffect("3D"));
         entities.back()->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         entities.back()->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float()) * 20.0f));
         entities.back()->addComponent<ModelComponent>(Resources::getModel("Backpack"));
@@ -54,13 +54,13 @@ void SandboxApp::onUpdate()
         entities.back()->addComponent<LightComponent>(light);
     }
 
-    Resources::pool.forEach(entities.size(), 
-        [&](size_t i) 
-        {
-            entities[i]->updateComponent<TransformComponent>([](TransformComponent& transform) {});
-            entities[i]->updateComponent<ColorComponent>([](ColorComponent& color) { color.color = glm::vec4(RNG::Float(), RNG::Float(), RNG::Float(), 1.0f); });
-        });
-    Resources::pool.wait();
+    //Resources::pool.forEach(entities.size(), 
+    //    [&](size_t i) 
+    //    {
+    //        entities[i]->updateComponent<TransformComponent>([](TransformComponent& transform) {});
+    //        entities[i]->updateComponent<ColorComponent>([](ColorComponent& color) { color.color = glm::vec4(RNG::Float(), RNG::Float(), RNG::Float(), 1.0f); });
+    //    });
+    //Resources::pool.wait();
 
     scene->onUpdate();
 }
