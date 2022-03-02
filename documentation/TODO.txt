@@ -1,7 +1,6 @@
 - Multiple render passes
 - Fast Culling
 - Fast Occlusion Culling
-- Implement specialization constants and convert 3D shader to it (removes shader compilation time, making it faster)
 - Handle normal/other maps and materials in shader
 - Stream data instead of pre-initializing it
 - Better material system

@@ -1,8 +1,9 @@
 #folders
-build/*
-vendor/*
+build/
+vendor/
 
 #files
+CMakeSettings.json
 *.user
 .vscode
 .vs
