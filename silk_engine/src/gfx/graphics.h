@@ -3,7 +3,6 @@
 #include "scene/light.h"
 #include "enums.h"
 #include "utils/alarm.h"
-#include "buffers/command_buffer.h"
 
 class WindowResizeEvent;
 class Instance;
@@ -12,6 +11,7 @@ class PhysicalDevice;
 class LogicalDevice;
 class Allocator;
 class CommandPool;
+class CommandBuffer;
 class SwapChain;
 class DescriptorPool;
 class DescriptorSet;

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vk_mem_alloc.h>
-
 enum class Type
 {
 	BOOL,

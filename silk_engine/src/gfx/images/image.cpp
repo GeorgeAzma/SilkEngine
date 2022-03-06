@@ -6,6 +6,8 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/window/swap_chain.h"
 #include "gfx/buffers/storage_buffer.h"
+#include "gfx/buffers/command_buffer.h"
+
 Image::~Image()
 {
 	view = nullptr;

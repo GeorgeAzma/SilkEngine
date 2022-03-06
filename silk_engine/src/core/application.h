@@ -1,7 +1,6 @@
 #pragma once
 
 #include "log.h"
-#include "gfx/window/window.h"
 #include "layer_stack.h"
 #include "utils/fixed_update.h"
 #include "event.h"

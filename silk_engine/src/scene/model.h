@@ -21,6 +21,7 @@ class RawModel
 		Bitmap emissive_map;
 		static constexpr size_t size() { return 6u; }
 	};
+
 public:
 	RawModel(const std::string& file);
 

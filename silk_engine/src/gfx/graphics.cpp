@@ -15,9 +15,11 @@
 #include "window/window.h"
 #include "scene/resources.h"
 #include "buffers/storage_buffer.h"
+#include "buffers/command_buffer.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
+#include <GLFW/glfw3.h>
 
 void Graphics::init()
 {

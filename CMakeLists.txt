@@ -4,9 +4,14 @@ project(VulkanEngine VERSION 1.0.0 LANGUAGES CXX)
 include(FetchContent)
 include(ExternalProject)
 
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+    message(FATAL_ERROR "In-source build detected!")
+endif()
+
 #Some good to have code
 set(CMAKE_CXX_STANDARD 20)
 set(CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_DEBUG_POSTFIX d)
 
 if(MSVC)
@@ -30,8 +35,8 @@ list(APPEND EXTRA_LIBS ${Vulkan_LIBRARIES})
 string(FIND ${Vulkan_LIBRARIES} "/Lib" Vulkan_PATH_POS)
 string(SUBSTRING ${Vulkan_LIBRARIES} 0 ${Vulkan_PATH_POS} VULKAN_PATH)
 list(APPEND EXTRA_LIBS 
-    "${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}shaderc_combined$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}"
-    "${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-core$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}shaderc_combined$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-core$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
 )
 
 #spdlog
@@ -39,13 +44,11 @@ FetchContent_Declare(SPDLOG
 GIT_REPOSITORY  https://github.com/gabime/spdlog
 GIT_TAG         v1.9.2
 GIT_SHALLOW     ON
-SOURCE_DIR "${PROJECT_SOURCE_DIR}/vendor/spdlog"
-UPDATE_COMMAND ""
+SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/spdlog
+UPDATE_COMMAND  ""
 )
 FetchContent_MakeAvailable(SPDLOG)
-list(APPEND INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/vendor/spdlog/include")
-
-find_package(Threads REQUIRED)
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
 
 #glfw
 list(APPEND DEPENDENCIES_TO_ADD GLFW)
@@ -54,54 +57,46 @@ GIT_REPOSITORY  https://github.com/glfw/glfw
 GIT_TAG         3.3.5
 GIT_SHALLOW     ON
 CMAKE_ARGS   -DGLFW_BUILD_EXAMPLES=OFF
+             -DGLFW_BUILD_DOCS=OFF
              -DGLFW_BUILD_TESTS=OFF
-             -DCMAKE_INSTALL_PREFIX="${PROJECT_SOURCE_DIR}/vendor/glfw"
-UPDATE_COMMAND ""
+             -DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/vendor/glfw
+UPDATE_COMMAND  ""
 )
-list(APPEND INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/vendor/glfw/include")
-list(APPEND EXTRA_LIBS "${PROJECT_SOURCE_DIR}/vendor/glfw/lib/${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_STATIC_LIBRARY_SUFFIX}")
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glfw/include)
+list(APPEND EXTRA_LIBS ${PROJECT_SOURCE_DIR}/vendor/glfw/lib/${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 #glm
 FetchContent_Declare(GLM
 GIT_REPOSITORY  https://github.com/g-truc/glm
 GIT_TAG origin/master
 GIT_SHALLOW     ON
-SOURCE_DIR "${PROJECT_SOURCE_DIR}/vendor/glm"
-BUILD_COMMAND ""
-CONFIGURE_COMMAND ""
-INSTALL_COMMAND ""
-UPDATE_COMMAND ""
+SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/glm
+UPDATE_COMMAND  ""
 )
 FetchContent_MakeAvailable(GLM)
-list(APPEND INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/vendor/glm")
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glm)
 
 #entt
 FetchContent_Declare(ENTT
 GIT_REPOSITORY  https://github.com/skypjack/entt
 GIT_TAG origin/master
 GIT_SHALLOW     ON
-SOURCE_DIR "${PROJECT_SOURCE_DIR}/vendor/entt"
-BUILD_COMMAND ""
-CONFIGURE_COMMAND ""
-INSTALL_COMMAND ""
-UPDATE_COMMAND ""
+SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/entt
+UPDATE_COMMAND  ""
 )
 FetchContent_MakeAvailable(ENTT)
-list(APPEND INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/vendor/entt/src")
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/entt/src)
 
 #stb
 FetchContent_Declare(STB
 GIT_REPOSITORY   https://github.com/nothings/stb
 GIT_TAG origin/master
 GIT_SHALLOW     ON
-SOURCE_DIR "${PROJECT_SOURCE_DIR}/vendor/stb"
-BUILD_COMMAND ""
-CONFIGURE_COMMAND ""
-INSTALL_COMMAND ""
-UPDATE_COMMAND ""
+SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/stb
+UPDATE_COMMAND  ""
 )
 FetchContent_MakeAvailable(STB)
-list(APPEND INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/vendor/stb")
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/stb)
 
 #FreeType
 list(APPEND DEPENDENCIES_TO_ADD FREETYPE)
@@ -109,25 +104,22 @@ ExternalProject_Add(FREETYPE
 GIT_REPOSITORY   https://github.com/freetype/freetype
 GIT_TAG origin/master
 GIT_SHALLOW     ON
-CMAKE_ARGS   -DCMAKE_INSTALL_PREFIX="${PROJECT_SOURCE_DIR}/vendor/freetype"
-UPDATE_COMMAND ""
+CMAKE_ARGS   -DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/vendor/freetype
+UPDATE_COMMAND  ""
 )
-list(APPEND INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/vendor/freetype/include/freetype2")
-list(APPEND EXTRA_LIBS "${PROJECT_SOURCE_DIR}/vendor/freetype/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freetype$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}")
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/freetype/include/freetype2)
+list(APPEND EXTRA_LIBS ${PROJECT_SOURCE_DIR}/vendor/freetype/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freetype$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 #vma
 FetchContent_Declare(VMA
 GIT_REPOSITORY   https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
 GIT_TAG origin/master
 GIT_SHALLOW     ON
-SOURCE_DIR "${PROJECT_SOURCE_DIR}/vendor/vma"
-BUILD_COMMAND ""
-CONFIGURE_COMMAND ""
-INSTALL_COMMAND ""
+SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/vma
 UPDATE_COMMAND  ""
 )
 FetchContent_MakeAvailable(VMA)
-list(APPEND INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/vendor/vma/include")
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/vma/include)
 
 #assimp
 list(APPEND DEPENDENCIES_TO_ADD ASSIMP)
@@ -135,9 +127,8 @@ ExternalProject_Add(ASSIMP
 GIT_REPOSITORY  https://github.com/assimp/assimp
 GIT_TAG         v5.0.0
 GIT_SHALLOW     ON
-UPDATE_COMMAND  ""
-CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR="${PROJECT_SOURCE_DIR}/vendor/assimp/lib"
-                -DASSIMP_INCLUDE_INSTALL_DIR="${PROJECT_SOURCE_DIR}/vendor/assimp/include"
+CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_SOURCE_DIR}/vendor/assimp/lib
+                -DASSIMP_INCLUDE_INSTALL_DIR=${PROJECT_SOURCE_DIR}/vendor/assimp/include
                 -DASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT:BOOL=OFF
                 -DASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT:BOOL=OFF
                 -DASSIMP_BUILD_ASSIMP_TOOLS:BOOL=OFF
@@ -152,13 +143,13 @@ CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR="${PROJECT_SOURCE_DIR}/vendor/assimp/li
                 -DASSIMP_INJECT_DEBUG_POSTFIX:BOOL=OFF
                 -DBUILD_SHARED_LIBS:BOOL=OFF
                 -DCMAKE_POLICY_DEFAULT_CMP0091:STRING=NEW
+UPDATE_COMMAND  ""
 )
-list(APPEND INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/vendor/assimp/include")
-link_directories("${PROJECT_SOURCE_DIR}/vendor/assimp/lib")
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/assimp/include)
 list(APPEND EXTRA_LIBS 
-"${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}assimp$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}" 
-"${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zlibstatic$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}" 
-"${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}irrXML$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}"
+${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}assimp$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
+${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zlibstatic$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
+${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}irrXML$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
 )
 
 #Sub dirs
@@ -169,19 +160,11 @@ add_library(SilkEngine STATIC ${SILK_ENGINE_SOURCES})
 
 #Include dirs
 target_include_directories(SilkEngine PUBLIC 
-"${PROJECT_SOURCE_DIR}/silk_engine/src"
+${PROJECT_SOURCE_DIR}/silk_engine/src
 ${INCLUDE_DIRS}
 )
 
-#Add dependencies
-foreach(item IN LISTS DEPENDENCIES_TO_ADD)
-    if("${${item}}" MATCHES TRUE)
-        string(FIND ${item} "_" UNDERLINE_POS)
-        string(SUBSTRING ${item} 0 ${UNDERLINE_POS} USABLE_STRING)
-        string(TOUPPER ${USABLE_STRING} UPPER_STRING)
-        add_dependencies(VulkanEngine ${UPPER_STRING})
-    endif()
-endforeach()
+add_dependencies(SilkEngine ${DEPENDENCIES_TO_ADD})
 
 #Defines
 target_compile_definitions(SilkEngine PUBLIC 
@@ -233,6 +216,7 @@ silk_engine/src/core/base.h
 <future>
 <concepts>
 <vulkan/vulkan.hpp>
+<vk_mem_alloc.h>
 silk_engine/src/core/log.h
 silk_engine/src/io/file.h
 silk_engine/src/utils/math.h
@@ -241,6 +225,7 @@ silk_engine/src/utils/thread_pool.h)
 
 #Link
 target_link_libraries(SilkEngine ${EXTRA_LIBS})
+
 
 ############################__SANDBOX__#####################################
 file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp" "sandbox/src/*.h")

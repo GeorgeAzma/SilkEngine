@@ -9,6 +9,9 @@
 #include "utils/time.h"
 #include "gfx/window/swap_chain.h"
 #include "utils/timers.h"
+#include "core/event.h"
+#include "gfx/window/window.h"
+#include "gfx/graphics.h"
 
 Scene::Scene()
 {

@@ -9,7 +9,7 @@ public:
 
 	operator bool();
 
-	Time lastSetoff() const { return start_time; }
+	const Time& lastSetoff() const { return start_time; }
 
 private:
 	Time start_time;

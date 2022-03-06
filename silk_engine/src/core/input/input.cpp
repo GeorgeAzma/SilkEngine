@@ -3,6 +3,7 @@
 #include "mouse_buttons.h"
 #include "gfx/window/window.h"
 #include "gfx/images/image2D.h"
+#include <GLFW/glfw3.h>
 
 void Input::init()
 {

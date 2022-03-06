@@ -5,8 +5,36 @@
 #include "gfx/devices/physical_device.h"
 #include "scene/resources.h"
 #include "utils/string.h"
-#include <spirv_cross/spirv_reflect.hpp>
 #include "scene/scene.h"
+#include <spirv_cross/spirv_cross.hpp>
+
+shaderc_include_result* Shader::Includer::GetInclude(const char* requested_source, shaderc_include_type type, const char* requesting_source, size_t include_depth)
+{
+	const std::string name = std::string("data/shaders/") + requested_source;
+	const std::string contents = File::read(name);
+
+	auto container = new std::array<std::string, 2>;
+	(*container)[0] = name;
+	(*container)[1] = contents;
+
+	auto data = new shaderc_include_result;
+
+	data->user_data = container;
+
+	data->source_name = (*container)[0].data();
+	data->source_name_length = (*container)[0].size();
+
+	data->content = (*container)[1].data();
+	data->content_length = (*container)[1].size();
+
+	return data;
+}
+
+void Shader::Includer::ReleaseInclude(shaderc_include_result* data)
+{
+	delete static_cast<std::array<std::string, 2>*>(data->user_data);
+	delete data;
+}
 
 Shader::Shader(const std::filesystem::path& file, const std::vector<Define>& defines)
 	: file(file)

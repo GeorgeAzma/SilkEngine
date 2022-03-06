@@ -6,6 +6,7 @@
 #include "core/event.h"
 #include "core/layer.h"
 #include "core/layer_stack.h"
+#include "core/entry_point.h"
 
 #include "core/input/mouse_buttons.h"
 #include "core/input/joystick_buttons.h"
@@ -72,3 +73,4 @@
 #include "scene/meshes/mesh.h"
 #include "scene/meshes/circle_mesh.h"
 #include "scene/meshes/rectangle_mesh.h"
+

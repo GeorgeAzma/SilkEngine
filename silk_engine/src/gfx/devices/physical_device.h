@@ -1,7 +1,5 @@
 #pragma once
 
-#include <optional>
-
 struct QueueFamilyIndices
 {
 	std::optional<uint32_t> graphics;
@@ -9,21 +7,9 @@ struct QueueFamilyIndices
 	std::optional<uint32_t> present;
 	std::optional<uint32_t> compute;
 
-	bool isSuitable() const
-	{
-		return graphics.has_value() 
-			&& transfer.has_value()
-			&& present.has_value() 
-			&& compute.has_value();
-	}
+	bool isSuitable() const;
 
-	std::vector<uint32_t> getIndices() const 
-	{ 
-		if (!isSuitable()) 
-			return {};
-
-		return { *graphics, *transfer, *present, *compute };
-	};
+	std::vector<uint32_t> getIndices() const;
 };
 
 class PhysicalDevice : NonCopyable

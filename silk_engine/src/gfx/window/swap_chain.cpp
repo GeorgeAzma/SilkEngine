@@ -4,6 +4,7 @@
 #include "gfx/window/window.h"
 #include "gfx/window/surface.h"
 #include "gfx/devices/logical_device.h"
+#include <GLFW/glfw3.h>
 
 SwapChain::SwapChain(const std::optional<vk::SwapchainKHR>& old_swap_chain)
 {

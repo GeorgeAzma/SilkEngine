@@ -1,8 +1,6 @@
 #pragma once
 
 #include "descriptor_set_layout.h"
-#include "gfx/images/image.h"
-#include "gfx/images/image_array.h"
 
 class DescriptorSet : NonMovable
 {

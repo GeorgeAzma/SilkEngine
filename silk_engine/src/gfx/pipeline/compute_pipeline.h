@@ -2,8 +2,6 @@
 
 #include "pipeline.h"
 
-class WindowResizeEvent;
-
 class ComputePipeline : public Pipeline
 {
 public:

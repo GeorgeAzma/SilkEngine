@@ -1,11 +1,8 @@
 #pragma once
 
-#include "gfx/window/window.h"
-#include "core/log.h"
-#include "utils/math.h"
-#include "scene/model.h"
-#include "scene/instance.h"
-#include "scene/camera/camera.h"
+#include "model.h"
+#include "instance.h"
+#include "camera/camera.h"
 
 struct TransformComponent
 {

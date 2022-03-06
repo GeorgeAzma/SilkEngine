@@ -5,6 +5,22 @@
 #include "gfx/window/surface.h"
 #include "gfx/instance.h"
 
+bool QueueFamilyIndices::isSuitable() const
+{
+	return graphics.has_value()
+		&& transfer.has_value()
+		&& present.has_value()
+		&& compute.has_value();
+}
+
+std::vector<uint32_t> QueueFamilyIndices::getIndices() const
+{
+	if (!isSuitable())
+		return {};
+
+	return { *graphics, *transfer, *present, *compute };
+}
+
 PhysicalDevice::PhysicalDevice()
 {
 	physical_device = chooseMostSuitablePhysicalDevice(Graphics::instance->getAvailablePhysicalDevices());

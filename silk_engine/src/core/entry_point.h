@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include "application.h"
+#include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
 
 extern Application *createApp(ApplicationCommandLineArgs args);

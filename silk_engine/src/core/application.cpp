@@ -8,6 +8,7 @@
 #include "utils/timers.h"
 #include "scene/resources.h"
 #include "gfx/window/swap_chain.h"
+#include "gfx/window/window.h"
 
 Application::Application(const char* name, ApplicationCommandLineArgs args)
     : command_line_args(args), app_update(0.0)

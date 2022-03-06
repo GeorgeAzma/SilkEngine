@@ -2,7 +2,7 @@
 
 #include "buffer.h"
 
-class UniformBuffer : public Buffer //includes setData(const void* data)
+class UniformBuffer : public Buffer
 {
 public:
 	UniformBuffer(vk::DeviceSize size);

@@ -4,6 +4,7 @@
 #include "gfx/window/window.h"
 #include "gfx/instance.h"
 #include "gfx/devices/physical_device.h"
+#include <GLFW/glfw3.h>
 
 Surface::Surface()
 {

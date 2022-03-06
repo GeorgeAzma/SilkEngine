@@ -1,13 +1,12 @@
 #pragma once
 
-#include "core/event.h"
 #include "instance.h"
 #include "light.h"
 #include "gfx/buffers/indirect_buffer.h"
 #include "gfx/buffers/uniform_buffer.h"
-#include "gfx/graphics.h"
 
 class Entity;
+class WindowResizeEvent;
 
 class Scene
 {

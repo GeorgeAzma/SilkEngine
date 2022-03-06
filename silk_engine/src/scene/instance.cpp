@@ -3,6 +3,18 @@
 #include "gfx/window/swap_chain.h"
 #include "gfx/devices/logical_device.h"
 
+bool InstanceData::operator==(const InstanceData& other) const
+{
+	return transform == other.transform
+		&& image_index == other.image_index
+		&& color == color;
+}
+
+bool RenderedInstance::operator==(const RenderedInstance& other) const
+{
+	return (*mesh == *other.mesh);
+}
+
 InstanceBatch::~InstanceBatch()
 {
 	Graphics::logical_device->waitIdle();
@@ -55,4 +67,15 @@ uint32_t InstanceBatch::addImages(const std::vector<shared<Image2D>>& new_images
 		++image_owners[image_index + j];
 
 	return image_index;
+}
+
+void InstanceBatch::removeImages(size_t index, size_t count)
+{
+	for (size_t i = 0; i < count; ++i)
+		--image_owners[index + i];
+}
+
+bool InstanceBatch::operator==(const RenderedInstance& instance) const
+{
+	return *this->instance == instance;
 }

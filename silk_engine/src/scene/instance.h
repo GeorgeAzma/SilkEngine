@@ -20,12 +20,7 @@ struct InstanceData
 	uint32_t image_index = 0;
 	glm::vec4 color = glm::vec4(1);
 
-	bool operator==(const InstanceData& other) const
-	{
-		return transform == other.transform
-			&& image_index == other.image_index
-			&& color == color;
-	}
+	bool operator==(const InstanceData& other) const;
 };
 
 struct InstanceBatch;
@@ -39,10 +34,7 @@ struct RenderedInstance
 	size_t instance_data_index = -1;
 	size_t instance_batch_index = -1;
 
-	bool operator==(const RenderedInstance& other) const
-	{
-		return (*mesh == *other.mesh);
-	}
+	bool operator==(const RenderedInstance& other) const;
 };
 
 struct InstanceBatch
@@ -60,17 +52,10 @@ struct InstanceBatch
 
 	void bind();
 	uint32_t addImages(const std::vector<shared<Image2D>>& new_images);
-	void removeImages(size_t index, size_t count) 
-	{ 
-		for (size_t i = 0; i < count; ++i)
-			--image_owners[index + i];
-	}
+	void removeImages(size_t index, size_t count);
 
 	bool needs_update = true;
 	bool images_need_update = true;
 
-	bool operator==(const RenderedInstance& instance) const
-	{
-		return *this->instance == instance;
-	}
+	bool operator==(const RenderedInstance& instance) const;
 };
