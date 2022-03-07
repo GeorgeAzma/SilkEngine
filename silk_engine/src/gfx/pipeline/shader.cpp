@@ -1,4 +1,5 @@
 #include "shader.h"
+#include "shader.h"
 #include "io/file.h"
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
@@ -118,7 +119,7 @@ void Shader::compile(const std::vector<Define>& defines)
 		ci.pCode = stage.binary.data();
 		stage.module = Graphics::logical_device->createShaderModule(ci);
 	}
-
+	
 #define SK_WEIRD_ERROR_FIX 1 //If you have error in this file, set this to 0, compile (you will get an error), set it back to 1, recompile (IDK why this works, help), if it still doesn't work retry couple times
 #if SK_WEIRD_ERROR_FIX
 	if (!resources_was_compiled)
@@ -170,9 +171,12 @@ void Shader::compile(const std::vector<Define>& defines)
 				local_size = glm::max(local_size, glm::uvec3(1));
 		}
 
-		uint32_t write_index = 0;
+		std::unordered_map<uint32_t, uint32_t> write_indices;
+		for (const auto& resource : this->resources)
+			write_indices[resource.set] = 0;
 		for (const auto& resource : this->resources)
 		{
+			auto& write_index = write_indices[resource.set];
 			auto& set = descriptor_sets.at(resource.set);
 			set->add(resource.binding, resource.count, resource.type, resource.stage);
 			resource_locations.emplace(resource.name, ResourceLocation{ resource.set, write_index });
@@ -190,14 +194,20 @@ void Shader::compile(const std::vector<Define>& defines)
 
 void Shader::set(const std::string& resource_name, const std::vector<vk::DescriptorBufferInfo>& buffer_infos)
 {
-	auto& resource_location = resource_locations.at(resource_name);
+	const auto& resource_location = resource_locations.at(resource_name);
 	descriptor_sets.at(resource_location.set)->setBufferInfo(resource_location.write_index, buffer_infos);
 }
 
 void Shader::set(const std::string& resource_name, const std::vector<vk::DescriptorImageInfo>& image_infos)
 {
-	auto& resource_location = resource_locations.at(resource_name);
+	const auto& resource_location = resource_locations.at(resource_name);
 	descriptor_sets.at(resource_location.set)->setImageInfo(resource_location.write_index, image_infos);
+}
+
+const Shader::ResourceLocation* Shader::getIfExists(const std::string& resource_name) const
+{
+	auto resource_location = resource_locations.find(resource_name);
+	return (resource_location != resource_locations.end()) ? &resource_location->second : nullptr;
 }
 
 Shader::~Shader()

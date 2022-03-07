@@ -7,18 +7,18 @@ CircleMesh::CircleMesh(unsigned int resolution)
 	const size_t indices_count = resolution * 3;
 	vertices.resize(vertices_count);
 	indices.resize(indices_count);
-	constexpr glm::vec3 center(0);
+	constexpr glm::vec2 center(0);
 	vertices[0].position = center;
 
 	for (size_t i = 0; i < resolution; ++i)
 	{
 		float d = (float)i / resolution * glm::two_pi<float>();
-		vertices[i + 1].position = glm::vec3(cos(d), sin(d), 0);
+		vertices[i + 1].position = glm::vec2(cos(d), sin(d));
 	}
 
 	for (size_t i = 0; i < vertices_count; ++i)
 	{
-		vertices[i].texture_coordinates = (vertices[i].position + glm::vec3(1, 1, 0)) * glm::vec3(0.5f, 0.5f, 0.0f);
+		vertices[i].texture_coordinates = (vertices[i].position + glm::vec2(1)) * glm::vec2(0.5f, 0.5f);
 		vertices[i].texture_coordinates.y = 1.0f - vertices[i].texture_coordinates.y;
 	}
 

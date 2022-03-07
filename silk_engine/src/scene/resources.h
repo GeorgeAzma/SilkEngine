@@ -13,6 +13,7 @@ public:
 	static void cleanup();
 
 	static shared<Mesh> getMesh(const std::string& name);
+	static shared<Mesh2D> getMesh2D(const std::string& name);
 	static shared<Model> getModel(const std::string& name);
 	static shared<ShaderEffect> getShaderEffect(const std::string& name);
 	static shared<ComputeShaderEffect> getComputeShaderEffect(const std::string& name);
@@ -22,6 +23,7 @@ public:
 	static shared<Font> getFont(const std::string& path);
 
 	static void addMesh(const std::string& name, shared<Mesh> mesh);
+	static void addMesh2D(const std::string& name, shared<Mesh2D> mesh);
 	static void addModel(const std::string& name, shared<Model> model);
 	static void addShaderEffect(const std::string& name, shared<ShaderEffect> shader_effect);
 	static void addComputeShaderEffect(const std::string& name, shared<ComputeShaderEffect> compute_shader_effect);
@@ -34,6 +36,7 @@ public:
 
 private:
 	static inline std::unordered_map<std::string, shared<Mesh>> meshes;
+	static inline std::unordered_map<std::string, shared<Mesh2D>> meshes2D;
 	static inline std::unordered_map<std::string, shared<Model>> models;
 	static inline std::unordered_map<std::string, shared<ShaderEffect>> shader_effects;
 	static inline std::unordered_map<std::string, shared<ComputeShaderEffect>> compute_shader_effects;

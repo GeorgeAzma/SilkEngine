@@ -1,4 +1,6 @@
 #include "resources.h"
+#include "resources.h"
+#include "resources.h"
 #include "meshes/circle_mesh.h"
 #include "meshes/rectangle_mesh.h"
 #include "gfx/graphics.h"
@@ -51,8 +53,10 @@ void Resources::init()
 
     //MESHES
     {
-        addMesh("Circle", makeShared<CircleMesh>());
-        addMesh("Rectangle", makeShared<RectangleMesh>());
+        addMesh2D("Circle", makeShared<CircleMesh>());
+        addMesh2D("Rectangle", makeShared<RectangleMesh>());
+        addMesh("Circle", *getMesh2D("Circle"));
+        addMesh("Rectangle", *getMesh2D("Rectangle"));
     }
 
     //MODELS
@@ -100,6 +104,7 @@ void Resources::cleanup()
 {
     fonts.clear();
 	meshes.clear();
+    meshes2D.clear();
 	models.clear();
     shader_effects.clear();
     compute_shader_effects.clear();
@@ -111,6 +116,12 @@ shared<Mesh> Resources::getMesh(const std::string& name)
 {
     auto it = meshes.find(name);
     return it == meshes.end() ? nullptr : it->second;
+}
+
+shared<Mesh2D> Resources::getMesh2D(const std::string& name)
+{
+    auto it = meshes2D.find(name);
+    return it == meshes2D.end() ? nullptr : it->second;
 }
 
 shared<Model> Resources::getModel(const std::string& name)
@@ -161,6 +172,11 @@ shared<Font> Resources::getFont(const std::string& name)
 void Resources::addMesh(const std::string& name, shared<Mesh> mesh)
 {
 	meshes[name] = mesh;
+}
+
+void Resources::addMesh2D(const std::string& name, shared<Mesh2D> mesh)
+{
+    meshes2D[name] = mesh;
 }
 
 void Resources::addModel(const std::string& name, shared<Model> model)

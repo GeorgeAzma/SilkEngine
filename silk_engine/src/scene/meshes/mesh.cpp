@@ -10,8 +10,8 @@ Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& ind
 
 void Mesh::createVertexArray()
 {
-	auto vbo = makeShared<VertexBuffer>(this->vertices.data(), this->vertices.size() * sizeof(Vertex));
-	auto ibo = makeShared<IndexBuffer>(this->indices.data(), this->indices.size());
+	auto vbo = makeShared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
+	auto ibo = makeShared<IndexBuffer>(indices.data(), indices.size());
 	vertex_array = makeShared<VertexArray>();
 	vertex_array->setIndexBuffer(ibo).addVertexBuffer(vbo);
 }
@@ -29,22 +29,22 @@ void Mesh::calculateAABB()
 	}
 }
 
-void Mesh::calculateTangents()
-{
-	//std::vector<glm::vec3> positions(vertices.size());
-	//std::vector<glm::vec3> normals(vertices.size());
-	//std::vector<glm::vec2> texcoords(vertices.size());
-	//
-	//for (size_t i = 0; i < vertices.size(); ++i)
-	//{
-	//	positions[i] = vertices[i].position;
-	//	normals[i] = vertices[i].normal;
-	//	texcoords[i] = vertices[i].texcoord;
-	//}
-	//
-	//std::vector<glm::vec4> tangents = Maths::calculateTangents(vertices.size(), positions.data(), normals.data(), texcoords.data(), indices.size() / 3, indices.data());
-	//for (size_t i = 0; i < tangents.size(); ++i)
-	//{
-	//	vertices[i].tangent = tangents[i];
-	//}
-}
+//void Mesh::calculateTangents()
+//{
+//	std::vector<glm::vec3> positions(vertices.size());
+//	std::vector<glm::vec3> normals(vertices.size());
+//	std::vector<glm::vec2> texcoords(vertices.size());
+//	
+//	for (size_t i = 0; i < vertices.size(); ++i)
+//	{
+//		positions[i] = vertices[i].position;
+//		normals[i] = vertices[i].normal;
+//		texcoords[i] = vertices[i].texcoord;
+//	}
+//	
+//	std::vector<glm::vec4> tangents = Maths::calculateTangents(vertices.size(), positions.data(), normals.data(), texcoords.data(), indices.size() / 3, indices.data());
+//	for (size_t i = 0; i < tangents.size(); ++i)
+//	{
+//		vertices[i].tangent = tangents[i];
+//	}
+//}

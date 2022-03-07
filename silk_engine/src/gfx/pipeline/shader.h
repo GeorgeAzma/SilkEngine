@@ -75,6 +75,8 @@ public:
 
 	void set(const std::string& resource_name, const std::vector<vk::DescriptorBufferInfo>& buffer_infos);
 	void set(const std::string& resource_name, const std::vector<vk::DescriptorImageInfo>& image_infos);
+	const ResourceLocation& get(const std::string& resource_name) const { return resource_locations.at(resource_name); }
+	const ResourceLocation* getIfExists(const std::string& resource_name) const;
 
 	const std::unordered_map<uint32_t, shared<DescriptorSet>>& getDescriptorSets() const { return descriptor_sets; }
 	const std::vector<vk::PushConstantRange>& getPushConstants() const { return push_constants; }

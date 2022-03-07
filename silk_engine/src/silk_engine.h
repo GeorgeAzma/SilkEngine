@@ -60,7 +60,6 @@
 
 #include "gfx/ui/font.h"
 
-#include "scene/vertex.h"
 #include "scene/entity.h"
 #include "scene/scene.h"
 #include "scene/components.h"
@@ -70,7 +69,7 @@
 #include "scene/camera/camera_controller_2D.h"
 #include "scene/camera/camera.h"
 
-#include "scene/meshes/mesh.h"
+#include "scene/meshes/mesh2D.h"
 #include "scene/meshes/circle_mesh.h"
 #include "scene/meshes/rectangle_mesh.h"
 

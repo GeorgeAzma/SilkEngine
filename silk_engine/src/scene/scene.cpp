@@ -115,9 +115,14 @@ void Scene::onUpdate()
 
 	//Draw instances
 	const auto& white = Resources::getImage("White")->getDescriptorInfo();
+	Graphics::beginFrame();
+	Graphics::swap_chain->beginRenderPass();
+	size_t draw_index = 0;
 	for (auto& instance_batch : instance_batches)
 	{
-		instance_batch.descriptor_sets[0].setBufferInfo(0, { *global_uniform_buffer	}); //TODO: Global data doesn't have to update for each batch
+		const auto& shader = instance_batch.instance->material->pipeline->getShader();
+		if (auto global_uniform = shader->getIfExists("global_uniform"))
+			instance_batch.descriptor_sets[global_uniform->set].setBufferInfo(global_uniform->write_index, { *global_uniform_buffer }); //TODO: Global data doesn't have to update for each batch
 
 		if (instance_batch.images_need_update)
 		{
@@ -126,16 +131,11 @@ void Scene::onUpdate()
 				descriptor_images[i] = *instance_batch.images[i];
 
 			size_t index = 0;
-			instance_batch.descriptor_sets[1].setImageInfo(0, descriptor_images);
+			if (auto images = shader->getIfExists("images"))
+				instance_batch.descriptor_sets[images->set].setImageInfo(images->write_index, descriptor_images);
 			instance_batch.images_need_update = false;
 		}
-	}
 
-	Graphics::beginFrame();
-	Graphics::swap_chain->beginRenderPass();
-	size_t draw_index = 0;
-	for (auto& instance_batch : instance_batches)
-	{
 		instance_batch.bind();
 		Graphics::active.command_buffer.drawIndexedIndirect(*indirect_buffer, draw_index * sizeof(vk::DrawIndexedIndirectCommand), 1, sizeof(vk::DrawIndexedIndirectCommand));
 		++draw_index;

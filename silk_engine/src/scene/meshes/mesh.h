@@ -1,9 +1,15 @@
 #pragma once
 
 #include "gfx/buffers/vertex_array.h"
-#include "scene/vertex.h"
 #include "scene/AABB.h"
 #include "scene/material.h"
+
+struct Vertex
+{
+	glm::vec3 position = glm::vec3(0);
+	glm::vec2 texture_coordinates = glm::vec2(0);
+	glm::vec3 normal = glm::vec3(0);
+};
 
 class Mesh : NonCopyable
 {
@@ -27,9 +33,6 @@ public:
 	std::vector<uint32_t> indices;
 	shared<VertexArray> vertex_array = nullptr;
 
-protected:
-	void calculateTangents();
-
 private:
 	AABB aabb = {};
 	bool has_aabb = false;
@@ -37,4 +40,5 @@ private:
 	friend class Resources;
 	friend class RawModel;
 	friend class Scene;
+	friend class Mesh2D;
 };
