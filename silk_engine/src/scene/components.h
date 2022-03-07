@@ -64,8 +64,6 @@ struct MeshComponent
 {
 	shared<Mesh> mesh;
 	shared<RenderedInstance> instance = nullptr;
-
-	operator Mesh& () { return *mesh; }
 };
 
 struct ModelComponent

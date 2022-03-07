@@ -92,6 +92,20 @@ void Graphics::beginFrame()
 	logical_device->resetFences({ previous_frame_finished });
 	swap_chain->acquireNextImage(swap_chain_image_available);
 	command_buffer->begin();
+
+	vk::Viewport viewport = {};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = swap_chain->getExtent().width;
+	viewport.height = swap_chain->getExtent().height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	((const vk::CommandBuffer&)*command_buffer).setViewport(0, { viewport });
+
+	vk::Rect2D scissor = {};
+	scissor.offset = vk::Offset2D{ 0, 0 };
+	scissor.extent = vk::Extent2D{ (uint32_t)viewport.width, (uint32_t)viewport.height };
+	((const vk::CommandBuffer&)*command_buffer).setScissor(0, { scissor });
 }
 
 void Graphics::endFrame()

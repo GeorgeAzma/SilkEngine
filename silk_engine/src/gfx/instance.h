@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vulkan/vulkan.hpp>
+
 class Instance : NonCopyable
 {
     static constexpr const char* app_name = "Sandbox";

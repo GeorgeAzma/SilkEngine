@@ -1,25 +1,28 @@
 #pragma once
 
 #include "gfx/buffers/vertex_array.h"
-#include "scene/AABB.h"
-#include "scene/material.h"
-
-struct Vertex
-{
-	glm::vec3 position = glm::vec3(0);
-	glm::vec2 texture_coordinates = glm::vec2(0);
-	glm::vec3 normal = glm::vec3(0);
-};
 
 class Mesh : NonCopyable
 {
+	friend class Resources;
+	friend class RawModel;
+	friend class Scene;
+
 public:
-	Mesh() = default;
-	Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+	enum class Type
+	{
+		NONE,
+		_2D,
+		_3D
+	};
+
+public:
+	Mesh(const std::vector<uint32_t>& indices, Type type) : indices(indices), type(type) {}
 	virtual ~Mesh() {}
 	
-	void createVertexArray();
-	void calculateAABB();
+	virtual void createVertexArray() = 0;
+	virtual void calculateAABB() = 0;
+	virtual size_t vertexCount() const = 0;
 
 	bool hasAABB() const { return has_aabb; }
 
@@ -29,16 +32,10 @@ public:
 	}
 
 public:
-	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
 	shared<VertexArray> vertex_array = nullptr;
+	Type type = Type::NONE;
 
-private:
-	AABB aabb = {};
+protected:
 	bool has_aabb = false;
-
-	friend class Resources;
-	friend class RawModel;
-	friend class Scene;
-	friend class Mesh2D;
 };

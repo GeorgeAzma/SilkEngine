@@ -1,10 +1,7 @@
 #include "mesh2D.h"
-#include "gfx/buffers/buffer_layout.h"
-#include "gfx/graphics.h"
-#include "scene/instance.h"
 
 Mesh2D::Mesh2D(const std::vector<Vertex2D>& vertices, const std::vector<uint32_t>& indices)
-	: vertices(vertices), indices(indices)
+	: vertices(vertices), Mesh(indices, Type::_2D)
 {
 }
 
@@ -29,10 +26,10 @@ void Mesh2D::calculateAABB()
 	}
 }
 
-Mesh2D::operator shared<Mesh>() const
+Mesh2D::operator shared<Mesh3D>() const
 {
-	shared<Mesh> mesh3D = nullptr;
-	std::vector<Vertex> vertices3D(vertices.size());
+	shared<Mesh3D> mesh3D = nullptr;
+	std::vector<Vertex3D> vertices3D(vertices.size());
 	for (size_t i = 0; i < vertices.size(); ++i)
 	{
 		auto& vertex2D = vertices[i];
@@ -42,10 +39,10 @@ Mesh2D::operator shared<Mesh>() const
 		vertex3D.texture_coordinates = vertex2D.texture_coordinates;
 	}
 
-	mesh3D = makeShared<Mesh>(vertices3D, indices);
+	mesh3D = makeShared<Mesh3D>(vertices3D, indices);
 	if (has_aabb)
 	{
-		mesh3D->aabb = AABB(glm::vec3(aabb.min, 0.0f), glm::vec3(aabb.max, 0.0f));
+		mesh3D->aabb = AABB3D(glm::vec3(aabb.min, 0.0f), glm::vec3(aabb.max, 0.0f));
 		mesh3D->has_aabb = true;
 	}
 	else mesh3D->has_aabb = false;

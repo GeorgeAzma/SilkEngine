@@ -19,6 +19,7 @@ public:
 	struct GlobalUniformData
 	{
 		glm::mat4 projection_view;
+		glm::mat4 projection_view2D;
 		glm::vec3 camera_position;
 		float time;
 		glm::vec3 camera_direction;

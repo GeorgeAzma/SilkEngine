@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vulkan/vulkan.hpp>
+
 struct SamplerProps
 {
 	vk::Filter min_filter = vk::Filter::eLinear;

@@ -211,7 +211,6 @@ silk_engine/src/core/base.h
 <entt/entt.hpp>
 <semaphore>
 <future>
-<vulkan/vulkan.hpp>
 <vk_mem_alloc.h>
 silk_engine/src/core/log.h
 silk_engine/src/io/file.h

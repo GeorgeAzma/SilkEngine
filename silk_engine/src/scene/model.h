@@ -1,7 +1,7 @@
 #pragma once
 
 #include "instance.h"
-#include "meshes/mesh.h"
+#include "meshes/mesh3D.h"
 #include "gfx/images/image2D.h"
 
 #include <assimp/Importer.hpp>
@@ -31,7 +31,7 @@ private:
 	std::vector<Bitmap> loadMaterialTextures(aiMaterial* mat, aiTextureType type);
 
 private:
-	std::vector<shared<Mesh>> meshes;
+	std::vector<shared<Mesh3D>> meshes;
 	std::vector<MeshMaterialData> material_data;
 	std::string directory;
 	std::string path;
@@ -46,14 +46,14 @@ public:
 
 	static RawModel load(const std::string& file);
 
-	const std::vector<shared<Mesh>>& getMeshes() const { return meshes; }
+	const std::vector<shared<Mesh3D>>& getMeshes() const { return meshes; }
 	const std::vector<std::vector<shared<Image2D>>>& getImages() const { return images; }
 	const std::string& getPath() const { return path; }
 
 	Model& operator=(const RawModel& raw_model);
 
 private:
-	std::vector<shared<Mesh>> meshes;
+	std::vector<shared<Mesh3D>> meshes;
 	std::vector<std::vector<shared<Image2D>>> images;
 	std::string path;
 };

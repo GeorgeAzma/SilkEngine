@@ -97,7 +97,7 @@ void RawModel::processNode(aiNode* node, const aiScene* scene)
 
 void RawModel::processMesh(aiMesh *mesh, const aiScene *scene)
 {
-    std::vector<Vertex> vertices(mesh->mNumVertices, Vertex{});
+    std::vector<Vertex3D> vertices(mesh->mNumVertices, Vertex3D{});
     std::vector<uint32_t> indices;
 
     for(size_t i = 0; i < mesh->mNumVertices; ++i)
@@ -123,7 +123,7 @@ void RawModel::processMesh(aiMesh *mesh, const aiScene *scene)
             indices.emplace_back(mesh->mFaces[i].mIndices[j]);
     }
 
-    auto new_mesh = makeShared<Mesh>(vertices, indices);
+    auto new_mesh = makeShared<Mesh3D>(vertices, indices);
 
     if(mesh->mMaterialIndex >= 0)
     {

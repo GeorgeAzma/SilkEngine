@@ -1,11 +1,11 @@
 #pragma once
 
-struct AABB
+struct AABB3D
 {
 	glm::vec3 min = glm::vec3(0);
 	glm::vec3 max = glm::vec3(0);
 
-	bool intersects(const AABB& other) const
+	bool intersects(const AABB3D& other) const
 	{
 		return min.x >= other.min.x 
 			&& min.y >= other.min.y 
@@ -25,9 +25,9 @@ struct AABB
 			&& point.z <= max.z;
 	}
 
-	static AABB translate(const AABB& aabb, const glm::vec3& vec)
+	static AABB3D translate(const AABB3D& aabb, const glm::vec3& vec)
 	{
-		return AABB(aabb.min + vec, aabb.max + vec);
+		return AABB3D(aabb.min + vec, aabb.max + vec);
 	}
 };
 

@@ -22,7 +22,8 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     for (size_t i = 0; i < entities.size(); ++i)
     {
         entities[i] = scene->createEntity();
-        entities[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(i % (size_t)sqrt(entities.size()), i / (size_t)sqrt(entities.size()), RNG::Float() * sqrt(entities.size()) + 1.0f)));
+        entities[i]->addComponent<MaterialComponent>(Resources::getShaderEffect("2D"));
+        entities[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(100.0f), glm::vec3(i % (size_t)sqrt(entities.size()), i / (size_t)sqrt(entities.size()), RNG::Float() * sqrt(entities.size()) + 1.0f)));
         entities[i]->addComponent<ImageComponent>(Resources::getImage(RNG::Bool() ? "Test2" : "Test1"));
         entities[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         entities[i]->addComponent<MeshComponent>(circle);

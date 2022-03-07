@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vulkan/vulkan.hpp>
+
 class DescriptorPool : NonCopyable
 {
 public:

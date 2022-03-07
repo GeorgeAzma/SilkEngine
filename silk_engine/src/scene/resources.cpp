@@ -53,10 +53,12 @@ void Resources::init()
 
     //MESHES
     {
-        addMesh2D("Circle", makeShared<CircleMesh>());
-        addMesh2D("Rectangle", makeShared<RectangleMesh>());
-        addMesh("Circle", *getMesh2D("Circle"));
-        addMesh("Rectangle", *getMesh2D("Rectangle"));
+        auto circle2D = makeShared<CircleMesh>();
+        auto rectangle2D = makeShared<RectangleMesh>();
+        addMesh("Circle", circle2D);
+        addMesh("Rectangle", rectangle2D);
+        addMesh("Circle3D", shared<Mesh3D>(*circle2D));
+        addMesh("Rectangle3D", shared<Mesh3D>(*rectangle2D));
     }
 
     //MODELS
@@ -95,16 +97,25 @@ void Resources::init()
             .build();
         addShaderEffect("3D", makeShared<ShaderEffect>(graphics_pipeline));
 
+        shader = makeShared<Shader>("2D");
+        graphics_pipeline = makeShared<GraphicsPipeline>();
+        graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
+            .setShader(shader)
+            .setVertexLayout({ { Type::VEC2 }, { Type::VEC2 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
+            .setSampleCount(Graphics::swap_chain->getSampleCount())
+            .setRenderPass(Graphics::swap_chain->getRenderPass())
+            .build();
+        addShaderEffect("2D", makeShared<ShaderEffect>(graphics_pipeline));
+
         shared<ComputePipeline> compute_pipeline = makeShared<ComputePipeline>(makeShared<Shader>("bgra_to_rgba"));
         addComputeShaderEffect("BGRA To RGBA", makeShared<ComputeShaderEffect>(compute_pipeline)); 
     }
 }
-
+ 
 void Resources::cleanup()
 {
     fonts.clear();
 	meshes.clear();
-    meshes2D.clear();
 	models.clear();
     shader_effects.clear();
     compute_shader_effects.clear();
@@ -116,12 +127,6 @@ shared<Mesh> Resources::getMesh(const std::string& name)
 {
     auto it = meshes.find(name);
     return it == meshes.end() ? nullptr : it->second;
-}
-
-shared<Mesh2D> Resources::getMesh2D(const std::string& name)
-{
-    auto it = meshes2D.find(name);
-    return it == meshes2D.end() ? nullptr : it->second;
 }
 
 shared<Model> Resources::getModel(const std::string& name)
@@ -172,11 +177,6 @@ shared<Font> Resources::getFont(const std::string& name)
 void Resources::addMesh(const std::string& name, shared<Mesh> mesh)
 {
 	meshes[name] = mesh;
-}
-
-void Resources::addMesh2D(const std::string& name, shared<Mesh2D> mesh)
-{
-    meshes2D[name] = mesh;
 }
 
 void Resources::addModel(const std::string& name, shared<Model> model)

@@ -1,12 +1,11 @@
 #type vertex
-layout(location = 0) in vec3 in_position;
+layout(location = 0) in vec2 in_position;
 layout(location = 1) in vec2 in_texture_coordinate;
-layout(location = 2) in vec3 in_normal;
 
 //Instanced
-layout(location = 3) in mat4 in_transform;
-layout(location = 7) in uint in_texture_index;
-layout(location = 8) in vec4 in_color;
+layout(location = 2) in mat4 in_transform;
+layout(location = 6) in uint in_texture_index;
+layout(location = 7) in vec4 in_color;
 
 layout(location = 0) out VertexOutput 
 {
@@ -15,13 +14,19 @@ layout(location = 0) out VertexOutput
     vec4 color;
 } vertex_output;
 
+layout(set = 0, binding = 0) uniform GlobalUniform
+{
+    mat4 projection_view;
+    mat4 projection_view2D;
+} global_uniform;
+
 void main()
 {
     vertex_output.texture_coordinate = in_texture_coordinate;
     vertex_output.texture_index = in_texture_index;
     vertex_output.color = in_color;
 
-    gl_Position = global_uniform.projection_view * in_transform * vec4(in_position, 1.0);
+    gl_Position = global_uniform.projection_view2D * in_transform * vec4(in_position, 0.0, 1.0);
 }
 
 #type fragment

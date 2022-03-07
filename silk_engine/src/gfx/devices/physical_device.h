@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vulkan/vulkan.hpp>
+
 struct QueueFamilyIndices
 {
 	std::optional<uint32_t> graphics;

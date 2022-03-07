@@ -26,7 +26,7 @@ public:
 	Frustum() = default;
 	Frustum(const glm::mat4& projection_view);
 	void calculatePlanes(const glm::mat4& projection_view);
-	bool isBoxVisible(const AABB& aabb) const;
+	bool isBoxVisible(const AABB3D& aabb) const;
 	std::array<glm::vec4, COUNT> getPlanes() const { return planes; }
 
 private:

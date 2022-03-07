@@ -84,6 +84,14 @@ void Scene::onUpdate()
 		global_uniform_data.camera_position = main_camera->camera.position;
 		global_uniform_data.camera_direction = main_camera->camera.direction;
 	}
+	if (false /*Is main_camera 2D?*/)
+	{
+		//TODO: Support orthographic 2D camera
+	}
+	else
+	{
+		global_uniform_data.projection_view2D = glm::ortho(0.0f, (float)Window::getWidth(), 0.0f, (float)Window::getHeight(), 0.0f, 1.0f);
+	}
 	global_uniform_data.delta_time = Time::dt;
 	global_uniform_data.time = Time::runtime;
 	global_uniform_data.frame = Time::frame;
@@ -149,7 +157,7 @@ void Scene::onUpdate()
 	for (const auto& instance_batch : instance_batches)
 	{
 		Graphics::stats.instances += instance_batch.instances.size();
-		Graphics::stats.vertices += instance_batch.instance->mesh->vertices.size() * instance_batch.instances.size();
+		Graphics::stats.vertices += instance_batch.instance->mesh->vertexCount() * instance_batch.instances.size();
 		Graphics::stats.indices += instance_batch.instance->mesh->indices.size() * instance_batch.instances.size();
 	}
 }

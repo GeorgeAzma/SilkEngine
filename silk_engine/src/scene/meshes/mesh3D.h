@@ -1,0 +1,28 @@
+#pragma once
+
+#include "mesh.h"
+#include "scene/AABB.h"
+
+struct Vertex3D
+{
+	glm::vec3 position = glm::vec3(0);
+	glm::vec2 texture_coordinates = glm::vec2(0);
+	glm::vec3 normal = glm::vec3(0);
+};
+
+class Mesh3D : public Mesh
+{
+	friend class Mesh2D;
+
+public:
+	Mesh3D() : Mesh({}, Type::_3D) {}
+	Mesh3D(const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices);
+	
+	void createVertexArray() override;
+	void calculateAABB() override;
+	size_t vertexCount() const override { return vertices.size(); }
+
+protected:
+	std::vector<Vertex3D> vertices;
+	AABB3D aabb = {};
+};

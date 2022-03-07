@@ -1,22 +1,19 @@
-#include "mesh.h"
-#include "gfx/buffers/buffer_layout.h"
-#include "gfx/graphics.h"
-#include "scene/instance.h"
+#include "mesh3D.h"
 
-Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
-	: vertices(vertices), indices(indices)
+Mesh3D::Mesh3D(const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices)
+	: vertices(vertices), Mesh(indices, Type::_3D)
 {
 }
 
-void Mesh::createVertexArray()
+void Mesh3D::createVertexArray()
 {
-	auto vbo = makeShared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
+	auto vbo = makeShared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex3D));
 	auto ibo = makeShared<IndexBuffer>(indices.data(), indices.size());
 	vertex_array = makeShared<VertexArray>();
 	vertex_array->setIndexBuffer(ibo).addVertexBuffer(vbo);
 }
 
-void Mesh::calculateAABB()
+void Mesh3D::calculateAABB()
 {
 	has_aabb = true;
 	aabb.max = glm::vec3(-std::numeric_limits<float>::max());

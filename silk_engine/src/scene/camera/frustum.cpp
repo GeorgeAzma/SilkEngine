@@ -16,7 +16,7 @@ void Frustum::calculatePlanes(const glm::mat4& projection_view)
 	planes[FAR] = projection_view_t[3] - projection_view_t[2];
 }
 
-bool Frustum::isBoxVisible(const AABB& aabb) const
+bool Frustum::isBoxVisible(const AABB3D& aabb) const
 {
 	for (size_t i = 0; i < COUNT; ++i)
 		if (glm::dot(planes[i], glm::vec4(aabb.min.x, aabb.min.y, aabb.min.z, 1.0f)) < 0.0f &&
