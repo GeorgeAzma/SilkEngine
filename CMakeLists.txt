@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(VulkanEngine VERSION 1.0.0 LANGUAGES CXX)
+project(SilkEngine VERSION 1.0.0 LANGUAGES CXX)
 
 include(FetchContent)
 include(ExternalProject)

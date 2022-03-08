@@ -100,6 +100,8 @@ void Resources::init()
         shader = makeShared<Shader>("2D");
         graphics_pipeline = makeShared<GraphicsPipeline>();
         graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
+            .enable(EnableTag::DEPTH_TEST)
+            .enable(EnableTag::DEPTH_WRITE)
             .setShader(shader)
             .setVertexLayout({ { Type::VEC2 }, { Type::VEC2 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
             .setSampleCount(Graphics::swap_chain->getSampleCount())

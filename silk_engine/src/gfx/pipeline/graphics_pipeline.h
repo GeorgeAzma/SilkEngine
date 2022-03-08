@@ -22,7 +22,7 @@ private:
 	void create() override;
 
 private:
-	std::vector<vk::DynamicState> dynamic_states{};
+	std::vector<vk::DynamicState> dynamic_states{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
 	vk::PipelineVertexInputStateCreateInfo vertex_input_info{};
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	vk::PipelineMultisampleStateCreateInfo multisampling{};

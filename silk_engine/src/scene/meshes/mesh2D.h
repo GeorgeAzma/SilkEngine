@@ -5,7 +5,7 @@
 
 struct Vertex2D
 {
-	glm::vec2 position = glm::vec3(0);
+	glm::vec2 position = glm::vec2(0);
 	glm::vec2 texture_coordinates = glm::vec2(0);
 };
 

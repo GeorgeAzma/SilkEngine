@@ -16,7 +16,7 @@ Buffer::Buffer(vk::DeviceSize size, vk::BufferUsageFlags usage, VmaMemoryUsage v
 	const VkBufferCreateInfo& vk_ci = (const VkBufferCreateInfo&)ci;
 	VkBuffer& vk_buffer = (VkBuffer&)buffer;
 	Graphics::vulkanAssert(vk::Result(vmaCreateBuffer(*Graphics::allocator, &vk_ci, &allocation_create_info, &vk_buffer, &allocation, nullptr)));
-}
+} 
 
 Buffer::~Buffer()
 {

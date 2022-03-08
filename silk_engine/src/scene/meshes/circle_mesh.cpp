@@ -34,3 +34,4 @@ CircleMesh::CircleMesh(unsigned int resolution)
 	indices[index++] = resolution;
 	indices[index++] = 1;
 }
+ 

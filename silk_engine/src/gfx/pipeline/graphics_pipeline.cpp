@@ -145,11 +145,11 @@ void GraphicsPipeline::build()
 	viewport_info.scissorCount = 1;
 
 	rasterizer.polygonMode = vk::PolygonMode::eFill;
-	rasterizer.lineWidth = 1.0f; //We won't ever use lines
+	rasterizer.lineWidth = 1.0f;
 	rasterizer.cullMode = vk::CullModeFlagBits::eBack;
 	rasterizer.frontFace = vk::FrontFace::eCounterClockwise;
 
-	depth_stencil_info.depthCompareOp = vk::CompareOp::eLessOrEqual; //Default value was less, but we find this more useful
+	depth_stencil_info.depthCompareOp = vk::CompareOp::eLessOrEqual;
 
 	color_blend_attachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
 	color_blend_attachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
@@ -191,20 +191,6 @@ void GraphicsPipeline::bind()
 void GraphicsPipeline::create()
 {
 	pipeline_layout = Graphics::logical_device->createPipelineLayout(pipeline_layout_info);
-
-	vk::Viewport viewport = {};
-	viewport.x = 0;
-	viewport.y = Graphics::swap_chain->getExtent().height;
-	viewport.width = Graphics::swap_chain->getExtent().width;
-	viewport.height = -(float)Graphics::swap_chain->getExtent().height;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	viewport_info.pViewports = &viewport;
-
-	vk::Rect2D scissor{};
-	scissor.offset = vk::Offset2D(0, 0);
-	scissor.extent = Graphics::swap_chain->getExtent();
-	viewport_info.pScissors = &scissor;
 
 	ci.layout = pipeline_layout;
 	ci.pViewportState = &viewport_info;

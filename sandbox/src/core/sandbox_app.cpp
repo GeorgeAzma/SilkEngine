@@ -1,14 +1,14 @@
 #include "sandbox_app.h"
-
+   
 SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 {
-    scene = makeUnique<Scene>(); 
+    scene = makeUnique<Scene>();  
     
     using namespace std::chrono_literals;
     Timers::every(100ms, 
         [this] 
         { 
-            Window::setTitle(fmt::format("Vulkan - {0} FPS ({1:.4} ms)", int(1.0 / Time::dt), (Time::dt * 1000)));
+            Window::setTitle(fmt::format("Vulkan - {0} FPS ({1:.4} ms) | {2}x{3}", int(1.0 / Time::dt), (Time::dt * 1000), Window::getWidth(), Window::getHeight()));
         });
 
     Window::setSize({ 800, 600 });
@@ -23,7 +23,8 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     {
         entities[i] = scene->createEntity();
         entities[i]->addComponent<MaterialComponent>(Resources::getShaderEffect("2D"));
-        entities[i]->addComponent<TransformComponent>(glm::translate(glm::mat4(100.0f), glm::vec3(i % (size_t)sqrt(entities.size()), i / (size_t)sqrt(entities.size()), RNG::Float() * sqrt(entities.size()) + 1.0f)));
+        auto t = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(.73f, .73f, 0.0f)), glm::vec3(10.0f, 10.0f, 0.0f));
+        entities[i]->addComponent<TransformComponent>(t);
         entities[i]->addComponent<ImageComponent>(Resources::getImage(RNG::Bool() ? "Test2" : "Test1"));
         entities[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         entities[i]->addComponent<MeshComponent>(circle);

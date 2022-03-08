@@ -85,8 +85,8 @@ void Scene::onUpdate()
 		global_uniform_data.camera_direction = main_camera->camera.direction;
 	}
 	if (false /*Is main_camera 2D?*/)
-	{
-		//TODO: Support orthographic 2D camera
+	{ 
+		//TODO: Support orthographic 2D camera  
 	}
 	else
 	{
