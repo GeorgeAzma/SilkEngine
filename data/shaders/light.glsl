@@ -1,5 +1,15 @@
 #include "math.glsl"
 
+struct Light
+{
+    vec3 position;
+    float linear;
+    vec3 direction;
+    float quadratic;
+    vec3 color;
+    float padding;
+};
+
 vec3 fresnelSchlick(float cos_theta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cos_theta, 0.0, 1.0), 5.0);

@@ -12,7 +12,7 @@ bool InstanceData::operator==(const InstanceData& other) const
 
 bool RenderedInstance::operator==(const RenderedInstance& other) const
 {
-	return (*mesh == *other.mesh);
+	return (*mesh == *other.mesh && *material == *other.material);
 }
 
 InstanceBatch::~InstanceBatch()
@@ -73,6 +73,11 @@ void InstanceBatch::removeImages(size_t index, size_t count)
 {
 	for (size_t i = 0; i < count; ++i)
 		--image_owners[index + i];
+}
+
+size_t InstanceBatch::availableImages() const
+{
+	return (Graphics::MAX_IMAGE_SLOTS - images.size());
 }
 
 bool InstanceBatch::operator==(const RenderedInstance& instance) const

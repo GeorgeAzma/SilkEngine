@@ -53,6 +53,7 @@ struct InstanceBatch
 	void bind();
 	uint32_t addImages(const std::vector<shared<Image2D>>& new_images);
 	void removeImages(size_t index, size_t count);
+	size_t availableImages() const;
 
 	bool needs_update = true;
 	bool images_need_update = true;

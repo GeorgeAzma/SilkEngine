@@ -36,6 +36,7 @@ public:
 		return scene->registry.get<T>(entity);
 	}
 
+	//Function signature should be: void(Component&)
 	template<typename T, typename... Fn>
 	void updateComponent(Fn&&... func)
 	{

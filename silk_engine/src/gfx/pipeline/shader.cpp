@@ -8,7 +8,7 @@
 #include "utils/string.h"
 #include "scene/scene.h"
 #include <spirv_cross/spirv_cross.hpp>
-
+ 
 shaderc_include_result* Shader::Includer::GetInclude(const char* requested_source, shaderc_include_type type, const char* requesting_source, size_t include_depth)
 {
 	const std::string name = std::string("data/shaders/") + requested_source;
@@ -112,7 +112,7 @@ void Shader::compile(const std::vector<Define>& defines)
 			out.write((const char*)stage.binary.data(), stage.binary.size() * sizeof(uint32_t));
 		
 			SK_TRACE("Shader cache created: {0}", file_cache_path);
-		}
+		} 
 
 		vk::ShaderModuleCreateInfo ci{};
 		ci.codeSize = stage.binary.size() * sizeof(uint32_t);

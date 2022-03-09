@@ -1,6 +1,5 @@
 - Multiple render passes
 - Fast Culling
-- Fast Occlusion Culling
 - Handle normal/other maps and materials in shader
 - Stream data instead of pre-initializing it
 - Better material system

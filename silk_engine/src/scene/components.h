@@ -101,8 +101,12 @@ struct TextComponent
 
 struct LightComponent
 {
+	LightComponent(const Light& light) : light(light) {}
 	Light light = {};
-	Light* light_ptr = nullptr; //Never touch this, it's used for scene's internal code
 
-	operator Light& () { return light; };
+	operator Light& () { return light; }
+
+private:
+	friend class Scene;
+	Light* light_ptr = nullptr;
 };

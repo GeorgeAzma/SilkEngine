@@ -1,4 +1,5 @@
 #include "scene.h"
+#include "scene.h"
 #include "entity.h"
 #include "components.h"
 #include "scene/resources.h"
@@ -22,6 +23,9 @@ Scene::Scene()
 	registry.on_construct<LightComponent>().connect<&Scene::onLightComponentCreate>(this);
 	registry.on_update<TransformComponent>().connect<&Scene::onTransformComponentUpdate>(this);
 	registry.on_update<ColorComponent>().connect<&Scene::onColorComponentUpdate>(this);
+	registry.on_update<MaterialComponent>().connect<&Scene::onMaterialComponentUpdate>(this);
+	registry.on_update<LightComponent>().connect<&Scene::onLightComponentUpdate>(this);
+	registry.on_update<ImageComponent>().connect<&Scene::onImageComponentUpdate>(this);
 	registry.on_destroy<MeshComponent>().connect<&Scene::onMeshComponentDestroy>(this);
 	registry.on_destroy<ModelComponent>().connect<&Scene::onModelComponentDestroy>(this);
 	registry.on_destroy<LightComponent>().connect<&Scene::onLightComponentDestroy>(this);
@@ -169,6 +173,9 @@ void Scene::onStop()
 	registry.on_construct<LightComponent>().disconnect<&Scene::onLightComponentCreate>(this);
 	registry.on_update<TransformComponent>().disconnect<&Scene::onTransformComponentUpdate>(this);
 	registry.on_update<ColorComponent>().disconnect<&Scene::onColorComponentUpdate>(this);
+	registry.on_update<MaterialComponent>().disconnect<&Scene::onMaterialComponentUpdate>(this);
+	registry.on_update<LightComponent>().disconnect<&Scene::onLightComponentUpdate>(this);
+	registry.on_update<ImageComponent>().disconnect<&Scene::onImageComponentUpdate>(this);
 	registry.on_destroy<MeshComponent>().disconnect<&Scene::onMeshComponentDestroy>(this);
 	registry.on_destroy<ModelComponent>().disconnect<&Scene::onModelComponentDestroy>(this);
 	registry.on_destroy<LightComponent>().disconnect<&Scene::onLightComponentDestroy>(this);
@@ -240,6 +247,65 @@ void Scene::onColorComponentUpdate(entt::registry& registry, entt::entity entity
 	}
 }
 
+void Scene::onMaterialComponentUpdate(entt::registry& registry, entt::entity entity)
+{
+	MaterialComponent& material = registry.get<MaterialComponent>(entity);
+
+	if (auto mesh_component = registry.try_get<MeshComponent>(entity))
+	{
+		if (*mesh_component->instance->material != *material.material)
+		{
+			InstanceData instance_data = instance_batches[mesh_component->instance->instance_batch_index].instance_data[mesh_component->instance->instance_data_index];
+			destroyMeshInstance(*mesh_component->instance);
+			mesh_component->instance->material = material.material;
+			createMeshInstance(mesh_component->instance, instance_data);
+		}
+	}
+	if (auto model_component = registry.try_get<ModelComponent>(entity))
+	{
+		if (model_component->instances.size() && *model_component->instances[0]->material != *material.material)
+		{
+			for (size_t i = 0; i < model_component->instances.size(); ++i)
+			{
+				shared<RenderedInstance>& instance = model_component->instances[i];
+				InstanceData instance_data = instance_batches[instance->instance_batch_index].instance_data[instance->instance_data_index];
+				destroyMeshInstance(*instance);
+				instance->material = material.material;
+				createMeshInstance(instance, instance_data);
+			}
+		}
+	}
+}
+
+void Scene::onLightComponentUpdate(entt::registry& registry, entt::entity entity)
+{
+	LightComponent& light = registry.get<LightComponent>(entity);
+	(*light.light_ptr) = light.light;
+}
+
+void Scene::onImageComponentUpdate(entt::registry& registry, entt::entity entity)
+{
+	ImageComponent& image = registry.get<ImageComponent>(entity);
+
+	if (auto mesh_component = registry.try_get<MeshComponent>(entity))
+	{
+		SK_ASSERT(mesh_component->instance->images.size() >= image.images.size(), "Couldn't update image component because amount of images specified is more than instance's image count");
+		auto& instance = mesh_component->instance;
+		auto& instance_batch = instance_batches[instance->instance_batch_index];
+		instance->images = image.images;
+		instance_batch.removeImages(instance_batch.instance_data[instance->instance_data_index].image_index, instance->images.size());
+		uint32_t image_index = instance_batch.addImages(instance->images);
+		if (image_index == UINT32_MAX)
+		{
+			InstanceData instance_data = instance_batch.instance_data[instance->instance_data_index];
+			destroyMeshInstance(*instance);
+			addInstanceBatch(instance, instance_data);
+			image_index = instance_batches[instance->instance_batch_index].addImages(instance->images);
+		}
+		instance_batches[instance->instance_batch_index].instance_data[instance->instance_data_index].image_index = image_index;
+	}
+}
+
 void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
 {
 	MeshComponent& mesh_component = registry.get<MeshComponent>(entity);
@@ -298,9 +364,7 @@ void Scene::onModelComponentDestroy(entt::registry& registry, entt::entity entit
 	ModelComponent& model_component = registry.get<ModelComponent>(entity);
 
 	for (size_t i = 0; i < model_component.model->getMeshes().size(); ++i)
-	{
 		destroyMeshInstance(*model_component.instances[i]);
-	}
 }
 
 void Scene::onLightComponentCreate(entt::registry& registry, entt::entity entity)
@@ -320,16 +384,16 @@ void Scene::onLightComponentDestroy(entt::registry& registry, entt::entity entit
 {
 	LightComponent& light_component = registry.get<LightComponent>(entity);
 
-	for (size_t i = 0; i < light_index; ++i)
-	{
-		if (light_component == lights[i])
-		{
-			lights[i] = Light{}; //if color is black, light is inactive and shader skips it
-			std::swap(lights[i], lights[light_index - 1]);
-			--light_index;
-			break;
-		}
-	}
+	(*light_component.light_ptr) = Light{}; //if color is black, light is inactive and shader skips it
+	//TODO: this is slow (not critical but needs speedup)
+	registry.view<LightComponent>().each(
+		[&](auto entity, auto& lc) 
+		{ 
+			if (lc.light_ptr == &lights[light_index - 1])
+				lc.light_ptr = light_component.light_ptr;
+		});
+	std::swap(*light_component.light_ptr, lights[light_index - 1]);
+	--light_index;	
 }
 
 void Scene::createMeshInstance(shared<RenderedInstance> instance, const InstanceData& instance_data)
@@ -342,20 +406,17 @@ void Scene::createMeshInstance(shared<RenderedInstance> instance, const Instance
 	for (size_t i = 0; i < instance_batches.size(); ++i)
 	{
 		auto& instance_batch = instance_batches[i];
-		if (instance_batch == *instance)
+		if (instance_batch == *instance && instance_batch.instance_data.size() < Graphics::MAX_INSTANCES && instance_batch.availableImages() >= instance->images.size())
 		{
-			if (instance_batch.instance_data.size() < Graphics::MAX_INSTANCES)
-			{
-				instance_batch.needs_update = true;
-				instance_batch.instance_data.emplace_back(std::move(instance_data));
-				instance_batch.instances.emplace_back(instance);
+			instance_batch.needs_update = true;
+			instance_batch.instance_data.emplace_back(std::move(instance_data));
+			instance_batch.instances.emplace_back(instance);
 
-				instance->instance_batch_index = i;
-				instance->instance_data_index = instance_batch.instance_data.size() - 1;
+			instance->instance_batch_index = i;
+			instance->instance_data_index = instance_batch.instance_data.size() - 1;
 
-				need_new_instance_batch = false;
-				break;
-			}
+			need_new_instance_batch = false;
+			break;
 		}
 	}
 
@@ -365,17 +426,8 @@ void Scene::createMeshInstance(shared<RenderedInstance> instance, const Instance
 	if (instance->images.size())
 	{
 		uint32_t image_index = instance_batches[instance->instance_batch_index].addImages(instance->images);
-		if (image_index == UINT32_MAX) //UINT32_MAX means out of batch images, so here we are creating new batch
-		{
-			destroyMeshInstance(*instance);
-			addInstanceBatch(instance, instance_batches[instance->instance_batch_index].instance_data[instance->instance_data_index]);
-			image_index = instance_batches.back().addImages(instance->images);
-			SK_ASSERT(image_index != UINT32_MAX, "Entity has {0} images, when max image slot count is {1}.", instance->images.size(), Graphics::MAX_IMAGE_SLOTS);
-		}
+		SK_ASSERT(image_index != UINT32_MAX, "Instance has too much images");
 		instance_batches[instance->instance_batch_index].instance_data[instance->instance_data_index].image_index = image_index;
-		size_t last_size = instance->images.size();
-		instance->images.clear();
-		instance->images.resize(last_size);
 	}
 }
 

@@ -28,6 +28,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
         entities[i]->addComponent<ImageComponent>(Resources::getImage(RNG::Bool() ? "Test2" : "Test1"));
         entities[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         entities[i]->addComponent<MeshComponent>(circle);
+        entities[i]->updateComponent<ImageComponent>([](ImageComponent& mat) { mat.images[0] = Resources::getImage("White"); });
         //entities[i]->addComponent<ModelComponent>(Resources::getModel("Backpack"));
     }
 
@@ -54,6 +55,8 @@ void SandboxApp::onUpdate()
         Light light{};
         light.color = glm::vec3(1);
         entities.back()->addComponent<LightComponent>(light);
+        entities.back()->updateComponent<MaterialComponent>([](MaterialComponent& mat) { mat.material = Resources::getShaderEffect("Lit 3D"); });
+        entities.back()->updateComponent<LightComponent>([](LightComponent& mat) { mat.light.color = glm::vec3(1, 0, 0); });
     }
 
     //Resources::pool.forEach(entities.size(), 

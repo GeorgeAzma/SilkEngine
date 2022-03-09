@@ -12,8 +12,8 @@ layout(location = 0) out VertexOutput
 {
     vec2 texture_coordinate;
     vec3 normal;
-    uint texture_index;
-    vec4 color;
+    flat uint texture_index;
+    flat vec4 color;
     vec3 world_position;
 } vertex_output;
 
@@ -51,15 +51,7 @@ layout(location = 0) in VertexOutput
     vec3 world_position;
 } fragment_input;
 
-struct Light
-{
-    vec3 position;
-    float linear;
-    vec3 direction;
-    float quadratic;
-    vec3 color;
-    float padding;
-};
+#include "light.glsl"
 
 layout(set = 0, binding = 0) uniform GlobalUniform
 {
@@ -78,8 +70,6 @@ layout(set = 0, binding = 0) uniform GlobalUniform
 layout(location = 0) out vec4 color;
 
 layout(set = 1, binding = 0) uniform sampler2D images[MAX_IMAGE_SLOTS];
-
-#include "light.glsl"
 
 //Good HDR filter
 vec3 aces(vec3 x)
