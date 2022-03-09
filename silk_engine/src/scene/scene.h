@@ -46,6 +46,7 @@ public:
 	void onMaterialComponentUpdate(entt::registry& registry, entt::entity entity);
 	void onLightComponentUpdate(entt::registry& registry, entt::entity entity);
 	void onImageComponentUpdate(entt::registry& registry, entt::entity entity);
+	void onTextComponentUpdate(entt::registry& registry, entt::entity entity);
 
 private:
 	void onWindowResize(const WindowResizeEvent& e);

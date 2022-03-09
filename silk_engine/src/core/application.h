@@ -51,6 +51,3 @@ private:
 private:
     friend int ::main(int argc, char **argv);
 };
-
-// To be defined in client
-Application *createApp();

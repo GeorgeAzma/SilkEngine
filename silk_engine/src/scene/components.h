@@ -2,6 +2,7 @@
 
 #include "model.h"
 #include "instance.h"
+#include "gfx/ui/font.h"
 #include "camera/camera.h"
 
 struct TransformComponent
@@ -103,7 +104,7 @@ struct TextComponent
 	std::string text = "Text";
 
 	size_t size = 32;
-	std::string font = "Arial";
+	shared<Font> font = nullptr;
 
 	operator std::string& () { return text; }
 };

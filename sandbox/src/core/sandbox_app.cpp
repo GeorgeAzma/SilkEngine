@@ -4,7 +4,6 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 {
     scene = makeUnique<Scene>();  
     
-    using namespace std::chrono_literals;
     Timers::every(100ms, 
         [this] 
         { 
@@ -23,7 +22,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     {
         entities[i] = scene->createEntity();
         entities[i]->addComponent<MaterialComponent>(Resources::getShaderEffect("2D"));
-        auto t = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(.73f, .73f, 0.0f)), glm::vec3(10.0f, 10.0f, 0.0f));
+        auto t = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(Window::getWidth() * RNG::Float(), Window::getHeight() * RNG::Float(), 0.0f)), glm::vec3(4.0f, 4.0f, 0.0f));
         entities[i]->addComponent<TransformComponent>(t);
         entities[i]->addComponent<ImageComponent>(Resources::getImage(RNG::Bool() ? "Test2" : "Test1"));
         entities[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -34,7 +33,8 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     entities.emplace_back(scene->createEntity());
     entities.back()->addComponent<TransformComponent>(glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0)), glm::vec3(50, 50, 0)));
     entities.back()->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-    entities.back()->addComponent<TextComponent>("ab");
+    entities.back()->addComponent<TextComponent>("Quick brown fox jumped over a lazy dog");
+    entities.back()->updateComponent<TextComponent>([](TextComponent& text) { text.text = "AEA"; });
 
     scene->onPlay();
 }

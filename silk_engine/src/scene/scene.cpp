@@ -22,11 +22,14 @@ Scene::Scene()
 	registry.on_construct<ModelComponent>().connect<&Scene::onModelComponentCreate>(this);
 	registry.on_construct<LightComponent>().connect<&Scene::onLightComponentCreate>(this);
 	registry.on_construct<TextComponent>().connect<&Scene::onTextComponentCreate>(this);
+	
 	registry.on_update<TransformComponent>().connect<&Scene::onTransformComponentUpdate>(this);
 	registry.on_update<ColorComponent>().connect<&Scene::onColorComponentUpdate>(this);
 	registry.on_update<MaterialComponent>().connect<&Scene::onMaterialComponentUpdate>(this);
 	registry.on_update<LightComponent>().connect<&Scene::onLightComponentUpdate>(this);
 	registry.on_update<ImageComponent>().connect<&Scene::onImageComponentUpdate>(this);
+	registry.on_update<TextComponent>().connect<&Scene::onTextComponentUpdate>(this);
+
 	registry.on_destroy<MeshComponent>().connect<&Scene::onMeshComponentDestroy>(this);
 	registry.on_destroy<ModelComponent>().connect<&Scene::onModelComponentDestroy>(this);
 	registry.on_destroy<LightComponent>().connect<&Scene::onLightComponentDestroy>(this);
@@ -173,11 +176,14 @@ void Scene::onStop()
 	registry.on_construct<ModelComponent>().disconnect<&Scene::onModelComponentCreate>(this);
 	registry.on_construct<LightComponent>().disconnect<&Scene::onLightComponentCreate>(this);
 	registry.on_construct<TextComponent>().disconnect<&Scene::onTextComponentCreate>(this);
+	
 	registry.on_update<TransformComponent>().disconnect<&Scene::onTransformComponentUpdate>(this);
 	registry.on_update<ColorComponent>().disconnect<&Scene::onColorComponentUpdate>(this);
 	registry.on_update<MaterialComponent>().disconnect<&Scene::onMaterialComponentUpdate>(this);
 	registry.on_update<LightComponent>().disconnect<&Scene::onLightComponentUpdate>(this);
 	registry.on_update<ImageComponent>().disconnect<&Scene::onImageComponentUpdate>(this);
+	registry.on_update<TextComponent>().disconnect<&Scene::onTextComponentUpdate>(this);
+	
 	registry.on_destroy<MeshComponent>().disconnect<&Scene::onMeshComponentDestroy>(this);
 	registry.on_destroy<ModelComponent>().disconnect<&Scene::onModelComponentDestroy>(this);
 	registry.on_destroy<LightComponent>().disconnect<&Scene::onLightComponentDestroy>(this);
@@ -308,6 +314,17 @@ void Scene::onImageComponentUpdate(entt::registry& registry, entt::entity entity
 	}
 }
 
+void Scene::onTextComponentUpdate(entt::registry& registry, entt::entity entity)
+{
+	TextComponent& text = registry.get<TextComponent>(entity);
+	MeshComponent& mesh = registry.get<MeshComponent>(entity);
+	InstanceData instance_data = instance_batches[mesh.instance->instance_batch_index].instance_data[mesh.instance->instance_data_index];
+	destroyMeshInstance(*mesh.instance);
+	mesh.mesh = makeShared<TextMesh>(text.text, text.size, text.font);
+	mesh.instance->mesh = mesh.mesh;
+	createMeshInstance(mesh.instance, instance_data);
+}
+
 void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
 {
 	MeshComponent& mesh_component = registry.get<MeshComponent>(entity);
@@ -339,10 +356,11 @@ void Scene::onMeshComponentDestroy(entt::registry& registry, entt::entity entity
 void Scene::onTextComponentCreate(entt::registry& registry, entt::entity entity)
 {
 	TextComponent& text_component = registry.get<TextComponent>(entity);
-	auto font = Resources::getFont(text_component.font);
+	if (!text_component.font.get())
+		text_component.font = Resources::getFont("Arial");
 	registry.emplace<MaterialComponent>(entity, MaterialComponent{ Resources::getShaderEffect("Font") });
-	registry.emplace<ImageComponent>(entity, ImageComponent{ std::vector<shared<Image2D>>{ font->getAtlas() } });
-	registry.emplace<MeshComponent>(entity, MeshComponent{ makeShared<TextMesh>(text_component.text, text_component.size, font) });
+	registry.emplace<ImageComponent>(entity, ImageComponent{ std::vector<shared<Image2D>>{ text_component.font->getAtlas() } });
+	registry.emplace<MeshComponent>(entity, MeshComponent{ makeShared<TextMesh>(text_component.text, text_component.size, text_component.font) });
 }
 
 void Scene::onModelComponentCreate(entt::registry& registry, entt::entity entity)
