@@ -19,7 +19,7 @@ Model& Model::operator=(const RawModel& raw_model)
     path = raw_model.path;
 
     Image2DProps image_props{};
-    auto white = Resources::getImage("White");
+    auto white = Resources::white_image;
     auto black = Resources::getImage("Black");
     
     images.clear();

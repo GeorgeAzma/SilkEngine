@@ -31,6 +31,7 @@ public:
 
 public:
 	static inline ThreadPool pool;
+	static inline shared<Image2D> white_image = nullptr;
 
 private:
 	static inline std::unordered_map<std::string, shared<Mesh>> meshes;

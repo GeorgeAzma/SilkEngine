@@ -12,7 +12,7 @@ void Font::cleanup()
 	FT_Done_FreeType(free_type_library);
 }
 
-Font::Font(const std::string& file, size_t size)
+Font::Font(const std::string& file, uint32_t size)
 	: characters(MAX_CHARACTER_COUNT), size(size)
 {
 	path = std::string("data/fonts/") + file;
@@ -129,13 +129,16 @@ std::vector<Font::Character> Font::getCharacterLayout(const std::string& str)
 			continue;
 		}
 
+		int32_t char_x = x + this->characters[c].bearing.x;
+		int32_t char_y = y - (this->characters[c].size.y - this->characters[c].bearing.y);
+
 		character_layout.emplace_back
 		(
-			glm::vec2(x + this->characters[c].bearing.x, y - (this->characters[c].size.y - this->characters[c].bearing.y)),
+			glm::vec4(char_x, char_y, char_x + this->characters[c].size.x, char_y + this->characters[c].size.y) / glm::vec4(size),
 			this->characters[c].texture_coordinate
 		);
 
-		x += this->characters[c].advance.x >> 6;
+		x += this->characters[c].advance.x;
 	}
 
 	return character_layout;

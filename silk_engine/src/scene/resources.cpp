@@ -29,6 +29,7 @@ void Resources::init()
         constexpr glm::u8vec4 white(255);
         image_props.data = &white;
         addImage("White", makeShared<Image2D>(image_props));
+        white_image = getImage("White");
         constexpr glm::u8vec4 black(0);
         image_props.data = &black;
         addImage("Black", makeShared<Image2D>(image_props));
@@ -102,12 +103,26 @@ void Resources::init()
         graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
             .enable(EnableTag::DEPTH_TEST)
             .enable(EnableTag::DEPTH_WRITE)
+            .setDepthCompareOp(vk::CompareOp::eAlways)
             .setShader(shader)
             .setVertexLayout({ { Type::VEC2 }, { Type::VEC2 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
             .setSampleCount(Graphics::swap_chain->getSampleCount())
             .setRenderPass(Graphics::swap_chain->getRenderPass())
             .build();
         addShaderEffect("2D", makeShared<ShaderEffect>(graphics_pipeline));
+
+        shader = makeShared<Shader>("font");
+        graphics_pipeline = makeShared<GraphicsPipeline>();
+        graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
+            .enable(EnableTag::DEPTH_TEST)
+            .enable(EnableTag::DEPTH_WRITE)
+            .setDepthCompareOp(vk::CompareOp::eAlways)
+            .setShader(shader)
+            .setVertexLayout({ { Type::VEC2 }, { Type::VEC2 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
+            .setSampleCount(Graphics::swap_chain->getSampleCount())
+            .setRenderPass(Graphics::swap_chain->getRenderPass())
+            .build();
+        addShaderEffect("Font", makeShared<ShaderEffect>(graphics_pipeline));
 
         shared<ComputePipeline> compute_pipeline = makeShared<ComputePipeline>(makeShared<Shader>("bgra_to_rgba"));
         addComputeShaderEffect("BGRA To RGBA", makeShared<ComputeShaderEffect>(compute_pipeline)); 
@@ -121,6 +136,7 @@ void Resources::cleanup()
 	models.clear();
     shader_effects.clear();
     compute_shader_effects.clear();
+    white_image = nullptr;
     images.clear();
     descriptor_set_layouts.clear();
 }

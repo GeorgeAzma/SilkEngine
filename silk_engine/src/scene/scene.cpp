@@ -1,5 +1,4 @@
 #include "scene.h"
-#include "scene.h"
 #include "entity.h"
 #include "components.h"
 #include "scene/resources.h"
@@ -13,6 +12,7 @@
 #include "core/event.h"
 #include "gfx/window/window.h"
 #include "gfx/graphics.h"
+#include "meshes/text_mesh.h"
 
 Scene::Scene()
 {
@@ -21,6 +21,7 @@ Scene::Scene()
 	registry.on_construct<MeshComponent>().connect<&Scene::onMeshComponentCreate>(this);
 	registry.on_construct<ModelComponent>().connect<&Scene::onModelComponentCreate>(this);
 	registry.on_construct<LightComponent>().connect<&Scene::onLightComponentCreate>(this);
+	registry.on_construct<TextComponent>().connect<&Scene::onTextComponentCreate>(this);
 	registry.on_update<TransformComponent>().connect<&Scene::onTransformComponentUpdate>(this);
 	registry.on_update<ColorComponent>().connect<&Scene::onColorComponentUpdate>(this);
 	registry.on_update<MaterialComponent>().connect<&Scene::onMaterialComponentUpdate>(this);
@@ -126,7 +127,7 @@ void Scene::onUpdate()
 		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(vk::DrawIndexedIndirectCommand));
 
 	//Draw instances
-	const auto& white = Resources::getImage("White")->getDescriptorInfo();
+	const auto& white = Resources::white_image->getDescriptorInfo();
 	Graphics::beginFrame();
 	Graphics::swap_chain->beginRenderPass();
 	size_t draw_index = 0;
@@ -171,6 +172,7 @@ void Scene::onStop()
 	registry.on_construct<MeshComponent>().disconnect<&Scene::onMeshComponentCreate>(this);
 	registry.on_construct<ModelComponent>().disconnect<&Scene::onModelComponentCreate>(this);
 	registry.on_construct<LightComponent>().disconnect<&Scene::onLightComponentCreate>(this);
+	registry.on_construct<TextComponent>().disconnect<&Scene::onTextComponentCreate>(this);
 	registry.on_update<TransformComponent>().disconnect<&Scene::onTransformComponentUpdate>(this);
 	registry.on_update<ColorComponent>().disconnect<&Scene::onColorComponentUpdate>(this);
 	registry.on_update<MaterialComponent>().disconnect<&Scene::onMaterialComponentUpdate>(this);
@@ -334,6 +336,15 @@ void Scene::onMeshComponentDestroy(entt::registry& registry, entt::entity entity
 	destroyMeshInstance(*registry.get<MeshComponent>(entity).instance);
 }
 
+void Scene::onTextComponentCreate(entt::registry& registry, entt::entity entity)
+{
+	TextComponent& text_component = registry.get<TextComponent>(entity);
+	auto font = Resources::getFont(text_component.font);
+	registry.emplace<MaterialComponent>(entity, MaterialComponent{ Resources::getShaderEffect("Font") });
+	registry.emplace<ImageComponent>(entity, ImageComponent{ std::vector<shared<Image2D>>{ font->getAtlas() } });
+	registry.emplace<MeshComponent>(entity, MeshComponent{ makeShared<TextMesh>(text_component.text, text_component.size, font) });
+}
+
 void Scene::onModelComponentCreate(entt::registry& registry, entt::entity entity)
 {
 	ModelComponent& model_component = registry.get<ModelComponent>(entity);
@@ -439,7 +450,7 @@ void Scene::addInstanceBatch(shared<RenderedInstance> instance, const InstanceDa
 	new_batch.instances.reserve(Graphics::MAX_INSTANCES);
 
 	new_batch.images.reserve(Graphics::MAX_IMAGE_SLOTS);
-	new_batch.images.emplace_back(Resources::getImage("White"));
+	new_batch.images.emplace_back(Resources::white_image);
 	new_batch.image_owners.resize(Graphics::MAX_IMAGE_SLOTS);
 
 	new_batch.instance_data.emplace_back(std::move(instance_data));

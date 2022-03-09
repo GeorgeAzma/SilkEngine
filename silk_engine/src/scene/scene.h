@@ -53,6 +53,8 @@ private:
 	void onMeshComponentCreate(entt::registry& registry, entt::entity entity);
 	void onMeshComponentDestroy(entt::registry& registry, entt::entity entity);
 	
+	void onTextComponentCreate(entt::registry& registry, entt::entity entity);
+	
 	void onModelComponentCreate(entt::registry& registry, entt::entity entity);
 	void onModelComponentDestroy(entt::registry& registry, entt::entity entity);
 	

@@ -85,7 +85,7 @@ void Shader::compile(const std::vector<Define>& defines)
 		stage.stage = getVulkanType((Type)type);
 
 		std::string file_cache_path = cache_path.string() + getTypeFileExtension((Type)type) + ".spv";
-//#ifndef SK_ENABLE_DEBUG_OUTPUT
+
 		std::ifstream in(file_cache_path, std::ios::ate | std::ios::binary);
 		if (in.is_open())
 		{
@@ -97,7 +97,6 @@ void Shader::compile(const std::vector<Define>& defines)
 			SK_TRACE("Shader cache loaded: {0}", file_cache_path);
 		}
 		else
-//#endif
 		{
 			auto preprocess_result = compiler.PreprocessGlsl(source, shadercType((Type)type), path.string().c_str(), options);
 			SK_ASSERT(preprocess_result.GetCompilationStatus() == shaderc_compilation_status_success, preprocess_result.GetErrorMessage());
@@ -112,13 +111,13 @@ void Shader::compile(const std::vector<Define>& defines)
 			out.write((const char*)stage.binary.data(), stage.binary.size() * sizeof(uint32_t));
 		
 			SK_TRACE("Shader cache created: {0}", file_cache_path);
-		} 
+		}  
 
 		vk::ShaderModuleCreateInfo ci{};
 		ci.codeSize = stage.binary.size() * sizeof(uint32_t);
 		ci.pCode = stage.binary.data();
 		stage.module = Graphics::logical_device->createShaderModule(ci);
-	}
+	} 
 	
 #define SK_WEIRD_ERROR_FIX 1 //If you have error in this file, set this to 0, compile (you will get an error), set it back to 1, recompile (IDK why this works, help), if it still doesn't work retry couple times
 #if SK_WEIRD_ERROR_FIX

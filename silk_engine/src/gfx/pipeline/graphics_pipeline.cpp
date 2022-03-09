@@ -1,7 +1,33 @@
 #include "graphics_pipeline.h"
+#include "graphics_pipeline.h"
 #include "gfx/graphics.h"
 #include "gfx/window/swap_chain.h"
 #include "gfx/devices/logical_device.h"
+
+GraphicsPipeline::GraphicsPipeline()
+{
+	input_assembly_info.topology = vk::PrimitiveTopology::eTriangleList;
+
+	viewport_info.viewportCount = 1;
+	viewport_info.scissorCount = 1;
+
+	rasterizer.polygonMode = vk::PolygonMode::eFill;
+	rasterizer.lineWidth = 1.0f;
+	rasterizer.cullMode = vk::CullModeFlagBits::eBack;
+	rasterizer.frontFace = vk::FrontFace::eCounterClockwise;
+
+	depth_stencil_info.depthCompareOp = vk::CompareOp::eLessOrEqual;
+
+	color_blend_attachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+	color_blend_attachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
+	color_blend_attachment.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
+	color_blend_attachment.colorBlendOp = vk::BlendOp::eAdd;
+	color_blend_attachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
+	color_blend_attachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
+	color_blend_attachment.alphaBlendOp = vk::BlendOp::eAdd;
+
+	color_blending.attachmentCount = 1;
+}
 
 GraphicsPipeline& GraphicsPipeline::setShader(shared<Shader> shader, const std::vector<Constant>& constants)
 {
@@ -87,6 +113,12 @@ GraphicsPipeline& GraphicsPipeline::setSubpass(uint32_t subpass)
 	return *this;
 }
 
+GraphicsPipeline& GraphicsPipeline::setDepthCompareOp(vk::CompareOp depth_compare_op)
+{
+	depth_stencil_info.depthCompareOp = depth_compare_op;
+	return *this;
+}
+
 GraphicsPipeline& GraphicsPipeline::addDynamicState(vk::DynamicState dynamic_state)
 {
 	dynamic_states.emplace_back(dynamic_state);
@@ -138,28 +170,7 @@ void GraphicsPipeline::build()
 	pipeline_layout_info.pSetLayouts = descriptor_set_layouts.data();
 	pipeline_layout_info.pushConstantRangeCount = push_constant_ranges.size();
 	pipeline_layout_info.pPushConstantRanges = push_constant_ranges.data();
-
-	input_assembly_info.topology = vk::PrimitiveTopology::eTriangleList;
-
-	viewport_info.viewportCount = 1;
-	viewport_info.scissorCount = 1;
-
-	rasterizer.polygonMode = vk::PolygonMode::eFill;
-	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = vk::CullModeFlagBits::eBack;
-	rasterizer.frontFace = vk::FrontFace::eCounterClockwise;
-
-	depth_stencil_info.depthCompareOp = vk::CompareOp::eLessOrEqual;
-
-	color_blend_attachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-	color_blend_attachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
-	color_blend_attachment.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
-	color_blend_attachment.colorBlendOp = vk::BlendOp::eAdd;
-	color_blend_attachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
-	color_blend_attachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
-	color_blend_attachment.alphaBlendOp = vk::BlendOp::eAdd;
-
-	color_blending.attachmentCount = 1;
+	
 	color_blending.pAttachments = &color_blend_attachment;
 
 	dynamic_state.dynamicStateCount = dynamic_states.size();
@@ -191,7 +202,6 @@ void GraphicsPipeline::bind()
 void GraphicsPipeline::create()
 {
 	pipeline_layout = Graphics::logical_device->createPipelineLayout(pipeline_layout_info);
-
 	ci.layout = pipeline_layout;
 	ci.pViewportState = &viewport_info;
 	pipeline = Graphics::logical_device->createGraphicsPipeline(VK_NULL_HANDLE, ci);

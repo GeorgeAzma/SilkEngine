@@ -44,7 +44,8 @@ layout(set = 1, binding = 0) uniform sampler2D images[MAX_IMAGE_SLOTS];
 
 void main()
 {
-    color = texture(images[fragment_input.texture_index], fragment_input.texture_coordinate) * fragment_input.color;
+    color.a = texture(images[fragment_input.texture_index], fragment_input.texture_coordinate).r * fragment_input.color.a;
     if(color.a <= 0.01)
         discard;
+    color.rgb = fragment_input.color.rgb;
 }

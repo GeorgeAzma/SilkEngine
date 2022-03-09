@@ -7,11 +7,14 @@
 class GraphicsPipeline : public Pipeline
 {
 public:
+	GraphicsPipeline();
+
 	GraphicsPipeline& setShader(shared<Shader> shader, const std::vector<Constant>& constants = {});
 	GraphicsPipeline& setVertexLayout(const BufferLayout& layout);
 	GraphicsPipeline& setSampleCount(vk::SampleCountFlagBits sample_count);
 	GraphicsPipeline& setRenderPass(vk::RenderPass render_pass);
 	GraphicsPipeline& setSubpass(uint32_t subpass);
+	GraphicsPipeline& setDepthCompareOp(vk::CompareOp depth_compare_op);
 	GraphicsPipeline& addDynamicState(vk::DynamicState dynamic_state);
 	GraphicsPipeline& enable(EnableTag tag);
 

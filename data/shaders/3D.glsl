@@ -123,5 +123,7 @@ void main()
     else
     {
         color = texture(images[fragment_input.texture_index + DIFFUSE_TEXTURE], fragment_input.texture_coordinate) * fragment_input.color;
+        if(color.a <= 0.01)
+            discard;
     }
 }

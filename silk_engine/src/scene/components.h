@@ -18,6 +18,15 @@ struct ImageComponent
 
 	std::vector<shared<Image2D>> images;
 
+	ImageComponent& operator=(shared<Image2D> image) 
+	{ 
+		if (images.size()) 
+			images[0] = image; 
+		else 
+			images = { image }; 
+		return *this; 
+	}
+
 	operator const std::vector<shared<Image2D>>& () const { return images; }
 };
 
@@ -94,7 +103,7 @@ struct TextComponent
 	std::string text = "Text";
 
 	size_t size = 32;
-	std::string font = "arial.ttf";
+	std::string font = "Arial";
 
 	operator std::string& () { return text; }
 };
