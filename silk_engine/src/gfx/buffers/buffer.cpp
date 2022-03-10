@@ -132,7 +132,7 @@ void Buffer::copy(vk::Buffer destination, vk::Buffer source, vk::DeviceSize size
 	copy_region.srcOffset = src_offset;
 	copy_region.dstOffset = dst_offset;
 	copy_region.size = size;
-	Graphics::active.command_buffer.copyBuffer(source, destination, { copy_region });
+	vk::CommandBuffer(command_buffer).copyBuffer(source, destination, { copy_region });
 
 	command_buffer.submitIdle();
 }

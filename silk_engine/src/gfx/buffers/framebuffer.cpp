@@ -3,11 +3,11 @@
 #include "gfx/devices/logical_device.h"
 
 Framebuffer::Framebuffer(vk::RenderPass render_pass, const std::vector<shared<Image2D>>& attachments, uint32_t width, uint32_t height)
-    : width(width), height(height)
+    : width(width), height(height), attachments(attachments)
 {
-    std::vector<vk::ImageView> attachment_views(attachments.size());
-    for (size_t i = 0; i < attachments.size(); ++i)
-        attachment_views[i] = attachments[i]->getDescriptorInfo().imageView;
+    std::vector<vk::ImageView> attachment_views(this->attachments.size());
+    for (size_t i = 0; i < this->attachments.size(); ++i)
+        attachment_views[i] = this->attachments[i]->getDescriptorInfo().imageView;
 
     vk::FramebufferCreateInfo ci{};
     ci.renderPass = render_pass;

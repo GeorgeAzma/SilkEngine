@@ -136,7 +136,7 @@ void Graphics::screenshot(const std::string& file)
 	int channels = Image::channelCount(swap_chain->getSurfaceFormat().format);
 	size_t pixels = width * height;
 	 
-	DebugTimer t1("Create/Copy Image");
+	//Create/Copy Image - 2ms
 	Image2DProps props{};
 	props.width = width;
 	props.height = height;
@@ -152,11 +152,10 @@ void Graphics::screenshot(const std::string& file)
 	shared<Image2D> destination = makeShared<Image2D>(props);
 	auto image = swap_chain->getActiveImage();
 	bool blit_supported = image->copyImage(destination);
-	t1.stop();
 
 	if (!blit_supported)
 	{
-		DebugTimer t2("Change layout to RGBA");
+		//Change layout to RGBA - 4.5ms
 		StorageBuffer image_storage(destination->getSize(), VMA_MEMORY_USAGE_GPU_TO_CPU, vk::BufferUsageFlagBits::eTransferDst);
 		destination->copyToBuffer(image_storage);
 
@@ -168,8 +167,9 @@ void Graphics::screenshot(const std::string& file)
 		compute->getShader()->getDescriptorSets().at(0)->bind();
 		compute->dispatch(width * height);
 		command_buffer.submitIdle();
-		t2.stop();
 		
+
+		//Write PNG - 350ms
 		void* buffer_data;
 		image_storage.map(&buffer_data);
 		stbi_write_png(file.c_str(), width, height, channels, buffer_data, 0);
@@ -177,6 +177,7 @@ void Graphics::screenshot(const std::string& file)
 	}
 	else
 	{
+		//Write PNG 350ms
 		std::vector<uint8_t> image_data(destination->getSize());
 		destination->getData(image_data.data());
 		stbi_write_png(file.c_str(), width, height, channels, image_data.data(), 0);
