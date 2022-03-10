@@ -34,7 +34,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     entities.back()->addComponent<TransformComponent>(glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0)), glm::vec3(50, 50, 0)));
     entities.back()->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
     entities.back()->addComponent<TextComponent>("Quick brown fox jumped over a lazy dog");
-    entities.back()->updateComponent<TextComponent>([](TextComponent& text) { text.text = "AEA"; });
+    entities.back()->updateComponent<TextComponent>([](TextComponent& text) { text.text = "Press F2"; });
 
     scene->onPlay();
 }
@@ -55,6 +55,10 @@ void SandboxApp::onUpdate()
         Light light{};
         light.color = glm::vec3(1);
         entities.back()->addComponent<LightComponent>(light);
+    }
+    if (Input::isKeyPressed(Keys::F2))
+    {
+        Graphics::screenshot(fmt::format("data/images/screenshots/screenshot.png"));
     }
 
     //Resources::pool.forEach(entities.size(), 

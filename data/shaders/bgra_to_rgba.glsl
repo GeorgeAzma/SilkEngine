@@ -1,7 +1,7 @@
 #type compute
 layout(local_size_x = 64) in;
 
-layout(set = 0, binding = 0) buffer image
+layout(set = 0, binding = 0) buffer Image
 {
 	uint colors[];
 };

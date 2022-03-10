@@ -164,7 +164,7 @@ void Graphics::screenshot(const std::string& file)
 		command_buffer.begin();
 		auto compute = Resources::getComputeShaderEffect("BGRA To RGBA")->pipeline;
 		compute->bind();
-		compute->getShader()->set("image", { image_storage });
+		compute->getShader()->set("Image", { image_storage });
 		compute->getShader()->getDescriptorSets().at(0)->bind();
 		compute->dispatch(width * height);
 		command_buffer.submitIdle();

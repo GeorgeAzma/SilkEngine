@@ -208,7 +208,7 @@ const Shader::ResourceLocation* Shader::getIfExists(const std::string& resource_
 	auto resource_location = resource_locations.find(resource_name);
 	return (resource_location != resource_locations.end()) ? &resource_location->second : nullptr;
 }
-
+  
 Shader::~Shader()
 {
 	for (const auto& stage : stages)
@@ -273,7 +273,7 @@ void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spi
 	resource.binding = binding;
 	resource.stage = stage;
 	resource.type = type;
-	resource.name = compiler.get_name(spirv_resource.id);
+	resource.name = spirv_resource.name;
 	this->resources.emplace_back(std::move(resource));
 }
 

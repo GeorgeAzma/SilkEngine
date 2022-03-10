@@ -137,7 +137,7 @@ void Scene::onUpdate()
 	for (auto& instance_batch : instance_batches)
 	{
 		const auto& shader = instance_batch.instance->material->pipeline->getShader();
-		if (auto global_uniform = shader->getIfExists("global_uniform"))
+		if (auto global_uniform = shader->getIfExists("GlobalUniform"))
 			instance_batch.descriptor_sets[global_uniform->set].setBufferInfo(global_uniform->write_index, { *global_uniform_buffer }); //TODO: Global data doesn't have to update for each batch
 
 		if (instance_batch.images_need_update)
