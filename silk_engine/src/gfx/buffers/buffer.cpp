@@ -46,7 +46,7 @@ void Buffer::map(void** data) const
 	vmaMapMemory(*Graphics::allocator, allocation, data);
 	mapped = true;
 }
-
+ 
 void Buffer::unmap() const
 {
 	if (!mapped)
