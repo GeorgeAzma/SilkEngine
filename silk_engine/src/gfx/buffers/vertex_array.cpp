@@ -27,6 +27,6 @@ void VertexArray::bind()
 	for (size_t i = 0; i < vertex_buffers.size(); ++i)
 		buffers[i] = *vertex_buffers[i];
 	
-	Graphics::active.command_buffer.bindVertexBuffers(0, buffers, offsets);
+	Graphics::getActiveCommandBuffer().bindVertexBuffers(0, buffers, offsets);
 	index_buffer->bind();
 }

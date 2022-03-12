@@ -3,6 +3,7 @@
 Mesh2D::Mesh2D(const std::vector<Vertex2D>& vertices, const std::vector<uint32_t>& indices)
 	: vertices(vertices), Mesh(indices, Type::_2D)
 {
+	SK_TRACE("Created 2D mesh with {} vertices and {} indices", vertices.size(), indices.size());
 }
 
 void Mesh2D::createVertexArray()

@@ -97,6 +97,8 @@ void Image::create(const ImageProps& props)
 		sampler = makeUnique<Sampler>(sampler_props);
 		descriptor_image_info.sampler = *sampler;
 	}
+
+	SK_TRACE("Image created: {}x{}x{} with {} layers", props.width, props.height, props.depth, props.array_layers);
 }
 
 void Image::transitionLayout(vk::ImageLayout new_layout) 
@@ -199,7 +201,7 @@ void Image::transitionLayout(vk::ImageLayout new_layout)
 			SK_ERROR("Unsupported image layout transition destination: {0}", barrier.oldLayout);
 			break;
 	}
-	Graphics::active.command_buffer.pipelineBarrier(source_stage, destination_stage, vk::DependencyFlags(0), {}, {}, { barrier });
+	Graphics::getActiveCommandBuffer().pipelineBarrier(source_stage, destination_stage, vk::DependencyFlags(0), {}, {}, { barrier });
 
 	command_buffer.submitIdle();
 
@@ -247,7 +249,7 @@ void Image::copyFromBuffer(vk::Buffer buffer)
 
 		regions[layer] = std::move(region);
 	}
-	Graphics::active.command_buffer.copyBufferToImage(buffer, image, descriptor_image_info.imageLayout, regions);
+	Graphics::getActiveCommandBuffer().copyBufferToImage(buffer, image, descriptor_image_info.imageLayout, regions);
 
 	command_buffer.submitIdle();
 }
@@ -269,7 +271,7 @@ void Image::copyToBuffer(vk::Buffer buffer, uint32_t base_array_layer, uint32_t 
 	region.imageSubresource.baseArrayLayer = base_array_layer;
 	region.imageSubresource.layerCount = array_layers;
 	region.imageSubresource.mipLevel = 0;
-	Graphics::active.command_buffer.copyImageToBuffer(image, descriptor_image_info.imageLayout, buffer, { region });
+	Graphics::getActiveCommandBuffer().copyImageToBuffer(image, descriptor_image_info.imageLayout, buffer, { region });
 
 	command_buffer.submitIdle();
 }
@@ -289,7 +291,7 @@ void Image::insertMemoryBarrier(const vk::Image& image, vk::AccessFlags source_a
 	barrier.subresourceRange.levelCount = mip_levels;
 	barrier.subresourceRange.baseArrayLayer = base_array_layer;
 	barrier.subresourceRange.layerCount = array_layers;
-	Graphics::active.command_buffer.pipelineBarrier(source_stage_mask, destination_stage_mask, vk::DependencyFlags(0), {}, {}, { barrier });
+	Graphics::getActiveCommandBuffer().pipelineBarrier(source_stage_mask, destination_stage_mask, vk::DependencyFlags(0), {}, {}, { barrier });
 }
 
 void Image::generateMipmaps()
@@ -326,7 +328,7 @@ void Image::generateMipmaps()
 		barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
 		barrier.newLayout = vk::ImageLayout::eTransferSrcOptimal;
 		barrier.subresourceRange.baseMipLevel = i - 1;
-		Graphics::active.command_buffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags(0), {}, {}, { barrier });
+		Graphics::getActiveCommandBuffer().pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags(0), {}, {}, { barrier });
 		
 		vk::ImageBlit blit{};
 		blit.srcOffsets[0] = vk::Offset3D(0, 0, 0);
@@ -342,14 +344,14 @@ void Image::generateMipmaps()
 		blit.dstSubresource.baseArrayLayer = 0;
 		blit.dstSubresource.layerCount = props.array_layers;
 
-		Graphics::active.command_buffer.blitImage(image, vk::ImageLayout::eTransferSrcOptimal, image, vk::ImageLayout::eTransferDstOptimal, { blit }, props.mipmap_filter);
+		Graphics::getActiveCommandBuffer().blitImage(image, vk::ImageLayout::eTransferSrcOptimal, image, vk::ImageLayout::eTransferDstOptimal, { blit }, props.mipmap_filter);
 
 		barrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
 		barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
 		barrier.oldLayout = vk::ImageLayout::eTransferSrcOptimal;
 		barrier.newLayout = props.layout;
 		descriptor_image_info.imageLayout = barrier.newLayout;
-		Graphics::active.command_buffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, vk::DependencyFlags(0), {}, {}, { barrier });
+		Graphics::getActiveCommandBuffer().pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, vk::DependencyFlags(0), {}, {}, { barrier });
 
 		if (mip_width > 1) 
 			mip_width /= 2;
@@ -363,7 +365,7 @@ void Image::generateMipmaps()
 	barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
 	barrier.newLayout = props.layout;
 	barrier.subresourceRange.baseMipLevel = mip_levels - 1;
-	Graphics::active.command_buffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, vk::DependencyFlags(0), {}, {}, { barrier });
+	Graphics::getActiveCommandBuffer().pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, vk::DependencyFlags(0), {}, {}, { barrier });
 
 	command_buffer.submitIdle();
 }
@@ -432,7 +434,7 @@ bool Image::copyImage(shared<Image> destination, uint32_t array_layer)
 
 	if (!destination->isFeatureSupported(vk::FormatFeatureFlagBits::eBlitDst))
 	{
-		SK_WARN("Device does not support blitting to linear tiled images, using copy instead of blit!\n");
+		SK_WARN("Device does not support blitting to linear tiled images, using copy instead of blit!");
 		supports_blit = false;
 	}
 
@@ -460,7 +462,7 @@ bool Image::copyImage(shared<Image> destination, uint32_t array_layer)
 		blit.dstSubresource.layerCount = 1;
 		blit.dstOffsets[0] = vk::Offset3D(0, 0, 0);
 		blit.dstOffsets[1] = vk::Offset3D((int32_t)props.width, (int32_t)props.height, (int32_t)props.depth);
-		Graphics::active.command_buffer.blitImage(image, vk::ImageLayout::eTransferSrcOptimal, *destination, vk::ImageLayout::eTransferDstOptimal, { blit }, vk::Filter::eNearest);
+		Graphics::getActiveCommandBuffer().blitImage(image, vk::ImageLayout::eTransferSrcOptimal, *destination, vk::ImageLayout::eTransferDstOptimal, { blit }, vk::Filter::eNearest);
 	}
 	else 
 	{
@@ -475,7 +477,7 @@ bool Image::copyImage(shared<Image> destination, uint32_t array_layer)
 		region.dstSubresource.baseArrayLayer = 0;
 		region.dstSubresource.layerCount = 1;
 		region.extent = vk::Extent3D(props.width, props.height, props.depth);
-		Graphics::active.command_buffer.copyImage(image, vk::ImageLayout::eTransferSrcOptimal, *destination, vk::ImageLayout::eTransferDstOptimal, { region });
+		Graphics::getActiveCommandBuffer().copyImage(image, vk::ImageLayout::eTransferSrcOptimal, *destination, vk::ImageLayout::eTransferDstOptimal, { region });
 	}
 
 	destination->insertMemoryBarrier(vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eMemoryRead, vk::ImageLayout::eTransferDstOptimal, destination_old_layout, vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, 0, 0);

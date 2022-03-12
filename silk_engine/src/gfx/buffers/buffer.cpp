@@ -16,6 +16,7 @@ Buffer::Buffer(vk::DeviceSize size, vk::BufferUsageFlags usage, VmaMemoryUsage v
 	const VkBufferCreateInfo& vk_ci = (const VkBufferCreateInfo&)ci;
 	VkBuffer& vk_buffer = (VkBuffer&)buffer;
 	Graphics::vulkanAssert(vk::Result(vmaCreateBuffer(*Graphics::allocator, &vk_ci, &allocation_create_info, &vk_buffer, &allocation, nullptr)));
+	SK_TRACE("Buffer created with size: {}", size);
 } 
 
 Buffer::~Buffer()
@@ -120,7 +121,7 @@ void Buffer::insertMemoryBarrier(const vk::Buffer& buffer, vk::AccessFlags sourc
 	barrier.buffer = buffer;
 	barrier.offset = offset;
 	barrier.size = size;
-	Graphics::active.command_buffer.pipelineBarrier(source_stage_mask, destination_stage_mask, vk::DependencyFlags(0), {}, {barrier}, {});
+	Graphics::getActiveCommandBuffer().pipelineBarrier(source_stage_mask, destination_stage_mask, vk::DependencyFlags(0), {}, {barrier}, {});
 }
 
 void Buffer::copy(vk::Buffer destination, vk::Buffer source, vk::DeviceSize size, vk::DeviceSize dst_offset, vk::DeviceSize src_offset)
@@ -132,7 +133,7 @@ void Buffer::copy(vk::Buffer destination, vk::Buffer source, vk::DeviceSize size
 	copy_region.srcOffset = src_offset;
 	copy_region.dstOffset = dst_offset;
 	copy_region.size = size;
-	vk::CommandBuffer(command_buffer).copyBuffer(source, destination, { copy_region });
+	Graphics::getActiveCommandBuffer().copyBuffer(source, destination, { copy_region });
 
 	command_buffer.submitIdle();
 }

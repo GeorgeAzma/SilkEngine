@@ -10,7 +10,7 @@ public:
     ~SandboxApp();
 
 private:
-	unique<Scene> scene;
+    shared<Scene> scene;
 	shared<Entity> camera;
     std::vector<shared<Entity>> entities;
 };

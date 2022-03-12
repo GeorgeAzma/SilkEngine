@@ -193,7 +193,7 @@ void GraphicsPipeline::bind()
 {
 	if (Graphics::active.pipeline == pipeline && Graphics::active.bind_point == vk::PipelineBindPoint::eGraphics)
 		return; 
-	Graphics::active.command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+	Graphics::getActiveCommandBuffer().bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
 	Graphics::active.pipeline = pipeline;
 	Graphics::active.pipeline_layout = pipeline_layout;
 	Graphics::active.bind_point = vk::PipelineBindPoint::eGraphics;

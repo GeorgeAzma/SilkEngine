@@ -1,7 +1,6 @@
 #pragma once
 
 #include "log.h"
-#include "layer_stack.h"
 #include "utils/fixed_update.h"
 #include "event.h"
 
@@ -24,9 +23,6 @@ public:
     Application(const char *name = "App", ApplicationCommandLineArgs args = {});
     virtual ~Application();
 
-    void pushLayer(Layer *layer);
-    void pushOverlay(Layer *layer);
-
     ApplicationCommandLineArgs getCommandLineArgs() const { return command_line_args; }
 
 protected:
@@ -45,7 +41,6 @@ protected:
 private:
     ApplicationCommandLineArgs command_line_args;
     bool running = true;
-    LayerStack layer_stack;
     double runtime = 0.0;
 
 private:

@@ -13,6 +13,7 @@
 #include "gfx/window/window.h"
 #include "gfx/graphics.h"
 #include "meshes/text_mesh.h"
+#include "gfx/renderer.h"
 
 Scene::Scene()
 {
@@ -34,39 +35,34 @@ Scene::Scene()
 	registry.on_destroy<ModelComponent>().connect<&Scene::onModelComponentDestroy>(this);
 	registry.on_destroy<LightComponent>().connect<&Scene::onLightComponentDestroy>(this);
 
-	instance_batches.reserve(Graphics::MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
-
-	indirect_buffer = makeUnique<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(vk::DrawIndexedIndirectCommand));
-
-	global_uniform_buffer = makeUnique<UniformBuffer>(sizeof(GlobalUniformData));
-
-	Timers::every(200ms, [] {
-		SK_INFO("Render stats: ");
-		SK_INFO("Instance batches: {0}", Graphics::stats.instance_batches);
-		SK_INFO("Instances: {0}", Graphics::stats.instances);
-		SK_INFO("Vertices: {0}", Graphics::stats.vertices);
-		SK_INFO("Indices: {0}", Graphics::stats.indices);
-		});
+	SK_TRACE("Scene created");
 }
 
 Scene::~Scene()
 {
+	registry.on_construct<MeshComponent>().disconnect<&Scene::onMeshComponentCreate>(this);
+	registry.on_construct<ModelComponent>().disconnect<&Scene::onModelComponentCreate>(this);
+	registry.on_construct<LightComponent>().disconnect<&Scene::onLightComponentCreate>(this);
+	registry.on_construct<TextComponent>().disconnect<&Scene::onTextComponentCreate>(this);
+
+	registry.on_update<TransformComponent>().disconnect<&Scene::onTransformComponentUpdate>(this);
+	registry.on_update<ColorComponent>().disconnect<&Scene::onColorComponentUpdate>(this);
+	registry.on_update<MaterialComponent>().disconnect<&Scene::onMaterialComponentUpdate>(this);
+	registry.on_update<LightComponent>().disconnect<&Scene::onLightComponentUpdate>(this);
+	registry.on_update<ImageComponent>().disconnect<&Scene::onImageComponentUpdate>(this);
+	registry.on_update<TextComponent>().disconnect<&Scene::onTextComponentUpdate>(this);
+
+	registry.on_destroy<MeshComponent>().disconnect<&Scene::onMeshComponentDestroy>(this);
+	registry.on_destroy<ModelComponent>().disconnect<&Scene::onModelComponentDestroy>(this);
+	registry.on_destroy<LightComponent>().disconnect<&Scene::onLightComponentDestroy>(this);
+	
+	Dispatcher::unsubscribe(this, &Scene::onWindowResize);
+
 	onStop();
 }
 
 void Scene::onPlay()
 {
-	registry.view<ScriptComponent>().each(
-		[&](auto entity, auto& script_component)
-		{
-			if (!script_component.instance)
-			{
-				script_component.instance = script_component.instantiate_script();
-				script_component.instance->entity = makeShared<Entity>(entity, this);
-
-				script_component.instance->onCreate();
-			}
-		});
 }
 
 void Scene::onUpdate()
@@ -75,121 +71,19 @@ void Scene::onUpdate()
 	registry.view<ScriptComponent>().each(
 		[&](auto entity, auto& script_component)
 		{
+			if (!script_component.instance)
+			{
+				script_component.instance = script_component.instantiate_script();
+				script_component.instance->entity = makeShared<Entity>(entity, this);
+				script_component.instance->onCreate();
+			}
 			script_component.instance->onUpdate();
 		});
-
-	CameraComponent* main_camera = nullptr;
-	registry.view<CameraComponent>().each(
-		[&](auto entity, auto& camera_component)
-		{
-			main_camera = &camera_component;
-		});
-
-	GlobalUniformData global_uniform_data{};
-	if (main_camera)
-	{
-		global_uniform_data.projection_view = main_camera->camera.projection_view;
-		global_uniform_data.camera_position = main_camera->camera.position;
-		global_uniform_data.camera_direction = main_camera->camera.direction;
-	}
-	if (false /*Is main_camera 2D?*/)
-	{ 
-		//TODO: Support orthographic 2D camera  
-	}
-	else
-	{
-		global_uniform_data.projection_view2D = glm::ortho(0.0f, (float)Window::getWidth(), 0.0f, (float)Window::getHeight(), 0.0f, 1.0f);
-	}
-	global_uniform_data.delta_time = Time::dt;
-	global_uniform_data.time = Time::runtime;
-	global_uniform_data.frame = Time::frame;
-	global_uniform_data.resolution = glm::uvec2(Window::getWidth(), Window::getHeight());
-	global_uniform_data.light_count = light_index;
-	global_uniform_data.lights = lights;
-
-	global_uniform_buffer->setData(&global_uniform_data, sizeof(GlobalUniformData));
-
-	//Drawing	
-	bool any_needs_update = false;
-	static std::vector<vk::DrawIndexedIndirectCommand> draw_commands;
-	draw_commands.resize(instance_batches.size());
-	for (size_t i = 0; i < instance_batches.size(); ++i)
-	{
-		if (instance_batches[i].needs_update)
-		{
-			instance_batches[i].instance_buffer->setData(instance_batches[i].instance_data.data(), instance_batches[i].instance_data.size() * sizeof(InstanceData));
-			instance_batches[i].needs_update = false;
-			vk::DrawIndexedIndirectCommand draw_command{};
-			draw_command.instanceCount = instance_batches[i].instance_data.size();
-			draw_command.indexCount = instance_batches[i].instance->mesh->indices.size();
-			draw_commands[i] = std::move(draw_command);
-			any_needs_update = true;
-		}
-	}
-	if (any_needs_update)
-		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(vk::DrawIndexedIndirectCommand));
-
-	//Draw instances
-	const auto& white = Resources::white_image->getDescriptorInfo();
-	Graphics::beginFrame();
-	Graphics::swap_chain->beginRenderPass();
-	size_t draw_index = 0;
-	for (auto& instance_batch : instance_batches)
-	{
-		const auto& shader = instance_batch.instance->material->pipeline->getShader();
-		if (auto global_uniform = shader->getIfExists("GlobalUniform"))
-			instance_batch.descriptor_sets[global_uniform->set].setBufferInfo(global_uniform->write_index, { *global_uniform_buffer }); //TODO: Global data doesn't have to update for each batch
-
-		if (instance_batch.images_need_update)
-		{
-			std::vector<vk::DescriptorImageInfo> descriptor_images(Graphics::MAX_IMAGE_SLOTS, white);
-			for (size_t i = 0; i < instance_batch.images.size(); ++i)
-				descriptor_images[i] = *instance_batch.images[i];
-
-			size_t index = 0;
-			if (auto images = shader->getIfExists("images"))
-				instance_batch.descriptor_sets[images->set].setImageInfo(images->write_index, descriptor_images);
-			instance_batch.images_need_update = false;
-		}
-
-		instance_batch.bind();
-		Graphics::active.command_buffer.drawIndexedIndirect(*indirect_buffer, draw_index * sizeof(vk::DrawIndexedIndirectCommand), 1, sizeof(vk::DrawIndexedIndirectCommand));
-		++draw_index;
-	}
-
-	//End draw
-	Graphics::swap_chain->endRenderPass();
-	Graphics::endFrame();
-
-	Graphics::stats.instance_batches += instance_batches.size();
-	for (const auto& instance_batch : instance_batches)
-	{
-		Graphics::stats.instances += instance_batch.instances.size();
-		Graphics::stats.vertices += instance_batch.instance->mesh->vertexCount() * instance_batch.instances.size();
-		Graphics::stats.indices += instance_batch.instance->mesh->indices.size() * instance_batch.instances.size();
-	}
 }
 
 void Scene::onStop()
 {
-	registry.on_construct<MeshComponent>().disconnect<&Scene::onMeshComponentCreate>(this);
-	registry.on_construct<ModelComponent>().disconnect<&Scene::onModelComponentCreate>(this);
-	registry.on_construct<LightComponent>().disconnect<&Scene::onLightComponentCreate>(this);
-	registry.on_construct<TextComponent>().disconnect<&Scene::onTextComponentCreate>(this);
-	
-	registry.on_update<TransformComponent>().disconnect<&Scene::onTransformComponentUpdate>(this);
-	registry.on_update<ColorComponent>().disconnect<&Scene::onColorComponentUpdate>(this);
-	registry.on_update<MaterialComponent>().disconnect<&Scene::onMaterialComponentUpdate>(this);
-	registry.on_update<LightComponent>().disconnect<&Scene::onLightComponentUpdate>(this);
-	registry.on_update<ImageComponent>().disconnect<&Scene::onImageComponentUpdate>(this);
-	registry.on_update<TextComponent>().disconnect<&Scene::onTextComponentUpdate>(this);
-	
-	registry.on_destroy<MeshComponent>().disconnect<&Scene::onMeshComponentDestroy>(this);
-	registry.on_destroy<ModelComponent>().disconnect<&Scene::onModelComponentDestroy>(this);
-	registry.on_destroy<LightComponent>().disconnect<&Scene::onLightComponentDestroy>(this);
-	Dispatcher::unsubscribe(this, &Scene::onWindowResize);
-	registry.view<ScriptComponent>().each(
-		[&](auto entity, auto& script_component)
+	registry.view<ScriptComponent>().each([](auto entity, auto& script_component)
 		{
 			script_component.instance->onDestroy();
 		});
@@ -214,22 +108,34 @@ void Scene::onWindowResize(const WindowResizeEvent& e)
 		});
 }
 
+Camera* Scene::getMainCamera()
+{
+	CameraComponent* main_camera = nullptr;
+	registry.view<CameraComponent>().each(
+		[&](auto entity, auto& camera_component)
+		{
+			main_camera = &camera_component;
+		});
+
+	return main_camera ? &main_camera->camera : nullptr;
+}
+
 void Scene::onTransformComponentUpdate(entt::registry& registry, entt::entity entity)
 {
-	//TODO: Figure out how to get rid of all the stupid transform component child checks (It can be solved via Event system, but for now with this little components this method is faster)
+	//TODO: Figure out how to get rid of all the stupid transform component child checks (It can be solved via Event system, or entity child system, but for now with this little components this method is faster)
 	TransformComponent& transform = registry.get<TransformComponent>(entity);
 
 	if (auto mesh_component = registry.try_get<MeshComponent>(entity))
 	{
-		instance_batches[mesh_component->instance->instance_batch_index].instance_data[mesh_component->instance->instance_data_index].transform = transform;
-		instance_batches[mesh_component->instance->instance_batch_index].needs_update = true;
+		Renderer::instance_batches[mesh_component->instance->instance_batch_index].instance_data[mesh_component->instance->instance_data_index].transform = transform;
+		Renderer::instance_batches[mesh_component->instance->instance_batch_index].needs_update = true;
 	}
 	if (auto model_component = registry.try_get<ModelComponent>(entity))
 	{
 		for (size_t i = 0; i < model_component->instances.size(); ++i)
 		{
-			instance_batches[model_component->instances[i]->instance_batch_index].instance_data[model_component->instances[i]->instance_data_index].transform = transform;
-			instance_batches[model_component->instances[i]->instance_batch_index].needs_update = true;
+			Renderer::instance_batches[model_component->instances[i]->instance_batch_index].instance_data[model_component->instances[i]->instance_data_index].transform = transform;
+			Renderer::instance_batches[model_component->instances[i]->instance_batch_index].needs_update = true;
 		}
 	}
 	if (auto light_component = registry.try_get<LightComponent>(entity))
@@ -242,15 +148,15 @@ void Scene::onColorComponentUpdate(entt::registry& registry, entt::entity entity
 
 	if (auto mesh_component = registry.try_get<MeshComponent>(entity))
 	{
-		instance_batches[mesh_component->instance->instance_batch_index].instance_data[mesh_component->instance->instance_data_index].color = color;
-		instance_batches[mesh_component->instance->instance_batch_index].needs_update = true;
+		Renderer::instance_batches[mesh_component->instance->instance_batch_index].instance_data[mesh_component->instance->instance_data_index].color = color;
+		Renderer::instance_batches[mesh_component->instance->instance_batch_index].needs_update = true;
 	}
 	if (auto model_component = registry.try_get<ModelComponent>(entity))
 	{
 		for (size_t i = 0; i < model_component->instances.size(); ++i)
 		{
-			instance_batches[model_component->instances[i]->instance_batch_index].instance_data[model_component->instances[i]->instance_data_index].color = color;
-			instance_batches[model_component->instances[i]->instance_batch_index].needs_update = true;
+			Renderer::instance_batches[model_component->instances[i]->instance_batch_index].instance_data[model_component->instances[i]->instance_data_index].color = color;
+			Renderer::instance_batches[model_component->instances[i]->instance_batch_index].needs_update = true;
 		}
 	}
 }
@@ -263,10 +169,10 @@ void Scene::onMaterialComponentUpdate(entt::registry& registry, entt::entity ent
 	{
 		if (*mesh_component->instance->material != *material.material)
 		{
-			InstanceData instance_data = instance_batches[mesh_component->instance->instance_batch_index].instance_data[mesh_component->instance->instance_data_index];
-			destroyMeshInstance(*mesh_component->instance);
+			InstanceData instance_data = Renderer::instance_batches[mesh_component->instance->instance_batch_index].instance_data[mesh_component->instance->instance_data_index];
+			Renderer::destroyMeshInstance(*mesh_component->instance);
 			mesh_component->instance->material = material.material;
-			createMeshInstance(mesh_component->instance, instance_data);
+			Renderer::createMeshInstance(mesh_component->instance, instance_data);
 		}
 	}
 	if (auto model_component = registry.try_get<ModelComponent>(entity))
@@ -276,10 +182,10 @@ void Scene::onMaterialComponentUpdate(entt::registry& registry, entt::entity ent
 			for (size_t i = 0; i < model_component->instances.size(); ++i)
 			{
 				shared<RenderedInstance>& instance = model_component->instances[i];
-				InstanceData instance_data = instance_batches[instance->instance_batch_index].instance_data[instance->instance_data_index];
-				destroyMeshInstance(*instance);
+				InstanceData instance_data = Renderer::instance_batches[instance->instance_batch_index].instance_data[instance->instance_data_index];
+				Renderer::destroyMeshInstance(*instance);
 				instance->material = material.material;
-				createMeshInstance(instance, instance_data);
+				Renderer::createMeshInstance(instance, instance_data);
 			}
 		}
 	}
@@ -293,24 +199,34 @@ void Scene::onLightComponentUpdate(entt::registry& registry, entt::entity entity
 
 void Scene::onImageComponentUpdate(entt::registry& registry, entt::entity entity)
 {
-	ImageComponent& image = registry.get<ImageComponent>(entity);
-
 	if (auto mesh_component = registry.try_get<MeshComponent>(entity))
 	{
+		ImageComponent& image = registry.get<ImageComponent>(entity); 
 		SK_ASSERT(mesh_component->instance->images.size() >= image.images.size(), "Couldn't update image component because amount of images specified is more than instance's image count");
 		auto& instance = mesh_component->instance;
-		auto& instance_batch = instance_batches[instance->instance_batch_index];
+		bool same = true;
+		for (size_t i = 0; i < instance->images.size(); ++i)
+		{
+			if (image.images[i] != instance->images[i])
+			{
+				same = false;
+				break;
+			}
+		}
+		if (same)
+			return;
 		instance->images = image.images;
+		auto& instance_batch = Renderer::instance_batches[instance->instance_batch_index];
 		instance_batch.removeImages(instance_batch.instance_data[instance->instance_data_index].image_index, instance->images.size());
 		uint32_t image_index = instance_batch.addImages(instance->images);
 		if (image_index == UINT32_MAX)
 		{
 			InstanceData instance_data = instance_batch.instance_data[instance->instance_data_index];
-			destroyMeshInstance(*instance);
-			addInstanceBatch(instance, instance_data);
-			image_index = instance_batches[instance->instance_batch_index].addImages(instance->images);
+			Renderer::destroyMeshInstance(*instance);
+			Renderer::addInstanceBatch(instance, instance_data);
+			image_index = Renderer::instance_batches[instance->instance_batch_index].addImages(instance->images);
 		}
-		instance_batches[instance->instance_batch_index].instance_data[instance->instance_data_index].image_index = image_index;
+		Renderer::instance_batches[instance->instance_batch_index].instance_data[instance->instance_data_index].image_index = image_index;
 	}
 }
 
@@ -318,11 +234,11 @@ void Scene::onTextComponentUpdate(entt::registry& registry, entt::entity entity)
 {
 	TextComponent& text = registry.get<TextComponent>(entity);
 	MeshComponent& mesh = registry.get<MeshComponent>(entity);
-	InstanceData instance_data = instance_batches[mesh.instance->instance_batch_index].instance_data[mesh.instance->instance_data_index];
-	destroyMeshInstance(*mesh.instance);
+	InstanceData instance_data = Renderer::instance_batches[mesh.instance->instance_batch_index].instance_data[mesh.instance->instance_data_index];
+	Renderer::destroyMeshInstance(*mesh.instance);
 	mesh.mesh = makeShared<TextMesh>(text.text, text.size, text.font);
 	mesh.instance->mesh = mesh.mesh;
-	createMeshInstance(mesh.instance, instance_data);
+	Renderer::createMeshInstance(mesh.instance, instance_data);
 }
 
 void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
@@ -330,27 +246,23 @@ void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
 	MeshComponent& mesh_component = registry.get<MeshComponent>(entity);
 
 	InstanceData instance_data{};
-
 	if (auto transform = registry.try_get<TransformComponent>(entity))
 		instance_data.transform = *transform;
-
 	if (auto color = registry.try_get<ColorComponent>(entity))
 		instance_data.color = *color;
 
 	mesh_component.instance = makeShared<RenderedInstance>(mesh_component.mesh);
-
 	if (auto material = registry.try_get<MaterialComponent>(entity))
 		mesh_component.instance->material = material->material;
-
 	if (auto image = registry.try_get<ImageComponent>(entity))
 		mesh_component.instance->images = image->images;
 
-	createMeshInstance(mesh_component.instance, instance_data);
+	Renderer::createMeshInstance(mesh_component.instance, instance_data);
 }
 
 void Scene::onMeshComponentDestroy(entt::registry& registry, entt::entity entity)
 {
-	destroyMeshInstance(*registry.get<MeshComponent>(entity).instance);
+	Renderer::destroyMeshInstance(*registry.get<MeshComponent>(entity).instance);
 }
 
 void Scene::onTextComponentCreate(entt::registry& registry, entt::entity entity)
@@ -368,13 +280,10 @@ void Scene::onModelComponentCreate(entt::registry& registry, entt::entity entity
 	ModelComponent& model_component = registry.get<ModelComponent>(entity);
 
 	InstanceData instance_data{};
-
 	if (auto transform = registry.try_get<TransformComponent>(entity))
 		instance_data.transform = *transform;
-
 	if (auto color = registry.try_get<ColorComponent>(entity))
 		instance_data.color = *color;
-
 	shared<ShaderEffect> material = nullptr;
 	if (auto mat = registry.try_get<MaterialComponent>(entity))
 		material = mat->material;
@@ -384,133 +293,29 @@ void Scene::onModelComponentCreate(entt::registry& registry, entt::entity entity
 	{
 		model_component.instances[i] = makeShared<RenderedInstance>(model_component.model->getMeshes()[i], material);
 		model_component.instances[i]->images = model_component.model->getImages()[i];
-		createMeshInstance(model_component.instances[i], instance_data);
+		Renderer::createMeshInstance(model_component.instances[i], instance_data);
 	}
 }
 
 void Scene::onModelComponentDestroy(entt::registry& registry, entt::entity entity)
 {
 	ModelComponent& model_component = registry.get<ModelComponent>(entity);
-
 	for (size_t i = 0; i < model_component.model->getMeshes().size(); ++i)
-		destroyMeshInstance(*model_component.instances[i]);
+		Renderer::destroyMeshInstance(*model_component.instances[i]);
 }
 
 void Scene::onLightComponentCreate(entt::registry& registry, entt::entity entity)
 {
-	if (light_index >= lights.size())
-		return;
-
 	LightComponent& light_component = registry.get<LightComponent>(entity);
-	light_component.light_ptr = &lights[light_index];
-	lights[light_index] = light_component;
+
+	auto& light = Renderer::addLight(light_component.light);
+	light_component.light_ptr = &light;
 	if (auto transform = registry.try_get<TransformComponent>(entity))
-		lights[light_index].position = transform->transform * glm::vec4(light_component.light.position, 1);
-	++light_index;
+		light.position = transform->transform * glm::vec4(light_component.light.position, 1);
 }
 
 void Scene::onLightComponentDestroy(entt::registry& registry, entt::entity entity)
 {
 	LightComponent& light_component = registry.get<LightComponent>(entity);
-
 	(*light_component.light_ptr) = Light{}; //if color is black, light is inactive and shader skips it
-	//TODO: this is slow (not critical but needs speedup)
-	registry.view<LightComponent>().each(
-		[&](auto entity, auto& lc) 
-		{ 
-			if (lc.light_ptr == &lights[light_index - 1])
-				lc.light_ptr = light_component.light_ptr;
-		});
-	std::swap(*light_component.light_ptr, lights[light_index - 1]);
-	--light_index;	
-}
-
-void Scene::createMeshInstance(shared<RenderedInstance> instance, const InstanceData& instance_data)
-{
-	if (!instance->mesh->vertex_array.get()) instance->mesh->createVertexArray();
-	if (!instance->mesh->hasAABB()) instance->mesh->calculateAABB(); //TEMP for now
-	if (!instance->material.get()) instance->material = Resources::getShaderEffect("Lit 3D");
-
-	bool need_new_instance_batch = true;
-	for (size_t i = 0; i < instance_batches.size(); ++i)
-	{
-		auto& instance_batch = instance_batches[i];
-		if (instance_batch == *instance && instance_batch.instance_data.size() < Graphics::MAX_INSTANCES && instance_batch.availableImages() >= instance->images.size())
-		{
-			instance_batch.needs_update = true;
-			instance_batch.instance_data.emplace_back(std::move(instance_data));
-			instance_batch.instances.emplace_back(instance);
-
-			instance->instance_batch_index = i;
-			instance->instance_data_index = instance_batch.instance_data.size() - 1;
-
-			need_new_instance_batch = false;
-			break;
-		}
-	}
-
-	if (need_new_instance_batch)
-		addInstanceBatch(instance, instance_data);
-
-	if (instance->images.size())
-	{
-		uint32_t image_index = instance_batches[instance->instance_batch_index].addImages(instance->images);
-		SK_ASSERT(image_index != UINT32_MAX, "Instance has too much images");
-		instance_batches[instance->instance_batch_index].instance_data[instance->instance_data_index].image_index = image_index;
-	}
-}
-
-void Scene::addInstanceBatch(shared<RenderedInstance> instance, const InstanceData& instance_data)
-{
-	instance_batches.emplace_back(instance);
-	auto& new_batch = instance_batches.back();
-	new_batch.instance_data.reserve(Graphics::MAX_INSTANCES);
-	new_batch.instances.reserve(Graphics::MAX_INSTANCES);
-
-	new_batch.images.reserve(Graphics::MAX_IMAGE_SLOTS);
-	new_batch.images.emplace_back(Resources::white_image);
-	new_batch.image_owners.resize(Graphics::MAX_IMAGE_SLOTS);
-
-	new_batch.instance_data.emplace_back(std::move(instance_data));
-	new_batch.instances.emplace_back(instance);
-
-	new_batch.instance_buffer = makeShared<VertexBuffer>(new_batch.instance_data.data(), Graphics::MAX_INSTANCES * sizeof(InstanceData), VMA_MEMORY_USAGE_CPU_TO_GPU);
-
-	for (auto&& [set, descriptor_set] : new_batch.instance->material->pipeline->getShader()->getDescriptorSets())
-		new_batch.descriptor_sets[set] = *descriptor_set;
-
-
-	instance->instance_batch_index = instance_batches.size() - 1;
-	instance->instance_data_index = instance_batches.back().instance_data.size() - 1;
-}
-
-void Scene::destroyMeshInstance(const RenderedInstance& instance)
-{
-	auto& instance_batch = instance_batches[instance.instance_batch_index];
-
-	instance_batch.instances.back()->instance_data_index = instance.instance_data_index;
-
-	if (instance_batch.instance_data.size() - 1 == 0)
-	{
-		if (instance.instance_batch_index != instance_batches.size() - 1)
-		{
-			InstanceBatch* last_batch = &instance_batch;
-			instance_batches.back().needs_update = true; //Instance batches data got swapped around so this forces to also update instance_batch draw commands buffer
-			std::swap(instance_batch, instance_batches.back());
-			for (size_t j = 0; j < last_batch->instances.size(); ++j)
-				last_batch->instances[j]->instance_batch_index = instance_batches.back().instance->instance_batch_index;
-		}
-		instance_batches.pop_back();
-		return;
-	}
-
-	instance_batch.removeImages(instance_batch.instance_data[instance.instance_data_index].image_index, instance.images.size());
-
-	instance_batch.needs_update = true;
-
-	std::swap(instance_batch.instance_data[instance.instance_data_index], instance_batch.instance_data.back());
-	instance_batch.instance_data.pop_back();
-
-	std::swap(instance_batch.instances[instance.instance_data_index], instance_batch.instances.back());
-	instance_batch.instances.pop_back();
 }

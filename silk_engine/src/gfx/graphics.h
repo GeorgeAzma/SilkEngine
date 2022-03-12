@@ -3,6 +3,9 @@
 #include "scene/light.h"
 #include "enums.h"
 #include "utils/alarm.h"
+#include "images/image2D.h"
+#include "utils/color.h"
+#include "scene/entity.h"
 
 class WindowResizeEvent;
 class Instance;
@@ -45,11 +48,14 @@ public:
 		vk::Pipeline pipeline = VK_NULL_HANDLE;
 		vk::PipelineLayout pipeline_layout = VK_NULL_HANDLE;
 		vk::PipelineBindPoint bind_point = vk::PipelineBindPoint(VK_PIPELINE_BIND_POINT_MAX_ENUM);
-		vk::CommandBuffer command_buffer = VK_NULL_HANDLE;
-		vk::CommandBuffer primary_command_buffer = VK_NULL_HANDLE;
+		std::unordered_map<std::thread::id, vk::CommandBuffer> command_buffer;
+		std::unordered_map<std::thread::id, vk::CommandBuffer> primary_command_buffer;
 		vk::RenderPass render_pass = VK_NULL_HANDLE;
 		uint32_t subpass = 0;
 		vk::Framebuffer framebuffer = VK_NULL_HANDLE;
+
+		shared<Image2D> image = nullptr;
+		glm::vec4 color = glm::vec4(1);
 	} active{};
 
 public:
@@ -60,13 +66,31 @@ public:
 	static void beginFrame();
 	static void endFrame();
 
+	static void image(const shared<Image2D>& image);
+	static void color(Color&& color);
+	static void rect(int x, int y, int width, int height = 0);
+	static void circle(int x, int y, int width, int height = 0);
+	//static void line(int x1, int y1, int x2, int y2);
+	//static void bezier(int x1, int y1, int x2, int y2, int x3, int y3);
+	//static void cubicBezier(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4);
+	//static void triangle(int x1, int y1, int x2, int y2, int x3, int y3);
+
 	static shared<CommandPool> getCommandPool();
+	static vk::CommandBuffer getActiveCommandBuffer();
+	static vk::CommandBuffer getActivePrimaryCommandBuffer();
+	static void setActiveCommandBuffer(vk::CommandBuffer command_buffer);
+	static void setActivePrimaryCommandBuffer(vk::CommandBuffer command_buffer);
 
 	static void screenshot(const std::string& file);
 
 	static void vulkanAssert(vk::Result result);
 
+private:
+	static void render(int x, int y, int width, int height, const std::string& mesh, const std::string& material);
+
 public:
+	static inline std::vector<shared<Entity>> rendered_entities;
+	static inline size_t rendered_entity_index = 0;
 	static inline Instance* instance = nullptr;
 	static inline Surface* surface = nullptr;
 	static inline PhysicalDevice* physical_device = nullptr;
@@ -80,4 +104,8 @@ public:
 	static inline VkFence previous_frame_finished = VK_NULL_HANDLE;
 	static inline VkSemaphore swap_chain_image_available = VK_NULL_HANDLE;
 	static inline VkSemaphore render_finished = VK_NULL_HANDLE;
+
+private:
+	static inline std::mutex active_command_buffer_mutex;
+	static inline std::mutex active_primary_command_buffer_mutex;
 };

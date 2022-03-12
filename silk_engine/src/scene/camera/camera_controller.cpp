@@ -13,7 +13,7 @@ void CameraController::onCreate()
 
 void CameraController::onUpdate()
 {
-	auto& camera = getComponent<CameraComponent>().camera;
+	auto& camera = get<CameraComponent>().camera;
 
 	float sensitivity = 0.003f;
 	glm::vec2 dm = delta_mouse(Input::getMouse()) * sensitivity;

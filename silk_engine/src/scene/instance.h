@@ -23,8 +23,6 @@ struct InstanceData
 	bool operator==(const InstanceData& other) const;
 };
 
-struct InstanceBatch;
-
 struct RenderedInstance
 {
 	shared<Mesh> mesh;

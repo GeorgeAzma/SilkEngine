@@ -65,7 +65,7 @@ void DescriptorSet::bind(size_t first_set)
 	else
 		update();
 
-	Graphics::active.command_buffer.bindDescriptorSets(Graphics::active.bind_point, Graphics::active.pipeline_layout, first_set, { descriptor_set }, {});
+	Graphics::getActiveCommandBuffer().bindDescriptorSets(Graphics::active.bind_point, Graphics::active.pipeline_layout, first_set, { descriptor_set }, {});
 }
 
 void DescriptorSet::setImageInfo(size_t write_index, const std::vector<vk::DescriptorImageInfo>& image_info)
@@ -73,6 +73,7 @@ void DescriptorSet::setImageInfo(size_t write_index, const std::vector<vk::Descr
 	SK_ASSERT(image_info.size() == write_descriptor_sets[write_index].descriptorCount, "Invalid image_info size: {0}, should be {1}", image_info.size(), write_descriptor_sets[write_index].descriptorCount);
 	this->image_infos[write_index] = image_info;
 	write_descriptor_sets[write_index].pImageInfo = this->image_infos[write_index].data();
+	needs_update = true;
 }
 
 void DescriptorSet::setBufferInfo(size_t write_index, const std::vector<vk::DescriptorBufferInfo>& buffer_info)
@@ -80,6 +81,7 @@ void DescriptorSet::setBufferInfo(size_t write_index, const std::vector<vk::Desc
 	SK_ASSERT(buffer_info.size() == write_descriptor_sets[write_index].descriptorCount, "Invalid buffer_info size: {0}, should be {1}", buffer_info.size(), write_descriptor_sets[write_index].descriptorCount);
 	this->buffer_infos[write_index] = buffer_info;
 	write_descriptor_sets[write_index].pBufferInfo = this->buffer_infos[write_index].data();
+	needs_update = true;
 }
 
 DescriptorSet::DescriptorSet(const DescriptorSet& other)

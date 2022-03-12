@@ -4,7 +4,6 @@
 
 #ifndef SK_DIST
 #define SK_ENABLE_DEBUG_OUTPUT
-#include "utils/debug_timer.h"
 #endif
 
 #ifdef SK_ENABLE_DEBUG_OUTPUT

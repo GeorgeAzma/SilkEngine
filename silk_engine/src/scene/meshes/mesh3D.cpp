@@ -3,6 +3,7 @@
 Mesh3D::Mesh3D(const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices)
 	: vertices(vertices), Mesh(indices, Type::_3D)
 {
+	SK_TRACE("Created 3D mesh with {} vertices and {} indices", vertices.size(), indices.size());
 }
 
 void Mesh3D::createVertexArray()

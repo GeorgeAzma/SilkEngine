@@ -22,12 +22,12 @@ QueryPool::~QueryPool()
 void QueryPool::begin(uint32_t index)
 {
 	Graphics::logical_device->resetQueryPool(query_pool, index, 1);
-	Graphics::active.command_buffer.beginQuery(query_pool, index, vk::QueryControlFlagBits::ePrecise);
+	Graphics::getActiveCommandBuffer().beginQuery(query_pool, index, vk::QueryControlFlagBits::ePrecise);
 }
 
 void QueryPool::end(uint32_t index)
 {
-	Graphics::active.command_buffer.endQuery(query_pool, index);
+	Graphics::getActiveCommandBuffer().endQuery(query_pool, index);
 }
 
 std::vector<uint64_t> QueryPool::getResults()

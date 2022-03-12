@@ -10,41 +10,41 @@ public:
 	~Entity();
 
 	template<typename T, typename... Args>
-	T& addComponent(Args&&... args)
+	T& add(Args&&... args)
 	{
-		SK_ASSERT(!hasComponent<T>(), "Entity already has specified component");
+		SK_ASSERT(!has<T>(), "Entity already has specified component");
 		return scene->registry.emplace<T>(entity, std::forward<Args>(args)...);
 	}
 
 	template<typename T>
-	bool hasComponent() const
+	bool has() const
 	{
 		return scene->registry.any_of<T>(entity);
 	}
 
 	template<typename T>
-	void removeComponent() const
+	void remove() const
 	{
-		SK_ASSERT(hasComponent<T>(), "Entity doesn't have specified component");
+		SK_ASSERT(has<T>(), "Entity doesn't have specified component");
 		scene->registry.remove<T>(entity);
 	}
 
 	template<typename T>
-	T& getComponent()
+	T& get()
 	{
-		SK_ASSERT(hasComponent<T>(), "Entity doesn't have specified component");
+		SK_ASSERT(has<T>(), "Entity doesn't have specified component");
 		return scene->registry.get<T>(entity);
 	}
 
 	//Function signature should be: void(Component&)
 	template<typename T, typename... Fn>
-	void updateComponent(Fn&&... func)
+	void update(Fn&&... func)
 	{
 		scene->registry.patch<T>(entity, std::forward<Fn>(func)...);
 	}
 
 	template<typename T, typename... Args>
-	void replaceComponent(Args&&... args)
+	void replace(Args&&... args)
 	{
 		scene->registry.replace<T>(entity, std::forward<Args>(args)...);
 	}
@@ -64,7 +64,7 @@ struct ScriptableEntity
 {
 public:
 	template<typename T>
-	T& getComponent() { return entity->getComponent<T>(); }
+	T& get() { return entity->get<T>(); }
 
 protected:
 	virtual void onCreate() = 0;

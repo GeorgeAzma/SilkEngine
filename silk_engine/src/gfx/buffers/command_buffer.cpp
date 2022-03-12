@@ -35,9 +35,9 @@ void CommandBuffer::begin(vk::CommandBufferUsageFlags usage)
 	}
 
 	command_buffer.begin(vk::CommandBufferBeginInfo(usage, &inheritance_info));
-	Graphics::active.command_buffer = command_buffer;
+	Graphics::setActiveCommandBuffer(command_buffer);
 	if(is_primary)
-		Graphics::active.primary_command_buffer = command_buffer;
+		Graphics::setActivePrimaryCommandBuffer(command_buffer);
 	running = true;
 }
 
@@ -47,9 +47,9 @@ void CommandBuffer::end()
 		return;
 
 	command_buffer.end();
-	Graphics::active.command_buffer = VK_NULL_HANDLE;
+	Graphics::setActiveCommandBuffer(VK_NULL_HANDLE);
 	if (is_primary)
-		Graphics::active.primary_command_buffer = command_buffer;
+		Graphics::setActivePrimaryCommandBuffer(VK_NULL_HANDLE);
 	recorded = true;
 	running = false;
 }

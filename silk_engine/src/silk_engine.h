@@ -62,6 +62,7 @@
 
 #include "scene/entity.h"
 #include "scene/scene.h"
+#include "scene/scene_manager.h"
 #include "scene/components.h"
 #include "scene/resources.h"
 

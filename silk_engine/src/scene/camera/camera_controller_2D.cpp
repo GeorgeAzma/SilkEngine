@@ -13,7 +13,7 @@ void CameraController2D::onCreate()
 
 void CameraController2D::onUpdate()
 {
-	auto& camera = getComponent<CameraComponent>().camera;
+	auto& camera = get<CameraComponent>().camera;
 
 	auto old_position = camera.position;
 	float speed = 2.0f * Time::dt * (1 + Input::isKeyDown(Keys::LEFT_SHIFT) * 20);

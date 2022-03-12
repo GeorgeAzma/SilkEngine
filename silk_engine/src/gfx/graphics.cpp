@@ -16,6 +16,9 @@
 #include "scene/resources.h"
 #include "buffers/storage_buffer.h"
 #include "buffers/command_buffer.h"
+#include "scene/components.h"
+#include "scene/scene_manager.h"
+#include "renderer.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
@@ -46,10 +49,13 @@ void Graphics::init()
 	render_finished = Graphics::logical_device->createSemaphore({});
 
 	Font::init();
+
+	SK_TRACE("Graphics objects initialized");
 }
 
 void Graphics::cleanup()
 {
+	rendered_entities.clear();
 	Font::cleanup();
 	Graphics::logical_device->destroyFence(previous_frame_finished);
 	Graphics::logical_device->destroySemaphore(swap_chain_image_available);
@@ -63,13 +69,15 @@ void Graphics::cleanup()
 	delete physical_device;
 	delete surface;
 	delete instance;
-
 	glfwTerminate();
+
+	SK_TRACE("Graphics objects destroyed");
 }
 
 void Graphics::update()
 {
 	stats.reset();
+	rendered_entity_index = 0;
 	//Destroy old unused command pools
 	if (command_pool_purge_alarm)
 	{
@@ -100,12 +108,12 @@ void Graphics::beginFrame()
 	viewport.height = -(float)swap_chain->getExtent().height;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
-	((const vk::CommandBuffer&)*command_buffer).setViewport(0, { viewport });
+	getActiveCommandBuffer().setViewport(0, {viewport});
 
 	vk::Rect2D scissor = {};
 	scissor.offset = vk::Offset2D{ 0, 0 };
 	scissor.extent = vk::Extent2D{ (uint32_t)swap_chain->getExtent().width, (uint32_t)swap_chain->getExtent().height };
-	((const vk::CommandBuffer&)*command_buffer).setScissor(0, { scissor });
+	getActiveCommandBuffer().setScissor(0, { scissor });
 }
 
 void Graphics::endFrame()
@@ -120,6 +128,43 @@ void Graphics::endFrame()
 	Graphics::vulkanAssert(swap_chain->present(render_finished));
 }
 
+void Graphics::image(const shared<Image2D>& image)
+{
+	active.image = image;
+}
+
+void Graphics::color(Color&& color)
+{
+	active.color = color;
+}
+
+void Graphics::rect(int x, int y, int width, int height)
+{
+	render(x, y, width, height, "Rectangle", "2D");
+}
+
+void Graphics::circle(int x, int y, int width, int height)
+{
+	render(x, y, width, height, "Circle", "2D");
+}
+
+void Graphics::render(int x, int y, int width, int height, const std::string& mesh, const std::string& material)
+{
+	if (!SceneManager::getActive().get())
+		return;
+	height = (height != 0) ? height : width;
+
+	//TODO: This creates instance everytime function is called fix
+	shared<RenderedInstance> instance = makeShared<RenderedInstance>();
+	instance->mesh = Resources::getMesh(mesh);
+	instance->material = Resources::getShaderEffect(material);
+	instance->images = { active.image.get() ? active.image : Resources::white_image };
+	InstanceData instance_data{};
+	instance_data.color = active.color;
+	instance_data.transform = glm::mat4(width, 0, 0, 0, 0, height, 0, 0, 0, 0, 1, 0, x, y, 0, 1);
+	Renderer::createMeshInstance(instance, instance_data);
+}
+
 shared<CommandPool> Graphics::getCommandPool()
 {
 	auto it = command_pools.find(std::this_thread::get_id());
@@ -128,9 +173,30 @@ shared<CommandPool> Graphics::getCommandPool()
 	return command_pools.emplace(std::this_thread::get_id(), makeShared<CommandPool>()).first->second;
 }
 
+vk::CommandBuffer Graphics::getActiveCommandBuffer()
+{
+	return Graphics::active.command_buffer.at(std::this_thread::get_id());
+}
+
+vk::CommandBuffer Graphics::getActivePrimaryCommandBuffer()
+{
+	return Graphics::active.primary_command_buffer.at(std::this_thread::get_id());
+}
+
+void Graphics::setActiveCommandBuffer(vk::CommandBuffer command_buffer)
+{
+	std::scoped_lock lock(active_command_buffer_mutex);
+	Graphics::active.command_buffer[std::this_thread::get_id()] = command_buffer;
+}
+
+void Graphics::setActivePrimaryCommandBuffer(vk::CommandBuffer command_buffer)
+{
+	std::scoped_lock lock(active_primary_command_buffer_mutex);
+	Graphics::active.primary_command_buffer[std::this_thread::get_id()] = command_buffer;
+}
+
 void Graphics::screenshot(const std::string& file)
 {
-	DebugTimer t0("Screenshot");
 	int width = swap_chain->getExtent().width;
 	int height = swap_chain->getExtent().height;
 	int channels = Image::channelCount(swap_chain->getSurfaceFormat().format);
@@ -182,9 +248,8 @@ void Graphics::screenshot(const std::string& file)
 		destination->getData(image_data.data());
 		stbi_write_png(file.c_str(), width, height, channels, image_data.data(), 0);
 	}
-	t0.stop();
 	
-	SK_TRACE("Screenshot created: at {0}", file);
+	SK_TRACE("Screenshot saved at {0}", file);
 }
 
 void Graphics::vulkanAssert(vk::Result result)

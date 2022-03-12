@@ -155,7 +155,7 @@ void RenderPass::begin(vk::Framebuffer framebuffer, vk::SubpassContents subpass_
     begin_info.clearValueCount = clear_values.size();
     begin_info.pClearValues = clear_values.data();
 
-    Graphics::active.command_buffer.beginRenderPass(begin_info, subpass_contents);
+    Graphics::getActiveCommandBuffer().beginRenderPass(begin_info, subpass_contents);
     Graphics::active.render_pass = render_pass;
     current_subpass = 0;
     Graphics::active.subpass = current_subpass;
@@ -164,7 +164,7 @@ void RenderPass::begin(vk::Framebuffer framebuffer, vk::SubpassContents subpass_
 
 void RenderPass::nextSubpass(vk::SubpassContents subpass_contents)
 {
-    Graphics::active.command_buffer.nextSubpass(subpass_contents);
+    Graphics::getActiveCommandBuffer().nextSubpass(subpass_contents);
     ++current_subpass;
     Graphics::active.subpass = current_subpass;
 }
@@ -174,7 +174,7 @@ void RenderPass::end()
     if (Graphics::active.render_pass != render_pass)
         return;
 
-    Graphics::active.command_buffer.endRenderPass();
+    Graphics::getActiveCommandBuffer().endRenderPass();
 
     Graphics::active.render_pass = VK_NULL_HANDLE;
     Graphics::active.subpass = 0;

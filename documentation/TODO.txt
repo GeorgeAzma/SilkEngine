@@ -1,3 +1,4 @@
+- Create a renderer class and seperate render logic from scene
 - Multiple render passes
 - Fast Culling
 - Handle normal/other maps and materials in shader

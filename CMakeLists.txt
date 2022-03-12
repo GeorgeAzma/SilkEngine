@@ -154,7 +154,7 @@ ${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}irrXML$<$<
 
 #Sub dirs
 ############################__SILK ENGINE__#####################################
-file(GLOB_RECURSE SILK_ENGINE_SOURCES "silk_engine/src/*.cpp" "silk_engine/src/*.h")
+file(GLOB_RECURSE SILK_ENGINE_SOURCES "silk_engine/src/*.cpp")
 #Create SilkEngine.lib
 add_library(SilkEngine STATIC ${SILK_ENGINE_SOURCES})
 
@@ -223,7 +223,7 @@ target_link_libraries(SilkEngine ${EXTRA_LIBS})
 
 
 ############################__SANDBOX__#####################################
-file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp" "sandbox/src/*.h")
+file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp")
 add_executable(Sandbox ${SANDBOX_SOURCES})
 target_link_libraries(Sandbox PRIVATE SilkEngine)
 

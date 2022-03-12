@@ -1,9 +1,7 @@
 #pragma once
 
 #include "instance.h"
-#include "light.h"
-#include "gfx/buffers/indirect_buffer.h"
-#include "gfx/buffers/uniform_buffer.h"
+#include "camera/camera.h"
 
 class Entity;
 class WindowResizeEvent;
@@ -11,24 +9,6 @@ class WindowResizeEvent;
 class Scene
 {
 	friend class Entity;
-
-public:
-	static constexpr size_t MAX_LIGHTS = 64;
-
-public:
-	struct GlobalUniformData
-	{
-		glm::mat4 projection_view;
-		glm::mat4 projection_view2D;
-		glm::vec3 camera_position;
-		float time;
-		glm::vec3 camera_direction;
-		float delta_time;
-		glm::uvec2 resolution;
-		uint32_t frame;
-		uint32_t light_count;
-		std::array<Light, MAX_LIGHTS> lights;
-	};
 
 public:
 	Scene();
@@ -48,32 +28,22 @@ public:
 	void onImageComponentUpdate(entt::registry& registry, entt::entity entity);
 	void onTextComponentUpdate(entt::registry& registry, entt::entity entity);
 
+	Camera* getMainCamera();
+
 private:
 	void onWindowResize(const WindowResizeEvent& e);
 	
 	void onMeshComponentCreate(entt::registry& registry, entt::entity entity);
-	void onMeshComponentDestroy(entt::registry& registry, entt::entity entity);
-	
 	void onTextComponentCreate(entt::registry& registry, entt::entity entity);
-	
-	void onModelComponentCreate(entt::registry& registry, entt::entity entity);
-	void onModelComponentDestroy(entt::registry& registry, entt::entity entity);
-	
+	void onModelComponentCreate(entt::registry& registry, entt::entity entity);	
 	void onLightComponentCreate(entt::registry& registry, entt::entity entity);
-	void onLightComponentDestroy(entt::registry& registry, entt::entity entity);
 	
-	void createMeshInstance(shared<RenderedInstance> instance, const InstanceData& instance_data);
-	void addInstanceBatch(shared<RenderedInstance> instance, const InstanceData& instance_data);
-	void destroyMeshInstance(const RenderedInstance& instance);
+	void onMeshComponentDestroy(entt::registry& registry, entt::entity entity);
+	void onModelComponentDestroy(entt::registry& registry, entt::entity entity);
+	void onLightComponentDestroy(entt::registry& registry, entt::entity entity);
 
 private:
 	entt::registry registry;
-	std::vector<InstanceBatch> instance_batches;
-	unique<IndirectBuffer> indirect_buffer;
-	unique<UniformBuffer> global_uniform_buffer;
-	std::array<Light, MAX_LIGHTS> lights;
-	size_t light_index = 0;
-	bool lights_updated = false;
 };
 
 

@@ -9,6 +9,8 @@
 #include "scene/resources.h"
 #include "gfx/window/swap_chain.h"
 #include "gfx/window/window.h"
+#include "scene/scene_manager.h"
+#include "gfx/renderer.h"
 
 Application::Application(const char* name, ApplicationCommandLineArgs args)
     : command_line_args(args), app_update(0.0)
@@ -22,6 +24,7 @@ Application::Application(const char* name, ApplicationCommandLineArgs args)
     Input::init();
     Graphics::init();
     Resources::init();
+    Renderer::init();
 }
 
 Application::~Application()
@@ -35,24 +38,10 @@ Application::~Application()
     SK_INFO("Terminated");
 }
 
-void Application::pushLayer(Layer *layer)
-{
-    layer_stack.pushLayer(layer);
-    layer->onAttach();
-}
-
-void Application::pushOverlay(Layer *layer)
-{
-    layer_stack.pushOverlay(layer);
-    layer->onAttach();
-}
-
 void Application::run()
 {
     while (running)
-    {
         update();
-    }
 }
 
 void Application::update()
@@ -66,10 +55,10 @@ void Application::update()
             Time::runtime = app_update.getRuntime();
 
             onUpdate();
-
-            for (Layer* layer : layer_stack)
-                layer->onUpdate();
-
+            SceneManager::update();
+            Graphics::beginFrame();
+            Renderer::update(SceneManager::getActive()->getMainCamera());
+            Graphics::endFrame();
             Timers::update();
             Graphics::update();
             Input::update();

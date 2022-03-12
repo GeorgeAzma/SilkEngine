@@ -141,6 +141,8 @@ void Window::init()
         {
             Dispatcher::post(JoystickEvent(id, event == GLFW_CONNECTED));
         });
+
+    SK_TRACE("Window created: \"{}\" {}x{}", data.title.c_str(), data.width, data.height);
 }
 
 void Window::cleanup()

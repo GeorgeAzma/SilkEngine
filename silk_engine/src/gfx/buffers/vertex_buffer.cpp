@@ -13,5 +13,5 @@ VertexBuffer::VertexBuffer(const void* data, vk::DeviceSize size, VmaMemoryUsage
 void VertexBuffer::bind(size_t binding)
 {
 	constexpr vk::DeviceSize offset = 0;
-	Graphics::active.command_buffer.bindVertexBuffers(binding, { buffer }, { offset });
+	Graphics::getActiveCommandBuffer().bindVertexBuffers(binding, { buffer }, { offset });
 }

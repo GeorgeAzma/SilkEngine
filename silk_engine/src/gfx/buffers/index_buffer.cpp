@@ -14,5 +14,5 @@ IndexBuffer::IndexBuffer(const void* data, vk::DeviceSize count, IndexType index
 
 void IndexBuffer::bind()
 {
-	Graphics::active.command_buffer.bindIndexBuffer(buffer, 0, index_type);
+	Graphics::getActiveCommandBuffer().bindIndexBuffer(buffer, 0, index_type);
 }

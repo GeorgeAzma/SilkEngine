@@ -2,7 +2,9 @@
    
 SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 {
-    scene = makeUnique<Scene>();  
+    scene = makeShared<Scene>();  
+    SceneManager::add(scene);
+    SceneManager::switchTo(scene);
     
     Timers::every(100ms, 
         [this] 
@@ -12,31 +14,29 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
     Window::setSize({ 800, 600 });
     camera = scene->createEntity();
-    camera->addComponent<CameraComponent>();
-    camera->addComponent<ScriptComponent>().bind<CameraController>();
+    camera->add<CameraComponent>();
+    camera->add<ScriptComponent>().bind<CameraController>();
 
     auto rectangle = Resources::getMesh("Rectangle");
     auto circle = Resources::getMesh("Circle");
-    entities.resize(10000);
+    entities.resize(100000);
     for (size_t i = 0; i < entities.size(); ++i)
     {
         entities[i] = scene->createEntity();
-        entities[i]->addComponent<MaterialComponent>(Resources::getShaderEffect("2D"));
+        entities[i]->add<MaterialComponent>(Resources::getShaderEffect("2D"));
         auto t = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(Window::getWidth() * RNG::Float(), Window::getHeight() * RNG::Float(), 0.0f)), glm::vec3(4.0f, 4.0f, 0.0f));
-        entities[i]->addComponent<TransformComponent>(t);
-        entities[i]->addComponent<ImageComponent>(Resources::getImage(RNG::Bool() ? "Test2" : "Test1"));
-        entities[i]->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        entities[i]->addComponent<MeshComponent>(circle);
-        //entities[i]->addComponent<ModelComponent>(Resources::getModel("Backpack"));
+        entities[i]->add<TransformComponent>(t);
+        entities[i]->add<ImageComponent>(Resources::getImage(RNG::Bool() ? "Test2" : "Test1"));
+        entities[i]->add<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        entities[i]->add<MeshComponent>(circle);
+        //entities[i]->add<ModelComponent>(Resources::getModel("Backpack"));
     }
 
     entities.emplace_back(scene->createEntity());
-    entities.back()->addComponent<TransformComponent>(glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0)), glm::vec3(50, 50, 0)));
-    entities.back()->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-    entities.back()->addComponent<TextComponent>("Quick brown fox jumped over a lazy dog");
-    entities.back()->updateComponent<TextComponent>([](TextComponent& text) { text.text = "Press F2"; });
-
-    scene->onPlay();
+    entities.back()->add<TransformComponent>(glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0)), glm::vec3(50, 50, 0)));
+    entities.back()->add<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    entities.back()->add<TextComponent>("Quick brown fox jumped over a lazy dog");
+    entities.back()->update<TextComponent>([](TextComponent& text) { text.text = "Press F2"; });
 }
 
 void SandboxApp::onUpdate()
@@ -48,32 +48,33 @@ void SandboxApp::onUpdate()
     if (Input::isKeyPressed(Keys::Z))
     {
         entities.emplace_back(scene->createEntity());
-        entities.back()->addComponent<MaterialComponent>(Resources::getShaderEffect("3D"));
-        entities.back()->addComponent<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        entities.back()->addComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float()) * 20.0f));
-        entities.back()->addComponent<ModelComponent>(Resources::getModel("Backpack"));
+        entities.back()->add<MaterialComponent>(Resources::getShaderEffect("3D"));
+        entities.back()->add<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        entities.back()->add<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float()) * 20.0f));
+        entities.back()->add<ModelComponent>(Resources::getModel("Backpack"));
         Light light{};
         light.color = glm::vec3(1);
-        entities.back()->addComponent<LightComponent>(light);
+        entities.back()->add<LightComponent>(light);
     }
     if (Input::isKeyPressed(Keys::F2))
     {
         Graphics::screenshot(fmt::format("data/images/screenshots/screenshot.png"));
     }
 
+    Graphics::rect(32, 32, 500, 200);
+
     //Resources::pool.forEach(entities.size(), 
     //    [&](size_t i) 
     //    {
-    //        entities[i]->updateComponent<TransformComponent>([](TransformComponent& transform) {});
-    //        entities[i]->updateComponent<ColorComponent>([](ColorComponent& color) { color.color = glm::vec4(RNG::Float(), RNG::Float(), RNG::Float(), 1.0f); });
+    //        entities[i]->update<TransformComponent>([](TransformComponent& transform) {});
+    //        entities[i]->update<ColorComponent>([](ColorComponent& color) { color.color = glm::vec4(RNG::Float(), RNG::Float(), RNG::Float(), 1.0f); });
     //    });
     //Resources::pool.wait();
-
-    scene->onUpdate();
 }
 
 SandboxApp::~SandboxApp()
 {
+    SceneManager::remove(scene);
 }
 
 //CREATE APP

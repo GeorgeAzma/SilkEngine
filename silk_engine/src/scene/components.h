@@ -2,6 +2,7 @@
 
 #include "model.h"
 #include "instance.h"
+#include "light.h"
 #include "gfx/ui/font.h"
 #include "camera/camera.h"
 

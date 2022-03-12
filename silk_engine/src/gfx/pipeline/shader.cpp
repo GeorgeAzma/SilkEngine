@@ -6,7 +6,7 @@
 #include "gfx/devices/physical_device.h"
 #include "scene/resources.h"
 #include "utils/string.h"
-#include "scene/scene.h"
+#include "gfx/renderer.h"
 #include <spirv_cross/spirv_cross.hpp>
  
 shaderc_include_result* Shader::Includer::GetInclude(const char* requested_source, shaderc_include_type type, const char* requesting_source, size_t include_depth)
@@ -59,7 +59,7 @@ void Shader::compile(const std::vector<Define>& defines)
 	options.SetTargetEnvironment(shaderc_target_env_vulkan, shadercApiVersion(Graphics::API_VERSION));
 	options.SetForcedVersionProfile(450, shaderc_profile_core);
 	options.AddMacroDefinition("MAX_IMAGE_SLOTS", std::to_string(Graphics::MAX_IMAGE_SLOTS));
-	options.AddMacroDefinition("MAX_LIGHTS", std::to_string(Scene::MAX_LIGHTS));
+	options.AddMacroDefinition("MAX_LIGHTS", std::to_string(Renderer::MAX_LIGHTS));
 	options.AddMacroDefinition("DIFFUSE_TEXTURE", "0");
 	options.AddMacroDefinition("NORMAL_TEXTURE", "1");
 	options.AddMacroDefinition("AO_TEXTURE", "2");
