@@ -12,7 +12,7 @@ bool InstanceData::operator==(const InstanceData& other) const
 
 bool RenderedInstance::operator==(const RenderedInstance& other) const
 {
-	return (*mesh == *other.mesh && *material == *other.material);
+	return (*mesh == *other.mesh && material == other.material);
 }
 
 InstanceBatch::~InstanceBatch()
@@ -22,7 +22,7 @@ InstanceBatch::~InstanceBatch()
 
 void InstanceBatch::bind()
 {
-	instance->material->pipeline->bind();
+	instance->material->bind();
 	for (auto& descriptor_set : descriptor_sets)
 		descriptor_set.second.bind(descriptor_set.first);
 	instance->mesh->vertex_array->bind();

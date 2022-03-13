@@ -4,6 +4,7 @@
 #include "instance.h"
 #include "light.h"
 #include "gfx/ui/font.h"
+#include "gfx/pipeline/graphics_pipeline.h"
 #include "camera/camera.h"
 
 struct TransformComponent
@@ -88,9 +89,9 @@ struct ModelComponent
 
 struct MaterialComponent
 {
-	shared<ShaderEffect> material;
+	shared<GraphicsPipeline> material;
 
-	operator const ShaderEffect& () const { return *material; }
+	operator const GraphicsPipeline& () const { return *material; }
 };
 
 struct ColorComponent

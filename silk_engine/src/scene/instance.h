@@ -3,7 +3,8 @@
 #include "meshes/mesh.h"
 #include "gfx/images/image2D.h"
 #include "gfx/buffers/indirect_buffer.h"
-#include "material.h"
+#include "gfx/pipeline/graphics_pipeline.h"
+#include "gfx/descriptors/descriptor_set.h"
 
 struct CullData
 {
@@ -26,7 +27,7 @@ struct InstanceData
 struct RenderedInstance
 {
 	shared<Mesh> mesh;
-	shared<ShaderEffect> material = nullptr;
+	shared<GraphicsPipeline> material = nullptr;
 
 	std::vector<shared<Image2D>> images;
 	size_t instance_data_index = -1;

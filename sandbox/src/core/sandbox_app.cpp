@@ -5,6 +5,10 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     scene = makeShared<Scene>();  
     SceneManager::add(scene);
     SceneManager::switchTo(scene);
+
+    Resources::addImage("Test1", [] { return makeShared<Image2D>("test1.png"); });
+    Resources::addImage("Test2", [] { return makeShared<Image2D>("test2.png"); });
+    Resources::addModel("Backpack", [] { return makeShared<Model>("backpack/backpack.obj"); });
     
     Timers::every(100ms, 
         [this] 
@@ -23,7 +27,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     for (size_t i = 0; i < entities.size(); ++i)
     {
         entities[i] = scene->createEntity();
-        entities[i]->add<MaterialComponent>(Resources::getShaderEffect("2D"));
+        entities[i]->add<MaterialComponent>(Resources::getGraphicsPipeline("2D"));
         auto t = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(Window::getWidth() * RNG::Float(), Window::getHeight() * RNG::Float(), 0.0f)), glm::vec3(4.0f, 4.0f, 0.0f));
         entities[i]->add<TransformComponent>(t);
         entities[i]->add<ImageComponent>(Resources::getImage(RNG::Bool() ? "Test2" : "Test1"));
@@ -48,7 +52,7 @@ void SandboxApp::onUpdate()
     if (Input::isKeyPressed(Keys::Z))
     {
         entities.emplace_back(scene->createEntity());
-        entities.back()->add<MaterialComponent>(Resources::getShaderEffect("3D"));
+        entities.back()->add<MaterialComponent>(Resources::getGraphicsPipeline("3D"));
         entities.back()->add<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         entities.back()->add<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float()) * 20.0f));
         entities.back()->add<ModelComponent>(Resources::getModel("Backpack"));
@@ -60,8 +64,6 @@ void SandboxApp::onUpdate()
     {
         Graphics::screenshot(fmt::format("data/images/screenshots/screenshot.png"));
     }
-
-    Graphics::rect(32, 32, 500, 200);
 
     //Resources::pool.forEach(entities.size(), 
     //    [&](size_t i) 

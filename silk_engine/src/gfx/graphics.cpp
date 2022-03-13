@@ -77,8 +77,6 @@ void Graphics::cleanup()
 void Graphics::update()
 {
 	stats.reset();
-	rendered_entity_index = 0;
-	//Destroy old unused command pools
 	if (command_pool_purge_alarm)
 	{
 		for (auto it = command_pools.begin(); it != command_pools.end();)
@@ -126,43 +124,6 @@ void Graphics::endFrame()
 	submit_info.fence = previous_frame_finished;
 	command_buffer->submit(submit_info);
 	Graphics::vulkanAssert(swap_chain->present(render_finished));
-}
-
-void Graphics::image(const shared<Image2D>& image)
-{
-	active.image = image;
-}
-
-void Graphics::color(Color&& color)
-{
-	active.color = color;
-}
-
-void Graphics::rect(int x, int y, int width, int height)
-{
-	render(x, y, width, height, "Rectangle", "2D");
-}
-
-void Graphics::circle(int x, int y, int width, int height)
-{
-	render(x, y, width, height, "Circle", "2D");
-}
-
-void Graphics::render(int x, int y, int width, int height, const std::string& mesh, const std::string& material)
-{
-	if (!SceneManager::getActive().get())
-		return;
-	height = (height != 0) ? height : width;
-
-	//TODO: This creates instance everytime function is called fix
-	shared<RenderedInstance> instance = makeShared<RenderedInstance>();
-	instance->mesh = Resources::getMesh(mesh);
-	instance->material = Resources::getShaderEffect(material);
-	instance->images = { active.image.get() ? active.image : Resources::white_image };
-	InstanceData instance_data{};
-	instance_data.color = active.color;
-	instance_data.transform = glm::mat4(width, 0, 0, 0, 0, height, 0, 0, 0, 0, 1, 0, x, y, 0, 1);
-	Renderer::createMeshInstance(instance, instance_data);
 }
 
 shared<CommandPool> Graphics::getCommandPool()
@@ -227,7 +188,7 @@ void Graphics::screenshot(const std::string& file)
 
 		CommandBuffer command_buffer;
 		command_buffer.begin();
-		auto compute = Resources::getComputeShaderEffect("BGRA To RGBA")->pipeline;
+		auto compute = Resources::getComputePipeline("BGRA To RGBA");
 		compute->bind();
 		compute->getShader()->set("Image", { image_storage });
 		compute->getShader()->getDescriptorSets().at(0)->bind();

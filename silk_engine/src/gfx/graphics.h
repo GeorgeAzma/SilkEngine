@@ -53,9 +53,6 @@ public:
 		vk::RenderPass render_pass = VK_NULL_HANDLE;
 		uint32_t subpass = 0;
 		vk::Framebuffer framebuffer = VK_NULL_HANDLE;
-
-		shared<Image2D> image = nullptr;
-		glm::vec4 color = glm::vec4(1);
 	} active{};
 
 public:
@@ -65,15 +62,6 @@ public:
 
 	static void beginFrame();
 	static void endFrame();
-
-	static void image(const shared<Image2D>& image);
-	static void color(Color&& color);
-	static void rect(int x, int y, int width, int height = 0);
-	static void circle(int x, int y, int width, int height = 0);
-	//static void line(int x1, int y1, int x2, int y2);
-	//static void bezier(int x1, int y1, int x2, int y2, int x3, int y3);
-	//static void cubicBezier(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4);
-	//static void triangle(int x1, int y1, int x2, int y2, int x3, int y3);
 
 	static shared<CommandPool> getCommandPool();
 	static vk::CommandBuffer getActiveCommandBuffer();

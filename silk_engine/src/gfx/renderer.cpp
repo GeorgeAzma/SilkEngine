@@ -9,8 +9,14 @@ void Renderer::init()
 	instance_batches.reserve(Graphics::MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
 	indirect_buffer = makeUnique<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(vk::DrawIndexedIndirectCommand));
 	global_uniform_buffer = makeUnique<UniformBuffer>(sizeof(GlobalUniformData));
-	for(auto& light : lights)
-		light = Light{};
+	lights.fill(Light{});
+}
+
+void Renderer::cleanup()
+{
+	instance_batches.clear();
+	indirect_buffer = nullptr;
+	global_uniform_buffer = nullptr;
 }
 
 void Renderer::update(Camera* camera)
@@ -63,7 +69,7 @@ void Renderer::update(Camera* camera)
 	size_t draw_index = 0;
 	for (auto& instance_batch : instance_batches)
 	{
-		const auto& shader = instance_batch.instance->material->pipeline->getShader();
+		const auto& shader = instance_batch.instance->material->getShader();
 		if (auto global_uniform = shader->getIfExists("GlobalUniform"))
 			instance_batch.descriptor_sets[global_uniform->set].setBufferInfo(global_uniform->write_index, { *global_uniform_buffer }); //TODO: Global data doesn't have to update for each batch
 
@@ -111,7 +117,7 @@ void Renderer::createMeshInstance(const shared<RenderedInstance>& instance, cons
 {
 	if (!instance->mesh->vertex_array.get()) instance->mesh->createVertexArray();
 	if (!instance->mesh->hasAABB()) instance->mesh->calculateAABB(); //TEMP for now
-	if (!instance->material.get()) instance->material = Resources::getShaderEffect("Lit 3D");
+	if (!instance->material.get()) instance->material = Resources::getGraphicsPipeline("Lit 3D");
 
 	bool need_new_instance_batch = true;
 	for (size_t i = 0; i < instance_batches.size(); ++i)
@@ -158,7 +164,7 @@ void Renderer::addInstanceBatch(const shared<RenderedInstance>& instance, const 
 
 	new_batch.instance_buffer = makeShared<VertexBuffer>(new_batch.instance_data.data(), Graphics::MAX_INSTANCES * sizeof(InstanceData), VMA_MEMORY_USAGE_CPU_TO_GPU);
 
-	for (auto&& [set, descriptor_set] : new_batch.instance->material->pipeline->getShader()->getDescriptorSets())
+	for (auto&& [set, descriptor_set] : new_batch.instance->material->getShader()->getDescriptorSets())
 		new_batch.descriptor_sets[set] = *descriptor_set;
 
 

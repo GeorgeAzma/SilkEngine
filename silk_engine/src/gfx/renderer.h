@@ -28,6 +28,7 @@ public:
 public:
 	static void init();
 	static void update(Camera* camera = nullptr);
+	static void cleanup();
 
 	static Light& addLight(const Light& light);
 	static void createMeshInstance(const shared<RenderedInstance>& instance, const InstanceData& instance_data);

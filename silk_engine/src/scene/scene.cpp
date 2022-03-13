@@ -167,7 +167,7 @@ void Scene::onMaterialComponentUpdate(entt::registry& registry, entt::entity ent
 
 	if (auto mesh_component = registry.try_get<MeshComponent>(entity))
 	{
-		if (*mesh_component->instance->material != *material.material)
+		if (mesh_component->instance->material != material.material)
 		{
 			InstanceData instance_data = Renderer::instance_batches[mesh_component->instance->instance_batch_index].instance_data[mesh_component->instance->instance_data_index];
 			Renderer::destroyMeshInstance(*mesh_component->instance);
@@ -177,7 +177,7 @@ void Scene::onMaterialComponentUpdate(entt::registry& registry, entt::entity ent
 	}
 	if (auto model_component = registry.try_get<ModelComponent>(entity))
 	{
-		if (model_component->instances.size() && *model_component->instances[0]->material != *material.material)
+		if (model_component->instances.size() && model_component->instances[0]->material != material.material)
 		{
 			for (size_t i = 0; i < model_component->instances.size(); ++i)
 			{
@@ -270,7 +270,7 @@ void Scene::onTextComponentCreate(entt::registry& registry, entt::entity entity)
 	TextComponent& text_component = registry.get<TextComponent>(entity);
 	if (!text_component.font.get())
 		text_component.font = Resources::getFont("Arial");
-	registry.emplace<MaterialComponent>(entity, MaterialComponent{ Resources::getShaderEffect("Font") });
+	registry.emplace<MaterialComponent>(entity, MaterialComponent{ Resources::getGraphicsPipeline("Font") });
 	registry.emplace<ImageComponent>(entity, ImageComponent{ std::vector<shared<Image2D>>{ text_component.font->getAtlas() } });
 	registry.emplace<MeshComponent>(entity, MeshComponent{ makeShared<TextMesh>(text_component.text, text_component.size, text_component.font) });
 }
@@ -284,7 +284,7 @@ void Scene::onModelComponentCreate(entt::registry& registry, entt::entity entity
 		instance_data.transform = *transform;
 	if (auto color = registry.try_get<ColorComponent>(entity))
 		instance_data.color = *color;
-	shared<ShaderEffect> material = nullptr;
+	shared<GraphicsPipeline> material = nullptr;
 	if (auto mat = registry.try_get<MaterialComponent>(entity))
 		material = mat->material;
 
