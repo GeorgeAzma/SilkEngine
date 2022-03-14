@@ -26,7 +26,7 @@
 
 void Graphics::init()
 {
-	SK_ASSERT(!instance, "Vulkan: Reinitializing vulkan instance is not allowed");
+	SK_ASSERT(!instance, "Reinitializing vulkan instance is not allowed");
 
 	instance = new Instance();
 	surface = new Surface();
@@ -55,7 +55,6 @@ void Graphics::init()
 
 void Graphics::cleanup()
 {
-	rendered_entities.clear();
 	Font::cleanup();
 	Graphics::logical_device->destroyFence(previous_frame_finished);
 	Graphics::logical_device->destroySemaphore(swap_chain_image_available);

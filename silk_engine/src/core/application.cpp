@@ -33,6 +33,7 @@ Application::~Application()
     Dispatcher::unsubscribe(this, &Application::onWindowResize);
     Dispatcher::unsubscribe(this, &Application::onKeyPress);
     Window::cleanup();
+    Renderer::cleanup();
     Resources::cleanup();
     Graphics::cleanup();
     SK_INFO("Terminated");

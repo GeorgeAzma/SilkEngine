@@ -16,7 +16,7 @@ class Resources
 			: fetch_function(fetch_function) {}
 		std::function<shared<T>()> fetch_function = nullptr;
 		shared<T> resource = nullptr;
-		shared<T> fetch()
+		shared<T>& fetch()
 		{
 			if(!resource.get())
 				return (resource = fetch_function());

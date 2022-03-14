@@ -1,6 +1,4 @@
 #include "resources.h"
-#include "resources.h"
-#include "resources.h"
 #include "meshes/circle_mesh.h"
 #include "meshes/rectangle_mesh.h"
 #include "gfx/graphics.h"
@@ -161,9 +159,9 @@ void Resources::init()
  
 void Resources::cleanup()
 {
-    fonts.clear();
 	meshes.clear();
 	models.clear();
+    fonts.clear();
     shaders.clear();
     graphics_pipelines.clear();
     compute_pipelines.clear();

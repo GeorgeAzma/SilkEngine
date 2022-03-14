@@ -77,8 +77,6 @@ private:
 	static void render(int x, int y, int width, int height, const std::string& mesh, const std::string& material);
 
 public:
-	static inline std::vector<shared<Entity>> rendered_entities;
-	static inline size_t rendered_entity_index = 0;
 	static inline Instance* instance = nullptr;
 	static inline Surface* surface = nullptr;
 	static inline PhysicalDevice* physical_device = nullptr;
