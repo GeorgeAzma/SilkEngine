@@ -5,7 +5,6 @@
 class Frustum
 {
 private:
-
 #undef NEAR
 #undef FAR
 

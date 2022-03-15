@@ -13,8 +13,6 @@ void Input::init()
 	Dispatcher::subscribe(onKeyPress);
 	Dispatcher::subscribe(onKeyRelease);
 	Dispatcher::subscribe(onJoystickConnect);
-
-	setCursor("test.png");
 }
 
 void Input::update()

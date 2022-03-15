@@ -2,7 +2,7 @@
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
 
-ComputePipeline::ComputePipeline(shared<Shader> shader, const std::vector<Constant>& constants)
+ComputePipeline::ComputePipeline(const shared<Shader>& shader, const std::vector<Constant>& constants)
 {
 	this->shader = shader;
 

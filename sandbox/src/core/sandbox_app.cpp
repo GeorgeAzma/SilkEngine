@@ -23,7 +23,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
     auto rectangle = Resources::getMesh("Rectangle");
     auto circle = Resources::getMesh("Circle");
-    entities.resize(100000);
+    entities.resize(10000);
     for (size_t i = 0; i < entities.size(); ++i)
     {
         entities[i] = scene->createEntity();
@@ -32,7 +32,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
         entities[i]->add<TransformComponent>(t);
         entities[i]->add<ImageComponent>(Resources::getImage(RNG::Bool() ? "Test2" : "Test1"));
         entities[i]->add<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        entities[i]->add<MeshComponent>(circle);
+        entities[i]->add<MeshComponent>(rectangle);
         //entities[i]->add<ModelComponent>(Resources::getModel("Backpack"));
     }
 

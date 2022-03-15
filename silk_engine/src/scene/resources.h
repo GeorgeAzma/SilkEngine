@@ -6,6 +6,7 @@
 #include "gfx/pipeline/compute_pipeline.h"
 #include "gfx/ui/font.h"
 #include "gfx/allocators/command_pool.h"
+#include "utils/thread_pool.h"
 
 class Resources
 {

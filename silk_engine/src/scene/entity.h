@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene.h"
+#include <entt/entt.hpp>
 
 class Entity : NonCopyable
 {

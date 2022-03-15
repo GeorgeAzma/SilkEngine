@@ -7,7 +7,7 @@ class FixedUpdate
 public:
     FixedUpdate(double interval);
     bool update();
-    unsigned int getFPS() const { return round(fps); }
+    unsigned int getFPS() const { return std::round(fps); }
     double getFPSf() const { return fps; }
     double getDeltaTime() const { return delta; }
     double getRuntime() const { return total_time; }

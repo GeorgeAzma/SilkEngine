@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vulkan/vulkan.hpp>
+#include <optional>
 
 struct AttachmentProps
 {
@@ -14,6 +15,7 @@ struct AttachmentProps
 	vk::AttachmentStoreOp stencil_store_operation = vk::AttachmentStoreOp::eDontCare;
 	vk::ImageLayout initial_layout = vk::ImageLayout::eUndefined;
 };
+
 struct Attachment
 {
 	enum class Type

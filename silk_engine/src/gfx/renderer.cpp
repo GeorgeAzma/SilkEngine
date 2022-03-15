@@ -101,16 +101,17 @@ void Renderer::update(Camera* camera)
 	}
 }
 
-Light& Renderer::addLight(const Light& light)
+Light* Renderer::addLight(const Light& light)
 {
 	for (auto& l : lights)
 	{
 		if (l.color == glm::vec3(0))
 		{
 			l = light;
-			return l;
+			return &l;
 		}
 	}
+	return nullptr;
 }
 
 void Renderer::createMeshInstance(const shared<RenderedInstance>& instance, const InstanceData& instance_data)

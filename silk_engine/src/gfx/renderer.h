@@ -30,7 +30,7 @@ public:
 	static void update(Camera* camera = nullptr);
 	static void cleanup();
 
-	static Light& addLight(const Light& light);
+	static Light* addLight(const Light& light);
 	static void createMeshInstance(const shared<RenderedInstance>& instance, const InstanceData& instance_data);
 	static void addInstanceBatch(const shared<RenderedInstance>& instance, const InstanceData& instance_data);
 	static void destroyMeshInstance(const RenderedInstance& instance);

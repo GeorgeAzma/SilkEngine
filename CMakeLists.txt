@@ -174,49 +174,35 @@ target_compile_definitions(SilkEngine PUBLIC
 target_compile_definitions(SilkEngine PRIVATE "SK_CORE")
 
 #Precompile headers
-target_precompile_headers(SilkEngine PUBLIC 
-silk_engine/src/core/base.h
-<iostream>
+target_precompile_headers(SilkEngine PUBLIC
+#Very useful
+<memory>
+<cmath>
+<vector>
+<array>
 <string>
 <unordered_map>
+<thread>
+
+#Less useful
 <unordered_set>
-<map>
 <set>
-<vector>
-<chrono>
-<sstream>
+<map>
+<filesystem>
 <fstream>
-<memory>
 <functional>
 <algorithm>
-<utility>
-<array>
-<random>
-<thread>
 <queue>
 <mutex>
-<condition_variable>
-<bit>
-<math.h>
-<filesystem>
-<cstdlib>
-<numeric>
-<optional>
-<typeindex>
-<typeinfo>
-<list>
-<GLM/glm.hpp>
-<GLM/gtc/matrix_transform.hpp>
-<GLM/gtx/quaternion.hpp>
-<entt/entt.hpp>
-<semaphore>
-<future>
-<vk_mem_alloc.h>
+
+#Non std
+<glm/glm.hpp>
+<glm/gtc/matrix_transform.hpp>
+silk_engine/src/core/base.h
 silk_engine/src/core/log.h
-silk_engine/src/io/file.h
-silk_engine/src/utils/math.h
 silk_engine/src/utils/RNG.h
-silk_engine/src/utils/thread_pool.h)
+silk_engine/src/utils/thread_pool.h
+)
 
 #Link
 target_link_libraries(SilkEngine ${EXTRA_LIBS})
@@ -225,6 +211,7 @@ target_link_libraries(SilkEngine ${EXTRA_LIBS})
 ############################__SANDBOX__#####################################
 file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp")
 add_executable(Sandbox ${SANDBOX_SOURCES})
+target_include_directories(Sandbox PRIVATE ${PROJECT_SOURCE_DIR}/sandbox/src)
 target_link_libraries(Sandbox PRIVATE SilkEngine)
 
 #Copy data folder where exe file is

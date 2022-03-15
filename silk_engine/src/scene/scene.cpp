@@ -308,10 +308,10 @@ void Scene::onLightComponentCreate(entt::registry& registry, entt::entity entity
 {
 	LightComponent& light_component = registry.get<LightComponent>(entity);
 
-	auto& light = Renderer::addLight(light_component.light);
-	light_component.light_ptr = &light;
+	auto light = Renderer::addLight(light_component.light);
+	light_component.light_ptr = light;
 	if (auto transform = registry.try_get<TransformComponent>(entity))
-		light.position = transform->transform * glm::vec4(light_component.light.position, 1);
+		light->position = transform->transform * glm::vec4(light_component.light.position, 1);
 }
 
 void Scene::onLightComponentDestroy(entt::registry& registry, entt::entity entity)

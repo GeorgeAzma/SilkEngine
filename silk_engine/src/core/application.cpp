@@ -58,7 +58,7 @@ void Application::update()
             onUpdate();
             SceneManager::update();
             Graphics::beginFrame();
-            Renderer::update(SceneManager::getActive()->getMainCamera());
+            Renderer::update(SceneManager::getActive().get() ? SceneManager::getActive()->getMainCamera() : nullptr);
             Graphics::endFrame();
             Timers::update();
             Graphics::update();

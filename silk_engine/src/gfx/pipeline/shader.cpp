@@ -1,5 +1,4 @@
 #include "shader.h"
-#include "shader.h"
 #include "io/file.h"
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
@@ -208,6 +207,12 @@ const Shader::ResourceLocation* Shader::getIfExists(const std::string& resource_
 	auto resource_location = resource_locations.find(resource_name);
 	return (resource_location != resource_locations.end()) ? &resource_location->second : nullptr;
 }
+
+void Shader::bindDescriptors()
+{
+	for (auto&& [set, descriptor_set] : descriptor_sets)
+		descriptor_set->bind(set);
+}
   
 Shader::~Shader()
 {
@@ -243,23 +248,22 @@ std::unordered_map<uint32_t, std::string> Shader::parse(const std::filesystem::p
 
 void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, vk::ShaderStageFlags stage, vk::DescriptorType type)
 {
-	const spirv_cross::SPIRType& spir_type = compiler.get_type(spirv_resource.type_id);
-
 	for (Resource& resource : this->resources)
 	{
-		if (resource.id == spir_type.basetype)
+		if (resource.name == spirv_resource.name)
 		{
 			resource.stage |= stage;
 			return;
 		}
 	}
-	
+
+	const spirv_cross::SPIRType& spir_type = compiler.get_type(spirv_resource.type_id);
 	uint32_t set = compiler.get_decoration(spirv_resource.id, spv::DecorationDescriptorSet);
 	uint32_t binding = compiler.get_decoration(spirv_resource.id, spv::DecorationBinding);
-	
+
 	if (descriptor_sets.find(set) == descriptor_sets.end())
 		descriptor_sets.emplace(set, makeShared<DescriptorSet>());
-	
+
 	uint32_t count = 0;
 	for (const auto& arr : spir_type.array)
 		count += arr;

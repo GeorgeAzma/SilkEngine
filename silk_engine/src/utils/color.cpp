@@ -1,4 +1,6 @@
 #include "color.h"
+#include <sstream>
+#include <iomanip>
 
 constexpr Color::Color(float r, float g, float b, float a)
 	: color(r, g, b, a)

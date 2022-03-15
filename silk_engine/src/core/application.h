@@ -1,6 +1,5 @@
 #pragma once
 
-#include "log.h"
 #include "utils/fixed_update.h"
 #include "event.h"
 

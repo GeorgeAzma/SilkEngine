@@ -1,5 +1,9 @@
 #pragma once
 
+#include <future>
+#include <atomic>
+#include <queue>
+
 class ThreadPool
 {
 public:

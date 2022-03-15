@@ -29,7 +29,7 @@ GraphicsPipeline::GraphicsPipeline()
 	color_blending.attachmentCount = 1;
 }
 
-GraphicsPipeline& GraphicsPipeline::setShader(shared<Shader> shader, const std::vector<Constant>& constants)
+GraphicsPipeline& GraphicsPipeline::setShader(const shared<Shader>& shader, const std::vector<Constant>& constants)
 {
 	this->shader = shader;
 	shader_stage_infos.clear();

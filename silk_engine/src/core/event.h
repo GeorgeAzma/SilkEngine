@@ -1,9 +1,6 @@
 #pragma once
 
-#include <map>
 #include <typeindex>
-#include <vector>
-#include <memory>
 
 //EVENT
 class Event

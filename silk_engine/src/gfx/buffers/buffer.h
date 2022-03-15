@@ -2,6 +2,7 @@
 
 #include "gfx/allocators/allocator.h"
 #include <vulkan/vulkan.hpp>
+#include <vk_mem_alloc.h>
 
 class Buffer : NonCopyable
 {

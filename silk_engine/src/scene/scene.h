@@ -2,6 +2,7 @@
 
 #include "instance.h"
 #include "camera/camera.h"
+#include <entt/entt.hpp>
 
 class Entity;
 class WindowResizeEvent;

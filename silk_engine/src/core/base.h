@@ -41,8 +41,6 @@ public:
     NonCopyable& operator=(const NonCopyable&) = delete;
 };
 
-#include <memory>
-
 struct Descriptor
 {
     void* ptr;
