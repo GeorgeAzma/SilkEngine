@@ -207,15 +207,4 @@ silk_engine/src/utils/thread_pool.h
 #Link
 target_link_libraries(SilkEngine ${EXTRA_LIBS})
 
-
-############################__SANDBOX__#####################################
-file(GLOB_RECURSE SANDBOX_SOURCES "sandbox/src/*.cpp")
-add_executable(Sandbox ${SANDBOX_SOURCES})
-target_include_directories(Sandbox PRIVATE ${PROJECT_SOURCE_DIR}/sandbox/src)
-target_link_libraries(Sandbox PRIVATE SilkEngine)
-
-#Copy data folder where exe file is
-add_custom_command(TARGET Sandbox POST_BUILD
-COMMAND ${CMAKE_COMMAND} -E copy_directory 
-${PROJECT_SOURCE_DIR}/data 
-$<TARGET_FILE_DIR:Sandbox>/data)
+add_subdirectory("sandbox/src")
