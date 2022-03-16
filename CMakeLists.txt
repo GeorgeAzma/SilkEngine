@@ -24,6 +24,7 @@ _USE_MATH_DEFINES
 GLM_FORCE_RADIANS
 GLM_FORCE_DEPTH_ZERO_TO_ONE
 GLM_FORCE_LEFT_HANDED
+GLM_ENABLE_EXPERIMENTAL
 )
 
 #|-----Vendor-----|#
@@ -153,58 +154,5 @@ ${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}irrXML$<$<
 )
 
 #Sub dirs
-############################__SILK ENGINE__#####################################
-file(GLOB_RECURSE SILK_ENGINE_SOURCES "silk_engine/src/*.cpp")
-#Create SilkEngine.lib
-add_library(SilkEngine STATIC ${SILK_ENGINE_SOURCES})
-
-#Include dirs
-target_include_directories(SilkEngine PUBLIC 
-${PROJECT_SOURCE_DIR}/silk_engine/src
-${INCLUDE_DIRS}
-)
-
-add_dependencies(SilkEngine ${DEPENDENCIES_TO_ADD})
-
-#Defines
-target_compile_definitions(SilkEngine PUBLIC 
-"$<$<CONFIG:DEBUG>:SK_DEBUG>"
-"$<$<CONFIG:RELEASE>:SK_DIST>"
-)
-target_compile_definitions(SilkEngine PRIVATE "SK_CORE")
-
-#Precompile headers
-target_precompile_headers(SilkEngine PUBLIC
-#Very useful
-<memory>
-<cmath>
-<vector>
-<array>
-<string>
-<unordered_map>
-<thread>
-
-#Less useful
-<unordered_set>
-<set>
-<map>
-<filesystem>
-<fstream>
-<functional>
-<algorithm>
-<queue>
-<mutex>
-
-#Non std
-<glm/glm.hpp>
-<glm/gtc/matrix_transform.hpp>
-silk_engine/src/core/base.h
-silk_engine/src/core/log.h
-silk_engine/src/utils/RNG.h
-silk_engine/src/utils/thread_pool.h
-)
-
-#Link
-target_link_libraries(SilkEngine ${EXTRA_LIBS})
-
+add_subdirectory("silk_engine/src")
 add_subdirectory("sandbox/src")

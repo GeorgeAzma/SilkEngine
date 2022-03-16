@@ -5,9 +5,6 @@
 #include <spdlog/fmt/ostr.h>
 #pragma warning(pop)
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/string_cast.hpp"
-
 class Log
 {
 public:
