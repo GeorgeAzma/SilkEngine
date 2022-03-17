@@ -251,6 +251,11 @@ uint32_t LogicalDevice::acquireNextImage(vk::SwapchainKHR swap_chain, uint64_t t
 	return logical_device.acquireNextImageKHR(swap_chain, timeout, semaphore, fence);
 }
 
+vk::Result LogicalDevice::acquireNextImage(vk::SwapchainKHR swap_chain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* image_index) const
+{
+	return logical_device.acquireNextImageKHR(swap_chain, timeout, semaphore, fence, image_index);
+}
+
 std::vector<vk::Image> LogicalDevice::getSwapChainImages(vk::SwapchainKHR swap_chain) const
 {
 	return logical_device.getSwapchainImagesKHR(swap_chain);

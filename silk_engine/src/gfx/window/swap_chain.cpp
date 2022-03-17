@@ -78,7 +78,9 @@ void SwapChain::createFramebuffers()
 
 void SwapChain::acquireNextImage(vk::Semaphore signal_semaphore, vk::Fence signal_fence)
 {
-	image_index = Graphics::logical_device->acquireNextImage(swap_chain, UINT64_MAX, signal_semaphore, signal_fence);
+	auto result = Graphics::logical_device->acquireNextImage(swap_chain, UINT64_MAX, signal_semaphore, signal_fence, &image_index);
+	if (result == vk::Result::eErrorOutOfDateKHR)
+		recreate();
 }
 
 vk::Result SwapChain::present(vk::Semaphore wait_semaphore)

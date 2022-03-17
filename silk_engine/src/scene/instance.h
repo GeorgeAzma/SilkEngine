@@ -1,10 +1,10 @@
 #pragma once
 
 #include "meshes/mesh.h"
-#include "gfx/images/image2D.h"
 #include "gfx/buffers/indirect_buffer.h"
 #include "gfx/pipeline/graphics_pipeline.h"
 #include "gfx/descriptors/descriptor_set.h"
+#include "instance_images.h"
 
 struct CullData
 {
@@ -43,19 +43,14 @@ struct InstanceBatch
 	std::vector<InstanceData> instance_data;
 	std::vector<shared<RenderedInstance>> instances;
 	shared<VertexBuffer> instance_buffer = nullptr;
-	std::vector<shared<Image>> images;
-	std::vector<uint32_t> image_owners;
+	InstanceImages instance_images;
 	std::unordered_map<uint32_t, DescriptorSet> descriptor_sets;
 
 	~InstanceBatch();
 
 	void bind();
-	uint32_t addImages(const std::vector<shared<Image2D>>& new_images);
-	void removeImages(size_t index, size_t count);
-	size_t availableImages() const;
 
 	bool needs_update = true;
-	bool images_need_update = true;
 
 	bool operator==(const RenderedInstance& instance) const;
 };

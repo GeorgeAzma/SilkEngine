@@ -45,7 +45,6 @@ public:
 	vk::Pipeline createComputePipeline(vk::PipelineCache pipeline_cache, const vk::ComputePipelineCreateInfo& compute_pipeline_info) const;
 	vk::Pipeline createGraphicsPipeline(vk::PipelineCache pipeline_cache, const vk::GraphicsPipelineCreateInfo& graphics_pipeline_info) const;
 	void destroyPipeline(vk::Pipeline pipeline) const;
-	void destroyComputePipeline() const;
 	vk::RenderPass createRenderPass(const vk::RenderPassCreateInfo& render_pass_info) const;
 	void destroyRenderPass(vk::RenderPass render_pass) const;
 	vk::ShaderModule createShaderModule(const vk::ShaderModuleCreateInfo& shader_module_info) const;
@@ -53,6 +52,7 @@ public:
 	vk::SwapchainKHR createSwapChain(const vk::SwapchainCreateInfoKHR& swap_chain_info) const;
 	void destroySwapChain(vk::SwapchainKHR swap_chain) const;
 	uint32_t acquireNextImage(vk::SwapchainKHR swap_chain, uint64_t timeout, VkSemaphore semaphore, VkFence fence) const;
+	vk::Result acquireNextImage(vk::SwapchainKHR swap_chain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* image_index) const;
 	std::vector<vk::Image> getSwapChainImages(vk::SwapchainKHR swap_chain) const;
 
 	operator const vk::Device& () const { return logical_device; }

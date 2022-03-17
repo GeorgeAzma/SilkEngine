@@ -217,14 +217,14 @@ void Scene::onImageComponentUpdate(entt::registry& registry, entt::entity entity
 			return;
 		instance->images = image.images;
 		auto& instance_batch = Renderer::instance_batches[instance->instance_batch_index];
-		instance_batch.removeImages(instance_batch.instance_data[instance->instance_data_index].image_index, instance->images.size());
-		uint32_t image_index = instance_batch.addImages(instance->images);
+		instance_batch.instance_images.remove(instance_batch.instance_data[instance->instance_data_index].image_index, instance->images.size());
+		uint32_t image_index = instance_batch.instance_images.add(instance->images);
 		if (image_index == UINT32_MAX)
 		{
 			InstanceData instance_data = instance_batch.instance_data[instance->instance_data_index];
 			Renderer::destroyMeshInstance(*instance);
 			Renderer::addInstanceBatch(instance, instance_data);
-			image_index = Renderer::instance_batches[instance->instance_batch_index].addImages(instance->images);
+			image_index = Renderer::instance_batches[instance->instance_batch_index].instance_images.add(instance->images);
 		}
 		Renderer::instance_batches[instance->instance_batch_index].instance_data[instance->instance_data_index].image_index = image_index;
 	}

@@ -49,10 +49,10 @@ void SandboxApp::onUpdate()
     {
         entities.erase(entities.begin());
     }
-    if (Input::isKeyPressed(Keys::Z))
+    if (Input::isKeyPressed(Keys::Z)) 
     {
         entities.emplace_back(scene->createEntity());
-        entities.back()->add<MaterialComponent>(Resources::getGraphicsPipeline("3D"));
+        entities.back()->add<MaterialComponent>(Resources::getGraphicsPipeline("Lit 3D"));
         entities.back()->add<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         entities.back()->add<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float()) * 20.0f));
         entities.back()->add<ModelComponent>(Resources::getModel("Backpack"));

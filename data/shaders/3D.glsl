@@ -109,7 +109,7 @@ void main()
         vec3 ambient = vec3(AMBIENT) * albedo.rgb; // * ao
         vec3 total_light = vec3(0);
         
-        for(uint i = 0; i < global_uniform.light_count; ++i)
+        for(uint i = 0; i < MAX_LIGHTS; ++i)
         {
             Light light = global_uniform.lights[i];
             if (light.color == vec3(0))

@@ -39,15 +39,21 @@ void Shader::Includer::ReleaseInclude(shaderc_include_result* data)
 Shader::Shader(const std::filesystem::path& file, const std::vector<Define>& defines)
 	: file(file)
 {
-	compile(defines);
+	compile(defines, false);
 }
 
-void Shader::compile(const std::vector<Define>& defines)
+void Shader::compile(const std::vector<Define>& defines, bool force)
 {
-	bool resources_was_compiled = resources.size();
 	for (const auto& stage : stages)
 		Graphics::logical_device->destroyShaderModule(stage.module);
+	//TODO: This doesn't support recompiling shaders when shader resources changed (we'd have to recompile pipelines and do some funky stuff, not worth the effort)
 	stages.clear();
+	resources.clear();
+	local_size = glm::vec3(0);
+	descriptor_sets.clear();
+	push_constants.clear();
+	resource_locations.clear();
+	constants.clear();
 
 	std::string defines_str = "";
 	for (const auto& define : defines)
@@ -88,29 +94,39 @@ void Shader::compile(const std::vector<Define>& defines)
 		std::ifstream in(file_cache_path, std::ios::ate | std::ios::binary);
 		if (in.is_open())
 		{
-			size_t size = in.tellg();
-			in.seekg(0);
-			stage.binary.resize(size / sizeof(uint32_t));
-			in.read((char*)stage.binary.data(), size);
+			if (force)
+			{
+				in.seekg(0);
+				in.close();
+				std::filesystem::remove(file_cache_path);
+			}
+			else
+			{
+				size_t size = in.tellg();
+				in.seekg(0);
+				stage.binary.resize(size / sizeof(uint32_t));
+				in.read((char*)stage.binary.data(), size);
 
-			SK_TRACE("Shader cache loaded: {0}", file_cache_path);
+				SK_TRACE("Shader cache loaded: {0}", file_cache_path);
+			}
 		}
-		else
+		if (!in.is_open() || force)
 		{
 			auto preprocess_result = compiler.PreprocessGlsl(source, shadercType((Type)type), path.string().c_str(), options);
 			SK_ASSERT(preprocess_result.GetCompilationStatus() == shaderc_compilation_status_success, preprocess_result.GetErrorMessage());
 			std::string preprocessed_source(preprocess_result.begin());
 
 			shaderc::SpvCompilationResult compilation_result = compiler.CompileGlslToSpv(preprocessed_source, shadercType((Type)type), path.string().c_str(), options);
-			SK_ASSERT(compilation_result.GetCompilationStatus() == shaderc_compilation_status_success, compilation_result.GetErrorMessage());
+			SK_ASSERT(compilation_result.GetCompilationStatus() == shaderc_compilation_status_success, "{}. SOURCE:\n{}", compilation_result.GetErrorMessage(), preprocessed_source);
 			stage.binary = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend());
 
 			std::ofstream out(file_cache_path, std::ios::binary | std::ios::trunc);
 			SK_ASSERT(out.is_open(), "Couldn't create shader cache file: {0}", file_cache_path);
 			out.write((const char*)stage.binary.data(), stage.binary.size() * sizeof(uint32_t));
-		
+			out.close();
+
 			SK_TRACE("Shader cache created: {0}", file_cache_path);
-		}  
+		}
 
 		vk::ShaderModuleCreateInfo ci{};
 		ci.codeSize = stage.binary.size() * sizeof(uint32_t);
@@ -120,70 +136,67 @@ void Shader::compile(const std::vector<Define>& defines)
 	
 #define SK_WEIRD_ERROR_FIX 1 //If you have error in this file, set this to 0, compile (you will get an error), set it back to 1, recompile (IDK why this works, help), if it still doesn't work retry couple times
 #if SK_WEIRD_ERROR_FIX
-	if (!resources_was_compiled)
+	for (const auto& stage : stages)
 	{
-		for (const auto& stage : stages)
+		const auto& binary = stage.binary;
+		auto stage_flag = stage.stage;
+		spirv_cross::Compiler spirv_compiler(binary);
+		spirv_cross::ShaderResources shader_resources = spirv_compiler.get_shader_resources();
+		
+		for (const spirv_cross::Resource& sampled_image : shader_resources.sampled_images)
+			loadResource(sampled_image, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eCombinedImageSampler);
+	
+		for (const spirv_cross::Resource& seperate_image : shader_resources.separate_images)
+			loadResource(seperate_image, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eSampledImage);
+	
+		for (const spirv_cross::Resource& seperate_sampler : shader_resources.separate_samplers)
+			loadResource(seperate_sampler, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eSampler);
+	
+		for (const spirv_cross::Resource& storage_buffer : shader_resources.storage_buffers)
+			loadResource(storage_buffer, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eStorageBuffer);
+	
+		for (const spirv_cross::Resource& storage_image : shader_resources.storage_images)
+			loadResource(storage_image, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eStorageImage);
+	
+		for (const spirv_cross::Resource& subpass_input : shader_resources.subpass_inputs)
+			loadResource(subpass_input, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eInputAttachment);
+	
+		for (const spirv_cross::Resource& uniform_buffer : shader_resources.uniform_buffers)
+			loadResource(uniform_buffer, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eUniformBuffer);
+	
+		for (const spirv_cross::Resource& push_constant : shader_resources.push_constant_buffers)
+			loadPushConstant(push_constant, spirv_compiler, shader_resources, stage_flag);
+	
+		auto constants = spirv_compiler.get_specialization_constants();
+		for (auto& constant : constants)
 		{
-			const auto& binary = stage.binary;
-			auto stage_flag = stage.stage;
-			spirv_cross::Compiler spirv_compiler(binary);
-			spirv_cross::ShaderResources shader_resources = spirv_compiler.get_shader_resources();
-			
-			for (const spirv_cross::Resource& sampled_image : shader_resources.sampled_images)
-				loadResource(sampled_image, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eCombinedImageSampler);
-
-			for (const spirv_cross::Resource& seperate_image : shader_resources.separate_images)
-				loadResource(seperate_image, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eSampledImage);
-
-			for (const spirv_cross::Resource& seperate_sampler : shader_resources.separate_samplers)
-				loadResource(seperate_sampler, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eSampler);
-
-			for (const spirv_cross::Resource& storage_buffer : shader_resources.storage_buffers)
-				loadResource(storage_buffer, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eStorageBuffer);
-
-			for (const spirv_cross::Resource& storage_image : shader_resources.storage_images)
-				loadResource(storage_image, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eStorageImage);
-
-			for (const spirv_cross::Resource& subpass_input : shader_resources.subpass_inputs)
-				loadResource(subpass_input, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eInputAttachment);
-
-			for (const spirv_cross::Resource& uniform_buffer : shader_resources.uniform_buffers)
-				loadResource(uniform_buffer, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eUniformBuffer);
-
-			for (const spirv_cross::Resource& push_constant : shader_resources.push_constant_buffers)
-				loadPushConstant(push_constant, spirv_compiler, shader_resources, stage_flag);
-
-			auto constants = spirv_compiler.get_specialization_constants();
-			for (auto& constant : constants)
-			{
-				auto& shader_constant = this->constants[spirv_compiler.get_name(constant.id)];
-				shader_constant = { constant.constant_id, shader_constant.stage | stage_flag };
-			}
-
-			//Local size reflection
-			local_size = glm::uvec3(0);
-			local_size[0] = spirv_compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 0);
-			local_size[1] = spirv_compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 1);
-			local_size[2] = spirv_compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 2);
-			if (local_size != glm::uvec3(0))
-				local_size = glm::max(local_size, glm::uvec3(1));
-		}
-
-		std::unordered_map<uint32_t, uint32_t> write_indices;
-		for (const auto& resource : this->resources)
-			write_indices[resource.set] = 0;
-		for (const auto& resource : this->resources)
-		{
-			auto& write_index = write_indices[resource.set];
-			auto& set = descriptor_sets.at(resource.set);
-			set->add(resource.binding, resource.count, resource.type, resource.stage);
-			resource_locations.emplace(resource.name, ResourceLocation{ resource.set, write_index });
-			++write_index;
+			auto& shader_constant = this->constants[spirv_compiler.get_name(constant.id)];
+			shader_constant = { constant.constant_id, shader_constant.stage | stage_flag };
 		}
 	
-		for (auto& descriptor_set : descriptor_sets)
-			descriptor_set.second->build();
+		//Local size reflection
+		local_size = glm::uvec3(0);
+		local_size[0] = spirv_compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 0);
+		local_size[1] = spirv_compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 1);
+		local_size[2] = spirv_compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 2);
+		if (local_size != glm::uvec3(0))
+			local_size = glm::max(local_size, glm::uvec3(1));
 	}
+	
+	std::unordered_map<uint32_t, uint32_t> write_indices;
+	for (const auto& resource : this->resources)
+		write_indices[resource.set] = 0;
+	for (const auto& resource : this->resources)
+	{
+		auto& write_index = write_indices[resource.set];
+		auto& set = descriptor_sets.at(resource.set);
+		set->add(resource.binding, resource.count, resource.type, resource.stage);
+		resource_locations.emplace(resource.name, ResourceLocation{ resource.set, write_index });
+		++write_index;
+	}
+	
+	for (auto& descriptor_set : descriptor_sets)
+		descriptor_set.second->build();
 #endif
 #undef SK_WEIRD_ERROR_FIX
 

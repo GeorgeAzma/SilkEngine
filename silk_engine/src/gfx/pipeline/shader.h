@@ -71,7 +71,7 @@ public:
     Shader(const std::filesystem::path& file, const std::vector<Define>& defines = {});
 	~Shader();
 
-    void compile(const std::vector<Define>& defines = {});
+	void compile(const std::vector<Define>& defines = {}, bool force = true);
 
 	void set(const std::string& resource_name, const std::vector<vk::DescriptorBufferInfo>& buffer_infos);
 	void set(const std::string& resource_name, const std::vector<vk::DescriptorImageInfo>& image_infos);

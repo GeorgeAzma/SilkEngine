@@ -39,6 +39,8 @@ target_precompile_headers(SilkEngine PUBLIC
 <glm/gtc/matrix_transform.hpp>
 <glm/gtx/hash.hpp>
 <glm/gtx/string_cast.hpp>
+
+#project sources
 core/base.h
 core/log.h
 utils/RNG.h

@@ -41,6 +41,7 @@ list(APPEND EXTRA_LIBS
 )
 
 #spdlog
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
 FetchContent_Declare(SPDLOG
 GIT_REPOSITORY  https://github.com/gabime/spdlog
 GIT_TAG         v1.9.2
@@ -49,9 +50,11 @@ SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/spdlog
 UPDATE_COMMAND  ""
 )
 FetchContent_MakeAvailable(SPDLOG)
+endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
 
 #glfw
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/glfw/include)
 list(APPEND DEPENDENCIES_TO_ADD GLFW)
 ExternalProject_Add(GLFW
 GIT_REPOSITORY  https://github.com/glfw/glfw
@@ -63,10 +66,12 @@ CMAKE_ARGS   -DGLFW_BUILD_EXAMPLES=OFF
              -DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/vendor/glfw
 UPDATE_COMMAND  ""
 )
+endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glfw/include)
 list(APPEND EXTRA_LIBS ${PROJECT_SOURCE_DIR}/vendor/glfw/lib/${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 #glm
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/glm/glm)
 FetchContent_Declare(GLM
 GIT_REPOSITORY  https://github.com/g-truc/glm
 GIT_TAG origin/master
@@ -75,9 +80,11 @@ SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/glm
 UPDATE_COMMAND  ""
 )
 FetchContent_MakeAvailable(GLM)
+endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glm)
 
 #entt
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/entt/src)
 FetchContent_Declare(ENTT
 GIT_REPOSITORY  https://github.com/skypjack/entt
 GIT_TAG origin/master
@@ -86,9 +93,11 @@ SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/entt
 UPDATE_COMMAND  ""
 )
 FetchContent_MakeAvailable(ENTT)
+endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/entt/src)
 
 #stb
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/stb)
 FetchContent_Declare(STB
 GIT_REPOSITORY   https://github.com/nothings/stb
 GIT_TAG origin/master
@@ -97,9 +106,11 @@ SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/stb
 UPDATE_COMMAND  ""
 )
 FetchContent_MakeAvailable(STB)
+endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/stb)
 
 #FreeType
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/freetype/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freetype$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX})
 list(APPEND DEPENDENCIES_TO_ADD FREETYPE)
 ExternalProject_Add(FREETYPE
 GIT_REPOSITORY   https://github.com/freetype/freetype
@@ -108,10 +119,12 @@ GIT_SHALLOW     ON
 CMAKE_ARGS   -DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/vendor/freetype
 UPDATE_COMMAND  ""
 )
+endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/freetype/include/freetype2)
 list(APPEND EXTRA_LIBS ${PROJECT_SOURCE_DIR}/vendor/freetype/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freetype$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 #vma
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/vma/include)
 FetchContent_Declare(VMA
 GIT_REPOSITORY   https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
 GIT_TAG origin/master
@@ -120,9 +133,11 @@ SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/vma
 UPDATE_COMMAND  ""
 )
 FetchContent_MakeAvailable(VMA)
+endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/vma/include)
 
 #assimp
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}assimp$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX})
 list(APPEND DEPENDENCIES_TO_ADD ASSIMP)
 ExternalProject_Add(ASSIMP
 GIT_REPOSITORY  https://github.com/assimp/assimp
@@ -146,6 +161,7 @@ CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_SOURCE_DIR}/vendor/assimp/lib
                 -DCMAKE_POLICY_DEFAULT_CMP0091:STRING=NEW
 UPDATE_COMMAND  ""
 )
+endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/assimp/include)
 list(APPEND EXTRA_LIBS 
 ${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}assimp$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
