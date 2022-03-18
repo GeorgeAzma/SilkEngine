@@ -22,6 +22,7 @@ public:
 		float delta_time;
 		glm::uvec2 resolution;
 		uint32_t frame;
+		uint32_t padding;
 		std::array<Light, MAX_LIGHTS> lights;
 	};
 

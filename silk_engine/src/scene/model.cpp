@@ -75,7 +75,7 @@ RawModel::RawModel(const std::string& file)
     this->path = path;
 
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_OptimizeGraph | aiProcess_OptimizeMeshes);
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_OptimizeGraph | aiProcess_OptimizeMeshes);
 	SK_ASSERT(scene && (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) != AI_SCENE_FLAGS_INCOMPLETE && scene->mRootNode,
 		"Assimp: Couldn't load model at path: {0}", path);
 

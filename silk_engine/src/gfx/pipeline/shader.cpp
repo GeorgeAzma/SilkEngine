@@ -138,9 +138,9 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 #if SK_WEIRD_ERROR_FIX
 	for (const auto& stage : stages)
 	{
-		const auto& binary = stage.binary;
+		auto& binary = stage.binary;
 		auto stage_flag = stage.stage;
-		spirv_cross::Compiler spirv_compiler(binary);
+		spirv_cross::Compiler spirv_compiler(std::move(binary));
 		spirv_cross::ShaderResources shader_resources = spirv_compiler.get_shader_resources();
 		
 		for (const spirv_cross::Resource& sampled_image : shader_resources.sampled_images)
@@ -237,7 +237,7 @@ std::unordered_map<uint32_t, std::string> Shader::parse(const std::filesystem::p
 {
 	std::unordered_map<uint32_t, std::string> shader_sources;
 
-	std::string source = File::read(file);
+	std::string source = File::read(file, 0);
 
 	constexpr const char* type_token = "#type";
 	size_t type_token_length = strlen(type_token);

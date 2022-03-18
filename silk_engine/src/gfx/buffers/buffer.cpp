@@ -98,7 +98,7 @@ void Buffer::getData(void* data, size_t size) const
 {
 	if (needs_staging)
 	{
-		StagingBuffer sb(nullptr, size ? size : this->size);
+		StagingBuffer sb(nullptr, size ? size : this->size, true);
 		copy(sb, buffer, sb.size, 0, 0);
 		sb.getData(data);
 	}

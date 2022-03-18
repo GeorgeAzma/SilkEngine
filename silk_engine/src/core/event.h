@@ -146,7 +146,6 @@ public:
     virtual void operator()(const Event& event) const = 0;
 
     virtual bool operator==(const HandlerFunctionBase& other) const = 0;
-    virtual bool operator!=(const HandlerFunctionBase& other) const = 0;
 };
 
 template <typename T>
@@ -156,19 +155,8 @@ public:
     virtual bool operator==(const HandlerFunctionBase& other) const override
     {
         if (const T* self = dynamic_cast<const T*>(&other))
-        {
             return ((T*)this)->operator==(*self);
-        }
         return false;
-    }
-
-    virtual bool operator!=(const HandlerFunctionBase& other) const override
-    {
-        if (const T* self = dynamic_cast<const T*>(&other))
-        {
-            return ((T*)this)->operator!=(*self);
-        }
-        return true;
     }
 };
 
@@ -229,10 +217,13 @@ public:
     template <typename EventType>
     static void post(const EventType& event)
     {
-        const auto& handlers = subscribers[typeid(EventType)];
-
-        for (const auto& handler : handlers)
-            (*handler)(event);
+        auto it = subscribers.find(typeid(EventType));
+        if (it != subscribers.cend())
+        {
+            const auto& handlers = it->second;
+            for (const auto& handler : handlers)
+                (*handler)(event);
+        }
     }
 
     template <class T, class EventType>
@@ -270,7 +261,7 @@ public:
         auto& handlers = subscribers.at(typeid(EventType));
         for (size_t i = 0; i < handlers.size(); ++i)
         {
-            if (*handlers[i] == comp)
+            if (comp == *handlers[i])
             {
                 std::swap(handlers[i], handlers.back());
                 handlers.pop_back();

@@ -63,6 +63,7 @@ layout(set = 0, binding = 0) uniform GlobalUniform
     float delta_time;
     uvec2 resolution;
     uint frame;
+    uint padding;
     Light lights[MAX_LIGHTS];
 } global_uniform;
 
