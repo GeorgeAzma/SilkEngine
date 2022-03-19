@@ -237,7 +237,7 @@ std::unordered_map<uint32_t, std::string> Shader::parse(const std::filesystem::p
 {
 	std::unordered_map<uint32_t, std::string> shader_sources;
 
-	std::string source = File::read(file, 0);
+	std::string source = File::read(file);
 
 	constexpr const char* type_token = "#type";
 	size_t type_token_length = strlen(type_token);

@@ -102,15 +102,29 @@ void RawModel::processMesh(aiMesh *mesh, const aiScene *scene)
 
     for(size_t i = 0; i < mesh->mNumVertices; ++i)
     {
-        vertices[i].position.x = mesh->mVertices[i].x;
-        vertices[i].position.y = mesh->mVertices[i].y;
-        vertices[i].position.z = -mesh->mVertices[i].z;
+        if (mesh->HasPositions())
+        {
+            vertices[i].position.x = mesh->mVertices[i].x;
+            vertices[i].position.y = mesh->mVertices[i].y;
+            vertices[i].position.z = -mesh->mVertices[i].z;
+        }
 
-        vertices[i].normal.x = mesh->mNormals[i].x;
-        vertices[i].normal.y = mesh->mNormals[i].y;
-        vertices[i].normal.z = -mesh->mNormals[i].z;
+        if (mesh->HasNormals())
+        {
+            vertices[i].normal.x = mesh->mNormals[i].x;
+            vertices[i].normal.y = mesh->mNormals[i].y;
+            vertices[i].normal.z = -mesh->mNormals[i].z;
+        }
+
+        if (mesh->HasVertexColors(0))
+        {
+            vertices[i].color.r = mesh->mColors[0][i].r;
+            vertices[i].color.g = mesh->mColors[0][i].g;
+            vertices[i].color.b = mesh->mColors[0][i].b;
+            vertices[i].color.a = mesh->mColors[0][i].a;
+        }
         
-        if (mesh->mTextureCoords[0])
+        if (mesh->HasTextureCoords(0))
         {
             vertices[i].texture_coordinates.x = mesh->mTextureCoords[0][i].x;
             vertices[i].texture_coordinates.y = mesh->mTextureCoords[0][i].y;

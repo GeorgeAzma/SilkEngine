@@ -14,7 +14,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
         [this] 
         { 
             Window::setTitle(fmt::format("Vulkan - {0} FPS ({1:.4} ms) | {2}x{3}", int(1.0 / Time::dt), (Time::dt * 1000), Window::getWidth(), Window::getHeight()));
-        });
+        });   
 
     Window::setSize({ 800, 600 });
     camera = scene->createEntity();

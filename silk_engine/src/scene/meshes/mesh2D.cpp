@@ -38,6 +38,7 @@ Mesh2D::operator shared<Mesh3D>() const
 		vertex3D.position = glm::vec3(vertex2D.position, 0.0f);
 		vertex3D.normal = glm::vec3(0.0);
 		vertex3D.texture_coordinates = vertex2D.texture_coordinates;
+		vertex3D.color = vertex2D.color;
 	}
 
 	mesh3D = makeShared<Mesh3D>(vertices3D, indices);

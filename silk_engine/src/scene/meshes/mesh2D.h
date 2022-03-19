@@ -7,6 +7,7 @@ struct Vertex2D
 {
 	glm::vec2 position = glm::vec2(0);
 	glm::vec2 texture_coordinates = glm::vec2(0);
+	glm::vec4 color = glm::vec4(1);
 };
 
 class Mesh2D : public Mesh

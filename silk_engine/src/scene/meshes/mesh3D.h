@@ -8,6 +8,7 @@ struct Vertex3D
 	glm::vec3 position = glm::vec3(0);
 	glm::vec2 texture_coordinates = glm::vec2(0);
 	glm::vec3 normal = glm::vec3(0);
+	glm::vec4 color = glm::vec4(1);
 };
 
 class Mesh3D : public Mesh

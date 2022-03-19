@@ -2,11 +2,12 @@
 layout(location = 0) in vec3 in_position;
 layout(location = 1) in vec2 in_texture_coordinate;
 layout(location = 2) in vec3 in_normal;
+layout(location = 3) in vec4 in_vcolor;
 
 //Instanced
-layout(location = 3) in mat4 in_transform;
-layout(location = 7) in uint in_texture_index;
-layout(location = 8) in vec4 in_color;
+layout(location = 4) in mat4 in_transform;
+layout(location = 8) in uint in_texture_index;
+layout(location = 9) in vec4 in_color;
 
 layout(location = 0) out VertexOutput 
 {
@@ -15,6 +16,7 @@ layout(location = 0) out VertexOutput
     flat uint texture_index;
     flat vec4 color;
     vec3 world_position;
+    vec4 vcolor;
 } vertex_output;
 
 layout(set = 0, binding = 0) uniform GlobalUniform
@@ -28,6 +30,7 @@ void main()
     vertex_output.normal = in_normal;
     vertex_output.texture_index = in_texture_index;
     vertex_output.color = in_color;
+    vertex_output.vcolor = in_vcolor;
     const vec4 world_position = in_transform * vec4(in_position, 1.0);
     vertex_output.world_position = world_position.xyz;
 
@@ -49,6 +52,7 @@ layout(location = 0) in VertexOutput
     flat uint texture_index;
     flat vec4 color;
     vec3 world_position;
+    vec4 vcolor;
 } fragment_input;
 
 #include "light.glsl"
@@ -86,7 +90,7 @@ void main()
 {
     if(lit)
     {
-        vec4 albedo = texture(images[fragment_input.texture_index + DIFFUSE_TEXTURE], fragment_input.texture_coordinate) * fragment_input.color;
+        vec4 albedo = texture(images[fragment_input.texture_index + DIFFUSE_TEXTURE], fragment_input.texture_coordinate) * fragment_input.color * fragment_input.vcolor;
         color.a = albedo.a;
         if(color.a <= 0.01)
             discard;
