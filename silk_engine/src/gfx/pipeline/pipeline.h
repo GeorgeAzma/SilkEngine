@@ -21,7 +21,9 @@ public:
 		create();
 	}
 
-	shared<Shader> getShader() { return shader; }
+	void pushConstant(const std::string& name, const void* data) const;
+
+	const shared<Shader>& getShader() const { return shader; }
 	const vk::PipelineLayout& getLayout() const { return pipeline_layout; }
 	operator const vk::Pipeline& () const { return pipeline; }
 

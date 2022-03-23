@@ -23,6 +23,7 @@ Buffer::~Buffer()
 {
 	delete[] data;
 	vmaDestroyBuffer(*Graphics::allocator, buffer, allocation);
+	SK_TRACE("Buffer destroyed: {}", size);
 }
 
 void Buffer::resize(vk::DeviceSize size)
@@ -30,13 +31,14 @@ void Buffer::resize(vk::DeviceSize size)
 	if (size == this->size)
 		return;
 	this->size = size;
+	ci.size = size;
 	delete[] data;
 	data = nullptr;
 	vmaDestroyBuffer(*Graphics::allocator, buffer, allocation);
-	ci.size = size;
 	const VkBufferCreateInfo& vk_ci = (const VkBufferCreateInfo&)ci;
 	VkBuffer& vk_buffer = (VkBuffer&)buffer;
 	Graphics::vulkanAssert(vk::Result(vmaCreateBuffer(*Graphics::allocator, &vk_ci, &allocation_create_info, &vk_buffer, &allocation, nullptr)));
+	SK_TRACE("Buffer resized: {}", size);
 }
 
 void Buffer::map(void** data) const

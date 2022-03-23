@@ -5,8 +5,6 @@ ImageArray::ImageArray(const std::vector<std::string>& files, const ImageArrayPr
 	: paths(files.size())
 {
 	this->props = props;
-	for (size_t i = 0; i < files.size(); ++i)
-		paths[i] = std::string("data/images/") + files[i];
 	Bitmap load_data = load(files);
 	this->props.width = load_data.width;
 	this->props.height = load_data.height;
@@ -27,13 +25,9 @@ ImageArray::ImageArray(const ImageArrayProps& props)
 Bitmap ImageArray::load(const std::vector<std::string>& files)
 {
 	SK_ASSERT(files.size(), "You have to specify at least one filepath for loading image array");
-	std::vector<std::string> paths(files.size());
-	for (size_t i = 0; i < files.size(); ++i)
-		paths[i] = std::string("data/images/") + files[i];
 
 	Bitmap load_data;
-
-	Bitmap data = Image2D::load(paths[0]);
+	Bitmap data = Image2D::load(files[0]);
 	if (data.channels == 3)
 		Image::align4(data);
 
@@ -43,20 +37,20 @@ Bitmap ImageArray::load(const std::vector<std::string>& files)
 
 	size_t size = load_data.width * load_data.height * load_data.channels;
 
-	load_data.data.resize(size * paths.size());
+	load_data.data.resize(size * files.size());
 
 	std::memcpy(load_data.data.data(), data.data.data(), size * sizeof(uint8_t));
 
-	for (size_t i = 1; i < paths.size(); ++i)
+	for (size_t i = 1; i < files.size(); ++i)
 	{
-		data = Image2D::load(paths[i]);
+		data = Image2D::load(files[i]);
 		if (data.channels == 3)
 			Image::align4(data);
 
 		SK_ASSERT(data.width == load_data.width
 			&& data.height == load_data.height
 			&& data.channels == load_data.channels,
-			"Error while loading image array, couldn't load image at {0}. width, height and channel count should match in all the images of image array", paths[i]);
+			"Error while loading image array, couldn't load image at {0}. width, height and channel count should match in all the images of image array", files[i]);
 
 		std::memcpy(load_data.data.data() + i * size, data.data.data(), size * sizeof(uint8_t));
 	}

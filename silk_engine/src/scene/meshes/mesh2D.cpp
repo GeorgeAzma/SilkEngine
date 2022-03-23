@@ -8,6 +8,8 @@ Mesh2D::Mesh2D(const std::vector<Vertex2D>& vertices, const std::vector<uint32_t
 
 void Mesh2D::createVertexArray()
 {
+	if (vertex_array.get())
+		return;
 	auto vbo = makeShared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex2D));
 	auto ibo = makeShared<IndexBuffer>(indices.data(), indices.size());
 	vertex_array = makeShared<VertexArray>();

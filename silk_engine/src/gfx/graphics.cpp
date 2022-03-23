@@ -133,23 +133,23 @@ shared<CommandPool> Graphics::getCommandPool()
 	return command_pools.emplace(std::this_thread::get_id(), makeShared<CommandPool>()).first->second;
 }
 
-vk::CommandBuffer Graphics::getActiveCommandBuffer()
+CommandBuffer& Graphics::getActiveCommandBuffer()
 {
-	return Graphics::active.command_buffer.at(std::this_thread::get_id());
+	return *Graphics::active.command_buffer.at(std::this_thread::get_id());
 }
 
-vk::CommandBuffer Graphics::getActivePrimaryCommandBuffer()
+CommandBuffer& Graphics::getActivePrimaryCommandBuffer()
 {
-	return Graphics::active.primary_command_buffer.at(std::this_thread::get_id());
+	return *Graphics::active.primary_command_buffer.at(std::this_thread::get_id());
 }
 
-void Graphics::setActiveCommandBuffer(vk::CommandBuffer command_buffer)
+void Graphics::setActiveCommandBuffer(CommandBuffer* command_buffer)
 {
 	std::scoped_lock lock(active_command_buffer_mutex);
 	Graphics::active.command_buffer[std::this_thread::get_id()] = command_buffer;
 }
 
-void Graphics::setActivePrimaryCommandBuffer(vk::CommandBuffer command_buffer)
+void Graphics::setActivePrimaryCommandBuffer(CommandBuffer* command_buffer)
 {
 	std::scoped_lock lock(active_primary_command_buffer_mutex);
 	Graphics::active.primary_command_buffer[std::this_thread::get_id()] = command_buffer;

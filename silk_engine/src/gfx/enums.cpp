@@ -17,7 +17,7 @@ vk::Format EnumInfo::type(Type type)
 	case Type::VEC2: return eR32G32Sfloat;
 	case Type::VEC3: return eR32G32B32Sfloat;
 	case Type::VEC4: return eR32G32B32A32Sfloat;
-	case Type::VEC2I: return eR32G32Sint;
+	case Type::IVEC2: return eR32G32Sint;
 	case Type::VEC3I: return eR32G32B32Sint;
 	case Type::VEC4I: return eR32G32B32A32Sint;
 	case Type::VEC2U: return eR32G32Uint;
@@ -92,7 +92,7 @@ size_t EnumInfo::size(Type type)
 	case Type::VEC2: return 8;
 	case Type::VEC3: return 12;
 	case Type::VEC4: return 16;
-	case Type::VEC2I: return 8;
+	case Type::IVEC2: return 8;
 	case Type::VEC3I: return 12;
 	case Type::VEC4I: return 16;
 	case Type::VEC2U: return 8;
@@ -141,7 +141,7 @@ size_t EnumInfo::count(Type type)
 	case Type::VEC2: return 2;
 	case Type::VEC3: return 3;
 	case Type::VEC4: return 4;
-	case Type::VEC2I: return 2;
+	case Type::IVEC2: return 2;
 	case Type::VEC3I: return 3;
 	case Type::VEC4I: return 4;
 	case Type::VEC2U: return 2;
@@ -178,7 +178,7 @@ size_t EnumInfo::rows(Type type)
 	case Type::VEC2: return 1;
 	case Type::VEC3: return 1;
 	case Type::VEC4: return 1;
-	case Type::VEC2I: return 1;
+	case Type::IVEC2: return 1;
 	case Type::VEC3I: return 1;
 	case Type::VEC4I: return 1;
 	case Type::VEC2U: return 1;

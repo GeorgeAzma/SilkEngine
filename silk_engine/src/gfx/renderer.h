@@ -16,6 +16,8 @@ public:
 	{
 		glm::mat4 projection_view;
 		glm::mat4 projection_view2D;
+		glm::mat4 projection;
+		glm::mat4 view;
 		glm::vec3 camera_position;
 		float time;
 		glm::vec3 camera_direction;

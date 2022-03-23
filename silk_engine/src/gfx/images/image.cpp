@@ -614,7 +614,7 @@ Type Image::formatToType(vk::Format format)
 	case eR32G32Sfloat:			return Type::VEC2;
 	case eR32G32B32Sfloat:		return Type::VEC3;
 	case eR32G32B32A32Sfloat:	return Type::VEC4;
-	case eR32G32Sint:			return Type::VEC2I;
+	case eR32G32Sint:			return Type::IVEC2;
 	case eR32G32B32Sint:		return Type::VEC3I;
 	case eR32G32B32A32Sint:		return Type::VEC4I;
 	case eR32G32Uint:			return Type::VEC2U;

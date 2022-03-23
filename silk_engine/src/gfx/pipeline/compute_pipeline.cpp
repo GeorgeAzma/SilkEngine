@@ -1,6 +1,7 @@
 #include "compute_pipeline.h"
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
+#include "gfx/buffers/command_buffer.h"
 
 ComputePipeline::ComputePipeline(const shared<Shader>& shader, const std::vector<Constant>& constants)
 {
@@ -39,7 +40,10 @@ ComputePipeline::ComputePipeline(const shared<Shader>& shader, const std::vector
 
 	ci.stage = shader_stage_infos[0];
 
-	push_constant_ranges = shader->getPushConstants(); 
+	push_constant_ranges.clear();
+	for (auto&& [name, push_constant] : shader->getPushConstants())
+		push_constant_ranges.emplace_back(push_constant);
+
 	descriptor_set_layouts.clear();
 	for (auto&& [set, descriptor_set] : shader->getDescriptorSets())
 		descriptor_set_layouts.emplace_back(descriptor_set->getLayout());

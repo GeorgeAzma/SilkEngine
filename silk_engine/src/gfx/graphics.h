@@ -1,11 +1,7 @@
 #pragma once
 
-#include "scene/light.h"
 #include "enums.h"
 #include "utils/alarm.h"
-#include "images/image2D.h"
-#include "utils/color.h"
-#include "scene/entity.h"
 
 class WindowResizeEvent;
 class Instance;
@@ -48,8 +44,8 @@ public:
 		vk::Pipeline pipeline = VK_NULL_HANDLE;
 		vk::PipelineLayout pipeline_layout = VK_NULL_HANDLE;
 		vk::PipelineBindPoint bind_point = vk::PipelineBindPoint(VK_PIPELINE_BIND_POINT_MAX_ENUM);
-		std::unordered_map<std::thread::id, vk::CommandBuffer> command_buffer;
-		std::unordered_map<std::thread::id, vk::CommandBuffer> primary_command_buffer;
+		std::unordered_map<std::thread::id, CommandBuffer*> command_buffer;
+		std::unordered_map<std::thread::id, CommandBuffer*> primary_command_buffer;
 		vk::RenderPass render_pass = VK_NULL_HANDLE;
 		uint32_t subpass = 0;
 		vk::Framebuffer framebuffer = VK_NULL_HANDLE;
@@ -64,17 +60,14 @@ public:
 	static void endFrame();
 
 	static shared<CommandPool> getCommandPool();
-	static vk::CommandBuffer getActiveCommandBuffer();
-	static vk::CommandBuffer getActivePrimaryCommandBuffer();
-	static void setActiveCommandBuffer(vk::CommandBuffer command_buffer);
-	static void setActivePrimaryCommandBuffer(vk::CommandBuffer command_buffer);
+	static CommandBuffer& getActiveCommandBuffer();
+	static CommandBuffer& getActivePrimaryCommandBuffer();
+	static void setActiveCommandBuffer(CommandBuffer* command_buffer);
+	static void setActivePrimaryCommandBuffer(CommandBuffer* command_buffer);
 
 	static void screenshot(const std::string& file);
 
 	static void vulkanAssert(vk::Result result);
-
-private:
-	static void render(int x, int y, int width, int height, const std::string& mesh, const std::string& material);
 
 public:
 	static inline Instance* instance = nullptr;

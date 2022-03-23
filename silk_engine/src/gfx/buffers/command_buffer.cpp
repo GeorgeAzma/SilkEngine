@@ -4,19 +4,15 @@
 #include "gfx/allocators/command_pool.h"
 
 CommandBuffer::CommandBuffer(vk::CommandBufferLevel level, vk::QueueFlagBits queue_type)
-	: level(level), queue_type(queue_type), pool(Graphics::getCommandPool())
+	: level(level), queue_type(queue_type), pool(Graphics::getCommandPool()), 
+	vk::CommandBuffer(VkCommandBuffer(Graphics::logical_device->allocateCommandBuffers({ *Graphics::getCommandPool(), level, 1 }).front())),
+	is_primary(level == vk::CommandBufferLevel::ePrimary)
 {
-	vk::CommandBufferAllocateInfo allocate_info{};
-	allocate_info.level = level;
-	allocate_info.commandPool = *pool;
-	allocate_info.commandBufferCount = 1;
-	command_buffer = Graphics::logical_device->allocateCommandBuffers(allocate_info).front();
-	is_primary = (level == vk::CommandBufferLevel::ePrimary);
 }
 
 CommandBuffer::~CommandBuffer()
 {
-	Graphics::logical_device->freeCommandBuffers(*pool, { command_buffer });
+	Graphics::logical_device->freeCommandBuffers(*pool, { *this });
 }
 
 void CommandBuffer::begin(vk::CommandBufferUsageFlags usage)
@@ -34,10 +30,10 @@ void CommandBuffer::begin(vk::CommandBufferUsageFlags usage)
 		//inheritance_info.pipelineStatistics = ;  //TODO:
 	}
 
-	command_buffer.begin(vk::CommandBufferBeginInfo(usage, &inheritance_info));
-	Graphics::setActiveCommandBuffer(command_buffer);
+	vk::CommandBuffer::begin(vk::CommandBufferBeginInfo(usage, &inheritance_info));
+	Graphics::setActiveCommandBuffer(this);
 	if(is_primary)
-		Graphics::setActivePrimaryCommandBuffer(command_buffer);
+		Graphics::setActivePrimaryCommandBuffer(this);
 	running = true;
 }
 
@@ -46,10 +42,10 @@ void CommandBuffer::end()
 	if (!running)
 		return;
 
-	command_buffer.end();
-	Graphics::setActiveCommandBuffer(VK_NULL_HANDLE);
+	vk::CommandBuffer::end();
+	Graphics::setActiveCommandBuffer(nullptr);
 	if (is_primary)
-		Graphics::setActivePrimaryCommandBuffer(VK_NULL_HANDLE);
+		Graphics::setActivePrimaryCommandBuffer(nullptr);
 	recorded = true;
 	running = false;
 }
@@ -62,7 +58,7 @@ void CommandBuffer::submit(const CommandBufferSubmitInfo& info)
 
 	vk::SubmitInfo submit_info{};
 	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &command_buffer;
+	submit_info.pCommandBuffers = this;
 	
 	submit_info.pWaitDstStageMask = info.wait_stages;
 	submit_info.waitSemaphoreCount = info.wait_semaphores.size();
@@ -85,7 +81,7 @@ void CommandBuffer::submitIdle()
 
 	vk::SubmitInfo submit_info{};
 	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &command_buffer;
+	submit_info.pCommandBuffers = this;
 
 	vk::Fence fence = Graphics::logical_device->createFence({});
 	Graphics::logical_device->resetFences({ fence });

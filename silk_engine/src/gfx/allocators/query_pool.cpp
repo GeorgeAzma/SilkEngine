@@ -2,6 +2,7 @@
 #include "gfx/graphics.h"
 #include "utils/math.h"
 #include "gfx/devices/logical_device.h"
+#include "gfx/buffers/command_buffer.h"
 
 QueryPool::QueryPool(vk::QueryType query_type, vk::QueryPipelineStatisticFlags pipeline_statistic_flags)
 	: query_type(query_type), pipeline_statistic_flags()

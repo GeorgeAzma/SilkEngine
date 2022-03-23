@@ -17,7 +17,7 @@ enum class Type
 	VEC2,
 	VEC3,
 	VEC4,
-	VEC2I,
+	IVEC2,
 	VEC3I,
 	VEC4I,
 	VEC2U,

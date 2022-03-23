@@ -1,6 +1,7 @@
 #include "resources.h"
 #include "meshes/circle_mesh.h"
 #include "meshes/rectangle_mesh.h"
+#include "meshes/quad_mesh.h"
 #include "gfx/graphics.h"
 #include "gfx/buffers/uniform_buffer.h"
 #include "gfx/window/swap_chain.h"
@@ -70,6 +71,7 @@ void Resources::init()
     {
         addMesh("Circle", [] { return makeShared<CircleMesh>(); });
         addMesh("Rectangle", [] { return makeShared<RectangleMesh>(); });
+        addMesh("Quad", [] { return makeShared<QuadMesh>(); });
         addMesh("Circle3D", [] { return shared<Mesh3D>(*(Mesh2D*)(getMesh("Circle").get())); });
         addMesh("Rectangle3D", [] { return shared<Mesh3D>(*(Mesh2D*)(getMesh("Rectangle").get())); });
     }

@@ -1,5 +1,6 @@
 #include "vertex_buffer.h"
 #include "gfx/graphics.h"
+#include "gfx/buffers/command_buffer.h"
 
 VertexBuffer::VertexBuffer(const void* data, vk::DeviceSize size, VmaMemoryUsage memory_usage)
 	: Buffer(size,

@@ -10,7 +10,7 @@ struct CommandBufferSubmitInfo
 	vk::PipelineStageFlags* wait_stages = nullptr;
 };
 
-class CommandBuffer : NonCopyable
+class CommandBuffer : public vk::CommandBuffer, NonCopyable
 {
 public:
 	CommandBuffer(vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary, vk::QueueFlagBits queue_type = vk::QueueFlagBits::eGraphics);
@@ -23,13 +23,11 @@ public:
 	void submitIdle();
 
 	bool wasRecorded() const { return recorded; }
-	operator const vk::CommandBuffer& () const { return command_buffer; }
 
 private:
 	vk::Queue getQueue() const;
 
 private:
-	vk::CommandBuffer command_buffer;
 	vk::CommandBufferLevel level;
 	vk::QueueFlagBits queue_type;
 	shared<CommandPool> pool;

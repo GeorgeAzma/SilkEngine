@@ -8,6 +8,8 @@ Mesh3D::Mesh3D(const std::vector<Vertex3D>& vertices, const std::vector<uint32_t
 
 void Mesh3D::createVertexArray()
 {
+	if (vertex_array.get())
+		return;
 	auto vbo = makeShared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex3D));
 	auto ibo = makeShared<IndexBuffer>(indices.data(), indices.size());
 	vertex_array = makeShared<VertexArray>();

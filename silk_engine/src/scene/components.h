@@ -1,6 +1,7 @@
 #pragma once
 
 #include "model.h"
+#include "entity.h"
 #include "instance.h"
 #include "light.h"
 #include "gfx/ui/font.h"

@@ -35,7 +35,7 @@ namespace math
 	}
 
 	template<typename T = float>
-	T lerp(const T& a, const T& b, float k)
+	static T lerp(const T& a, const T& b, float k)
 	{
 		return a + (b - a) * (T)k;
 	}

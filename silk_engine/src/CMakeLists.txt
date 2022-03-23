@@ -45,6 +45,7 @@ core/base.h
 core/log.h
 utils/RNG.h
 utils/thread_pool.h
+utils/math.h
 )
 
 #Link

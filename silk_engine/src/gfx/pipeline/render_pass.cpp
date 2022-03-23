@@ -3,6 +3,7 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/enums.h"
 #include "gfx/window/swap_chain.h"
+#include "gfx/buffers/command_buffer.h"
 
 RenderPass::~RenderPass()
 {

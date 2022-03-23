@@ -3,6 +3,7 @@
 #include "gfx/graphics.h"
 #include "gfx/window/swap_chain.h"
 #include "gfx/devices/logical_device.h"
+#include "gfx/buffers/command_buffer.h"
 
 GraphicsPipeline::GraphicsPipeline()
 {
@@ -76,8 +77,11 @@ GraphicsPipeline& GraphicsPipeline::setShader(const shared<Shader>& shader, cons
 
 	ci.stageCount = shader_stage_infos.size();
 	ci.pStages = shader_stage_infos.data();
-	
-	push_constant_ranges = shader->getPushConstants();
+
+	push_constant_ranges.clear();
+	for (auto&& [name, push_constant] : shader->getPushConstants())
+		push_constant_ranges.emplace_back(push_constant);
+
 	descriptor_set_layouts.clear();
 	for (auto&& [set, descriptor_set] : shader->getDescriptorSets())
 		descriptor_set_layouts.emplace_back(descriptor_set->getLayout());

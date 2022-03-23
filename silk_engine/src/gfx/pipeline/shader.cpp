@@ -299,7 +299,7 @@ void Shader::loadPushConstant(const spirv_cross::Resource& spirv_resource, const
 	auto ranges = compiler.get_active_buffer_ranges(resources.push_constant_buffers.front().id);
 	for (auto& range : ranges)
 	{
-		for (auto& push_constant : push_constants)
+		for (auto&& [name, push_constant] : push_constants)
 		{
 			if (push_constant.size == range.range && push_constant.offset == range.offset)
 			{
@@ -311,7 +311,7 @@ void Shader::loadPushConstant(const spirv_cross::Resource& spirv_resource, const
 		push_constant_range.offset = range.offset;
 		push_constant_range.size = range.range;
 		push_constant_range.stageFlags = stage;
-		push_constants.emplace_back(std::move(push_constant_range));
+		push_constants.emplace(spirv_resource.name, std::move(push_constant_range));
 	}
 }
 

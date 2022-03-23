@@ -10,6 +10,9 @@ public:
 
 	void bind();
 
+	IndexType getIndexType() const { return index_type; }
+	vk::DeviceSize getCount() const { return size / EnumInfo::size(index_type); }
+
 private:
-	vk::IndexType index_type;
+	IndexType index_type;
 };

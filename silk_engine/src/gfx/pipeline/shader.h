@@ -80,7 +80,7 @@ public:
 	void bindDescriptors();
 
 	const std::unordered_map<uint32_t, shared<DescriptorSet>>& getDescriptorSets() const { return descriptor_sets; }
-	const std::vector<vk::PushConstantRange>& getPushConstants() const { return push_constants; }
+	const std::unordered_map<std::string, vk::PushConstantRange>& getPushConstants() const { return push_constants; }
 	const std::unordered_map<std::string, Constant>& getConstants() const { return constants; }
 	const std::vector<PerStageData>& getStages() const { return stages; }
 	const glm::uvec3& getLocalSize() const 
@@ -109,8 +109,8 @@ private:
 	//Reflection data
 	glm::uvec3 local_size = glm::vec3(0);
 	std::unordered_map<uint32_t, shared<DescriptorSet>> descriptor_sets;
-    std::vector<vk::PushConstantRange> push_constants;
 	std::vector<Resource> resources;
+    std::unordered_map<std::string, vk::PushConstantRange> push_constants;
 	std::unordered_map<std::string, ResourceLocation> resource_locations;
 	std::unordered_map<std::string, Constant> constants;
 	std::vector<PerStageData> stages;

@@ -33,7 +33,6 @@ void main()
     vertex_output.vcolor = in_vcolor;
     const vec4 world_position = in_transform * vec4(in_position, 1.0);
     vertex_output.world_position = world_position.xyz;
-
     gl_Position = global_uniform.projection_view * world_position;
 }
 
@@ -61,6 +60,8 @@ layout(set = 0, binding = 0) uniform GlobalUniform
 {
     mat4 projection_view;
     mat4 projection_view2D;
+    mat4 projection;
+    mat4 view;
     vec3 camera_position;
     float time;
     vec3 camera_direction;
@@ -126,7 +127,7 @@ void main()
     }
     else
     {
-        color = texture(images[fragment_input.texture_index + DIFFUSE_TEXTURE], fragment_input.texture_coordinate) * fragment_input.color;
+        color = texture(images[fragment_input.texture_index + DIFFUSE_TEXTURE], fragment_input.texture_coordinate) * fragment_input.color * fragment_input.vcolor;
         if(color.a <= 0.01)
             discard;
     }

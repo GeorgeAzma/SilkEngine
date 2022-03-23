@@ -3,6 +3,7 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/descriptors/descriptor_pool.h"
 #include "scene/resources.h"
+#include "gfx/buffers/command_buffer.h"
 
 DescriptorSet& DescriptorSet::add(uint32_t binding, uint32_t count, vk::DescriptorType descriptor_type, vk::ShaderStageFlags stage_flags)
 {

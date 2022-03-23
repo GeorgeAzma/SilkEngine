@@ -3,6 +3,7 @@
 #include "gfx/window/window.h"
 #include "gfx/window/swap_chain.h"
 #include "scene/resources.h"
+#include "gfx/buffers/command_buffer.h"
 
 void Renderer::init()
 {
@@ -25,6 +26,8 @@ void Renderer::update(Camera* camera)
 	if (camera)
 	{
 		global_uniform_data.projection_view = camera->projection_view;
+		global_uniform_data.projection = camera->projection;
+		global_uniform_data.view = camera->view;
 		global_uniform_data.camera_position = camera->position;
 		global_uniform_data.camera_direction = camera->direction;
 	}
