@@ -23,7 +23,11 @@ RenderPass& RenderPass::addAttachment(const AttachmentProps& props)
     attachment_description.finalLayout = props.layout;
 
     if (props.samples != vk::SampleCountFlagBits::e1)
+    {
+        //Vulkan said that multisampled images should always have store op set to don't care (-\(^_^)/-)
+        attachment_description.storeOp = vk::AttachmentStoreOp::eDontCare;
         subpasses.back().multisampled = true;
+    }
 
     Attachment attachment{};
     Attachment::Type type;

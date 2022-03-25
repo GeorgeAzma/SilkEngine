@@ -86,6 +86,7 @@ void Window::init()
             case GLFW_RELEASE:
             {
                 Dispatcher::post(KeyReleaseEvent(key));
+                break;
             }
             }
         });
@@ -168,6 +169,7 @@ void Window::setFullscreen(bool fullscreen)
         const GLFWvidmode* video_mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
         int last_width = data.width;
         int last_height = data.height;
+        setSize({ video_mode->width, video_mode->height });
         glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, video_mode->width, video_mode->height, GLFW_DONT_CARE);
         Dispatcher::post(WindowMoveEvent(0, 0));
         Dispatcher::post(WindowResizeEvent(video_mode->width, video_mode->height));

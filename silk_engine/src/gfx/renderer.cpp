@@ -109,10 +109,10 @@ Light* Renderer::addLight(const Light& light)
 	return nullptr;
 }
 
-void Renderer::createMeshInstance(const shared<RenderedInstance>& instance, const InstanceData& instance_data)
+void Renderer::createInstance(const shared<RenderedInstance>& instance, const InstanceData& instance_data)
 {
 	if (!instance->mesh->vertex_array.get()) instance->mesh->createVertexArray();
-	if (!instance->mesh->hasAABB()) instance->mesh->calculateAABB(); //TEMP for now
+	//if (!instance->mesh->hasAABB()) instance->mesh->calculateAABB(); //TEMP for now
 	if (!instance->material.get()) instance->material = Resources::getGraphicsPipeline("Lit 3D");
 
 	bool need_new_instance_batch = true;
@@ -144,6 +144,13 @@ void Renderer::createMeshInstance(const shared<RenderedInstance>& instance, cons
 	}
 }
 
+void Renderer::updateInstance(RenderedInstance& instance, const InstanceData& instance_data)
+{
+	auto& instance_batch = instance_batches[instance.instance_batch_index];
+	instance_batch.needs_update = true;
+	instance_batch.instance_data[instance.instance_data_index] = instance_data;
+}
+
 void Renderer::addInstanceBatch(const shared<RenderedInstance>& instance, const InstanceData& instance_data)
 {
 	instance_batches.emplace_back(instance);
@@ -166,7 +173,7 @@ void Renderer::addInstanceBatch(const shared<RenderedInstance>& instance, const 
 	instance->instance_data_index = instance_batches.back().instance_data.size() - 1;
 }
 
-void Renderer::destroyMeshInstance(const RenderedInstance& instance)
+void Renderer::destroyInstance(const RenderedInstance& instance)
 {
 	auto& instance_batch = instance_batches[instance.instance_batch_index];
 

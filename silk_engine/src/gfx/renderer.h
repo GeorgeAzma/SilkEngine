@@ -34,9 +34,10 @@ public:
 	static void cleanup();
 
 	static Light* addLight(const Light& light);
-	static void createMeshInstance(const shared<RenderedInstance>& instance, const InstanceData& instance_data);
+	static void createInstance(const shared<RenderedInstance>& instance, const InstanceData& instance_data);
+	static void updateInstance(RenderedInstance& instance, const InstanceData& instance_data);
 	static void addInstanceBatch(const shared<RenderedInstance>& instance, const InstanceData& instance_data);
-	static void destroyMeshInstance(const RenderedInstance& instance);
+	static void destroyInstance(const RenderedInstance& instance);
 
 public:
 	static inline std::vector<InstanceBatch> instance_batches;

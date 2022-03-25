@@ -170,9 +170,9 @@ void Scene::onMaterialComponentUpdate(entt::registry& registry, entt::entity ent
 		if (mesh_component->instance->material != material.material)
 		{
 			InstanceData instance_data = Renderer::instance_batches[mesh_component->instance->instance_batch_index].instance_data[mesh_component->instance->instance_data_index];
-			Renderer::destroyMeshInstance(*mesh_component->instance);
+			Renderer::destroyInstance(*mesh_component->instance);
 			mesh_component->instance->material = material.material;
-			Renderer::createMeshInstance(mesh_component->instance, instance_data);
+			Renderer::createInstance(mesh_component->instance, instance_data);
 		}
 	}
 	if (auto model_component = registry.try_get<ModelComponent>(entity))
@@ -183,9 +183,9 @@ void Scene::onMaterialComponentUpdate(entt::registry& registry, entt::entity ent
 			{
 				shared<RenderedInstance>& instance = model_component->instances[i];
 				InstanceData instance_data = Renderer::instance_batches[instance->instance_batch_index].instance_data[instance->instance_data_index];
-				Renderer::destroyMeshInstance(*instance);
+				Renderer::destroyInstance(*instance);
 				instance->material = material.material;
-				Renderer::createMeshInstance(instance, instance_data);
+				Renderer::createInstance(instance, instance_data);
 			}
 		}
 	}
@@ -222,7 +222,7 @@ void Scene::onImageComponentUpdate(entt::registry& registry, entt::entity entity
 		if (image_index == UINT32_MAX)
 		{
 			InstanceData instance_data = instance_batch.instance_data[instance->instance_data_index];
-			Renderer::destroyMeshInstance(*instance);
+			Renderer::destroyInstance(*instance);
 			Renderer::addInstanceBatch(instance, instance_data);
 			image_index = Renderer::instance_batches[instance->instance_batch_index].instance_images.add(instance->images);
 		}
@@ -235,10 +235,10 @@ void Scene::onTextComponentUpdate(entt::registry& registry, entt::entity entity)
 	TextComponent& text = registry.get<TextComponent>(entity);
 	MeshComponent& mesh = registry.get<MeshComponent>(entity);
 	InstanceData instance_data = Renderer::instance_batches[mesh.instance->instance_batch_index].instance_data[mesh.instance->instance_data_index];
-	Renderer::destroyMeshInstance(*mesh.instance);
+	Renderer::destroyInstance(*mesh.instance);
 	mesh.mesh = makeShared<TextMesh>(text.text, text.size, text.font);
 	mesh.instance->mesh = mesh.mesh;
-	Renderer::createMeshInstance(mesh.instance, instance_data);
+	Renderer::createInstance(mesh.instance, instance_data);
 }
 
 void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
@@ -257,12 +257,12 @@ void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
 	if (auto image = registry.try_get<ImageComponent>(entity))
 		mesh_component.instance->images = image->images;
 
-	Renderer::createMeshInstance(mesh_component.instance, instance_data);
+	Renderer::createInstance(mesh_component.instance, instance_data);
 }
 
 void Scene::onMeshComponentDestroy(entt::registry& registry, entt::entity entity)
 {
-	Renderer::destroyMeshInstance(*registry.get<MeshComponent>(entity).instance);
+	Renderer::destroyInstance(*registry.get<MeshComponent>(entity).instance);
 }
 
 void Scene::onTextComponentCreate(entt::registry& registry, entt::entity entity)
@@ -293,7 +293,7 @@ void Scene::onModelComponentCreate(entt::registry& registry, entt::entity entity
 	{
 		model_component.instances[i] = makeShared<RenderedInstance>(model_component.model->getMeshes()[i], material);
 		model_component.instances[i]->images = model_component.model->getImages()[i];
-		Renderer::createMeshInstance(model_component.instances[i], instance_data);
+		Renderer::createInstance(model_component.instances[i], instance_data);
 	}
 }
 
@@ -301,7 +301,7 @@ void Scene::onModelComponentDestroy(entt::registry& registry, entt::entity entit
 {
 	ModelComponent& model_component = registry.get<ModelComponent>(entity);
 	for (size_t i = 0; i < model_component.model->getMeshes().size(); ++i)
-		Renderer::destroyMeshInstance(*model_component.instances[i]);
+		Renderer::destroyInstance(*model_component.instances[i]);
 }
 
 void Scene::onLightComponentCreate(entt::registry& registry, entt::entity entity)
