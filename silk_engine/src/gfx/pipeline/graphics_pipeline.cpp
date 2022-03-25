@@ -89,13 +89,13 @@ GraphicsPipeline& GraphicsPipeline::setShader(const shared<Shader>& shader, cons
 	return *this;
 }
 
-GraphicsPipeline& GraphicsPipeline::setVertexLayout(const BufferLayout& layout)
+GraphicsPipeline& GraphicsPipeline::setVertexLayout(const BufferLayout& buffer_layout)
 {
-	this->layout = layout;
-	vertex_input_info.vertexBindingDescriptionCount = this->layout.getBindingDescriptions().size();
-	vertex_input_info.pVertexBindingDescriptions = this->layout.getBindingDescriptions().data();
-	vertex_input_info.vertexAttributeDescriptionCount = this->layout.getAttributeDescriptions().size();
-	vertex_input_info.pVertexAttributeDescriptions = this->layout.getAttributeDescriptions().data();
+	this->buffer_layout = buffer_layout;
+	vertex_input_info.vertexBindingDescriptionCount = this->buffer_layout.getBindingDescriptions().size();
+	vertex_input_info.pVertexBindingDescriptions = this->buffer_layout.getBindingDescriptions().data();
+	vertex_input_info.vertexAttributeDescriptionCount = this->buffer_layout.getAttributeDescriptions().size();
+	vertex_input_info.pVertexAttributeDescriptions = this->buffer_layout.getAttributeDescriptions().data();
 	return *this;
 }
 
@@ -195,18 +195,13 @@ void GraphicsPipeline::build()
 
 void GraphicsPipeline::bind()
 {
-	if (Graphics::active.pipeline == pipeline && Graphics::active.bind_point == vk::PipelineBindPoint::eGraphics)
-		return; 
-	Graphics::getActiveCommandBuffer().bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-	Graphics::active.pipeline = pipeline;
-	Graphics::active.pipeline_layout = pipeline_layout;
-	Graphics::active.bind_point = vk::PipelineBindPoint::eGraphics;
+	Graphics::getActiveCommandBuffer().bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline, layout);
 }
 
 void GraphicsPipeline::create()
 {
-	pipeline_layout = Graphics::logical_device->createPipelineLayout(pipeline_layout_info);
-	ci.layout = pipeline_layout;
+	layout = Graphics::logical_device->createPipelineLayout(pipeline_layout_info);
+	ci.layout = layout;
 	ci.pViewportState = &viewport_info;
 	pipeline = Graphics::logical_device->createGraphicsPipeline(VK_NULL_HANDLE, ci);
 }

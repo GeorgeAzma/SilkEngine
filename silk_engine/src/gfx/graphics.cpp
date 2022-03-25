@@ -105,12 +105,12 @@ void Graphics::beginFrame()
 	viewport.height = -(float)swap_chain->getExtent().height;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
-	getActiveCommandBuffer().setViewport(0, {viewport});
+	getActiveCommandBuffer().setViewport({ viewport });
 
 	vk::Rect2D scissor = {};
 	scissor.offset = vk::Offset2D{ 0, 0 };
 	scissor.extent = vk::Extent2D{ (uint32_t)swap_chain->getExtent().width, (uint32_t)swap_chain->getExtent().height };
-	getActiveCommandBuffer().setScissor(0, { scissor });
+	getActiveCommandBuffer().setScissor({ scissor });
 }
 
 void Graphics::endFrame()
@@ -135,24 +135,24 @@ shared<CommandPool> Graphics::getCommandPool()
 
 CommandBuffer& Graphics::getActiveCommandBuffer()
 {
-	return *Graphics::active.command_buffer.at(std::this_thread::get_id());
+	return *command_buffers.at(std::this_thread::get_id());
 }
 
 CommandBuffer& Graphics::getActivePrimaryCommandBuffer()
 {
-	return *Graphics::active.primary_command_buffer.at(std::this_thread::get_id());
+	return *primary_command_buffers.at(std::this_thread::get_id());
 }
 
 void Graphics::setActiveCommandBuffer(CommandBuffer* command_buffer)
 {
 	std::scoped_lock lock(active_command_buffer_mutex);
-	Graphics::active.command_buffer[std::this_thread::get_id()] = command_buffer;
+	command_buffers[std::this_thread::get_id()] = command_buffer;
 }
 
 void Graphics::setActivePrimaryCommandBuffer(CommandBuffer* command_buffer)
 {
 	std::scoped_lock lock(active_primary_command_buffer_mutex);
-	Graphics::active.primary_command_buffer[std::this_thread::get_id()] = command_buffer;
+	primary_command_buffers[std::this_thread::get_id()] = command_buffer;
 }
 
 void Graphics::screenshot(const std::string& file)

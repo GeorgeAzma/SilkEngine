@@ -54,5 +54,4 @@ public:
 private:
 	vk::RenderPass render_pass;
 	std::vector<Subpass> subpasses;
-	uint32_t current_subpass = 0;
 };

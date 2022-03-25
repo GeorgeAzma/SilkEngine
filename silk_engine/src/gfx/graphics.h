@@ -39,17 +39,6 @@ public:
 			indices = 0;
 		}
 	} stats{};
-	static inline struct Active //TODO: state system does not support multithreading, think of something else later
-	{
-		vk::Pipeline pipeline = VK_NULL_HANDLE;
-		vk::PipelineLayout pipeline_layout = VK_NULL_HANDLE;
-		vk::PipelineBindPoint bind_point = vk::PipelineBindPoint(VK_PIPELINE_BIND_POINT_MAX_ENUM);
-		std::unordered_map<std::thread::id, CommandBuffer*> command_buffer;
-		std::unordered_map<std::thread::id, CommandBuffer*> primary_command_buffer;
-		vk::RenderPass render_pass = VK_NULL_HANDLE;
-		uint32_t subpass = 0;
-		vk::Framebuffer framebuffer = VK_NULL_HANDLE;
-	} active{};
 
 public:
 	static void init();
@@ -87,4 +76,6 @@ public:
 private:
 	static inline std::mutex active_command_buffer_mutex;
 	static inline std::mutex active_primary_command_buffer_mutex;
+	static inline std::unordered_map<std::thread::id, CommandBuffer*> command_buffers;
+	static inline std::unordered_map<std::thread::id, CommandBuffer*> primary_command_buffers;
 };

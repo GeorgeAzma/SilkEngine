@@ -11,6 +11,9 @@ target_compile_definitions(SilkEngine PUBLIC
 "$<$<CONFIG:RELEASE>:SK_DIST>"
 )
 target_compile_definitions(SilkEngine PRIVATE "SK_CORE")
+if(MSVC AND NOT CMAKE_BUILD_TYPE EQUAL "RELEASE")
+  target_link_options(SilkEngine PUBLIC "/INCREMENTAL")
+endif()
 
 #Precompile headers
 target_precompile_headers(SilkEngine PUBLIC
@@ -36,15 +39,11 @@ target_precompile_headers(SilkEngine PUBLIC
 
 #Non std
 <glm/glm.hpp>
-<glm/gtc/matrix_transform.hpp>
-<glm/gtx/hash.hpp>
-<glm/gtx/string_cast.hpp>
 
 #project sources
 core/base.h
 core/log.h
 utils/RNG.h
-utils/thread_pool.h
 utils/math.h
 )
 

@@ -1,7 +1,22 @@
 #include "sandbox_app.h"
+#include "utils/timers.h"
+#include "gfx/graphics.h"
+#include "gfx/window/window.h"
+#include "gfx/images/image2D.h"
+#include "scene/scene_manager.h"
+#include "scene/model.h"
+#include "scene/components.h"
+#include "scene/resources.h"
+#include "scene/camera/camera_controller.h"
+#include "scene/camera/camera.h"
+#include "scene/meshes/circle_mesh.h"
+#include "scene/meshes/rectangle_mesh.h"
+#include "core/input/input.h"
+#include "core/input/keys.h"
+#include <glm/gtc/matrix_transform.hpp>
    
 SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
-{
+{ 
     scene = makeShared<Scene>();  
     SceneManager::add(scene);
     SceneManager::switchTo(scene);

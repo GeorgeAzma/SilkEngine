@@ -1,6 +1,10 @@
 #pragma once
 
-#include "silk_engine.h"
+#include "core/application.h"
+#include "core/entry_point.h"
+#include "scene/scene.h"
+#include "scene/entity.h"
+
 
 class SandboxApp : public Application
 {

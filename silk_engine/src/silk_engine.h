@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/application.h"
-#include "core/platform.h"
 #include "core/event.h"
 #include "core/layer.h"
 #include "core/layer_stack.h"

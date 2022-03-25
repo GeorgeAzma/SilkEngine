@@ -4,6 +4,7 @@
 #include "gfx/window/swap_chain.h"
 #include "scene/resources.h"
 #include "gfx/buffers/command_buffer.h"
+#include <glm/gtc/matrix_transform.hpp>
 
 void Renderer::init()
 {

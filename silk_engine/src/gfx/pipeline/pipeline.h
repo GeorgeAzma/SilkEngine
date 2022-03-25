@@ -24,7 +24,7 @@ public:
 	void pushConstant(const std::string& name, const void* data) const;
 
 	const shared<Shader>& getShader() const { return shader; }
-	const vk::PipelineLayout& getLayout() const { return pipeline_layout; }
+	const vk::PipelineLayout& getLayout() const { return layout; }
 	operator const vk::Pipeline& () const { return pipeline; }
 
 protected:
@@ -42,7 +42,7 @@ protected:
 protected:
 	vk::PipelineCache cache;
 	vk::Pipeline pipeline;
-	vk::PipelineLayout pipeline_layout;
+	vk::PipelineLayout layout;
 
 	vk::PipelineLayoutCreateInfo pipeline_layout_info{};
 	std::vector<vk::PushConstantRange> push_constant_ranges;

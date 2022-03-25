@@ -58,12 +58,7 @@ ComputePipeline::ComputePipeline(const shared<Shader>& shader, const std::vector
 
 void ComputePipeline::bind()
 {
-	if (Graphics::active.pipeline == pipeline && Graphics::active.bind_point == vk::PipelineBindPoint::eCompute)
-		return;
-	Graphics::getActiveCommandBuffer().bindPipeline(vk::PipelineBindPoint::eCompute, pipeline);
-	Graphics::active.pipeline = pipeline;
-	Graphics::active.pipeline_layout = pipeline_layout;
-	Graphics::active.bind_point = vk::PipelineBindPoint::eCompute;
+	Graphics::getActiveCommandBuffer().bindPipeline(vk::PipelineBindPoint::eCompute, pipeline, layout);
 }
 
 void ComputePipeline::dispatch(uint32_t global_invocation_count_x, uint32_t global_invocation_count_y, uint32_t global_invocation_count_z) const
@@ -76,7 +71,7 @@ void ComputePipeline::dispatch(uint32_t global_invocation_count_x, uint32_t glob
 
 void ComputePipeline::create()
 {
-	pipeline_layout = Graphics::logical_device->createPipelineLayout(pipeline_layout_info);
-	ci.layout = pipeline_layout;
+	layout = Graphics::logical_device->createPipelineLayout(pipeline_layout_info);
+	ci.layout = layout;
 	pipeline = Graphics::logical_device->createComputePipeline(VK_NULL_HANDLE, ci);
 }

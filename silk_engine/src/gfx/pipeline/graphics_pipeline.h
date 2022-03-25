@@ -37,6 +37,6 @@ private:
 	vk::PipelineDynamicStateCreateInfo dynamic_state{};
 	vk::RenderPass render_pass = VK_NULL_HANDLE;
 	uint32_t subpass = 0;
-	BufferLayout layout = {};
+	BufferLayout buffer_layout = {};
 	vk::GraphicsPipelineCreateInfo ci{};
 };

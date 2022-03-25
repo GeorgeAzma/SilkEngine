@@ -1,4 +1,5 @@
 #include "circle_mesh.h"
+#include <glm/gtc/constants.hpp>
 
 CircleMesh::CircleMesh(unsigned int resolution)
 {

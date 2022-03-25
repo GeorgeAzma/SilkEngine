@@ -11,12 +11,12 @@ Pipeline::~Pipeline()
 void Pipeline::pushConstant(const std::string& name, const void* data) const
 {
 	const auto& push_constant = getShader()->getPushConstants().at(name);
-	Graphics::getActiveCommandBuffer().pushConstants(pipeline_layout, push_constant.stageFlags, push_constant.offset, push_constant.size, data);
+	Graphics::getActiveCommandBuffer().pushConstants(layout, push_constant.stageFlags, push_constant.offset, push_constant.size, data);
 }
 
 void Pipeline::destroy()
 {
 	Graphics::logical_device->waitIdle();
 	Graphics::logical_device->destroyPipeline(pipeline);
-	Graphics::logical_device->destroyPipelineLayout(pipeline_layout);
+	Graphics::logical_device->destroyPipelineLayout(layout);
 }

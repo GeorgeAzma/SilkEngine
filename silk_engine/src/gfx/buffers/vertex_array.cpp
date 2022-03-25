@@ -23,11 +23,9 @@ VertexArray& VertexArray::setIndexBuffer(shared<IndexBuffer> index_buffer)
 
 void VertexArray::bind()
 {
-	const std::vector<vk::DeviceSize> offsets(vertex_buffers.size(), 0);
 	std::vector<vk::Buffer> buffers(vertex_buffers.size());
 	for (size_t i = 0; i < vertex_buffers.size(); ++i)
 		buffers[i] = *vertex_buffers[i];
-	
-	Graphics::getActiveCommandBuffer().bindVertexBuffers(0, buffers, offsets);
+	Graphics::getActiveCommandBuffer().bindVertexBuffers(0, buffers);
 	index_buffer->bind();
 }
