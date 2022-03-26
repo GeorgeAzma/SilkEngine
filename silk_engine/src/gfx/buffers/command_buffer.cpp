@@ -435,7 +435,7 @@ void CommandBuffer::submitIdle()
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = this;
 
-	vk::Fence fence = Graphics::logical_device->createFence({ vk::FenceCreateFlagBits::eSignaled });
+	vk::Fence fence = Graphics::logical_device->createFence({});
 	getQueue().submit({ submit_info }, fence);	
 	Graphics::logical_device->waitForFences({ fence });	
 	Graphics::logical_device->destroyFence(fence);
