@@ -5,9 +5,16 @@
 #include "buffers/uniform_buffer.h"
 #include "buffers/indirect_buffer.h"
 #include "scene/light.h"
+#include "utils/color.h"
 
 class Renderer
 {
+	static inline struct Active
+	{
+		glm::vec4 color;
+		shared<Image2D> image;
+		glm::mat4 transform;
+	} active;
 public:
 	static constexpr size_t MAX_LIGHTS = 64;
 
@@ -32,6 +39,35 @@ public:
 	static void init();
 	static void update(Camera* camera = nullptr);
 	static void cleanup();
+	static void reset();
+
+	//States
+	static void transform(const glm::mat4& transform) { active.transform = transform; }
+	static void color(const Color& color) { active.color = color; }
+	static void image(const shared<Image2D>& image) { active.image = image; }
+
+	//2D
+	static void triangle(float x, float y, float width, float height);
+	static void triangle(float x, float y, float size);
+	static void triangle(float x1, float y1, float x2, float y2, float x3, float y3);
+	static void rectangle(float x, float y, float width, float height);
+	static void square(float x, float y, float size);
+	static void ellipse(float x, float y, float width, float height);
+	static void circle(float x, float y, float radius);
+	static void line(const std::vector<glm::vec2>& points, float width = 1.0f);
+	static void line(float x1, float y1, float x2, float y2);
+	static void bezier(float x1, float y1, float px, float py, float x2, float y2, float width);
+	static void bezier(float x1, float y1, float px1, float py1, float px2, float py2, float x2, float y2, float width);
+
+	//3D
+	static void tetrahedron(float x, float y, float z, float size);
+	static void cube(float x, float y, float z, float size);
+	static void cuboid(float x, float y, float z, float width, float height, float depth);
+	static void sphere(float x, float y, float z, float radius);
+	static void ellipsoid(float x, float y, float z, float width, float height, float depth);
+
+	//Helper
+	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth = 1.0f);
 
 	static Light* addLight(const Light& light);
 	static void createInstance(const shared<RenderedInstance>& instance, const InstanceData& instance_data);
@@ -41,6 +77,7 @@ public:
 
 public:
 	static inline std::vector<InstanceBatch> instance_batches;
+	static inline std::vector<shared<RenderedInstance>> instances;
 	static inline unique<IndirectBuffer> indirect_buffer;
 	static inline unique<UniformBuffer> global_uniform_buffer;
 	static inline std::array<Light, MAX_LIGHTS> lights;

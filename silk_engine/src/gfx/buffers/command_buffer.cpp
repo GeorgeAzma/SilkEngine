@@ -4,15 +4,15 @@
 #include "gfx/allocators/command_pool.h"
 
 CommandBuffer::CommandBuffer(vk::CommandBufferLevel level, vk::QueueFlagBits queue_type)
-	: level(level), queue_type(queue_type), pool(Graphics::getCommandPool()), 
-	vk::CommandBuffer(VkCommandBuffer(Graphics::logical_device->allocateCommandBuffers({ *Graphics::getCommandPool(), level, 1 }).front())),
+	: level(level), queue_type(queue_type), pool(Graphics::getActiveCommandPool()),
+	vk::CommandBuffer(VkCommandBuffer(Graphics::getActiveCommandPool()->allocate(level))),
 	is_primary(level == vk::CommandBufferLevel::ePrimary)
 {
 }
 
 CommandBuffer::~CommandBuffer()
 {
-	Graphics::logical_device->freeCommandBuffers(*pool, { *this });
+	pool->deallocate(*this);
 }
 
 void CommandBuffer::begin(vk::CommandBufferUsageFlags usage)

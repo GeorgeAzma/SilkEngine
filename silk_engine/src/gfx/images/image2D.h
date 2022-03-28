@@ -6,12 +6,12 @@ class Image2D : public Image
 {
 public:
 	Image2D(const Image2DProps& props);
-	Image2D(const std::string& file, const Image2DProps& props = {});
+	Image2D(std::string_view file, const Image2DProps& props = {});
 	Image2D(VkImage image, const Image2DProps& props = {});
 
-	const std::string& getPath() const { return path; }
+	std::string_view getPath() const { return path; }
 
-	static Bitmap load(const std::string& file);
+	static Bitmap load(std::string_view file);
 
 private:
 	std::string path = "";

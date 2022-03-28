@@ -6,5 +6,5 @@
 class TextMesh : public Mesh2D
 {
 public:
-	TextMesh(const std::string& text, uint32_t size = 32, shared<Font> font = nullptr);
+	TextMesh(std::string_view text, uint32_t size = 32, shared<Font> font = nullptr);
 };

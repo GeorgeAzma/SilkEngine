@@ -95,16 +95,6 @@ vk::Result SwapChain::present(vk::Semaphore wait_semaphore)
 	return Graphics::logical_device->getPresentQueue().presentKHR(present_info);
 }
 
-void SwapChain::beginRenderPass(vk::SubpassContents subpass_contents)
-{
-	render_pass->begin(*framebuffers[image_index], subpass_contents);
-}
-
-void SwapChain::endRenderPass()
-{
-	render_pass->end();
-}
-
 void SwapChain::create(const std::optional<vk::SwapchainKHR>& old_swap_chain)
 {
 	int width, height;

@@ -25,13 +25,13 @@ public:
 	static void cleanup();
 
 public:
-	Font(const std::string& file, uint32_t size = 64);
+	Font(std::string_view file, uint32_t size = 64);
 	~Font();
 
-	const std::string& getPath() const { return path; }
+	std::string_view getPath() const { return path; }
 	shared<Image2D> getAtlas() const { return texture_atlas; }
 
-	std::vector<Character> getCharacterLayout(const std::string& str);
+	std::vector<Character> getCharacterLayout(std::string_view str);
 
 public:
 	static constexpr size_t MAX_CHARACTER_COUNT = 256;

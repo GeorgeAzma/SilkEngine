@@ -3,6 +3,9 @@
 #include "gfx/window/window.h"
 #include "gfx/window/swap_chain.h"
 #include "scene/resources.h"
+#include "scene/meshes/line_mesh.h"
+#include "scene/meshes/bezier_mesh.h"
+#include "scene/meshes/triangle_mesh.h"
 #include "gfx/buffers/command_buffer.h"
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -12,13 +15,127 @@ void Renderer::init()
 	indirect_buffer = makeUnique<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(vk::DrawIndexedIndirectCommand));
 	global_uniform_buffer = makeUnique<UniformBuffer>(sizeof(GlobalUniformData));
 	lights.fill(Light{});
+	active.image = Resources::white_image;
 }
 
 void Renderer::cleanup()
 {
+	active.image = nullptr;
+	instances.clear();
 	instance_batches.clear();
 	indirect_buffer = nullptr;
 	global_uniform_buffer = nullptr;
+}
+
+void Renderer::reset()
+{
+	for (const auto& instance : instances)
+		destroyInstance(*instance);
+	instances.clear();
+	active.image = Resources::white_image;
+	active.transform = glm::mat4(1);
+	active.color = glm::vec4(1);
+}
+
+void Renderer::triangle(float x, float y, float width, float height)
+{
+	draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Triangle"), x, y, 0.0f, width, height, 1);
+}
+
+void Renderer::triangle(float x, float y, float size)
+{
+	triangle(x, y, size, size);
+}
+
+void Renderer::triangle(float x1, float y1, float x2, float y2, float x3, float y3)
+{
+	draw(Resources::getGraphicsPipeline("2D"), makeShared<TriangleMesh>(x1, y1, x2, y2, x3, y3), 0, 0, 0, 1, 1, 1);
+}
+
+void Renderer::rectangle(float x, float y, float width, float height)
+{
+	draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), x, y, 0, width, height, 1);
+}
+
+void Renderer::square(float x, float y, float size)
+{
+	rectangle(x, y, size, size);
+}
+
+void Renderer::ellipse(float x, float y, float width, float height)
+{
+	draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Circle"), x, y, 0, width, height, 1);
+}
+
+void Renderer::circle(float x, float y, float radius)
+{
+	ellipse(x, y, radius, radius);
+}
+
+void Renderer::line(const std::vector<glm::vec2>& points, float width)
+{
+	draw(Resources::getGraphicsPipeline("2D"), makeShared<LineMesh>(points, width), 0, 0, 0, 1, 1, 1);
+}
+
+void Renderer::line(float x1, float y1, float x2, float y2)
+{
+	//TODO: It might be faster to not generate line every time and just rotate pregenerated line
+	line({ { x1, y1 }, { x2, y2 } });
+}
+
+void Renderer::bezier(float x1, float y1, float px, float py, float x2, float y2, float width)
+{
+	draw(Resources::getGraphicsPipeline("2D"), makeShared<BezierMesh>(x1, y1, px, py, x2, y2, 64u, width), 0, 0, 0, 1, 1, 1);
+}
+
+void Renderer::bezier(float x1, float y1, float px1, float py1, float px2, float py2, float x2, float y2, float width)
+{
+	draw(Resources::getGraphicsPipeline("2D"), makeShared<BezierMesh>(x1, y1, px1, py1, px2, py2, x2, y2, 64u, width), 0, 0, 0, 1, 1, 1);
+}
+
+void Renderer::tetrahedron(float x, float y, float z, float size)
+{
+	draw(Resources::getGraphicsPipeline("3D"), Resources::getMesh("Tetrahedron"), x, y, z, size, size, size);
+}
+
+void Renderer::cube(float x, float y, float z, float size)
+{
+	draw(Resources::getGraphicsPipeline("3D"), Resources::getMesh("Cube"), x, y, z, size, size, size);
+}
+
+void Renderer::cuboid(float x, float y, float z, float width, float height, float depth)
+{
+	draw(Resources::getGraphicsPipeline("3D"), Resources::getMesh("Cube"), x, y, z, width, height, depth);
+}
+
+void Renderer::sphere(float x, float y, float z, float radius)
+{
+	draw(Resources::getGraphicsPipeline("3D"), Resources::getMesh("Sphere"), x, y, z, radius, radius, radius);
+}
+
+void Renderer::ellipsoid(float x, float y, float z, float width, float height, float depth)
+{
+	draw(Resources::getGraphicsPipeline("3D"), Resources::getMesh("Sphere"), x, y, z, width, height, depth);
+}
+
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
+{
+	shared<RenderedInstance> instance = makeShared<RenderedInstance>();
+	instance->mesh = mesh;
+	instance->material = graphics_pipeline;
+	instance->images = { active.image };
+	instances.emplace_back(instance);
+
+	InstanceData data{};
+	data.transform = glm::mat4
+	(
+		width, 0, 0, 0,
+		0, height, 0, 0,
+		0, 0, depth, 0,
+		x, y, z, 1
+	) * active.transform;
+	data.color = active.color;
+	createInstance(instance, std::move(data));
 }
 
 void Renderer::update(Camera* camera)
@@ -69,7 +186,7 @@ void Renderer::update(Camera* camera)
 		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(vk::DrawIndexedIndirectCommand));
 
 	//Draw instances
-	Graphics::swap_chain->beginRenderPass();
+	Graphics::swap_chain->getRenderPass()->begin(*Graphics::swap_chain->getActiveFramebuffer(), vk::SubpassContents::eInline);
 	size_t draw_index = 0;
 	for (auto& instance_batch : instance_batches)
 	{
@@ -85,7 +202,7 @@ void Renderer::update(Camera* camera)
 		++draw_index;
 	}
 	//End draw
-	Graphics::swap_chain->endRenderPass();
+	Graphics::swap_chain->getRenderPass()->end();
 
 	Graphics::stats.instance_batches += instance_batches.size();
 	for (const auto& instance_batch : instance_batches)

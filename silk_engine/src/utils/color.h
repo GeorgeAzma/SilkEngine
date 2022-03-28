@@ -8,9 +8,10 @@ class Color
 		BGRA, ABGR, BGR
 	};
 	static constexpr float NORM = 1.0f / 255.0f;
+
 public:
-	constexpr Color(float r, float g, float b, float a = 1.0f);
-	constexpr Color(uint32_t hex, Type type = Type::RGBA);
+	Color(float r, float g, float b, float a = 1.0f);
+	Color(uint32_t hex, Type type = Type::RGBA);
 	Color(std::string hex, float a = 1.0f);
 
 	constexpr uint32_t getHex(Type type = Type::RGBA) const;

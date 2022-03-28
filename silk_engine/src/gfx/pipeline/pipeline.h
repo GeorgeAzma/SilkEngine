@@ -21,7 +21,7 @@ public:
 		create();
 	}
 
-	void pushConstant(const std::string& name, const void* data) const;
+	void pushConstant(std::string_view name, const void* data) const;
 
 	const shared<Shader>& getShader() const { return shader; }
 	const vk::PipelineLayout& getLayout() const { return layout; }

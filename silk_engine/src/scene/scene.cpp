@@ -59,6 +59,8 @@ Scene::~Scene()
 	Dispatcher::unsubscribe(this, &Scene::onWindowResize);
 
 	onStop();
+
+	stopped = true;
 }
 
 void Scene::onPlay()
@@ -96,7 +98,8 @@ shared<Entity> Scene::createEntity()
 
 void Scene::removeEntity(const entt::entity& entity)
 {
-	registry.destroy(entity);
+	if(!stopped)
+		registry.destroy(entity);
 }
 
 void Scene::onWindowResize(const WindowResizeEvent& e)

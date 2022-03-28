@@ -18,9 +18,10 @@ public:
     const vk::Extent2D& getExtent() const { return extent; }
     const std::vector<shared<Framebuffer>>& getFramebuffers() const { return framebuffers; }
     const std::vector<shared<Image2D>>& getImages() const { return images; }
-    const vk::RenderPass& getRenderPass() const { return *render_pass; }
+    shared<RenderPass> getRenderPass() const { return render_pass; }
     uint32_t getImageIndex() const { return image_index; }
     shared<Image2D> getActiveImage() const { return images[image_index]; }
+    shared<Framebuffer> getActiveFramebuffer() const { return framebuffers[image_index]; }
     vk::SampleCountFlagBits getSampleCount() const { return sample_count; }
     
     void recreate();
@@ -28,9 +29,6 @@ public:
     void createFramebuffers();
     void acquireNextImage(vk::Semaphore signal_semaphore, vk::Fence signal_fence = VK_NULL_HANDLE);
     vk::Result present(vk::Semaphore wait_semaphore);
-
-    void beginRenderPass(vk::SubpassContents subpass_contents = vk::SubpassContents::eInline);
-    void endRenderPass();
     
 private:
     void create(const std::optional<vk::SwapchainKHR>& old_swap_chain = {});

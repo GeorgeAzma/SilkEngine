@@ -1,9 +1,15 @@
 #include "descriptor_set.h"
+#include "descriptor_allocator.h"
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/descriptors/descriptor_pool.h"
 #include "scene/resources.h"
 #include "gfx/buffers/command_buffer.h"
+
+DescriptorSet::~DescriptorSet()
+{
+	pool->deallocate();
+}
 
 DescriptorSet& DescriptorSet::add(uint32_t binding, uint32_t count, vk::DescriptorType descriptor_type, vk::ShaderStageFlags stage_flags)
 {
@@ -33,12 +39,7 @@ void DescriptorSet::build()
 		return;
 
 	layout = Resources::getDescriptorSetLayout(descriptor_set_layout_bindings);
-
-	vk::DescriptorSetAllocateInfo allocate_info{};
-	allocate_info.descriptorPool = *Graphics::descriptor_pool;
-	allocate_info.descriptorSetCount = 1;
-	allocate_info.pSetLayouts = &layout->layout;
-	descriptor_set = Graphics::logical_device->allocateDescriptorSets(allocate_info).front();
+	pool = DescriptorAllocator::allocate(descriptor_set, *layout);
 	updated = false;
 	needs_update = true;
 
@@ -94,11 +95,7 @@ DescriptorSet::DescriptorSet(const DescriptorSet& other)
 DescriptorSet& DescriptorSet::operator=(const DescriptorSet& other)
 {
 	layout = other.layout;
-	vk::DescriptorSetAllocateInfo allocate_info{};
-	allocate_info.descriptorPool = *Graphics::descriptor_pool;
-	allocate_info.descriptorSetCount = 1;
-	allocate_info.pSetLayouts = &layout->layout;
-	descriptor_set = Graphics::logical_device->allocateDescriptorSets(allocate_info).front();
+	pool = DescriptorAllocator::allocate(descriptor_set, layout->layout);
 	updated = false;
 
 	image_infos = other.image_infos;

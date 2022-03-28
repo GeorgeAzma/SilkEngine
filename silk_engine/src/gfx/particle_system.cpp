@@ -25,7 +25,7 @@ void ParticleSystem::init()
                                            .setShader(shader)
                                            .setVertexLayout({ { Type::VEC2 }, { Type::VEC2 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
                                            .setSampleCount(Graphics::swap_chain->getSampleCount())
-                                           .setRenderPass(Graphics::swap_chain->getRenderPass())
+                                           .setRenderPass(*Graphics::swap_chain->getRenderPass())
                                            .build();
                                        return graphics_pipeline;
                                    });

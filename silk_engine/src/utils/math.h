@@ -39,4 +39,28 @@ namespace math
 	{
 		return a + (b - a) * (T)k;
 	}
+
+	template<typename T, enum glm::qualifier Q = glm::qualifier::packed_highp>
+	static glm::vec<2, T, Q> cross2D(const glm::vec<2, T, Q>& v)
+	{
+		return { v.y, -v.x };
+	}
+
+	template<typename T, enum glm::qualifier Q = glm::qualifier::packed_highp>
+	static glm::vec<2, T, Q> cross2DCW(const glm::vec<2, T, Q>& v)
+	{
+		return { v.y, -v.x };
+	}
+
+	template<typename T, enum glm::qualifier Q = glm::qualifier::packed_highp>
+	static glm::vec<2, T, Q> cross2DCCW(const glm::vec<2, T, Q>& v)
+	{
+		return { -v.y, v.x };
+	}
+
+	template<glm::length_t L, typename T, enum glm::qualifier Q = glm::qualifier::packed_highp>
+	static glm::vec<L, T, Q> directionTo(const glm::vec<L, T, Q>& p1, const glm::vec<L, T, Q>& p2)
+	{
+		return glm::normalize(p2 - p1);
+	}
 };

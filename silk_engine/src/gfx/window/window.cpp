@@ -238,12 +238,12 @@ void Window::setSize(const glm::uvec2 &size)
     glfwSetWindowSize(window, data.width, data.height);
 }
 
-void Window::setTitle(const std::string& title)
+void Window::setTitle(std::string_view title)
 {
     if (title == data.title)
         return;
     data.title = title;
-    glfwSetWindowTitle(window, title.c_str());
+    glfwSetWindowTitle(window, title.data());
 }
 
 void Window::align(WindowAlignment a)
@@ -295,9 +295,9 @@ void Window::align(WindowAlignment a)
     glfwSetWindowPos(window, x, y);
 }
 
-void Window::setIcon(const std::string& file)
+void Window::setIcon(std::string_view file)
 {
-    std::string path = std::string("icons/") + file;
+    std::string path = std::string("icons/") + file.data();
     Bitmap bitmap_data = Image2D::load(path);
     std::vector<GLFWimage> icons(1);
     icons[0].height = bitmap_data.height;

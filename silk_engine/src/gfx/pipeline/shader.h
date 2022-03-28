@@ -73,15 +73,15 @@ public:
 
 	void compile(const std::vector<Define>& defines = {}, bool force = true);
 
-	void set(const std::string& resource_name, const std::vector<vk::DescriptorBufferInfo>& buffer_infos);
-	void set(const std::string& resource_name, const std::vector<vk::DescriptorImageInfo>& image_infos);
-	const ResourceLocation& get(const std::string& resource_name) const { return resource_locations.at(resource_name); }
-	const ResourceLocation* getIfExists(const std::string& resource_name) const;
+	void set(std::string_view resource_name, const std::vector<vk::DescriptorBufferInfo>& buffer_infos);
+	void set(std::string_view resource_name, const std::vector<vk::DescriptorImageInfo>& image_infos);
+	const ResourceLocation& get(std::string_view resource_name) const { return resource_locations.at(resource_name); }
+	const ResourceLocation* getIfExists(std::string_view resource_name) const;
 	void bindDescriptors();
 
 	const std::unordered_map<uint32_t, shared<DescriptorSet>>& getDescriptorSets() const { return descriptor_sets; }
-	const std::unordered_map<std::string, vk::PushConstantRange>& getPushConstants() const { return push_constants; }
-	const std::unordered_map<std::string, Constant>& getConstants() const { return constants; }
+	const std::unordered_map<std::string_view, vk::PushConstantRange>& getPushConstants() const { return push_constants; }
+	const std::unordered_map<std::string_view, Constant>& getConstants() const { return constants; }
 	const std::vector<PerStageData>& getStages() const { return stages; }
 	const glm::uvec3& getLocalSize() const 
 	{ 
@@ -93,7 +93,7 @@ public:
 	static shaderc_shader_kind shadercType(Type shader_type);
 	static shaderc_env_version shadercApiVersion(APIVersion api_version);
     static vk::ShaderStageFlagBits getVulkanType(Type shader_type);
-    static Type getStringType(const std::string& shader_string);
+    static Type getStringType(std::string_view shader_string);
     static std::string getTypeFileExtension(Type shader_type);
 
 private:
@@ -110,8 +110,8 @@ private:
 	glm::uvec3 local_size = glm::vec3(0);
 	std::unordered_map<uint32_t, shared<DescriptorSet>> descriptor_sets;
 	std::vector<Resource> resources;
-    std::unordered_map<std::string, vk::PushConstantRange> push_constants;
-	std::unordered_map<std::string, ResourceLocation> resource_locations;
-	std::unordered_map<std::string, Constant> constants;
+    std::unordered_map<std::string_view, vk::PushConstantRange> push_constants;
+	std::unordered_map<std::string_view, ResourceLocation> resource_locations;
+	std::unordered_map<std::string_view, Constant> constants;
 	std::vector<PerStageData> stages;
 };

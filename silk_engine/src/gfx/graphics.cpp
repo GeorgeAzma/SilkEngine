@@ -7,6 +7,7 @@
 #include "window/swap_chain.h"
 #include "allocators/command_pool.h"
 #include "descriptors/descriptor_pool.h"
+#include "descriptors/descriptor_allocator.h"
 #include "allocators/allocator.h"
 #include "buffers/uniform_buffer.h"
 #include "descriptors/descriptor_set.h"
@@ -33,15 +34,7 @@ void Graphics::init()
 	physical_device = new PhysicalDevice();
 	logical_device = new LogicalDevice();
 	allocator = new Allocator();
-
 	command_buffer = new CommandBuffer();
-
-	descriptor_pool = new DescriptorPool();
-	descriptor_pool->addSize(vk::DescriptorType::eUniformBuffer, 64)
-		.addSize(vk::DescriptorType::eCombinedImageSampler, 256)
-		.addSize(vk::DescriptorType::eStorageBuffer, 64)
-		.setMaxSets(1024).build();
-
 	swap_chain = new SwapChain();
 
 	previous_frame_finished = Graphics::logical_device->createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
@@ -61,7 +54,6 @@ void Graphics::cleanup()
 	Graphics::logical_device->destroySemaphore(render_finished);
 	delete command_buffer;
 	delete swap_chain;
-	delete descriptor_pool;
 	command_pools.clear();
 	delete allocator;
 	delete logical_device;
@@ -78,9 +70,10 @@ void Graphics::update()
 	stats.reset();
 	if (command_pool_purge_alarm)
 	{
+		DescriptorAllocator::reset();
 		for (auto it = command_pools.begin(); it != command_pools.end();)
 		{
-			if (it->second.use_count() <= 1)
+			if (!it->second->allocatedCommandBufferCount())
 			{
 				it = command_pools.erase(it);
 				continue;
@@ -125,7 +118,7 @@ void Graphics::endFrame()
 	Graphics::vulkanAssert(swap_chain->present(render_finished));
 }
 
-shared<CommandPool> Graphics::getCommandPool()
+shared<CommandPool> Graphics::getActiveCommandPool()
 {
 	auto it = command_pools.find(std::this_thread::get_id());
 	if (it != command_pools.end())
@@ -155,7 +148,7 @@ void Graphics::setActivePrimaryCommandBuffer(CommandBuffer* command_buffer)
 	primary_command_buffers[std::this_thread::get_id()] = command_buffer;
 }
 
-void Graphics::screenshot(const std::string& file)
+void Graphics::screenshot(std::string_view file)
 {
 	int width = swap_chain->getExtent().width;
 	int height = swap_chain->getExtent().height;
@@ -198,7 +191,7 @@ void Graphics::screenshot(const std::string& file)
 		//Write PNG - 350ms
 		void* buffer_data;
 		image_storage.map(&buffer_data);
-		stbi_write_png(file.c_str(), width, height, channels, buffer_data, 0);
+		stbi_write_png(file.data(), width, height, channels, buffer_data, 0);
 		image_storage.unmap();
 	}
 	else
@@ -206,7 +199,7 @@ void Graphics::screenshot(const std::string& file)
 		//Write PNG 350ms
 		std::vector<uint8_t> image_data(destination->getSize());
 		destination->getData(image_data.data());
-		stbi_write_png(file.c_str(), width, height, channels, image_data.data(), 0);
+		stbi_write_png(file.data(), width, height, channels, image_data.data(), 0);
 	}
 	
 	SK_TRACE("Screenshot saved at {0}", file);

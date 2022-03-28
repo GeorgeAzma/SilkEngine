@@ -203,19 +203,19 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 	SK_TRACE("Shader loaded: {0}", path);
 }
 
-void Shader::set(const std::string& resource_name, const std::vector<vk::DescriptorBufferInfo>& buffer_infos)
+void Shader::set(std::string_view resource_name, const std::vector<vk::DescriptorBufferInfo>& buffer_infos)
 {
 	const auto& resource_location = resource_locations.at(resource_name);
 	descriptor_sets.at(resource_location.set)->setBufferInfo(resource_location.write_index, buffer_infos);
 }
 
-void Shader::set(const std::string& resource_name, const std::vector<vk::DescriptorImageInfo>& image_infos)
+void Shader::set(std::string_view resource_name, const std::vector<vk::DescriptorImageInfo>& image_infos)
 {
 	const auto& resource_location = resource_locations.at(resource_name);
 	descriptor_sets.at(resource_location.set)->setImageInfo(resource_location.write_index, image_infos);
 }
 
-const Shader::ResourceLocation* Shader::getIfExists(const std::string& resource_name) const
+const Shader::ResourceLocation* Shader::getIfExists(std::string_view resource_name) const
 {
 	auto resource_location = resource_locations.find(resource_name);
 	return (resource_location != resource_locations.end()) ? &resource_location->second : nullptr;
@@ -315,7 +315,7 @@ void Shader::loadPushConstant(const spirv_cross::Resource& spirv_resource, const
 	}
 }
 
-Shader::Type Shader::getStringType(const std::string& shader_string)
+Shader::Type Shader::getStringType(std::string_view shader_string)
 {
 	if (shader_string == "vertex") return Type::VERTEX;
 	else if (shader_string == "fragment") return Type::FRAGMENT;

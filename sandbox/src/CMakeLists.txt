@@ -1,6 +1,6 @@
 project(Sandbox VERSION 1.0.0 LANGUAGES CXX)
 
-file(GLOB_RECURSE SANDBOX_SOURCES "*.cpp")
+file(GLOB_RECURSE SANDBOX_SOURCES "${PROJECT_SOURCE_DIR}/*.cpp")
 add_executable(Sandbox ${SANDBOX_SOURCES})
 target_include_directories(Sandbox PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(Sandbox PRIVATE SilkEngine)

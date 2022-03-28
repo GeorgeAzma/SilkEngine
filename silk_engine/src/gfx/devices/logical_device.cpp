@@ -134,6 +134,11 @@ void LogicalDevice::destroyFramebuffer(vk::Framebuffer framebuffer) const
 vk::DescriptorPool LogicalDevice::createDescriptorPool(const vk::DescriptorPoolCreateInfo& descriptor_pool_info) const
 {
 	return logical_device.createDescriptorPool(descriptor_pool_info);
+}	
+
+void LogicalDevice::resetDescriptorPool(vk::DescriptorPool descriptor_pool, vk::DescriptorPoolResetFlags flags) const
+{
+	logical_device.resetDescriptorPool(descriptor_pool, flags);
 }
 
 void LogicalDevice::destroyDescriptorPool(vk::DescriptorPool descriptor_pool) const
@@ -144,6 +149,10 @@ void LogicalDevice::destroyDescriptorPool(vk::DescriptorPool descriptor_pool) co
 std::vector<vk::DescriptorSet> LogicalDevice::allocateDescriptorSets(const vk::DescriptorSetAllocateInfo& descriptor_set_allocate_info) const
 {
 	return logical_device.allocateDescriptorSets(descriptor_set_allocate_info);
+}
+vk::Result LogicalDevice::allocateDescriptorSets(const vk::DescriptorSetAllocateInfo& alloc_info, vk::DescriptorSet& descriptor_set) const
+{
+	return logical_device.allocateDescriptorSets(&alloc_info, &descriptor_set);
 }
 
 void LogicalDevice::updateDescriptorSets(const std::vector<vk::WriteDescriptorSet>& writes) const

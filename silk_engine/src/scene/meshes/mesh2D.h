@@ -6,7 +6,7 @@
 struct Vertex2D
 {
 	glm::vec2 position = glm::vec2(0);
-	glm::vec2 texture_coordinates = glm::vec2(0);
+	glm::vec2 texture_coordinate = glm::vec2(0);
 	glm::vec4 color = glm::vec4(1);
 };
 
@@ -21,7 +21,9 @@ public:
 	size_t vertexCount() const override { return vertices.size(); }
 	operator shared<Mesh3D>() const;
 
-protected:
+public:
 	std::vector<Vertex2D> vertices;
+
+private:
 	AABB2D aabb = {};
 };

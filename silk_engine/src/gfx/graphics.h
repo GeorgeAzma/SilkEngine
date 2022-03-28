@@ -48,13 +48,13 @@ public:
 	static void beginFrame();
 	static void endFrame();
 
-	static shared<CommandPool> getCommandPool();
+	static shared<CommandPool> getActiveCommandPool();
 	static CommandBuffer& getActiveCommandBuffer();
 	static CommandBuffer& getActivePrimaryCommandBuffer();
 	static void setActiveCommandBuffer(CommandBuffer* command_buffer);
 	static void setActivePrimaryCommandBuffer(CommandBuffer* command_buffer);
 
-	static void screenshot(const std::string& file);
+	static void screenshot(std::string_view file);
 
 	static void vulkanAssert(vk::Result result);
 
@@ -66,7 +66,6 @@ public:
 	static inline Allocator* allocator = nullptr;
 	static inline std::unordered_map<std::thread::id, shared<CommandPool>> command_pools;
 	static inline SwapChain* swap_chain = nullptr;
-	static inline DescriptorPool* descriptor_pool = nullptr;
 	static inline Alarm command_pool_purge_alarm = Alarm(5s);
 	static inline CommandBuffer* command_buffer = nullptr;
 	static inline VkFence previous_frame_finished = VK_NULL_HANDLE;

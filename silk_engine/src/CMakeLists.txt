@@ -1,6 +1,6 @@
 project(SilkEngine VERSION 1.0.0 LANGUAGES CXX)
 
-file(GLOB_RECURSE SILK_ENGINE_SOURCES "*.cpp")
+file(GLOB_RECURSE SILK_ENGINE_SOURCES "${PROJECT_SOURCE_DIR}/*.cpp")
 add_library(SilkEngine STATIC ${SILK_ENGINE_SOURCES})
 target_include_directories(SilkEngine PUBLIC ${INCLUDE_DIRS} ${PROJECT_SOURCE_DIR})
 add_dependencies(SilkEngine ${DEPENDENCIES_TO_ADD})
@@ -11,9 +11,6 @@ target_compile_definitions(SilkEngine PUBLIC
 "$<$<CONFIG:RELEASE>:SK_DIST>"
 )
 target_compile_definitions(SilkEngine PRIVATE "SK_CORE")
-if(MSVC AND NOT CMAKE_BUILD_TYPE EQUAL "RELEASE")
-  target_link_options(SilkEngine PUBLIC "/INCREMENTAL")
-endif()
 
 #Precompile headers
 target_precompile_headers(SilkEngine PUBLIC
@@ -38,6 +35,7 @@ target_precompile_headers(SilkEngine PUBLIC
 <mutex>
 
 #Non std
+<glm/gtx/norm.hpp> # length2(), distance2()
 <glm/glm.hpp>
 
 #project sources

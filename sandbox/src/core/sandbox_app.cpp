@@ -3,6 +3,7 @@
 #include "gfx/graphics.h"
 #include "gfx/window/window.h"
 #include "gfx/images/image2D.h"
+#include "gfx/renderer.h"
 #include "scene/scene_manager.h"
 #include "scene/model.h"
 #include "scene/components.h"
@@ -79,6 +80,15 @@ void SandboxApp::onUpdate()
     {
         Graphics::screenshot(fmt::format("data/images/screenshots/screenshot.png"));
     }
+
+    Renderer::color({ 1, 1, 0, 1 });
+    Renderer::image(Resources::getImage("Test1"));
+    for(float x = 0; x < 100; ++x)
+        for (float y = 0; y < 100; ++y)
+            Renderer::rectangle(x * 5, y * 5, 4, 4);
+
+    Renderer::color({ 1, 1, 0, 1 });
+    Renderer::triangle(0, 0, 100, 100, 200, 0);
 
     //Resources::pool.forEach(entities.size(), 
     //    [&](size_t i) 

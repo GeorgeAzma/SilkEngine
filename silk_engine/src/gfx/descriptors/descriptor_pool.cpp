@@ -27,3 +27,19 @@ void DescriptorPool::build()
 	ci.maxSets = max_sets;
 	descriptor_pool = Graphics::logical_device->createDescriptorPool(ci);
 }
+
+vk::Result DescriptorPool::allocate(vk::DescriptorSet& descriptor_set, const vk::DescriptorSetLayout& descriptor_set_layout)
+{
+	++allocated_descriptor_sets;
+	vk::DescriptorSetAllocateInfo alloc_info{};
+	alloc_info.descriptorPool = descriptor_pool;
+	alloc_info.descriptorSetCount = 1;
+	alloc_info.pSetLayouts = &descriptor_set_layout;
+	return Graphics::logical_device->allocateDescriptorSets(alloc_info, descriptor_set);
+}
+
+void DescriptorPool::deallocate()
+{
+	SK_ASSERT(allocated_descriptor_sets > 0, "Can't deallocate pool's descriptor set when it doesn't have any");
+	--allocated_descriptor_sets;
+}

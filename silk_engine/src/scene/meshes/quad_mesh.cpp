@@ -9,10 +9,10 @@ QuadMesh::QuadMesh()
 	vertices[2].position = {  0.5f,  0.5f };
 	vertices[3].position = {  0.5f, -0.5f };
 
-	vertices[0].texture_coordinates = { 0, 1 };
-	vertices[1].texture_coordinates = { 0, 0 };
-	vertices[2].texture_coordinates = { 1, 0 };
-	vertices[3].texture_coordinates = { 1, 1 };
+	vertices[0].texture_coordinate = { 0, 1 };
+	vertices[1].texture_coordinate = { 0, 0 };
+	vertices[2].texture_coordinate = { 1, 0 };
+	vertices[3].texture_coordinate = { 1, 1 };
 
 	indices = { 2, 1, 0, 0, 3, 2 };
 }

@@ -5,7 +5,7 @@ SphereMesh::SphereMesh(uint32_t resolution)
 	size_t vertices_size = resolution * resolution;
 	size_t lines = resolution - 1;
 	size_t indices_size = lines * lines * 6;
-	vertices.resize(vertices.size);
+	vertices.resize(vertices_size);
 	indices.resize(indices_size);
 	float d = 1.0f / lines;
 	constexpr glm::vec3 faces[6] =
@@ -31,9 +31,9 @@ SphereMesh::SphereMesh(uint32_t resolution)
 				glm::vec3 point = facing + ((dx - 0.5f) * 2 * axisA + (dy - 0.5f) * 2 * axisB);
 				point = glm::vec3
 				(
-					point.x * std::sqrt(1.0f - ((point.y * p.y) + (point.z * p.z)) * 0.5f + ((point.y * point.y) * (point.z * point.z)) * 0.3333333f),
-					point.y * std::sqrt(1.0f - ((point.z * p.z) + (point.x * p.x)) * 0.5f + ((point.z * point.z) * (point.x * point.x)) * 0.3333333f),
-					point.z * std::sqrt(1.0f - ((point.x * p.x) + (point.y * p.y)) * 0.5f + ((point.x * point.x) * (point.y * point.y)) * 0.3333333f)
+					point.x * std::sqrt(1.0f - ((point.y * point.y) + (point.z * point.z)) * 0.5f + ((point.y * point.y) * (point.z * point.z)) * 0.3333333f),
+					point.y * std::sqrt(1.0f - ((point.z * point.z) + (point.x * point.x)) * 0.5f + ((point.z * point.z) * (point.x * point.x)) * 0.3333333f),
+					point.z * std::sqrt(1.0f - ((point.x * point.x) + (point.y * point.y)) * 0.5f + ((point.x * point.x) * (point.y * point.y)) * 0.3333333f)
 				);
 				vertices[offset + i].position = point;
 				vertices[offset + i].normal = point;

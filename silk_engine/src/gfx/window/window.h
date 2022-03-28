@@ -39,9 +39,9 @@ public:
     static void setWidth(int width);
     static void setHeight(int height);
     static void setSize(const glm::uvec2 &size);
-    static void setTitle(const std::string& title);
+    static void setTitle(std::string_view title);
     static void align(WindowAlignment a = WindowAlignment::CENTER);
-    static void setIcon(const std::string& file);
+    static void setIcon(std::string_view file);
     static void focus();
 
 private:

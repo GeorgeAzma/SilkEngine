@@ -2,7 +2,7 @@
 
 #include "gfx/buffers/vertex_array.h"
 
-class Mesh : NonCopyable
+class Mesh
 {
 	friend class Resources;
 	friend class RawModel;
@@ -21,7 +21,7 @@ public:
 	virtual ~Mesh() {}
 	
 	virtual void createVertexArray() = 0;
-	virtual void calculateAABB() = 0;
+	virtual void calculateAABB() {}
 	virtual size_t vertexCount() const = 0;
 
 	bool hasAABB() const { return has_aabb; }

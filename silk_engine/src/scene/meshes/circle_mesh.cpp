@@ -19,8 +19,8 @@ CircleMesh::CircleMesh(unsigned int resolution)
 
 	for (size_t i = 0; i < vertices_count; ++i)
 	{
-		vertices[i].texture_coordinates = (vertices[i].position + glm::vec2(1)) * glm::vec2(0.5f, 0.5f);
-		vertices[i].texture_coordinates.y = 1.0f - vertices[i].texture_coordinates.y;
+		vertices[i].texture_coordinate = (vertices[i].position + glm::vec2(1)) * glm::vec2(0.5f, 0.5f);
+		vertices[i].texture_coordinate.y = 1.0f - vertices[i].texture_coordinate.y;
 	}
 
 	size_t index = 0;

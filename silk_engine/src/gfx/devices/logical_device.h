@@ -30,8 +30,10 @@ public:
 	vk::Framebuffer createFramebuffer(const vk::FramebufferCreateInfo& framebuffer_info) const;
 	void destroyFramebuffer(vk::Framebuffer framebuffer) const;
 	vk::DescriptorPool createDescriptorPool(const vk::DescriptorPoolCreateInfo& descriptor_pool_info) const;
+	void resetDescriptorPool(vk::DescriptorPool descriptor_pool, vk::DescriptorPoolResetFlags flags = {}) const;
 	void destroyDescriptorPool(vk::DescriptorPool descriptor_pool) const;
 	std::vector<vk::DescriptorSet> allocateDescriptorSets(const vk::DescriptorSetAllocateInfo& descriptor_set_allocate_info) const;
+	vk::Result allocateDescriptorSets(const vk::DescriptorSetAllocateInfo& alloc_info, vk::DescriptorSet& descriptor_set) const;
 	void updateDescriptorSets(const std::vector<vk::WriteDescriptorSet>& writes) const;
 	vk::DescriptorSetLayout createDescriptorSetLayout(const vk::DescriptorSetLayoutCreateInfo& descriptor_set_layout_create_info) const;
 	void destroyDescriptorSetLayout(vk::DescriptorSetLayout descriptor_set_layout) const;

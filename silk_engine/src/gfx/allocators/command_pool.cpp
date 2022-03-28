@@ -13,5 +13,19 @@ CommandPool::CommandPool(vk::CommandPoolCreateFlags flags, std::optional<uint32_
 
 CommandPool::~CommandPool()
 {
+	SK_ASSERT(allocated_command_buffer_count == 0, "Called command pool destructor when command pool still contained command buffers");
 	Graphics::logical_device->destroyCommandPool(command_pool);
+}
+
+vk::CommandBuffer CommandPool::allocate(vk::CommandBufferLevel level)
+{
+	++allocated_command_buffer_count;
+	return Graphics::logical_device->allocateCommandBuffers({ command_pool, level, 1 }).front();
+}
+
+void CommandPool::deallocate(const vk::CommandBuffer& command_buffer)
+{
+	SK_ASSERT(allocated_command_buffer_count > 0, "Can't deallocate pool's command buffer when it doesn't have any");
+	Graphics::logical_device->freeCommandBuffers(command_pool, { command_buffer });
+	--allocated_command_buffer_count;
 }

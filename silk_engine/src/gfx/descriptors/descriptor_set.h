@@ -1,11 +1,13 @@
 #pragma once
 
 #include "descriptor_set_layout.h"
+#include "descriptor_pool.h"
 
 class DescriptorSet : NonMovable
 {
 public:
 	DescriptorSet() = default;
+	~DescriptorSet();
 	DescriptorSet(const DescriptorSet & other);
 	DescriptorSet& operator=(const DescriptorSet & other);
 
@@ -27,8 +29,9 @@ private:
 	void forceUpdate();
 
 private:
-	vk::DescriptorSet descriptor_set;
-	shared<DescriptorSetLayout> layout;
+	vk::DescriptorSet descriptor_set = VK_NULL_HANDLE;
+	shared<DescriptorSetLayout> layout = nullptr;
+	shared<DescriptorPool> pool = nullptr;
 	std::vector<vk::WriteDescriptorSet> write_descriptor_sets;
 	std::vector<std::vector<vk::DescriptorImageInfo>> image_infos;
 	std::vector<std::vector<vk::DescriptorBufferInfo>> buffer_infos;

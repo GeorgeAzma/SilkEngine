@@ -2,6 +2,10 @@
 #include "meshes/circle_mesh.h"
 #include "meshes/rectangle_mesh.h"
 #include "meshes/quad_mesh.h"
+#include "meshes/cube_mesh.h"
+#include "meshes/sphere_mesh.h"
+#include "meshes/triangle_mesh.h"
+#include "meshes/tetrahedron_mesh.h"
 #include "gfx/graphics.h"
 #include "gfx/buffers/uniform_buffer.h"
 #include "gfx/window/swap_chain.h"
@@ -69,11 +73,15 @@ void Resources::init()
 
     //MESHES
     {
+        addMesh("Triangle", [] { return makeShared<TriangleMesh>(); });
         addMesh("Circle", [] { return makeShared<CircleMesh>(); });
         addMesh("Rectangle", [] { return makeShared<RectangleMesh>(); });
         addMesh("Quad", [] { return makeShared<QuadMesh>(); });
         addMesh("Circle3D", [] { return shared<Mesh3D>(*(Mesh2D*)(getMesh("Circle").get())); });
         addMesh("Rectangle3D", [] { return shared<Mesh3D>(*(Mesh2D*)(getMesh("Rectangle").get())); });
+        addMesh("Cube", [] { return makeShared<CubeMesh>(); });
+        addMesh("Sphere", [] { return makeShared<SphereMesh>(); });
+        addMesh("Tetrahedron", [] { return makeShared<TetrahedronMesh>(); });
     }
 
     //MODELS
@@ -104,7 +112,7 @@ void Resources::init()
                     .setShader(getShader("3D"))
                     .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::VEC4 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
                     .setSampleCount(Graphics::swap_chain->getSampleCount())
-                    .setRenderPass(Graphics::swap_chain->getRenderPass())
+                    .setRenderPass(*Graphics::swap_chain->getRenderPass())
                     .build();
                 return graphics_pipeline; 
             });
@@ -119,7 +127,7 @@ void Resources::init()
                     .setShader(getShader("3D"), { { "lit", &lit, sizeof(vk::Bool32) } })
                     .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::VEC4 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
                     .setSampleCount(Graphics::swap_chain->getSampleCount())
-                    .setRenderPass(Graphics::swap_chain->getRenderPass())
+                    .setRenderPass(*Graphics::swap_chain->getRenderPass())
                     .build();
                 return graphics_pipeline; 
             });
@@ -134,7 +142,7 @@ void Resources::init()
                     .setShader(getShader("2D"))
                     .setVertexLayout({ { Type::VEC2 }, { Type::VEC2 }, { Type::VEC4 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
                     .setSampleCount(Graphics::swap_chain->getSampleCount())
-                    .setRenderPass(Graphics::swap_chain->getRenderPass())
+                    .setRenderPass(*Graphics::swap_chain->getRenderPass())
                     .build();
                 return graphics_pipeline; 
             });
@@ -150,7 +158,7 @@ void Resources::init()
                     .setShader(getShader("Font"))
                     .setVertexLayout({ { Type::VEC2 }, { Type::VEC2 }, { Type::VEC4 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
                     .setSampleCount(Graphics::swap_chain->getSampleCount())
-                    .setRenderPass(Graphics::swap_chain->getRenderPass())
+                    .setRenderPass(*Graphics::swap_chain->getRenderPass())
                     .build();
                 return graphics_pipeline;
             });
@@ -172,37 +180,37 @@ void Resources::cleanup()
     descriptor_set_layouts.clear();
 }
 
-shared<Mesh> Resources::getMesh(const std::string& name)
+shared<Mesh> Resources::getMesh(std::string_view name)
 {
     return fetch(meshes, name);
 }
 
-shared<Model> Resources::getModel(const std::string& name)
+shared<Model> Resources::getModel(std::string_view name)
 {
     return fetch(models, name);
 }
 
-shared<Shader> Resources::getShader(const std::string& name)
+shared<Shader> Resources::getShader(std::string_view name)
 {
     return fetch(shaders, name);
 }
 
-shared<GraphicsPipeline> Resources::getGraphicsPipeline(const std::string& name)
+shared<GraphicsPipeline> Resources::getGraphicsPipeline(std::string_view name)
 {
     return fetch(graphics_pipelines, name);
 }
 
-shared<ComputePipeline> Resources::getComputePipeline(const std::string& name)
+shared<ComputePipeline> Resources::getComputePipeline(std::string_view name)
 {
     return fetch(compute_pipelines, name);
 }
 
-shared<Image2D> Resources::getImage(const std::string& name)
+shared<Image2D> Resources::getImage(std::string_view name)
 {
     return fetch(images, name);
 }
 
-shared<Font> Resources::getFont(const std::string& name)
+shared<Font> Resources::getFont(std::string_view name)
 {
     return fetch(fonts, name);
 }
@@ -222,37 +230,37 @@ shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<
     return new_layout;
 }
 
-void Resources::addMesh(const std::string& name, const std::function<shared<Mesh>()>& mesh)
+void Resources::addMesh(std::string_view name, const std::function<shared<Mesh>()>& mesh)
 {
     add(meshes, name, mesh);
 }
 
-void Resources::addModel(const std::string& name, const std::function<shared<Model>()>& model)
+void Resources::addModel(std::string_view name, const std::function<shared<Model>()>& model)
 {
     add(models, name, model);
 }
 
-void Resources::addShader(const std::string& name, const std::function<shared<Shader>()>& shader)
+void Resources::addShader(std::string_view name, const std::function<shared<Shader>()>& shader)
 {
     add(shaders, name, shader);
 }
 
-void Resources::addGraphicsPipeline(const std::string& name, const std::function<shared<GraphicsPipeline>()>& graphics_pipeline)
+void Resources::addGraphicsPipeline(std::string_view name, const std::function<shared<GraphicsPipeline>()>& graphics_pipeline)
 {
     add(graphics_pipelines, name, graphics_pipeline);
 }
 
-void Resources::addComputePipeline(const std::string& name, const std::function<shared<ComputePipeline>()>& compute_pipeline)
+void Resources::addComputePipeline(std::string_view name, const std::function<shared<ComputePipeline>()>& compute_pipeline)
 {
     add(compute_pipelines, name, compute_pipeline);
 }
 
-void Resources::addImage(const std::string& name, const std::function<shared<Image2D>()>& image)
+void Resources::addImage(std::string_view name, const std::function<shared<Image2D>()>& image)
 {
     add(images, name, image);
 }
 
-void Resources::addFont(const std::string& name, const std::function<shared<Font>()>& font)
+void Resources::addFont(std::string_view name, const std::function<shared<Font>()>& font)
 {
     add(fonts, name, font);
 }

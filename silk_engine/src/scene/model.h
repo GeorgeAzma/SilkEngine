@@ -23,7 +23,7 @@ class RawModel
 	};
 
 public:
-	RawModel(const std::string& file);
+	RawModel(std::string_view file);
 
 private:
 	void processNode(aiNode* node, const aiScene* scene);
@@ -42,13 +42,13 @@ private:
 class Model
 {
 public:
-	Model(const std::string& file);
+	Model(std::string_view file);
 
-	static RawModel load(const std::string& file);
+	static RawModel load(std::string_view file);
 
 	const std::vector<shared<Mesh3D>>& getMeshes() const { return meshes; }
 	const std::vector<std::vector<shared<Image2D>>>& getImages() const { return images; }
-	const std::string& getPath() const { return path; }
+	std::string_view getPath() const { return path; }
 
 	Model& operator=(const RawModel& raw_model);
 

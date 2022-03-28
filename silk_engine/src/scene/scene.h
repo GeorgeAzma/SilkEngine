@@ -45,6 +45,7 @@ private:
 
 private:
 	entt::registry registry;
+	bool stopped = false;
 };
 
 

@@ -11,6 +11,7 @@
 #include "gfx/window/window.h"
 #include "scene/scene_manager.h"
 #include "gfx/renderer.h"
+#include "gfx/descriptors/descriptor_allocator.h"
 
 Application::Application(const char* name, ApplicationCommandLineArgs args)
     : command_line_args(args), app_update(0.0)
@@ -35,6 +36,7 @@ Application::~Application()
     Window::cleanup();
     Renderer::cleanup();
     Resources::cleanup();
+    DescriptorAllocator::cleanup();
     Graphics::cleanup();
     SK_INFO("Terminated");
 }
@@ -54,14 +56,15 @@ void Application::update()
             Time::dt = app_update.getDeltaTime();
             Time::frame = app_update.getFramesPassed();
             Time::runtime = app_update.getRuntime();
-
+           
+            Renderer::reset();
+            Graphics::update();
             onUpdate();
             SceneManager::update();
             Graphics::beginFrame();
             Renderer::update(SceneManager::getActive().get() ? SceneManager::getActive()->getMainCamera() : nullptr);
             Graphics::endFrame();
             Timers::update();
-            Graphics::update();
             Input::update();
         }
         else

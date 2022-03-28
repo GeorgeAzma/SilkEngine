@@ -12,10 +12,10 @@ void Font::cleanup()
 	FT_Done_FreeType(free_type_library);
 }
 
-Font::Font(const std::string& file, uint32_t size)
+Font::Font(std::string_view file, uint32_t size)
 	: characters(MAX_CHARACTER_COUNT), size(size)
 {
-	path = std::string("data/fonts/") + file;
+	path = std::string("data/fonts/") + file.data();
 	FT_Error result = FT_New_Face(free_type_library, path.c_str(), 0, &face);
 	SK_ASSERT(!result, "FreeType: Couldn't create new face");
 
@@ -103,7 +103,7 @@ Font::~Font()
 	FT_Done_Face(face);
 }
 
-std::vector<Font::Character> Font::getCharacterLayout(const std::string& str)
+std::vector<Font::Character> Font::getCharacterLayout(std::string_view str)
 {
 	const int32_t new_line_offset = size / 8;
 	const int32_t new_line_indent = size + new_line_offset;

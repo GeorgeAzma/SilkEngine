@@ -1,6 +1,6 @@
 #include "debug_timer.h"
 
-DebugTimer::DebugTimer(const std::string& name, bool showMilliseconds)
+DebugTimer::DebugTimer(std::string_view name, bool showMilliseconds)
     : name(name), show_millis(showMilliseconds),
       start_point(std::chrono::high_resolution_clock::now())
 {

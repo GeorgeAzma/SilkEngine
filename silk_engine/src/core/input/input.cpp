@@ -51,32 +51,32 @@ bool Input::isKeyReleased(int key)
 	return !keys[key] && last_keys[key];
 }
 
-void Input::setKey(const std::string& name, int key)
+void Input::setKey(std::string_view name, int key)
 {
 	key_binds[name] = key;
 }
 
-void Input::setMouseButton(const std::string& name, int button)
+void Input::setMouseButton(std::string_view name, int button)
 {
 	mouse_button_binds[name] = button;
 }
 
-void Input::setJoystickButton(const std::string& name, int button)
+void Input::setJoystickButton(std::string_view name, int button)
 {
 	joystick_button_binds[name] = button;
 }
 
-int Input::getKey(const std::string& name)
+int Input::getKey(std::string_view name)
 {
 	return key_binds.at(name);
 }
 
-int Input::getMouseButton(const std::string& name)
+int Input::getMouseButton(std::string_view name)
 {
 	return mouse_button_binds.at(name);
 }
 
-int Input::getJoystickButton(const std::string& name)
+int Input::getJoystickButton(std::string_view name)
 {
 	return joystick_button_binds.at(name);
 }
@@ -101,9 +101,9 @@ std::string Input::getClipboard()
 	return glfwGetClipboardString(Window::getGLFWWindow());
 }
 
-void Input::setClipboard(const std::string& str)
+void Input::setClipboard(std::string_view str)
 {
-	return glfwSetClipboardString(Window::getGLFWWindow(), str.c_str());
+	return glfwSetClipboardString(Window::getGLFWWindow(), str.data());
 }
 
 void Input::lockMouse()
@@ -116,9 +116,9 @@ void Input::unlockMouse()
 	glfwSetInputMode(Window::getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
-void Input::setClipboardString(const std::string& str)
+void Input::setClipboardString(std::string_view str)
 {
-	glfwSetClipboardString(Window::getGLFWWindow(), str.c_str());
+	glfwSetClipboardString(Window::getGLFWWindow(), str.data());
 }
 
 std::string Input::getClipboardString()
@@ -131,9 +131,9 @@ InputDevice Input::getActiveInputDevice()
 	return active_joystick ? InputDevice::JOYSTICK : InputDevice::KEYBOARD_AND_MOUSE;
 }
 
-void Input::setCursor(const std::string& file, CursorHotSpot hot_spot)
+void Input::setCursor(std::string_view file, CursorHotSpot hot_spot)
 {
-	std::string path = std::string("cursors/") + file;
+	std::string path = std::string("cursors/") + file.data();
 	Bitmap bitmap_data = Image2D::load(path);
 	GLFWimage cursor_image[1];
 	cursor_image[0].height = bitmap_data.height;

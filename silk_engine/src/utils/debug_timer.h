@@ -5,7 +5,7 @@
 class DebugTimer
 {
 public:
-    DebugTimer(const std::string& name = "Timer", bool showMilliseconds = true);
+    DebugTimer(std::string_view name = "Timer", bool showMilliseconds = true);
 
     ~DebugTimer();
 

@@ -3,12 +3,12 @@
 #include "resources.h"
 #include "gfx/graphics.h"
 
-Model::Model(const std::string& file)
+Model::Model(std::string_view file)
 {
     *this = load(file);
 }
 
-RawModel Model::load(const std::string& file)
+RawModel Model::load(std::string_view file)
 {
     return RawModel(file);
 }
@@ -69,9 +69,9 @@ Model& Model::operator=(const RawModel& raw_model)
     return *this;
 }
 
-RawModel::RawModel(const std::string& file)
+RawModel::RawModel(std::string_view file)
 {
-    std::string path = std::string("data/models/") + file;
+    std::string path = std::string("data/models/") + file.data();
     this->path = path;
 
 	Assimp::Importer importer;
@@ -126,8 +126,8 @@ void RawModel::processMesh(aiMesh *mesh, const aiScene *scene)
         
         if (mesh->HasTextureCoords(0))
         {
-            vertices[i].texture_coordinates.x = mesh->mTextureCoords[0][i].x;
-            vertices[i].texture_coordinates.y = mesh->mTextureCoords[0][i].y;
+            vertices[i].texture_coordinate.x = mesh->mTextureCoords[0][i].x;
+            vertices[i].texture_coordinate.y = mesh->mTextureCoords[0][i].y;
         }
     }
 

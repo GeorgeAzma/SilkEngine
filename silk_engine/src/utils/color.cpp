@@ -2,12 +2,12 @@
 #include <sstream>
 #include <iomanip>
 
-constexpr Color::Color(float r, float g, float b, float a)
+Color::Color(float r, float g, float b, float a)
 	: color(r, g, b, a)
 {
 }
 
-constexpr Color::Color(uint32_t hex, Type type)
+Color::Color(uint32_t hex, Type type)
 {
 	switch (type) 
 	{

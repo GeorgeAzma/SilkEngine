@@ -6,7 +6,7 @@
 struct Vertex3D
 {
 	glm::vec3 position = glm::vec3(0);
-	glm::vec2 texture_coordinates = glm::vec2(0);
+	glm::vec2 texture_coordinate = glm::vec2(0);
 	glm::vec3 normal = glm::vec3(0);
 	glm::vec4 color = glm::vec4(1);
 };
@@ -23,7 +23,9 @@ public:
 	void calculateAABB() override;
 	size_t vertexCount() const override { return vertices.size(); }
 
-protected:
+public:
 	std::vector<Vertex3D> vertices;
+
+private:
 	AABB3D aabb = {};
 };
