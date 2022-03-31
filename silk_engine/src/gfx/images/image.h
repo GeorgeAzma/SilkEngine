@@ -1,9 +1,9 @@
 #pragma once
 
 #include "gfx/buffers/staging_buffer.h"
-#include "gfx/enums.h"
 #include "image_view.h"
 #include "sampler.h"
+#include "gfx/device_type.h"
 
 struct CubemapProps
 {
@@ -261,7 +261,7 @@ public:
 	static bool hasDepth(VkFormat format);
 	static VkImageAspectFlags getAspectFlags(VkFormat format);
 	static size_t channelCount(VkFormat format);
-	static Type formatToType(VkFormat format);
+	static DeviceType formatToType(VkFormat format);
 	static size_t formatSize(VkFormat format);
 
 protected:

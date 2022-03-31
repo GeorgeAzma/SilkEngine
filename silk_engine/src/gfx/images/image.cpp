@@ -587,51 +587,51 @@ size_t Image::channelCount(VkFormat format)
 	return 0;
 }
 
-Type Image::formatToType(VkFormat format)
+DeviceType Image::formatToType(VkFormat format)
 {
 	switch (format)
 	{
-	case VK_FORMAT_R8_SINT:				return Type::BYTE;
-	case VK_FORMAT_R8_UINT:				return Type::UBYTE;
-	case VK_FORMAT_R16_SINT:				return Type::SHORT;
-	case VK_FORMAT_R16_UINT:				return Type::USHORT;
-	case VK_FORMAT_R32_SINT:				return Type::INT;
-	case VK_FORMAT_R32_UINT:				return Type::UINT;
-	case VK_FORMAT_R32_SFLOAT:			return Type::FLOAT;
-	case VK_FORMAT_R64_SFLOAT:			return Type::DOUBLE;
-	case VK_FORMAT_R32G32_SFLOAT:		return Type::VEC2;
-	case VK_FORMAT_R32G32B32_SFLOAT:		return Type::VEC3;
-	case VK_FORMAT_R32G32B32A32_SFLOAT:	return Type::VEC4;
-	case VK_FORMAT_R32G32_SINT:			return Type::IVEC2;
-	case VK_FORMAT_R32G32B32_SINT:		return Type::VEC3I;
-	case VK_FORMAT_R32G32B32A32_SINT:	return Type::VEC4I;
-	case VK_FORMAT_R32G32_UINT:			return Type::VEC2U;
-	case VK_FORMAT_R32G32B32_UINT:		return Type::VEC3U;
-	case VK_FORMAT_R32G32B32A32_UINT:	return Type::VEC4U;
-	case VK_FORMAT_R64G64_SFLOAT:		return Type::VEC2D;
-	case VK_FORMAT_R64G64B64_SFLOAT:		return Type::VEC3D;
-	case VK_FORMAT_R64G64B64A64_SFLOAT:	return Type::VEC4D;
-	case VK_FORMAT_R8_SRGB:				return Type::FLOAT;
-	case VK_FORMAT_R8G8_SRGB:			return Type::VEC2;
-	case VK_FORMAT_R8G8B8_SRGB:			return Type::VEC3;
-	case VK_FORMAT_R8G8B8A8_SRGB:		return Type::VEC4;
-	case VK_FORMAT_R8_UNORM:				return Type::FLOAT;
-	case VK_FORMAT_R8G8_UNORM:			return Type::VEC2;
-	case VK_FORMAT_R8G8B8_UNORM:			return Type::VEC3;
-	case VK_FORMAT_R8G8B8A8_UNORM:		return Type::VEC4;
-	case VK_FORMAT_D16_UNORM:			return Type::UINT;
-	case VK_FORMAT_D16_UNORM_S8_UINT:		return Type::UINT;
-	case VK_FORMAT_D24_UNORM_S8_UINT:		return Type::UINT;
-	case VK_FORMAT_D32_SFLOAT:			return Type::FLOAT;
-	case VK_FORMAT_D32_SFLOAT_S8_UINT:		return Type::DOUBLE;
-	case VK_FORMAT_B8G8R8_SRGB:			return Type::VEC3;
-	case VK_FORMAT_B8G8R8A8_SRGB:		return Type::VEC4;
-	case VK_FORMAT_B8G8R8_UNORM:			return Type::VEC3;
-	case VK_FORMAT_B8G8R8A8_UNORM:		return Type::VEC4;
+	case VK_FORMAT_R8_SINT:				return DeviceType::BYTE;
+	case VK_FORMAT_R8_UINT:				return DeviceType::UBYTE;
+	case VK_FORMAT_R16_SINT:			return DeviceType::SHORT;
+	case VK_FORMAT_R16_UINT:			return DeviceType::USHORT;
+	case VK_FORMAT_R32_SINT:			return DeviceType::INT;
+	case VK_FORMAT_R32_UINT:			return DeviceType::UINT;
+	case VK_FORMAT_R32_SFLOAT:			return DeviceType::FLOAT;
+	case VK_FORMAT_R64_SFLOAT:			return DeviceType::DOUBLE;
+	case VK_FORMAT_R32G32_SFLOAT:		return DeviceType::VEC2;
+	case VK_FORMAT_R32G32B32_SFLOAT:	return DeviceType::VEC3;
+	case VK_FORMAT_R32G32B32A32_SFLOAT:	return DeviceType::VEC4;
+	case VK_FORMAT_R32G32_SINT:			return DeviceType::IVEC2;
+	case VK_FORMAT_R32G32B32_SINT:		return DeviceType::VEC3I;
+	case VK_FORMAT_R32G32B32A32_SINT:	return DeviceType::VEC4I;
+	case VK_FORMAT_R32G32_UINT:			return DeviceType::VEC2U;
+	case VK_FORMAT_R32G32B32_UINT:		return DeviceType::VEC3U;
+	case VK_FORMAT_R32G32B32A32_UINT:	return DeviceType::VEC4U;
+	case VK_FORMAT_R64G64_SFLOAT:		return DeviceType::VEC2D;
+	case VK_FORMAT_R64G64B64_SFLOAT:	return DeviceType::VEC3D;
+	case VK_FORMAT_R64G64B64A64_SFLOAT:	return DeviceType::VEC4D;
+	case VK_FORMAT_R8_SRGB:				return DeviceType::FLOAT;
+	case VK_FORMAT_R8G8_SRGB:			return DeviceType::VEC2;
+	case VK_FORMAT_R8G8B8_SRGB:			return DeviceType::VEC3;
+	case VK_FORMAT_R8G8B8A8_SRGB:		return DeviceType::VEC4;
+	case VK_FORMAT_R8_UNORM:			return DeviceType::FLOAT;
+	case VK_FORMAT_R8G8_UNORM:			return DeviceType::VEC2;
+	case VK_FORMAT_R8G8B8_UNORM:		return DeviceType::VEC3;
+	case VK_FORMAT_R8G8B8A8_UNORM:		return DeviceType::VEC4;
+	case VK_FORMAT_D16_UNORM:			return DeviceType::UINT;
+	case VK_FORMAT_D16_UNORM_S8_UINT:	return DeviceType::UINT;
+	case VK_FORMAT_D24_UNORM_S8_UINT:	return DeviceType::UINT;
+	case VK_FORMAT_D32_SFLOAT:			return DeviceType::FLOAT;
+	case VK_FORMAT_D32_SFLOAT_S8_UINT:	return DeviceType::DOUBLE;
+	case VK_FORMAT_B8G8R8_SRGB:			return DeviceType::VEC3;
+	case VK_FORMAT_B8G8R8A8_SRGB:		return DeviceType::VEC4;
+	case VK_FORMAT_B8G8R8_UNORM:		return DeviceType::VEC3;
+	case VK_FORMAT_B8G8R8A8_UNORM:		return DeviceType::VEC4;
 	}
 
 	SK_ERROR("Unsupported format specified: {0}.", format);
-	return Type(0);
+	return DeviceType(0);
 }
 
 size_t Image::formatSize(VkFormat format)

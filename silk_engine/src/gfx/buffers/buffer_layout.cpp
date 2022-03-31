@@ -1,5 +1,4 @@
 #include "buffer_layout.h"
-#include "gfx/enums.h"
 
 BufferLayout::BufferLayout(const std::initializer_list<BufferElement>& elements)
 {
@@ -11,13 +10,13 @@ BufferLayout::BufferLayout(const std::initializer_list<BufferElement>& elements)
 
 	for (const BufferElement& element : elements)
 	{
-		size_t size = EnumInfo::size(element.type);
+		size_t size = DeviceTypeInfo::size(element.type);
 		size_t actual_rows = (float)size / sizeof(glm::vec4);
 		size_t rows = actual_rows + ((size % sizeof(glm::vec4)) > 0);
 		for (size_t i = 0; i < rows; ++i)
 		{
 			VkVertexInputAttributeDescription attribute_description{};
-			attribute_description.format = EnumInfo::type(element.type);
+			attribute_description.format = DeviceTypeInfo::format(element.type);
 			attribute_description.location = location;
 
 			if (element.instanced)

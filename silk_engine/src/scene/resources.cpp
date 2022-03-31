@@ -103,6 +103,7 @@ void Resources::init()
 
     //PIPELINES
     {       
+        using enum DeviceType;
         addGraphicsPipeline("Lit 3D", [] 
             { 
                 shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
@@ -110,7 +111,7 @@ void Resources::init()
                     .enable(EnableTag::DEPTH_TEST)
                     .enable(EnableTag::DEPTH_WRITE)
                     .setShader(getShader("3D"))
-                    .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::VEC4 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
+                    .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
                     .setSampleCount(Graphics::swap_chain->getSampleCount())
                     .setRenderPass(*Graphics::swap_chain->getRenderPass())
                     .build();
@@ -125,7 +126,7 @@ void Resources::init()
                     .enable(EnableTag::DEPTH_TEST)
                     .enable(EnableTag::DEPTH_WRITE)
                     .setShader(getShader("3D"), { { "lit", &lit, sizeof(VkBool32) } })
-                    .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::VEC4 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
+                    .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
                     .setSampleCount(Graphics::swap_chain->getSampleCount())
                     .setRenderPass(*Graphics::swap_chain->getRenderPass())
                     .build();
@@ -140,7 +141,7 @@ void Resources::init()
                     .enable(EnableTag::DEPTH_WRITE)
                     .setDepthCompareOp(VK_COMPARE_OP_ALWAYS)
                     .setShader(getShader("2D"))
-                    .setVertexLayout({ { Type::VEC2 }, { Type::VEC2 }, { Type::VEC4 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
+                    .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
                     .setSampleCount(Graphics::swap_chain->getSampleCount())
                     .setRenderPass(*Graphics::swap_chain->getRenderPass())
                     .build();
@@ -156,7 +157,7 @@ void Resources::init()
                     .enable(EnableTag::DEPTH_WRITE)
                     .setDepthCompareOp(VK_COMPARE_OP_ALWAYS)
                     .setShader(getShader("Font"))
-                    .setVertexLayout({ { Type::VEC2 }, { Type::VEC2 }, { Type::VEC4 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
+                    .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
                     .setSampleCount(Graphics::swap_chain->getSampleCount())
                     .setRenderPass(*Graphics::swap_chain->getRenderPass())
                     .build();

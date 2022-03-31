@@ -1,5 +1,13 @@
 #include "timers.h"
 
+Timers::Timer::Timer(const Time& interval, int repeat, std::function<void()>&& on_tick)
+    : repeat(repeat),
+    interval(interval.asSeconds()),
+    next(Time::getTime() + this->interval),
+    on_tick(on_tick)
+{
+}
+
 void Timers::frameOnce(unsigned int frame_delay, std::function<void()>&& function)
 {
     frame_timers.emplace_back(frame_delay, 1, std::forward<std::function<void()>>(function));

@@ -14,6 +14,7 @@ void ParticleSystem::init()
     vao = mesh->vertex_array;
 	instance_vbo = makeShared<VertexBuffer>(nullptr, MAX_PARTICLES * sizeof(ParticleData));
 	
+    using enum DeviceType;
 	Resources::addGraphicsPipeline("Particle", []
                                    {
                                        shared<Shader> shader = makeShared<Shader>("particle");
@@ -22,7 +23,7 @@ void ParticleSystem::init()
                                            .enable(EnableTag::DEPTH_TEST)
                                            .enable(EnableTag::DEPTH_WRITE)
                                            .setShader(shader)
-                                           .setVertexLayout({ { Type::VEC2 }, { Type::VEC2 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
+                                           .setVertexLayout({ { VEC2 }, { VEC2 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
                                            .setSampleCount(Graphics::swap_chain->getSampleCount())
                                            .setRenderPass(*Graphics::swap_chain->getRenderPass())
                                            .build();

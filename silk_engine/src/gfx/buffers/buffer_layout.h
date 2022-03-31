@@ -1,10 +1,10 @@
 #pragma once
 
-#include "gfx/enums.h"
+#include "gfx/device_type.h"
 
 struct BufferElement
 {
-	Type type;
+	DeviceType type;
 	bool instanced = false;
 };
 

@@ -9,13 +9,7 @@ class Timers
         friend class Timers;
 
     public:
-        Timer(const Time& interval, int repeat, std::function<void()>&& on_tick)
-            : repeat(repeat),
-              interval(interval.asSeconds()),
-              next(Time::getTime() + this->interval),
-              on_tick(on_tick)
-        {
-        }
+        Timer(const Time& interval, int repeat, std::function<void()>&& on_tick);
 
     private:
         double interval;
