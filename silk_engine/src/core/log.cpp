@@ -1,6 +1,8 @@
 #include "log.h"
+#ifdef SK_ENABLE_DEBUG_OUTPUT
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
+#endif
 
 std::shared_ptr<spdlog::logger> Log::core_logger;
 std::shared_ptr<spdlog::logger> Log::client_logger;

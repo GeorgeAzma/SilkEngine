@@ -14,11 +14,10 @@
 #include "scene/meshes/rectangle_mesh.h"
 #include "core/input/input.h"
 #include "core/input/keys.h"
-#include <glm/gtc/matrix_transform.hpp>
    
 SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
-{ 
-    scene = makeShared<Scene>();  
+{  
+    scene = makeShared<Scene>();   
     SceneManager::add(scene);
     SceneManager::switchTo(scene);
 
@@ -39,7 +38,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 
     auto rectangle = Resources::getMesh("Rectangle");
     auto circle = Resources::getMesh("Circle");
-    entities.resize(100000);
+    entities.resize(10000);
     for (size_t i = 0; i < entities.size(); ++i)
     {
         entities[i] = scene->createEntity();
@@ -86,7 +85,7 @@ void SandboxApp::onUpdate()
     for(float x = 0; x < 100; ++x)
         for (float y = 0; y < 100; ++y)
             Renderer::rectangle(x * 5, y * 5, 4, 4);
-
+    
     Renderer::color({ 1, 1, 0, 1 });
     Renderer::triangle(0, 0, 100, 100, 200, 0);
 

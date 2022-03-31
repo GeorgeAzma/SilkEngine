@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
+set(MSVC_INCREMENTAL_DEFAULT ON)
 project(SilkEngine VERSION 1.0.0 LANGUAGES CXX)
 
 include(FetchContent)
@@ -43,12 +44,12 @@ list(APPEND EXTRA_LIBS
 
 #spdlog
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
+list(APPEND FETCHED_CONTENTS SPDLOG)
 FetchContent_Declare(SPDLOG
 GIT_REPOSITORY  https://github.com/gabime/spdlog
 GIT_TAG         v1.9.2
 GIT_SHALLOW     ON
 SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/spdlog
-UPDATE_COMMAND  ""
 )
 FetchContent_MakeAvailable(SPDLOG)
 endif()
@@ -65,7 +66,7 @@ CMAKE_ARGS   -DGLFW_BUILD_EXAMPLES=OFF
              -DGLFW_BUILD_DOCS=OFF
              -DGLFW_BUILD_TESTS=OFF
              -DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/vendor/glfw
-UPDATE_COMMAND  ""
+UPDATE_COMMAND ""
 )
 endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glfw/include)
@@ -73,12 +74,12 @@ list(APPEND EXTRA_LIBS ${PROJECT_SOURCE_DIR}/vendor/glfw/lib/${CMAKE_STATIC_LIBR
 
 #glm
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/glm/glm)
+list(APPEND FETCHED_CONTENTS GLM)
 FetchContent_Declare(GLM
 GIT_REPOSITORY  https://github.com/g-truc/glm
 GIT_TAG origin/master
 GIT_SHALLOW     ON
 SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/glm
-UPDATE_COMMAND  ""
 )
 FetchContent_MakeAvailable(GLM)
 endif()
@@ -86,12 +87,12 @@ list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glm)
 
 #entt
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/entt/src)
+list(APPEND FETCHED_CONTENTS ENTT)
 FetchContent_Declare(ENTT
 GIT_REPOSITORY  https://github.com/skypjack/entt
 GIT_TAG origin/master
 GIT_SHALLOW     ON
 SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/entt
-UPDATE_COMMAND  ""
 )
 FetchContent_MakeAvailable(ENTT)
 endif()
@@ -99,12 +100,12 @@ list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/entt/src)
 
 #stb
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/stb)
+list(APPEND FETCHED_CONTENTS STB)
 FetchContent_Declare(STB
 GIT_REPOSITORY   https://github.com/nothings/stb
 GIT_TAG origin/master
 GIT_SHALLOW     ON
 SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/stb
-UPDATE_COMMAND  ""
 )
 FetchContent_MakeAvailable(STB)
 endif()
@@ -118,7 +119,7 @@ GIT_REPOSITORY   https://github.com/freetype/freetype
 GIT_TAG origin/master
 GIT_SHALLOW     ON
 CMAKE_ARGS   -DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/vendor/freetype
-UPDATE_COMMAND  ""
+UPDATE_COMMAND ""
 )
 endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/freetype/include/freetype2)
@@ -126,14 +127,13 @@ list(APPEND EXTRA_LIBS ${PROJECT_SOURCE_DIR}/vendor/freetype/lib/${CMAKE_STATIC_
 
 #vma
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/vma/include)
+list(APPEND FETCHED_CONTENTS VMA)
 FetchContent_Declare(VMA
 GIT_REPOSITORY   https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
 GIT_TAG origin/master
 GIT_SHALLOW     ON
 SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/vma
-UPDATE_COMMAND  ""
 )
-FetchContent_MakeAvailable(VMA)
 endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/vma/include)
 
@@ -160,7 +160,7 @@ CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_SOURCE_DIR}/vendor/assimp/lib
                 -DASSIMP_INJECT_DEBUG_POSTFIX:BOOL=OFF
                 -DBUILD_SHARED_LIBS:BOOL=OFF
                 -DCMAKE_POLICY_DEFAULT_CMP0091:STRING=NEW
-UPDATE_COMMAND  ""
+UPDATE_COMMAND ""
 )
 endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/assimp/include)
@@ -169,6 +169,8 @@ ${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}assimp$<$<
 ${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zlibstatic$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
 ${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}irrXML$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
 )
+
+FetchContent_MakeAvailable(${FETCHED_CONTENTS})
 
 #Sub dirs
 add_subdirectory("silk_engine/src")

@@ -3,9 +3,12 @@
 #include "scene/instance.h"
 #include "scene/camera/camera.h"
 #include "buffers/uniform_buffer.h"
+#include "buffers/command_buffer.h"
 #include "buffers/indirect_buffer.h"
 #include "scene/light.h"
 #include "utils/color.h"
+#include "subrender.h"
+#include "utils/type_info.h"
 
 class Renderer
 {
@@ -15,6 +18,7 @@ class Renderer
 		shared<Image2D> image;
 		glm::mat4 transform;
 	} active;
+
 public:
 	static constexpr size_t MAX_LIGHTS = 64;
 
@@ -40,6 +44,34 @@ public:
 	static void update(Camera* camera = nullptr);
 	static void cleanup();
 	static void reset();
+
+	template<typename T>
+	static const T* getSubrender()
+	{
+		TypeId type_id = TypeInfo<Subrender>::getTypeId<T>();
+		if (auto it = subrenders.find(type_id);  it != subrenders.end() && it->second)
+			return (T*)(it->second.get());
+		return nullptr;
+	}
+
+	template<typename T>
+	static void addSubrender()
+	{
+		TypeId type_id = TypeInfo<Subrender>::getTypeId<T>();
+		subrenders.emplace(type_id, makeShared<T>());
+	}
+
+	template<typename T>
+	static void removeSubrender()
+	{
+		TypeId type_id = TypeInfo<Subrender>::getTypeId<T>();
+		subrenders.erase(type_id);
+	}
+
+	static void clearSubrenders()
+	{
+		subrenders.clear();
+	}
 
 	//States
 	static void transform(const glm::mat4& transform) { active.transform = transform; }
@@ -72,13 +104,24 @@ public:
 	static Light* addLight(const Light& light);
 	static void createInstance(const shared<RenderedInstance>& instance, const InstanceData& instance_data);
 	static void updateInstance(RenderedInstance& instance, const InstanceData& instance_data);
+	static InstanceBatch& getInstanceBatch(size_t index) { return instance_batches[index]; }
 	static void addInstanceBatch(const shared<RenderedInstance>& instance, const InstanceData& instance_data);
 	static void destroyInstance(const RenderedInstance& instance);
 
-public:
+private:
+	static void updateUniformData(Camera* camera);
+	static void updateDrawCommands();
+
+private:
 	static inline std::vector<InstanceBatch> instance_batches;
 	static inline std::vector<shared<RenderedInstance>> instances;
 	static inline unique<IndirectBuffer> indirect_buffer;
 	static inline unique<UniformBuffer> global_uniform_buffer;
 	static inline std::array<Light, MAX_LIGHTS> lights;
+
+	static inline CommandBuffer* command_buffer = nullptr;
+	static inline vk::Fence previous_frame_finished = VK_NULL_HANDLE;
+	static inline vk::Semaphore swap_chain_image_available = VK_NULL_HANDLE;
+	static inline vk::Semaphore render_finished = VK_NULL_HANDLE;
+	static inline std::unordered_map<TypeId, shared<Subrender>> subrenders;
 };

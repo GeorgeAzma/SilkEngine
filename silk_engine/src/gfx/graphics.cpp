@@ -23,7 +23,6 @@
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
-#include <GLFW/glfw3.h>
 
 void Graphics::init()
 {
@@ -34,12 +33,7 @@ void Graphics::init()
 	physical_device = new PhysicalDevice();
 	logical_device = new LogicalDevice();
 	allocator = new Allocator();
-	command_buffer = new CommandBuffer();
 	swap_chain = new SwapChain();
-
-	previous_frame_finished = Graphics::logical_device->createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
-	swap_chain_image_available = Graphics::logical_device->createSemaphore({});
-	render_finished = Graphics::logical_device->createSemaphore({});
 
 	Font::init();
 
@@ -49,10 +43,6 @@ void Graphics::init()
 void Graphics::cleanup()
 {
 	Font::cleanup();
-	Graphics::logical_device->destroyFence(previous_frame_finished);
-	Graphics::logical_device->destroySemaphore(swap_chain_image_available);
-	Graphics::logical_device->destroySemaphore(render_finished);
-	delete command_buffer;
 	delete swap_chain;
 	command_pools.clear();
 	delete allocator;
@@ -84,51 +74,26 @@ void Graphics::update()
 	}
 }
 
-void Graphics::beginFrame()
-{
-	logical_device->waitForFences({ previous_frame_finished }, VK_TRUE, UINT64_MAX);
-	logical_device->resetFences({ previous_frame_finished });
-	swap_chain->acquireNextImage(swap_chain_image_available);
-	command_buffer->begin();
-
-	vk::Viewport viewport = {};
-	viewport.x = 0.0f;
-	viewport.y = swap_chain->getExtent().height;
-	viewport.width = swap_chain->getExtent().width;
-	viewport.height = -(float)swap_chain->getExtent().height;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	getActiveCommandBuffer().setViewport({ viewport });
-
-	vk::Rect2D scissor = {};
-	scissor.offset = vk::Offset2D{ 0, 0 };
-	scissor.extent = vk::Extent2D{ (uint32_t)swap_chain->getExtent().width, (uint32_t)swap_chain->getExtent().height };
-	getActiveCommandBuffer().setScissor({ scissor });
-}
-
-void Graphics::endFrame()
-{
-	CommandBufferSubmitInfo submit_info{};
-	vk::PipelineStageFlags wait_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-	submit_info.wait_stages = &wait_stage;
-	submit_info.wait_semaphores = { swap_chain_image_available };
-	submit_info.signal_semaphores = { render_finished };
-	submit_info.fence = previous_frame_finished;
-	command_buffer->submit(submit_info);
-	Graphics::vulkanAssert(swap_chain->present(render_finished));
-}
-
 shared<CommandPool> Graphics::getActiveCommandPool()
 {
 	auto it = command_pools.find(std::this_thread::get_id());
 	if (it != command_pools.end())
 		return it->second;
+	std::scoped_lock lock(active_command_pool_mutex);
 	return command_pools.emplace(std::this_thread::get_id(), makeShared<CommandPool>()).first->second;
 }
 
 CommandBuffer& Graphics::getActiveCommandBuffer()
 {
 	return *command_buffers.at(std::this_thread::get_id());
+}
+
+CommandBuffer* Graphics::getActiveCommandBufferP()
+{
+	auto it = command_buffers.find(std::this_thread::get_id());
+	if (it != command_buffers.end())
+		return it->second;
+	return nullptr;
 }
 
 CommandBuffer& Graphics::getActivePrimaryCommandBuffer()

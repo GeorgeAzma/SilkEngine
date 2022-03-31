@@ -5,7 +5,6 @@
 #include "gfx/window/window.h"
 #include "core/input/keys.h"
 #include "utils/time.h"
-#include <glm/gtx/norm.hpp>
 
 void CameraController::onCreate()
 {

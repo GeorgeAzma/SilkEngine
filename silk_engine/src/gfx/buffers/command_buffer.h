@@ -66,6 +66,8 @@ public:
 	void submitIdle();
 
 	bool wasRecorded() const { return recorded; }
+	bool isRecording() const { return running; }
+	bool isPrimary() const { return is_primary; }
 
 private:
 	vk::CommandBufferLevel level;
@@ -77,18 +79,18 @@ private:
 
 	struct Active
 	{
-		vk::Pipeline pipeline = VK_NULL_HANDLE;
-		vk::PipelineLayout pipeline_layout = VK_NULL_HANDLE;
-		vk::PipelineBindPoint pipeline_bind_point = vk::PipelineBindPoint(VK_PIPELINE_BIND_POINT_MAX_ENUM);
-		vk::RenderPass render_pass = VK_NULL_HANDLE;
 		uint32_t subpass = 0;
-		vk::Framebuffer framebuffer = VK_NULL_HANDLE;
-		vk::QueryPool query_pool = VK_NULL_HANDLE;
-		std::vector<BoundDescriptorSet> descriptor_sets;
-		vk::Buffer index_buffer = VK_NULL_HANDLE;
+		std::vector<BoundDescriptorSet> descriptor_sets{};
 		vk::DeviceSize index_buffer_offset = 0;
-		std::vector<OffsetVertexBuffer> vertex_buffers;
+		std::vector<OffsetVertexBuffer> vertex_buffers{};
 
+		std::optional<vk::PipelineBindPoint> pipeline_bind_point = vk::PipelineBindPoint(VK_PIPELINE_BIND_POINT_MAX_ENUM);
+		std::optional<vk::Pipeline> pipeline = {};
+		std::optional<vk::PipelineLayout> pipeline_layout = {};
+		std::optional<vk::RenderPass> render_pass = {};
+		std::optional<vk::QueryPool> query_pool = {};
+		std::optional<vk::Framebuffer> framebuffer = {};
+		std::optional<vk::Buffer> index_buffer = {};
 		std::optional<vk::Viewport> viewport = {};
 		std::optional<vk::Rect2D> scissor = {};
 		std::optional<float> line_width = {};

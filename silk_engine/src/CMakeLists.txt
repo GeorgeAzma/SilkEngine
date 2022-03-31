@@ -1,6 +1,6 @@
 project(SilkEngine VERSION 1.0.0 LANGUAGES CXX)
 
-file(GLOB_RECURSE SILK_ENGINE_SOURCES "${PROJECT_SOURCE_DIR}/*.cpp")
+file(GLOB_RECURSE SILK_ENGINE_SOURCES "*.cpp")
 add_library(SilkEngine STATIC ${SILK_ENGINE_SOURCES})
 target_include_directories(SilkEngine PUBLIC ${INCLUDE_DIRS} ${PROJECT_SOURCE_DIR})
 add_dependencies(SilkEngine ${DEPENDENCIES_TO_ADD})
@@ -22,28 +22,44 @@ target_precompile_headers(SilkEngine PUBLIC
 <string>
 <unordered_map>
 <thread>
-
-#Less useful
-<unordered_set>
-<set>
+<functional>
+<algorithm>
 <map>
 <filesystem>
 <fstream>
-<functional>
-<algorithm>
-<queue>
 <mutex>
+<optional>
+
+#Less useful
+<atomic>
+<chrono>
+<initializer_list>
+<exception>
+<type_traits>
+<typeinfo>
+<typeindex>
+<unordered_set>
+<set>
+<queue>
+<sstream>
+<future>
 
 #Non std
-<glm/gtx/norm.hpp> # length2(), distance2()
 <glm/glm.hpp>
+<glm/gtx/norm.hpp> # length2(), distance2()
+<glm/gtc/constants.hpp> # pi, etc
+<glm/gtc/matrix_transform.hpp> # ortho() perspective() etc.
+<vulkan/vulkan.hpp>
+<vk_mem_alloc.h>
+<GLFW/glfw3.h>
 
 #project sources
-core/base.h
-core/log.h
-utils/RNG.h
-utils/math.h
+[["core/base.h"]] #Very rarely changed
+[["core/log.h"]] #Not changed
+[["utils/RNG.h"]] #Not changed
+[["utils/math.h"]] #Rarely changed, but useful
 )
+set(CMAKE_PCH_INSTANTIATE_TEMPLATES ON)
 
 #Link
 target_link_libraries(SilkEngine ${EXTRA_LIBS})

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <typeindex>
-
 //EVENT
 class Event
 {

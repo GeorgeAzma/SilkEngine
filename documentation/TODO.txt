@@ -1,5 +1,6 @@
 - Multiple render passes
-- drawRectangle() etc. instanced functions
+- Deffer command buffer submission
+- faster immidiate drawing
 - Whenever you bind something with command buffer, it saves the state and when you submit it, it resets the state
 - Fast Culling
 - Handle normal/other maps and materials in shader

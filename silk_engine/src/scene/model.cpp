@@ -2,6 +2,8 @@
 #include "io/file.h"
 #include "resources.h"
 #include "gfx/graphics.h"
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 Model::Model(std::string_view file)
 {

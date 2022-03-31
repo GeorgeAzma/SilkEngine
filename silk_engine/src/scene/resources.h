@@ -19,9 +19,10 @@ class Resources
 		shared<T> resource = nullptr;
 		shared<T>& fetch()
 		{
-			if(!resource.get())
-				return (resource = fetch_function());
-			return resource;
+			if(resource.get())
+				return resource;
+			SK_ASSERT(fetch_function != nullptr, "Couldn't fetch resource, because fetch function provided was nullptr");
+			return (resource = fetch_function());
 		}
 	};
 
@@ -56,7 +57,7 @@ private:
 	static shared<T> fetch(std::unordered_map<std::string_view, Resource<T>>& resources, std::string_view name)
 	{ 
 		auto it = resources.find(name);
-		return it == resources.end() ? nullptr : it->second.fetch();
+		return it != resources.end() ? it->second.fetch() : nullptr;
 	}
 
 	template<typename T>

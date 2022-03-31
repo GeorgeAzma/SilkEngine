@@ -1,7 +1,5 @@
 #pragma once
 
-#include <chrono>
-
 class DebugTimer
 {
 public:

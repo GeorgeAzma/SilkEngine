@@ -25,9 +25,9 @@ void CommandBuffer::begin(vk::CommandBufferUsageFlags usage)
 	{
 		SK_ASSERT(!is_primary, "Only primary command buffers can have eRenderPassContinue flag");
 		const auto& primary_command_buffer = Graphics::getActivePrimaryCommandBuffer();
-		inheritance_info.renderPass = primary_command_buffer.getActive().render_pass;
+		inheritance_info.renderPass = *primary_command_buffer.getActive().render_pass;
 		inheritance_info.subpass = primary_command_buffer.getActive().subpass;
-		inheritance_info.framebuffer = primary_command_buffer.getActive().framebuffer;
+		inheritance_info.framebuffer = *primary_command_buffer.getActive().framebuffer;
 		//inheritance_info.occlusionQueryEnable = ; //TODO:
 		//inheritance_info.pipelineStatistics = ;  //TODO:
 	}
@@ -168,7 +168,7 @@ void CommandBuffer::bindDescriptorSets(uint32_t first, const std::vector<vk::Des
 	}
 	if (!needs_binding)
 		return;
-	vk::CommandBuffer::bindDescriptorSets(active.pipeline_bind_point, active.pipeline_layout, first, sets, dynamic_offsets);
+	vk::CommandBuffer::bindDescriptorSets(*active.pipeline_bind_point, *active.pipeline_layout, first, sets, dynamic_offsets);
 	active.descriptor_sets.resize(std::max(first + sets.size(), active.descriptor_sets.size()));
 	for (size_t i = 0; i < sets.size(); ++i)
 	{
@@ -240,7 +240,7 @@ void CommandBuffer::endQuery(vk::QueryPool query_pool, uint32_t query)
 	if (active.query_pool != query_pool)
 		return;
 	vk::CommandBuffer::endQuery(query_pool, query);
-	active.query_pool = VK_NULL_HANDLE;
+	active.query_pool = {};
 }
 
 void CommandBuffer::beginRenderPass(const vk::RenderPassBeginInfo& render_pass_begin_info, vk::SubpassContents contents)
@@ -266,7 +266,9 @@ void CommandBuffer::endRenderPass()
 	if (active.render_pass == vk::RenderPass(VK_NULL_HANDLE))
 		return;
 	vk::CommandBuffer::endRenderPass();
-	active.render_pass = VK_NULL_HANDLE;
+	active.render_pass = {};
+	active.framebuffer = {};
+	active.render_area = {};
 }
 
 void CommandBuffer::executeCommands(const std::vector<vk::CommandBuffer>& command_buffers)

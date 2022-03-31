@@ -7,7 +7,7 @@
 #include "scene/meshes/bezier_mesh.h"
 #include "scene/meshes/triangle_mesh.h"
 #include "gfx/buffers/command_buffer.h"
-#include <glm/gtc/matrix_transform.hpp>
+#include "gfx/devices/logical_device.h"
 
 void Renderer::init()
 {
@@ -16,10 +16,20 @@ void Renderer::init()
 	global_uniform_buffer = makeUnique<UniformBuffer>(sizeof(GlobalUniformData));
 	lights.fill(Light{});
 	active.image = Resources::white_image;
+
+	previous_frame_finished = Graphics::logical_device->createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
+	swap_chain_image_available = Graphics::logical_device->createSemaphore({});
+	render_finished = Graphics::logical_device->createSemaphore({});
+
+	command_buffer = new CommandBuffer();
 }
 
 void Renderer::cleanup()
 {
+	Graphics::logical_device->destroyFence(previous_frame_finished);
+	Graphics::logical_device->destroySemaphore(swap_chain_image_available);
+	Graphics::logical_device->destroySemaphore(render_finished);
+	delete command_buffer;
 	active.image = nullptr;
 	instances.clear();
 	instance_batches.clear();
@@ -140,50 +150,28 @@ void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const sha
 
 void Renderer::update(Camera* camera)
 {
-	GlobalUniformData global_uniform_data{};
-	if (camera)
-	{
-		global_uniform_data.projection_view = camera->projection_view;
-		global_uniform_data.projection = camera->projection;
-		global_uniform_data.view = camera->view;
-		global_uniform_data.camera_position = camera->position;
-		global_uniform_data.camera_direction = camera->direction;
-	}
-	if (false /*Is main_camera 2D?*/)
-	{
-		//TODO: Support orthographic 2D camera  
-	}
-	else
-	{
-		global_uniform_data.projection_view2D = glm::ortho(0.0f, (float)Window::getWidth(), 0.0f, (float)Window::getHeight(), 0.0f, 1.0f);
-	}
-	global_uniform_data.delta_time = Time::dt;
-	global_uniform_data.time = Time::runtime;
-	global_uniform_data.frame = Time::frame;
-	global_uniform_data.resolution = glm::uvec2(Window::getWidth(), Window::getHeight());
-	global_uniform_data.lights = lights;
+	updateUniformData(camera);
+	updateDrawCommands();
 
-	global_uniform_buffer->setData(&global_uniform_data, sizeof(GlobalUniformData));
+	Graphics::logical_device->waitForFences({ previous_frame_finished }, VK_TRUE, UINT64_MAX);
+	Graphics::logical_device->resetFences({ previous_frame_finished });
+	Graphics::swap_chain->acquireNextImage(swap_chain_image_available);
 
-	//Drawing	
-	bool any_needs_update = false;
-	static std::vector<vk::DrawIndexedIndirectCommand> draw_commands;
-	draw_commands.resize(instance_batches.size());
-	for (size_t i = 0; i < instance_batches.size(); ++i)
-	{
-		if (instance_batches[i].needs_update)
-		{
-			instance_batches[i].instance_buffer->setData(instance_batches[i].instance_data.data(), instance_batches[i].instance_data.size() * sizeof(InstanceData));
-			instance_batches[i].needs_update = false;
-			vk::DrawIndexedIndirectCommand draw_command{};
-			draw_command.instanceCount = instance_batches[i].instance_data.size();
-			draw_command.indexCount = instance_batches[i].instance->mesh->indices.size();
-			draw_commands[i] = std::move(draw_command);
-			any_needs_update = true;
-		}
-	}
-	if (any_needs_update)
-		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(vk::DrawIndexedIndirectCommand));
+	//Set viewport
+	command_buffer->begin();
+	vk::Viewport viewport = {};
+	viewport.x = 0.0f;
+	viewport.y = Graphics::swap_chain->getExtent().height;
+	viewport.width = Graphics::swap_chain->getExtent().width;
+	viewport.height = -(float)Graphics::swap_chain->getExtent().height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	Graphics::getActiveCommandBuffer().setViewport({ viewport });
+
+	vk::Rect2D scissor = {};
+	scissor.offset = vk::Offset2D{ 0, 0 };
+	scissor.extent = vk::Extent2D{ (uint32_t)Graphics::swap_chain->getExtent().width, (uint32_t)Graphics::swap_chain->getExtent().height };
+	Graphics::getActiveCommandBuffer().setScissor({ scissor });
 
 	//Draw instances
 	Graphics::swap_chain->getRenderPass()->begin(*Graphics::swap_chain->getActiveFramebuffer(), vk::SubpassContents::eInline);
@@ -201,8 +189,22 @@ void Renderer::update(Camera* camera)
 		Graphics::getActiveCommandBuffer().drawIndexedIndirect(*indirect_buffer, draw_index * sizeof(vk::DrawIndexedIndirectCommand), 1, sizeof(vk::DrawIndexedIndirectCommand));
 		++draw_index;
 	}
+
+	//Draw subrenders
+	for (const auto& subrender : subrenders)
+		if (subrender.second && subrender.second->enabled)
+			subrender.second->render();
+
 	//End draw
 	Graphics::swap_chain->getRenderPass()->end();
+	CommandBufferSubmitInfo submit_info{};
+	vk::PipelineStageFlags wait_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+	submit_info.wait_stages = &wait_stage;
+	submit_info.wait_semaphores = { swap_chain_image_available };
+	submit_info.signal_semaphores = { render_finished };
+	submit_info.fence = previous_frame_finished;
+	command_buffer->submit(submit_info);
+	Graphics::vulkanAssert(Graphics::swap_chain->present(render_finished));
 
 	Graphics::stats.instance_batches += instance_batches.size();
 	for (const auto& instance_batch : instance_batches)
@@ -319,4 +321,54 @@ void Renderer::destroyInstance(const RenderedInstance& instance)
 
 	std::swap(instance_batch.instances[instance.instance_data_index], instance_batch.instances.back());
 	instance_batch.instances.pop_back();
+}
+
+void Renderer::updateUniformData(Camera* camera)
+{
+	GlobalUniformData global_uniform_data{};
+	if (camera)
+	{
+		global_uniform_data.projection_view = camera->projection_view;
+		global_uniform_data.projection = camera->projection;
+		global_uniform_data.view = camera->view;
+		global_uniform_data.camera_position = camera->position;
+		global_uniform_data.camera_direction = camera->direction;
+	}
+	if (false /*Is main_camera 2D?*/)
+	{
+		//TODO: Support orthographic 2D camera  
+	}
+	else
+	{
+		global_uniform_data.projection_view2D = glm::ortho(0.0f, (float)Window::getWidth(), 0.0f, (float)Window::getHeight(), 0.0f, 1.0f);
+	}
+	global_uniform_data.delta_time = Time::dt;
+	global_uniform_data.time = Time::runtime;
+	global_uniform_data.frame = Time::frame;
+	global_uniform_data.resolution = glm::uvec2(Window::getWidth(), Window::getHeight());
+	global_uniform_data.lights = lights;
+
+	global_uniform_buffer->setData(&global_uniform_data, sizeof(GlobalUniformData));
+}
+
+void Renderer::updateDrawCommands()
+{	
+	bool any_needs_update = false;
+	static std::vector<vk::DrawIndexedIndirectCommand> draw_commands;
+	draw_commands.resize(instance_batches.size());
+	for (size_t i = 0; i < instance_batches.size(); ++i)
+	{
+		if (instance_batches[i].needs_update)
+		{
+			instance_batches[i].instance_buffer->setData(instance_batches[i].instance_data.data(), instance_batches[i].instance_data.size() * sizeof(InstanceData));
+			instance_batches[i].needs_update = false;
+			vk::DrawIndexedIndirectCommand draw_command{};
+			draw_command.instanceCount = instance_batches[i].instance_data.size();
+			draw_command.indexCount = instance_batches[i].instance->mesh->indices.size();
+			draw_commands[i] = std::move(draw_command);
+			any_needs_update = true;
+		}
+	}
+	if (any_needs_update)
+		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(vk::DrawIndexedIndirectCommand));
 }

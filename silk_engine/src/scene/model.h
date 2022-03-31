@@ -3,10 +3,12 @@
 #include "instance.h"
 #include "meshes/mesh3D.h"
 #include "gfx/images/image2D.h"
-
 #include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+
+class aiNode;
+class aiMesh;
+class aiMaterial;
+enum aiTextureType;
 
 class RawModel
 {

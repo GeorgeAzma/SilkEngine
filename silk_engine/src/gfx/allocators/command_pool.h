@@ -1,8 +1,5 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
-#include <optional>
-
 class CommandPool : NonCopyable
 {
 public:

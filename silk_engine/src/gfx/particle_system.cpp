@@ -6,7 +6,6 @@
 #include "scene/scene_manager.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/buffers/command_buffer.h"
-#include <glm/gtc/matrix_transform.hpp>
 
 void ParticleSystem::init()
 {

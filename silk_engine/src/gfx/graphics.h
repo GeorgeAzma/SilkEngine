@@ -45,17 +45,13 @@ public:
 	static void cleanup();
 	static void update();
 
-	static void beginFrame();
-	static void endFrame();
-
 	static shared<CommandPool> getActiveCommandPool();
 	static CommandBuffer& getActiveCommandBuffer();
+	static CommandBuffer* getActiveCommandBufferP();
 	static CommandBuffer& getActivePrimaryCommandBuffer();
 	static void setActiveCommandBuffer(CommandBuffer* command_buffer);
 	static void setActivePrimaryCommandBuffer(CommandBuffer* command_buffer);
-
 	static void screenshot(std::string_view file);
-
 	static void vulkanAssert(vk::Result result);
 
 public:
@@ -67,14 +63,11 @@ public:
 	static inline std::unordered_map<std::thread::id, shared<CommandPool>> command_pools;
 	static inline SwapChain* swap_chain = nullptr;
 	static inline Alarm command_pool_purge_alarm = Alarm(5s);
-	static inline CommandBuffer* command_buffer = nullptr;
-	static inline VkFence previous_frame_finished = VK_NULL_HANDLE;
-	static inline VkSemaphore swap_chain_image_available = VK_NULL_HANDLE;
-	static inline VkSemaphore render_finished = VK_NULL_HANDLE;
 
 private:
 	static inline std::mutex active_command_buffer_mutex;
 	static inline std::mutex active_primary_command_buffer_mutex;
+	static inline std::mutex active_command_pool_mutex;
 	static inline std::unordered_map<std::thread::id, CommandBuffer*> command_buffers;
 	static inline std::unordered_map<std::thread::id, CommandBuffer*> primary_command_buffers;
 };

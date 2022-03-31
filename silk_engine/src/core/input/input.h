@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/event.h"
-#include <GLFW/glfw3.h>
 
 enum class CursorHotSpot
 {
