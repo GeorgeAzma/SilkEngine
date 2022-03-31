@@ -10,6 +10,14 @@
 #include "gfx/buffers/uniform_buffer.h"
 #include "gfx/window/swap_chain.h"
 #include "gfx/descriptors/descriptor_set_layout.h"
+#include "gfx/pipeline/graphics_pipeline.h"
+#include "gfx/pipeline/compute_pipeline.h"
+#include "gfx/allocators/command_pool.h"
+#include "utils/thread_pool.h"
+#include "model.h"
+#include "gfx/ui/font.h"
+
+ThreadPool Resources::pool;
 
 void Resources::init()
 {

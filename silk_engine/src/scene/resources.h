@@ -1,12 +1,14 @@
 #pragma once
 
-#include "meshes/mesh.h"
-#include "model.h"
-#include "gfx/pipeline/graphics_pipeline.h"
-#include "gfx/pipeline/compute_pipeline.h"
-#include "gfx/ui/font.h"
-#include "gfx/allocators/command_pool.h"
-#include "utils/thread_pool.h"
+class Mesh;
+class Model;
+class Font;
+class GraphicsPipeline;
+class ComputePipeline;
+class ThreadPool;
+class DescriptorSetLayout;
+class Image2D;
+class Shader;
 
 class Resources
 {
@@ -49,7 +51,7 @@ public:
 	static void addDescriptorSetLayout(const shared<DescriptorSetLayout>& descriptor_layout);
 
 public:
-	static inline ThreadPool pool;
+	static ThreadPool pool;
 	static inline shared<Image2D> white_image = nullptr;
 
 private:

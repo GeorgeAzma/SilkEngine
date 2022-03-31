@@ -6,6 +6,7 @@
 #include "scene/scene_manager.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/buffers/command_buffer.h"
+#include "utils/thread_pool.h"
 
 void ParticleSystem::init()
 {
