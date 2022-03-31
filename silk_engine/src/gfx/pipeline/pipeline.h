@@ -2,6 +2,21 @@
 
 #include "shader.h"
 
+
+enum class EnableTag
+{
+	DEPTH_TEST,
+	DEPTH_WRITE,
+	STENCIL_TEST,
+	COLOR_BLENDING,
+	SAMPLE_SHADING,
+	PRIMITIVE_RESTART,
+	RASTERIZER_DISCARD,
+	DEPTH_CLAMP,
+	DEPTH_BIAS,
+	COLOR_BLEND_LOGIC_OP
+};
+
 class Pipeline : NonCopyable
 {
 public:
@@ -24,15 +39,15 @@ public:
 	void pushConstant(std::string_view name, const void* data) const;
 
 	const shared<Shader>& getShader() const { return shader; }
-	const vk::PipelineLayout& getLayout() const { return layout; }
-	operator const vk::Pipeline& () const { return pipeline; }
+	const VkPipelineLayout& getLayout() const { return layout; }
+	operator const VkPipeline& () const { return pipeline; }
 
 protected:
 	struct StageSpecializationInfo
 	{
-		vk::SpecializationInfo specialization_info;
+		VkSpecializationInfo specialization_info;
 		std::vector<uint8_t> constant_data;
-		std::vector<vk::SpecializationMapEntry> entries;
+		std::vector<VkSpecializationMapEntry> entries;
 	};
 
 protected:
@@ -40,14 +55,14 @@ protected:
 	virtual void create() = 0;
 
 protected:
-	vk::PipelineCache cache;
-	vk::Pipeline pipeline;
-	vk::PipelineLayout layout;
+	VkPipelineCache cache;
+	VkPipeline pipeline;
+	VkPipelineLayout layout;
 
-	vk::PipelineLayoutCreateInfo pipeline_layout_info{};
-	std::vector<vk::PushConstantRange> push_constant_ranges;
-	std::vector<vk::DescriptorSetLayout> descriptor_set_layouts;
+	VkPipelineLayoutCreateInfo pipeline_layout_info{};
+	std::vector<VkPushConstantRange> push_constant_ranges;
+	std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
 	shared<Shader> shader = nullptr;
-	std::vector<vk::PipelineShaderStageCreateInfo> shader_stage_infos;
+	std::vector<VkPipelineShaderStageCreateInfo> shader_stage_infos;
 	std::vector<StageSpecializationInfo> stage_specialization_infos{};
 };

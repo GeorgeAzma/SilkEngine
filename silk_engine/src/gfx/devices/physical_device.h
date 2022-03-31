@@ -17,47 +17,47 @@ class PhysicalDevice : NonCopyable
 public:
 	PhysicalDevice();
 
-	vk::Device createLogicalDevice(const vk::DeviceCreateInfo& create_info) const;
+	VkDevice createLogicalDevice(const VkDeviceCreateInfo& create_info) const;
 
 	void updateSurfaceDetails();
 	void updateSurfaceCapabilities();
-	vk::Format findSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features) const;
+	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const;
 
 	const QueueFamilyIndices& getQueueFamilyIndices() const { return queue_family_indices; }
-	const vk::PhysicalDeviceProperties& getProperties() const { return properties; }
-	const vk::PhysicalDeviceFeatures& getFeatures() const { return features; }
-	vk::SampleCountFlagBits getMaxSampleCount() const { return max_usable_sample_count; }
-	vk::SurfaceCapabilitiesKHR getSurfaceCapabilities() const { return surface_capabilities; }
-	std::vector<vk::SurfaceFormatKHR> getSurfaceFormats() const { return surface_formats; }
-	std::vector<vk::PresentModeKHR> getPresentModes() const { return present_modes; }
-	vk::FormatProperties getFormatProperties(vk::Format format) const;
-	vk::ImageFormatProperties getImageFormatProperties(vk::Format format, vk::ImageType type, vk::ImageTiling tilling, vk::ImageUsageFlags usage, vk::ImageCreateFlags flags) const;
-	vk::Format getDepthFormat() const { return depth_format; }
-	vk::Format getStencilFormat() const { return stencil_format; }
-	operator const vk::PhysicalDevice& () const { return physical_device; }
+	const VkPhysicalDeviceProperties& getProperties() const { return properties; }
+	const VkPhysicalDeviceFeatures& getFeatures() const { return features; }
+	VkSampleCountFlagBits getMaxSampleCount() const { return max_usable_sample_count; }
+	VkSurfaceCapabilitiesKHR getSurfaceCapabilities() const { return surface_capabilities; }
+	std::vector<VkSurfaceFormatKHR> getSurfaceFormats() const { return surface_formats; }
+	std::vector<VkPresentModeKHR> getPresentModes() const { return present_modes; }
+	VkFormatProperties getFormatProperties(VkFormat format) const;
+	VkImageFormatProperties getImageFormatProperties(VkFormat format, VkImageType type, VkImageTiling tilling, VkImageUsageFlags usage, VkImageCreateFlags flags) const;
+	VkFormat getDepthFormat() const { return depth_format; }
+	VkFormat getStencilFormat() const { return stencil_format; }
+	operator const VkPhysicalDevice& () const { return physical_device; }
 
 private:
-	static QueueFamilyIndices findQueueFamilies(vk::PhysicalDevice physical_device);
-	static vk::PhysicalDevice chooseMostSuitablePhysicalDevice(const std::vector<vk::PhysicalDevice>& physical_devices);
-	static int ratePhysicalDevice(vk::PhysicalDevice physical_device);
-	static bool checkPhysicalDeviceExtensionSupport(const std::vector<const char*>& required_extensions, vk::PhysicalDevice physical_device);
-	static vk::SampleCountFlagBits getMaxSampleCount(vk::SampleCountFlags counts);	
-	vk::Format findDepthFormat() const;
-	vk::Format findStencilFormat() const;
+	static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physical_device);
+	static VkPhysicalDevice chooseMostSuitablePhysicalDevice(const std::vector<VkPhysicalDevice>& physical_devices);
+	static int ratePhysicalDevice(VkPhysicalDevice physical_device);
+	static bool checkPhysicalDeviceExtensionSupport(const std::vector<const char*>& required_extensions, VkPhysicalDevice physical_device);
+	static VkSampleCountFlagBits getMaxSampleCount(VkSampleCountFlags counts);	
+	VkFormat findDepthFormat() const;
+	VkFormat findStencilFormat() const;
 
 private:
-	vk::PhysicalDevice physical_device = VK_NULL_HANDLE;
+	VkPhysicalDevice physical_device = VK_NULL_HANDLE;
 
 	QueueFamilyIndices queue_family_indices = {};
 
-	vk::PhysicalDeviceProperties properties;
-	vk::PhysicalDeviceFeatures features;
-	vk::SampleCountFlagBits max_usable_sample_count;
+	VkPhysicalDeviceProperties properties;
+	VkPhysicalDeviceFeatures features;
+	VkSampleCountFlagBits max_usable_sample_count;
 
-	vk::SurfaceCapabilitiesKHR surface_capabilities;
-	std::vector<vk::SurfaceFormatKHR> surface_formats;
-	std::vector<vk::PresentModeKHR> present_modes;
+	VkSurfaceCapabilitiesKHR surface_capabilities;
+	std::vector<VkSurfaceFormatKHR> surface_formats;
+	std::vector<VkPresentModeKHR> present_modes;
 
-	vk::Format depth_format;
-	vk::Format stencil_format;
+	VkFormat depth_format;
+	VkFormat stencil_format;
 };

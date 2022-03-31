@@ -3,20 +3,20 @@
 class QueryPool
 {
 public:
-	QueryPool(vk::QueryType query_type = vk::QueryType::eOcclusion, uint32_t query_count = 1, vk::QueryPipelineStatisticFlags pipeline_statistic_flags = vk::QueryPipelineStatisticFlags(0));
+	QueryPool(VkQueryType query_type = VK_QUERY_TYPE_OCCLUSION, uint32_t query_count = 1, VkQueryPipelineStatisticFlags pipeline_statistic_flags = 0);
 	~QueryPool();
 
-	void begin(uint32_t index = 0, vk::QueryControlFlags flags = vk::QueryControlFlagBits::ePrecise);
+	void begin(uint32_t index = 0, VkQueryControlFlags flags = VK_QUERY_CONTROL_PRECISE_BIT);
 	void end(uint32_t index = 0);
 
 	uint64_t getResult(uint32_t index = 0, bool wait = false);
 
-	operator const vk::QueryPool& () const { return query_pool; }
+	operator const VkQueryPool& () const { return query_pool; }
 
 private:
-	vk::QueryPool query_pool;
-	vk::QueryType query_type;
-	vk::QueryPipelineStatisticFlags pipeline_statistic_flags;
-	std::vector<vk::Bool32> queries;
+	VkQueryPool query_pool = VK_NULL_HANDLE;
+	VkQueryType query_type;
+	VkQueryPipelineStatisticFlags pipeline_statistic_flags;
+	std::vector<VkBool32> queries;
 	std::vector<uint64_t> results;
 };

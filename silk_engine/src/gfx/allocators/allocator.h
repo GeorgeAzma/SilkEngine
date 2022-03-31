@@ -9,5 +9,5 @@ public:
 	operator const VmaAllocator& () const { return allocator; }
 
 private:
-	VmaAllocator allocator;
+	VmaAllocator allocator = VK_NULL_HANDLE;
 };

@@ -5,5 +5,5 @@
 class StorageBuffer : public Buffer
 {
 public:
-	StorageBuffer(vk::DeviceSize size, VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_CPU_TO_GPU, vk::BufferUsageFlags usage_flags = vk::BufferUsageFlags(0));
+	StorageBuffer(VkDeviceSize size, VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_CPU_TO_GPU, VkBufferUsageFlags usage_flags = VkBufferUsageFlags(0));
 };

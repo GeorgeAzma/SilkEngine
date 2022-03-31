@@ -5,7 +5,8 @@
 
 Sampler::Sampler(const SamplerProps& props)
 {
-	vk::SamplerCreateInfo ci{};
+	VkSamplerCreateInfo ci{};
+	ci.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 	ci.magFilter = props.min_filter;
 	ci.minFilter = props.mag_filter;
 	ci.addressModeU = props.u_wrap;
@@ -21,11 +22,11 @@ Sampler::Sampler(const SamplerProps& props)
 		ci.anisotropyEnable = VK_FALSE;
 		ci.maxAnisotropy = 1.0f;
 	}
-	ci.borderColor = vk::BorderColor::eIntOpaqueBlack;
+	ci.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 	ci.unnormalizedCoordinates = VK_FALSE;
 	ci.compareEnable = VK_FALSE;
-	ci.compareOp = vk::CompareOp::eAlways;
-	ci.mipmapMode = props.linear_mipmap ? vk::SamplerMipmapMode::eLinear : vk::SamplerMipmapMode::eNearest;
+	ci.compareOp = VK_COMPARE_OP_ALWAYS;
+	ci.mipmapMode = props.linear_mipmap ? VK_SAMPLER_MIPMAP_MODE_LINEAR : VK_SAMPLER_MIPMAP_MODE_NEAREST;
 	ci.mipLodBias = 0.0f;
 	ci.minLod = 0.0f;
 	ci.maxLod = props.mip_levels;

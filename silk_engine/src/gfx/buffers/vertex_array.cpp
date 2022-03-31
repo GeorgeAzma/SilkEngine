@@ -23,7 +23,7 @@ VertexArray& VertexArray::setIndexBuffer(shared<IndexBuffer> index_buffer)
 
 void VertexArray::bind()
 {
-	std::vector<vk::Buffer> buffers(vertex_buffers.size());
+	std::vector<VkBuffer> buffers(vertex_buffers.size());
 	for (size_t i = 0; i < vertex_buffers.size(); ++i)
 		buffers[i] = *vertex_buffers[i];
 	Graphics::getActiveCommandBuffer().bindVertexBuffers(0, buffers);

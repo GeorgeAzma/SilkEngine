@@ -4,63 +4,79 @@
 
 struct CommandBufferSubmitInfo
 {
-	vk::Fence fence = VK_NULL_HANDLE;
-	std::vector<vk::Semaphore> wait_semaphores = {};
-	std::vector<vk::Semaphore> signal_semaphores = {};
-	vk::PipelineStageFlags* wait_stages = nullptr;
+	VkFence fence = VK_NULL_HANDLE;
+	std::vector<VkSemaphore> wait_semaphores = {};
+	std::vector<VkSemaphore> signal_semaphores = {};
+	VkPipelineStageFlags* wait_stages = nullptr;
 };
 
-class CommandBuffer : public vk::CommandBuffer, NonCopyable
+class CommandBuffer : NonCopyable
 {
 	struct BoundDescriptorSet
 	{
-		vk::DescriptorSet set = VK_NULL_HANDLE;
+		VkDescriptorSet set = VK_NULL_HANDLE;
 		std::vector<uint32_t> dynamic_offsets;
 	};
 	struct OffsetVertexBuffer
 	{
-		vk::Buffer vertex_buffer = VK_NULL_HANDLE;
-		vk::DeviceSize offset = 0;
+		VkBuffer vertex_buffer = VK_NULL_HANDLE;
+		VkDeviceSize offset = 0;
 	};
 public:
-	CommandBuffer(vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary, vk::QueueFlagBits queue_type = vk::QueueFlagBits::eGraphics);
+	CommandBuffer(VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY, VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT);
 	~CommandBuffer();
 
-	void begin(vk::CommandBufferUsageFlags usage = vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+	void begin(VkCommandBufferUsageFlags usage = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 	void end();
+	void beginQuery(VkQueryPool query_pool, uint32_t query, VkQueryControlFlags flags);
+	void endQuery(VkQueryPool query_pool, uint32_t query);
+	void beginRenderPass(const VkRenderPassBeginInfo& render_pass_begin_info, VkSubpassContents contents);
+	void nextSubpass(VkSubpassContents contents);
+	void endRenderPass();
 
-	void bindPipeline(vk::PipelineBindPoint bind_point, vk::Pipeline pipeline, vk::PipelineLayout layout);
-	void setViewport(vk::Viewport viewport);
-	void setScissor(vk::Rect2D scissor);
+	void bindPipeline(VkPipelineBindPoint bind_point, VkPipeline pipeline, VkPipelineLayout layout);
+	void bindDescriptorSets(uint32_t first, const std::vector<VkDescriptorSet>& sets, const std::vector<uint32_t>& dynamic_offsets = {});
+	void bindIndexBuffer(VkBuffer buffer, VkDeviceSize offset, VkIndexType index_type);
+	void bindVertexBuffers(uint32_t first, const std::vector<VkBuffer>& buffers, const std::vector<VkDeviceSize>& offsets = {});
+
+	void setViewport(VkViewport viewport);
+	void setScissor(VkRect2D scissor);
 	void setLineWidth(float width);
 	void setDepthBias(float constant, float clamp, float slope);
 	void setBlendConstants(const float blend_constants[4]);
 	void setDepthBounds(float min, float max);
-	void setStencilCompareMask(vk::StencilFaceFlags face_mask, uint32_t compare_mask);
-	void bindDescriptorSets(uint32_t first, const std::vector<vk::DescriptorSet>& sets, const std::vector<uint32_t>& dynamic_offsets = {});
-	void bindIndexBuffer(vk::Buffer buffer, vk::DeviceSize offset, vk::IndexType index_type);
-	void bindVertexBuffers(uint32_t first, const std::vector<vk::Buffer>& buffers, const std::vector<vk::DeviceSize>& offsets = {});
-	void beginQuery(vk::QueryPool query_pool, uint32_t query, vk::QueryControlFlags flags);
-	void endQuery(vk::QueryPool query_pool, uint32_t query);
-	void beginRenderPass(const vk::RenderPassBeginInfo& render_pass_begin_info, vk::SubpassContents contents);
-	void nextSubpass(vk::SubpassContents contents);
-	void endRenderPass();
-	void executeCommands(const std::vector<vk::CommandBuffer>& command_buffers);
+	void setStencilCompareMask(VkStencilFaceFlags face_mask, uint32_t compare_mask);
 	void setDeviceMask(uint32_t device_mask);
-	void setCullMode(vk::CullModeFlags cull_mode);
-	void setFrontFace(vk::FrontFace front_face);
-	void setPrimitiveTopology(vk::PrimitiveTopology primitive_topology);
-	void setViewportWithCount(vk::Viewport viewport);
-	void setScissorWithCount(vk::Rect2D scissor);
-	void setDepthTestEnable(vk::Bool32 depth_test_enable);
-	void setDepthWriteEnable(vk::Bool32 depth_write_enable);
-	void setDepthCompareOp(vk::CompareOp depth_compare_op);
-	void setDepthBoundsTestEnable(vk::Bool32 depth_bound_test_enable);
-	void setStencilTestEnable(vk::Bool32 stencil_test_enable);
-	void setStencilOp(vk::StencilFaceFlags face_mask, vk::StencilOp fail_op, vk::StencilOp pass_op, vk::StencilOp depth_fail_op, vk::CompareOp compare_op);
-	void setRasterizerDiscardEnable(vk::Bool32 rasterizer_discard_enable);
-	void setDepthBiasEnable(vk::Bool32 depth_bias_enable);
-	void setPrimitiveRestartEnable(vk::Bool32 primitive_restart_enable);
+	void setCullMode(VkCullModeFlags cull_mode);
+	void setFrontFace(VkFrontFace front_face);
+	void setPrimitiveTopology(VkPrimitiveTopology primitive_topology);
+	void setViewportWithCount(VkViewport viewport);
+	void setScissorWithCount(VkRect2D scissor);
+	void setDepthTestEnable(VkBool32 depth_test_enable);
+	void setDepthWriteEnable(VkBool32 depth_write_enable);
+	void setDepthCompareOp(VkCompareOp depth_compare_op);
+	void setDepthBoundsTestEnable(VkBool32 depth_bound_test_enable);
+	void setStencilTestEnable(VkBool32 stencil_test_enable);
+	void setStencilOp(VkStencilFaceFlags face_mask, VkStencilOp fail_op, VkStencilOp pass_op, VkStencilOp depth_fail_op, VkCompareOp compare_op);
+	void setRasterizerDiscardEnable(VkBool32 rasterizer_discard_enable);
+	void setDepthBiasEnable(VkBool32 depth_bias_enable);
+	void setPrimitiveRestartEnable(VkBool32 primitive_restart_enable);
+	
+	void executeCommands(const std::vector<VkCommandBuffer>& command_buffers) const;
+	void copyBuffer(VkBuffer source, VkBuffer destination, const std::vector<VkBufferCopy>& copy_regions) const;
+	void pipelineBarrier(VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDependencyFlags dependency, const std::vector<VkMemoryBarrier>& memory_barriers, const std::vector<VkBufferMemoryBarrier>& buffer_barriers, const std::vector<VkImageMemoryBarrier>& image_barriers) const;
+	void pipelineBarrier(VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDependencyFlags dependency, const std::vector<VkBufferMemoryBarrier>& buffer_barriers, const std::vector<VkMemoryBarrier>& memory_barriers = {}) const;
+	void pipelineBarrier(VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDependencyFlags dependency, const std::vector<VkImageMemoryBarrier>& image_barriers, const std::vector<VkMemoryBarrier>& memory_barriers = {}) const;
+	void blitImage(VkImage source, VkImageLayout source_layout, VkImage destination, VkImageLayout destination_layout, const std::vector<VkImageBlit>& blit_regions, VkFilter filter = VK_FILTER_LINEAR) const;
+	void copyBufferToImage(VkBuffer buffer, VkImage image, VkImageLayout image_layout, const std::vector<VkBufferImageCopy>& copy_regions) const;
+	void copyImageToBuffer(VkImage image, VkImageLayout image_layout, VkBuffer buffer, const std::vector<VkBufferImageCopy>& copy_regions) const;
+	void copyImage(VkImage source, VkImageLayout source_layout, VkImage destination, VkImageLayout destination_layout, const std::vector<VkImageCopy>& copy_regions) const;
+	void dispatch(uint32_t global_invocation_count_x, uint32_t global_invocation_count_y, uint32_t global_invocation_count_z) const;
+	void pushConstants(VkPipelineStageFlags stages, uint32_t offset, uint32_t size, const void* data) const;
+	void draw(uint32_t vertices, uint32_t instances = 1, uint32_t first_vertex = 0, uint32_t first_instance = 0) const;
+	void drawIndexed(uint32_t indices, uint32_t instances = 1, uint32_t first_index = 0, uint32_t vertex_offset = 0, uint32_t first_instance = 0) const;
+	void drawIndirect(VkBuffer indirect_buffer, uint32_t offset, uint32_t draw_count, uint32_t stride) const;
+	void drawIndexedIndirect(VkBuffer indirect_buffer, uint32_t offset, uint32_t draw_count, uint32_t stride) const;
 
 	void submit(const CommandBufferSubmitInfo& info = {});
 	void submitIdle();
@@ -70,8 +86,9 @@ public:
 	bool isPrimary() const { return is_primary; }
 
 private:
-	vk::CommandBufferLevel level;
-	vk::QueueFlagBits queue_type;
+	VkCommandBuffer command_buffer;
+	VkCommandBufferLevel level;
+	VkQueueFlagBits queue_type;
 	shared<CommandPool> pool;
 	bool recorded = false;
 	bool running = false;
@@ -81,18 +98,17 @@ private:
 	{
 		uint32_t subpass = 0;
 		std::vector<BoundDescriptorSet> descriptor_sets{};
-		vk::DeviceSize index_buffer_offset = 0;
+		VkDeviceSize index_buffer_offset = 0;
 		std::vector<OffsetVertexBuffer> vertex_buffers{};
-
-		std::optional<vk::PipelineBindPoint> pipeline_bind_point = vk::PipelineBindPoint(VK_PIPELINE_BIND_POINT_MAX_ENUM);
-		std::optional<vk::Pipeline> pipeline = {};
-		std::optional<vk::PipelineLayout> pipeline_layout = {};
-		std::optional<vk::RenderPass> render_pass = {};
-		std::optional<vk::QueryPool> query_pool = {};
-		std::optional<vk::Framebuffer> framebuffer = {};
-		std::optional<vk::Buffer> index_buffer = {};
-		std::optional<vk::Viewport> viewport = {};
-		std::optional<vk::Rect2D> scissor = {};
+		std::optional<VkPipelineBindPoint> pipeline_bind_point = VkPipelineBindPoint(VK_PIPELINE_BIND_POINT_MAX_ENUM);
+		std::optional<VkPipeline> pipeline = {};
+		std::optional<VkPipelineLayout> pipeline_layout = {};
+		std::optional<VkRenderPass> render_pass = {};
+		std::optional<VkQueryPool> query_pool = {};
+		std::optional<VkFramebuffer> framebuffer = {};
+		std::optional<VkBuffer> index_buffer = {};
+		std::optional<VkViewport> viewport = {};
+		std::optional<VkRect2D> scissor = {};
 		std::optional<float> line_width = {};
 		std::optional<float> depth_bias_constant = {};
 		std::optional<float> depth_bias_clamp = {};
@@ -100,30 +116,30 @@ private:
 		std::optional<std::array<float, 4>> blend_constants = {};
 		std::optional<float> min_depth_bound = {};
 		std::optional<float> max_depth_bound = {};
-		std::optional<vk::StencilFaceFlags> stencil_compare_mask_face_mask = {};
+		std::optional<VkStencilFaceFlags> stencil_compare_mask_face_mask = {};
 		std::optional<uint32_t> stencil_compare_mask_compare_mask = {};
 		std::optional<uint32_t> device_mask = {};
-		std::optional<vk::CullModeFlags> cull_mode = {};
-		std::optional<vk::FrontFace> front_face = {};
-		std::optional<vk::PrimitiveTopology> primitive_topology = {};
-		std::optional<vk::Bool32> depth_test_enable = {};
-		std::optional<vk::Bool32> depth_write_enable = {};
-		std::optional<vk::CompareOp> depth_compare_op = {};
-		std::optional<vk::Bool32> depth_bound_test_enable = {};
-		std::optional<vk::Bool32> stencil_test_enable = {};
-		std::optional<vk::StencilFaceFlags> stencil_op_face_mask = {};
-		std::optional<vk::StencilOp> stencil_op_fail_op = {};
-		std::optional<vk::StencilOp> stencil_op_pass_op = {};
-		std::optional<vk::StencilOp> stencil_op_depth_fail_op = {};
-		std::optional<vk::CompareOp> stencil_op_compare_op = {};
-		std::optional<vk::Bool32> rasterizer_discard_enable = {};
-		std::optional<vk::Bool32> depth_bias_enable = {};
-		std::optional<vk::Bool32> primitive_restart_enable = {};
-		std::optional<vk::Rect2D> render_area = {};
+		std::optional<VkCullModeFlags> cull_mode = {};
+		std::optional<VkFrontFace> front_face = {};
+		std::optional<VkPrimitiveTopology> primitive_topology = {};
+		std::optional<VkBool32> depth_test_enable = {};
+		std::optional<VkBool32> depth_write_enable = {};
+		std::optional<VkCompareOp> depth_compare_op = {};
+		std::optional<VkBool32> depth_bound_test_enable = {};
+		std::optional<VkBool32> stencil_test_enable = {};
+		std::optional<VkStencilFaceFlags> stencil_op_face_mask = {};
+		std::optional<VkStencilOp> stencil_op_fail_op = {};
+		std::optional<VkStencilOp> stencil_op_pass_op = {};
+		std::optional<VkStencilOp> stencil_op_depth_fail_op = {};
+		std::optional<VkCompareOp> stencil_op_compare_op = {};
+		std::optional<VkBool32> rasterizer_discard_enable = {};
+		std::optional<VkBool32> depth_bias_enable = {};
+		std::optional<VkBool32> primitive_restart_enable = {};
+		std::optional<VkRect2D> render_area = {};
 	} active;
 
 private:
-	vk::Queue getQueue() const;
+	VkQueue getQueue() const;
 
 public:
 	const Active& getActive() const { return active; }

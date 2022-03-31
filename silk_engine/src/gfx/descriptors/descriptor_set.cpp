@@ -11,19 +11,20 @@ DescriptorSet::~DescriptorSet()
 	pool->deallocate();
 }
 
-DescriptorSet& DescriptorSet::add(uint32_t binding, uint32_t count, vk::DescriptorType descriptor_type, vk::ShaderStageFlags stage_flags)
+DescriptorSet& DescriptorSet::add(uint32_t binding, uint32_t count, VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags)
 {
 	buffer_infos.push_back({});
 	image_infos.push_back({});
 
-	vk::WriteDescriptorSet write_descriptor{};
+	VkWriteDescriptorSet write_descriptor{};
+	write_descriptor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	write_descriptor.descriptorCount = count;
 	write_descriptor.descriptorType = descriptor_type;
 	write_descriptor.dstArrayElement = 0;
 	write_descriptor.dstBinding = binding;
 	write_descriptor_sets.emplace_back(std::move(write_descriptor));
 
-	vk::DescriptorSetLayoutBinding descriptor_layout_binding{};
+	VkDescriptorSetLayoutBinding descriptor_layout_binding{};
 	descriptor_layout_binding.binding = binding;
 	descriptor_layout_binding.descriptorCount = count;
 	descriptor_layout_binding.descriptorType = descriptor_type;
@@ -71,7 +72,7 @@ void DescriptorSet::bind(size_t first_set)
 	command_buffer.bindDescriptorSets(first_set, { descriptor_set });
 }
 
-void DescriptorSet::setImageInfo(size_t write_index, const std::vector<vk::DescriptorImageInfo>& image_info)
+void DescriptorSet::setImageInfo(size_t write_index, const std::vector<VkDescriptorImageInfo>& image_info)
 {
 	SK_ASSERT(image_info.size() == write_descriptor_sets[write_index].descriptorCount, "Invalid image_info size: {0}, should be {1}", image_info.size(), write_descriptor_sets[write_index].descriptorCount);
 	this->image_infos[write_index] = image_info;
@@ -79,7 +80,7 @@ void DescriptorSet::setImageInfo(size_t write_index, const std::vector<vk::Descr
 	needs_update = true; //TODO: This might be unnecessary if pImageInfo == image_infos[write_index]
 }
 
-void DescriptorSet::setBufferInfo(size_t write_index, const std::vector<vk::DescriptorBufferInfo>& buffer_info)
+void DescriptorSet::setBufferInfo(size_t write_index, const std::vector<VkDescriptorBufferInfo>& buffer_info)
 {
 	SK_ASSERT(buffer_info.size() == write_descriptor_sets[write_index].descriptorCount, "Invalid buffer_info size: {0}, should be {1}", buffer_info.size(), write_descriptor_sets[write_index].descriptorCount);
 	this->buffer_infos[write_index] = buffer_info;

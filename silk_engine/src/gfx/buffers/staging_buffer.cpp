@@ -2,15 +2,15 @@
 #include "command_buffer.h"
 #include "gfx/graphics.h"
 
-StagingBuffer::StagingBuffer(const void* data, vk::DeviceSize size, bool transfer_destination)
+StagingBuffer::StagingBuffer(const void* data, VkDeviceSize size, bool transfer_destination)
     : Buffer(size,
-             vk::BufferUsageFlagBits::eTransferSrc | (transfer_destination ? vk::BufferUsageFlagBits::eTransferDst : vk::BufferUsageFlagBits(0)),
+             VK_BUFFER_USAGE_TRANSFER_SRC_BIT | (transfer_destination * VK_BUFFER_USAGE_TRANSFER_DST_BIT),
              VMA_MEMORY_USAGE_CPU_ONLY)
 {
     setData(data, size);
 }
 
-void StagingBuffer::copy(vk::Buffer destination, vk::DeviceSize offset) const
+void StagingBuffer::copy(VkBuffer destination, VkDeviceSize offset) const
 {
     Buffer::copy(destination, buffer, size, offset);
 }

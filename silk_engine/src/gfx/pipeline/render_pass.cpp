@@ -12,7 +12,7 @@ RenderPass::~RenderPass()
 
 RenderPass& RenderPass::addAttachment(const AttachmentProps& props)
 {
-    vk::AttachmentDescription attachment_description{};
+    VkAttachmentDescription attachment_description{};
     attachment_description.format = props.format;
     attachment_description.samples = props.samples;
     attachment_description.loadOp = props.load_operation;
@@ -22,10 +22,10 @@ RenderPass& RenderPass::addAttachment(const AttachmentProps& props)
     attachment_description.initialLayout = props.initial_layout;
     attachment_description.finalLayout = props.layout;
 
-    if (props.samples != vk::SampleCountFlagBits::e1)
+    if (props.samples != VK_SAMPLE_COUNT_1_BIT)
     {
         //Vulkan said that multisampled images should always have store op set to don't care (-\(^_^)/-)
-        attachment_description.storeOp = vk::AttachmentStoreOp::eDontCare;
+        attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         subpasses.back().multisampled = true;
     }
 
@@ -33,30 +33,30 @@ RenderPass& RenderPass::addAttachment(const AttachmentProps& props)
     Attachment::Type type;
     attachment.description = attachment_description;
     
-    vk::AttachmentReference attachment_reference{};
+    VkAttachmentReference attachment_reference{};
     attachment_reference.attachment = subpasses.back().attachments.size();
     if (Image::hasDepth(attachment_description.format) || Image::hasStencil(attachment_description.format))
     {
-        attachment_reference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+        attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         type = Attachment::Type::DEPTH_STENCIL;
     }
-    else if (subpasses.back().multisampled && props.layout == vk::ImageLayout::ePresentSrcKHR)
+    else if (subpasses.back().multisampled && props.layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
     {
-        attachment_reference.layout = vk::ImageLayout::eColorAttachmentOptimal;
+        attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         type = Attachment::Type::RESOLVE;
     }
     else
     {
-        attachment_reference.layout = vk::ImageLayout::eColorAttachmentOptimal;
+        attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         type = Attachment::Type::COLOR;
     }
     attachment.reference = attachment_reference;
     attachment.type = type;
 
     if (type == Attachment::Type::DEPTH_STENCIL)
-        attachment.clear_value.depthStencil = props.clear_value ? props.clear_value->depthStencil : vk::ClearDepthStencilValue(1.0f, 0);
+        attachment.clear_value.depthStencil = props.clear_value ? props.clear_value->depthStencil : VkClearDepthStencilValue(1.0f, 0);
     else
-        attachment.clear_value.color = props.clear_value ? props.clear_value->color : vk::ClearColorValue(std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f});
+        attachment.clear_value.color = props.clear_value ? props.clear_value->color : VkClearColorValue{ { 0.0f, 0.0f, 0.0f, 1.0f } };
     
     subpasses.back().attachments.emplace_back(std::move(attachment));
    
@@ -70,7 +70,7 @@ RenderPass& RenderPass::addSubpass()
     if (subpasses.size() > 1)
     {
         auto& last_subpass = subpasses[subpasses.size() - 2];
-        std::vector<vk::AttachmentReference> input_attachment_references(last_subpass.attachments.size());
+        std::vector<VkAttachmentReference> input_attachment_references(last_subpass.attachments.size());
         for (size_t i = 0; i < last_subpass.attachments.size(); ++i)
             input_attachment_references[i] = last_subpass.attachments[i].reference;
         subpasses.back().input_attachment_references = std::move(input_attachment_references);
@@ -81,14 +81,14 @@ RenderPass& RenderPass::addSubpass()
 
 void RenderPass::build()
 {
-    std::vector<vk::AttachmentDescription> attachments;
-    std::vector<vk::SubpassDescription> subpass_descriptions(subpasses.size());
-    std::vector<vk::SubpassDependency> subpass_dependencies(subpasses.size());
+    std::vector<VkAttachmentDescription> attachments;
+    std::vector<VkSubpassDescription> subpass_descriptions(subpasses.size());
+    std::vector<VkSubpassDependency> subpass_dependencies(subpasses.size());
 
     //We need these alive for till this function finishes
-    std::vector<std::vector<vk::AttachmentReference>> color_attachment_references(subpasses.size());
-    std::vector<vk::AttachmentReference> depth_stencil_attachment_references(subpasses.size());
-    std::vector<vk::AttachmentReference> resolve_attachment_references(subpasses.size());
+    std::vector<std::vector<VkAttachmentReference>> color_attachment_references(subpasses.size());
+    std::vector<VkAttachmentReference> depth_stencil_attachment_references(subpasses.size());
+    std::vector<VkAttachmentReference> resolve_attachment_references(subpasses.size());
 
     for (size_t i = 0; i < subpasses.size(); ++i)
     {
@@ -110,8 +110,8 @@ void RenderPass::build()
             attachments.emplace_back(attachment.description);
         }
 
-        vk::SubpassDescription subpass_description{};
-        subpass_description.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
+        VkSubpassDescription subpass_description{};
+        subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass_description.inputAttachmentCount = subpasses[i].input_attachment_references.size();
         subpass_description.pInputAttachments = subpasses[i].input_attachment_references.data();
         subpass_description.colorAttachmentCount = color_attachment_references[i].size();
@@ -121,17 +121,18 @@ void RenderPass::build()
         subpass_descriptions[i] = std::move(subpass_description);
 
         //TODO:
-        vk::SubpassDependency subpass_dependency{};
+        VkSubpassDependency subpass_dependency{};
         subpass_dependency.srcSubpass = i ? (i - 1) : VK_SUBPASS_EXTERNAL;
         subpass_dependency.dstSubpass = i;
-        subpass_dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests;
-        subpass_dependency.srcAccessMask = vk::AccessFlagBits::eNone;
-        subpass_dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests;
-        subpass_dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        subpass_dependency.srcAccessMask = VK_ACCESS_NONE;
+        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
         subpass_dependencies[i] = std::move(subpass_dependency);
     }
     
-    vk::RenderPassCreateInfo ci{};
+    VkRenderPassCreateInfo ci{};
+    ci.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     ci.attachmentCount = attachments.size();
     ci.pAttachments = attachments.data();
     ci.subpassCount = subpass_descriptions.size();
@@ -141,16 +142,17 @@ void RenderPass::build()
     render_pass = Graphics::logical_device->createRenderPass(ci);
 }
 
-void RenderPass::begin(vk::Framebuffer framebuffer, vk::SubpassContents subpass_contents)
+void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_contents)
 {
-    vk::RenderPassBeginInfo begin_info{};
+    VkRenderPassBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     begin_info.renderPass = render_pass;
     begin_info.framebuffer = framebuffer;
 
-    begin_info.renderArea.offset = vk::Offset2D(0, 0);
+    begin_info.renderArea.offset = VkOffset2D(0, 0);
     begin_info.renderArea.extent = Graphics::swap_chain->getExtent();
 
-    std::vector<vk::ClearValue> clear_values(subpasses.back().attachments.size());
+    std::vector<VkClearValue> clear_values(subpasses.back().attachments.size());
     for (size_t i = 0; i < clear_values.size(); ++i)
         clear_values[i] = subpasses.back().attachments[i].clear_value;
 
@@ -160,7 +162,7 @@ void RenderPass::begin(vk::Framebuffer framebuffer, vk::SubpassContents subpass_
     Graphics::getActiveCommandBuffer().beginRenderPass(begin_info, subpass_contents);
 }
 
-void RenderPass::nextSubpass(vk::SubpassContents subpass_contents)
+void RenderPass::nextSubpass(VkSubpassContents subpass_contents)
 {
     Graphics::getActiveCommandBuffer().nextSubpass(subpass_contents);
 }

@@ -2,10 +2,10 @@
 #include "gfx/graphics.h"
 #include "gfx/buffers/command_buffer.h"
 
-VertexBuffer::VertexBuffer(const void* data, vk::DeviceSize size, VmaMemoryUsage memory_usage)
+VertexBuffer::VertexBuffer(const void* data, VkDeviceSize size, VmaMemoryUsage memory_usage)
 	: Buffer(size,
-		vk::BufferUsageFlagBits::eTransferDst |
-		vk::BufferUsageFlagBits::eVertexBuffer,
+		VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 		memory_usage)
 {
 	setData(data, size);

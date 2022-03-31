@@ -14,5 +14,5 @@ private:
 	void create() override;
 
 private:
-	vk::ComputePipelineCreateInfo ci{};
+	VkComputePipelineCreateInfo ci{};
 };

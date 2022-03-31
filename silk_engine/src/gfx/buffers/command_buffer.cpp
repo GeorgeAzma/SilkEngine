@@ -3,25 +3,25 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/allocators/command_pool.h"
 
-CommandBuffer::CommandBuffer(vk::CommandBufferLevel level, vk::QueueFlagBits queue_type)
+CommandBuffer::CommandBuffer(VkCommandBufferLevel level, VkQueueFlagBits queue_type)
 	: level(level), queue_type(queue_type), pool(Graphics::getActiveCommandPool()),
-	vk::CommandBuffer(VkCommandBuffer(Graphics::getActiveCommandPool()->allocate(level))),
-	is_primary(level == vk::CommandBufferLevel::ePrimary)
+	is_primary(level == VK_COMMAND_BUFFER_LEVEL_PRIMARY)
 {
+	command_buffer = Graphics::getActiveCommandPool()->allocate(level);
 }
 
 CommandBuffer::~CommandBuffer()
 {
-	pool->deallocate(*this);
+	pool->deallocate(command_buffer);
 }
 
-void CommandBuffer::begin(vk::CommandBufferUsageFlags usage)
+void CommandBuffer::begin(VkCommandBufferUsageFlags usage)
 {
 	if (running)
 		return;
 
-	vk::CommandBufferInheritanceInfo inheritance_info{};
-	if (usage & vk::CommandBufferUsageFlagBits::eRenderPassContinue)
+	VkCommandBufferInheritanceInfo inheritance_info{};
+	if (usage & VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT)
 	{
 		SK_ASSERT(!is_primary, "Only primary command buffers can have eRenderPassContinue flag");
 		const auto& primary_command_buffer = Graphics::getActivePrimaryCommandBuffer();
@@ -32,7 +32,11 @@ void CommandBuffer::begin(vk::CommandBufferUsageFlags usage)
 		//inheritance_info.pipelineStatistics = ;  //TODO:
 	}
 
-	vk::CommandBuffer::begin(vk::CommandBufferBeginInfo(usage, &inheritance_info));
+	VkCommandBufferBeginInfo begin_info{};
+	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	begin_info.pInheritanceInfo = &inheritance_info;
+	begin_info.flags = usage;
+	vkBeginCommandBuffer(command_buffer, &begin_info);
 	Graphics::setActiveCommandBuffer(this);
 	if(is_primary)
 		Graphics::setActivePrimaryCommandBuffer(this);
@@ -44,7 +48,7 @@ void CommandBuffer::end()
 	if (!running)
 		return;
 
-	vk::CommandBuffer::end();
+	vkEndCommandBuffer(command_buffer);
 	Graphics::setActiveCommandBuffer(nullptr);
 	if (is_primary)
 		Graphics::setActivePrimaryCommandBuffer(nullptr);
@@ -53,86 +57,62 @@ void CommandBuffer::end()
 	active = {};
 }
 
-void CommandBuffer::bindPipeline(vk::PipelineBindPoint bind_point, vk::Pipeline pipeline, vk::PipelineLayout layout)
+void CommandBuffer::beginQuery(VkQueryPool query_pool, uint32_t query, VkQueryControlFlags flags)
+{
+	if (active.query_pool == query_pool)
+		return;
+	vkCmdBeginQuery(command_buffer, query_pool, query, flags);
+	active.query_pool = query_pool;
+}
+
+void CommandBuffer::endQuery(VkQueryPool query_pool, uint32_t query)
+{
+	if (active.query_pool != query_pool)
+		return;
+	vkCmdEndQuery(command_buffer, query_pool, query);
+	active.query_pool = {};
+}
+
+void CommandBuffer::beginRenderPass(const VkRenderPassBeginInfo& render_pass_begin_info, VkSubpassContents contents)
+{
+	if (active.render_pass == render_pass_begin_info.renderPass)
+		return;
+	vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, contents);
+	active.render_pass = render_pass_begin_info.renderPass;
+	active.framebuffer = render_pass_begin_info.framebuffer;
+	active.render_area = render_pass_begin_info.renderArea;
+	active.subpass = 0;
+}
+
+void CommandBuffer::nextSubpass(VkSubpassContents contents)
+{
+	SK_ASSERT(active.render_pass != VkRenderPass(VK_NULL_HANDLE), "Can't call nextSubpass() when there is no active render pass in this command buffer");
+	vkCmdNextSubpass(command_buffer, contents);
+	++active.subpass;
+}
+
+void CommandBuffer::endRenderPass()
+{
+	if (active.render_pass == VkRenderPass(VK_NULL_HANDLE))
+		return;
+	vkCmdEndRenderPass(command_buffer);
+	active.render_pass = {};
+	active.framebuffer = {};
+	active.render_area = {};
+}
+
+void CommandBuffer::bindPipeline(VkPipelineBindPoint bind_point, VkPipeline pipeline, VkPipelineLayout layout)
 {
 	if (active.pipeline == pipeline && active.pipeline_bind_point == bind_point)
 		return;
-	vk::CommandBuffer::bindPipeline(bind_point, pipeline);
+	vkCmdBindPipeline(command_buffer, bind_point, pipeline);
 	active.pipeline = pipeline;
 	active.pipeline_layout = layout;
 	active.pipeline_bind_point = bind_point;
 }
 
-void CommandBuffer::setViewport(vk::Viewport viewport)
+void CommandBuffer::bindDescriptorSets(uint32_t first, const std::vector<VkDescriptorSet>& sets, const std::vector<uint32_t>& dynamic_offsets)
 {
-	if (active.viewport == viewport)
-		return;
-	vk::CommandBuffer::setViewport(0, { viewport });
-	active.viewport = viewport;
-}
-
-void CommandBuffer::setScissor(vk::Rect2D scissor)
-{
-	if (active.scissor == scissor)
-		return;
-	vk::CommandBuffer::setScissor(0, { scissor });
-	active.scissor = scissor;
-}
-
-void CommandBuffer::setLineWidth(float width)
-{
-	if (active.line_width == width)
-		return;
-	vk::CommandBuffer::setLineWidth(width);
-	active.line_width = width;
-}
-
-void CommandBuffer::setDepthBias(float constant, float clamp, float slope)
-{
-	if (active.depth_bias_constant == constant &&
-		active.depth_bias_clamp == clamp &&
-		active.depth_bias_slope == slope)
-		return;
-	vk::CommandBuffer::setDepthBias(constant, clamp, slope);
-	active.depth_bias_constant = constant;
-	active.depth_bias_clamp = clamp;
-	active.depth_bias_slope = slope;
-}
-
-void CommandBuffer::setBlendConstants(const float blend_constants[4])
-{
-	if (active.blend_constants &&
-		active.blend_constants->at(0) == blend_constants[0] &&
-		active.blend_constants->at(1) == blend_constants[1] &&
-		active.blend_constants->at(2) == blend_constants[2] &&
-		active.blend_constants->at(3) == blend_constants[3])
-		return;
-	vk::CommandBuffer::setBlendConstants(blend_constants);
-	active.blend_constants = { blend_constants[0], blend_constants[1], blend_constants[2], blend_constants[3] };
-}
-
-void CommandBuffer::setDepthBounds(float min, float max)
-{
-	if (active.min_depth_bound == min && active.max_depth_bound == max)
-		return;
-	vk::CommandBuffer::setDepthBounds(min, max);
-	active.min_depth_bound = min;
-	active.max_depth_bound = max;
-}
-
-void CommandBuffer::setStencilCompareMask(vk::StencilFaceFlags face_mask, uint32_t compare_mask)
-{
-	if (active.stencil_compare_mask_face_mask == face_mask &&
-		active.stencil_compare_mask_compare_mask == compare_mask)
-		return;
-	vk::CommandBuffer::setStencilCompareMask(face_mask, compare_mask);
-	active.stencil_compare_mask_face_mask = face_mask;
-	active.stencil_compare_mask_compare_mask = compare_mask;
-
-}
-
-void CommandBuffer::bindDescriptorSets(uint32_t first, const std::vector<vk::DescriptorSet>& sets, const std::vector<uint32_t>& dynamic_offsets)
-{	
 	//UNTESTED:
 	bool needs_binding = false;
 	if (active.descriptor_sets.size() < (sets.size() + first))
@@ -168,7 +148,7 @@ void CommandBuffer::bindDescriptorSets(uint32_t first, const std::vector<vk::Des
 	}
 	if (!needs_binding)
 		return;
-	vk::CommandBuffer::bindDescriptorSets(*active.pipeline_bind_point, *active.pipeline_layout, first, sets, dynamic_offsets);
+	vkCmdBindDescriptorSets(command_buffer, *active.pipeline_bind_point, *active.pipeline_layout, first, sets.size(), sets.data(), dynamic_offsets.size(), dynamic_offsets.data());
 	active.descriptor_sets.resize(std::max(first + sets.size(), active.descriptor_sets.size()));
 	for (size_t i = 0; i < sets.size(); ++i)
 	{
@@ -177,17 +157,17 @@ void CommandBuffer::bindDescriptorSets(uint32_t first, const std::vector<vk::Des
 	}
 }
 
-void CommandBuffer::bindIndexBuffer(vk::Buffer buffer, vk::DeviceSize offset, vk::IndexType index_type)
+void CommandBuffer::bindIndexBuffer(VkBuffer buffer, VkDeviceSize offset, VkIndexType index_type)
 {
 	//NOTE: We are not checking if index_type changed, since there is never a circumstance when that's useful
 	if (active.index_buffer == buffer && active.index_buffer_offset == offset)
 		return;
-	vk::CommandBuffer::bindIndexBuffer(buffer, offset, index_type);
+	vkCmdBindIndexBuffer(command_buffer, buffer, offset, index_type);
 	active.index_buffer = buffer;
 	active.index_buffer_offset = offset;
 }
 
-void CommandBuffer::bindVertexBuffers(uint32_t first, const std::vector<vk::Buffer>& buffers, const std::vector<vk::DeviceSize>& offsets)
+void CommandBuffer::bindVertexBuffers(uint32_t first, const std::vector<VkBuffer>& buffers, const std::vector<VkDeviceSize>& offsets)
 {
 	//UNTESTED:
 	bool needs_binding = false;
@@ -199,8 +179,8 @@ void CommandBuffer::bindVertexBuffers(uint32_t first, const std::vector<vk::Buff
 	{
 		for (size_t i = 0; i < buffers.size(); ++i)
 		{
-			if (buffers[i] != active.vertex_buffers[i + first].vertex_buffer || 
-				(offsets.empty() ? vk::DeviceSize(0) : offsets[i]) != active.vertex_buffers[i + first].offset)
+			if (buffers[i] != active.vertex_buffers[i + first].vertex_buffer ||
+				(offsets.empty() ? VkDeviceSize(0) : offsets[i]) != active.vertex_buffers[i + first].offset)
 			{
 				needs_binding = true;
 				break;
@@ -211,160 +191,199 @@ void CommandBuffer::bindVertexBuffers(uint32_t first, const std::vector<vk::Buff
 		return;
 	if (offsets.empty())
 	{
-		std::vector<vk::DeviceSize> default_offsets(buffers.size());
+		std::vector<VkDeviceSize> default_offsets(buffers.size());
 		for (auto& offset : default_offsets)
 			offset = 0;
-		vk::CommandBuffer::bindVertexBuffers(first, buffers, default_offsets);
+		vkCmdBindVertexBuffers(command_buffer, first, buffers.size(), buffers.data(), default_offsets.data());
 	}
 	else
-		vk::CommandBuffer::bindVertexBuffers(first, buffers, offsets);
+		vkCmdBindVertexBuffers(command_buffer, first, buffers.size(), buffers.data(), offsets.data());
 
 	active.vertex_buffers.resize(std::max(active.vertex_buffers.size(), first + buffers.size()));
 	for (size_t i = 0; i < buffers.size(); ++i)
 	{
 		active.vertex_buffers[first + i].vertex_buffer = buffers[i];
-		active.vertex_buffers[first + i].offset = offsets.empty() ? vk::DeviceSize(0) : offsets[i];
+		active.vertex_buffers[first + i].offset = offsets.empty() ? VkDeviceSize(0) : offsets[i];
 	}
 }
 
-void CommandBuffer::beginQuery(vk::QueryPool query_pool, uint32_t query, vk::QueryControlFlags flags)
+void CommandBuffer::setViewport(VkViewport viewport)
 {
-	if (active.query_pool == query_pool)
+	if (active.viewport && 
+		active.viewport->width == viewport.width &&
+		active.viewport->height == viewport.height &&
+		active.viewport->x == viewport.x &&
+		active.viewport->y == viewport.y &&
+		active.viewport->minDepth == viewport.minDepth &&
+		active.viewport->maxDepth == viewport.maxDepth)
 		return;
-	vk::CommandBuffer::beginQuery(query_pool, query, flags);
-	active.query_pool = query_pool;
+	vkCmdSetViewport(command_buffer, 0, 1, &viewport);
+	active.viewport = viewport;
 }
 
-void CommandBuffer::endQuery(vk::QueryPool query_pool, uint32_t query)
+void CommandBuffer::setScissor(VkRect2D scissor)
 {
-	if (active.query_pool != query_pool)
+	if (active.scissor &&
+		active.scissor->extent.width == scissor.extent.width &&
+		active.scissor->extent.height == scissor.extent.height &&
+		active.scissor->offset.x == scissor.offset.x &&
+		active.scissor->offset.y == scissor.offset.y)
 		return;
-	vk::CommandBuffer::endQuery(query_pool, query);
-	active.query_pool = {};
+	vkCmdSetScissor(command_buffer, 0, 1, &scissor);
+	active.scissor = scissor;
 }
 
-void CommandBuffer::beginRenderPass(const vk::RenderPassBeginInfo& render_pass_begin_info, vk::SubpassContents contents)
+void CommandBuffer::setLineWidth(float width)
 {
-	if (active.render_pass == render_pass_begin_info.renderPass)
+	if (active.line_width == width)
 		return;
-	vk::CommandBuffer::beginRenderPass(render_pass_begin_info, contents);
-	active.render_pass = render_pass_begin_info.renderPass;
-	active.framebuffer = render_pass_begin_info.framebuffer;
-	active.render_area = render_pass_begin_info.renderArea;
-	active.subpass = 0;
+	vkCmdSetLineWidth(command_buffer, width);
+	active.line_width = width;
 }
 
-void CommandBuffer::nextSubpass(vk::SubpassContents contents)
+void CommandBuffer::setDepthBias(float constant, float clamp, float slope)
 {
-	SK_ASSERT(active.render_pass != vk::RenderPass(VK_NULL_HANDLE), "Can't call nextSubpass() when there is no active render pass in this command buffer");
-	vk::CommandBuffer::nextSubpass(contents);
-	++active.subpass;
-}
-
-void CommandBuffer::endRenderPass()
-{
-	if (active.render_pass == vk::RenderPass(VK_NULL_HANDLE))
+	if (active.depth_bias_constant == constant &&
+		active.depth_bias_clamp == clamp &&
+		active.depth_bias_slope == slope)
 		return;
-	vk::CommandBuffer::endRenderPass();
-	active.render_pass = {};
-	active.framebuffer = {};
-	active.render_area = {};
+	vkCmdSetDepthBias(command_buffer, constant, clamp, slope);
+	active.depth_bias_constant = constant;
+	active.depth_bias_clamp = clamp;
+	active.depth_bias_slope = slope;
 }
 
-void CommandBuffer::executeCommands(const std::vector<vk::CommandBuffer>& command_buffers)
+void CommandBuffer::setBlendConstants(const float blend_constants[4])
 {
-	vk::CommandBuffer::executeCommands(command_buffers);
+	if (active.blend_constants &&
+		active.blend_constants->at(0) == blend_constants[0] &&
+		active.blend_constants->at(1) == blend_constants[1] &&
+		active.blend_constants->at(2) == blend_constants[2] &&
+		active.blend_constants->at(3) == blend_constants[3])
+		return;
+	vkCmdSetBlendConstants(command_buffer, blend_constants);
+	active.blend_constants = { blend_constants[0], blend_constants[1], blend_constants[2], blend_constants[3] };
+}
+
+void CommandBuffer::setDepthBounds(float min, float max)
+{
+	if (active.min_depth_bound == min && active.max_depth_bound == max)
+		return;
+	vkCmdSetDepthBounds(command_buffer, min, max);
+	active.min_depth_bound = min;
+	active.max_depth_bound = max;
+}
+
+void CommandBuffer::setStencilCompareMask(VkStencilFaceFlags face_mask, uint32_t compare_mask)
+{
+	if (active.stencil_compare_mask_face_mask == face_mask &&
+		active.stencil_compare_mask_compare_mask == compare_mask)
+		return;
+	vkCmdSetStencilCompareMask(command_buffer, face_mask, compare_mask);
+	active.stencil_compare_mask_face_mask = face_mask;
+	active.stencil_compare_mask_compare_mask = compare_mask;
+
 }
 
 void CommandBuffer::setDeviceMask(uint32_t device_mask)
 {
 	if (active.device_mask == device_mask)
 		return;
-	vk::CommandBuffer::setDeviceMask(device_mask);
+	vkCmdSetDeviceMask(command_buffer, device_mask);
 	active.device_mask = device_mask;
 }
 
-void CommandBuffer::setCullMode(vk::CullModeFlags cull_mode)
+void CommandBuffer::setCullMode(VkCullModeFlags cull_mode)
 {
 	if (active.cull_mode == cull_mode)
 		return;
-	vk::CommandBuffer::setCullMode(cull_mode);
+	vkCmdSetCullMode(command_buffer, cull_mode);
 	active.cull_mode = cull_mode;
 }
 
-void CommandBuffer::setFrontFace(vk::FrontFace front_face)
+void CommandBuffer::setFrontFace(VkFrontFace front_face)
 {
 	if (active.front_face == front_face)
 		return;
-	vk::CommandBuffer::setFrontFace(front_face);
+	vkCmdSetFrontFace(command_buffer, front_face);
 	active.front_face = front_face;
 }
 
-void CommandBuffer::setPrimitiveTopology(vk::PrimitiveTopology primitive_topology)
+void CommandBuffer::setPrimitiveTopology(VkPrimitiveTopology primitive_topology)
 {
 	if (active.primitive_topology == primitive_topology)
 		return;
-	vk::CommandBuffer::setPrimitiveTopology(primitive_topology);
+	vkCmdSetPrimitiveTopology(command_buffer, primitive_topology);
 	active.primitive_topology = primitive_topology;
 }
 
-void CommandBuffer::setViewportWithCount(vk::Viewport viewport)
+void CommandBuffer::setViewportWithCount(VkViewport viewport)
 {
-	if (active.viewport == viewport)
+	if (active.viewport &&
+		active.viewport->width == viewport.width &&
+		active.viewport->height == viewport.height &&
+		active.viewport->x == viewport.x &&
+		active.viewport->y == viewport.y &&
+		active.viewport->minDepth == viewport.minDepth &&
+		active.viewport->maxDepth == viewport.maxDepth)
 		return;
-	vk::CommandBuffer::setViewportWithCount({ viewport });
+	vkCmdSetViewportWithCount(command_buffer, 1, &viewport);
 	active.viewport = viewport;
 }
 
-void CommandBuffer::setScissorWithCount(vk::Rect2D scissor)
+void CommandBuffer::setScissorWithCount(VkRect2D scissor)
 {
-	if (active.scissor == scissor)
+	if (active.scissor &&
+		active.scissor->extent.width == scissor.extent.width &&
+		active.scissor->extent.height == scissor.extent.height &&
+		active.scissor->offset.x == scissor.offset.x &&
+		active.scissor->offset.y == scissor.offset.y)
 		return;
-	vk::CommandBuffer::setScissorWithCount({ scissor });
+	vkCmdSetScissorWithCount(command_buffer, 1, &scissor);
 	active.scissor = scissor;
 }
 
-void CommandBuffer::setDepthTestEnable(vk::Bool32 depth_test_enable)
+void CommandBuffer::setDepthTestEnable(VkBool32 depth_test_enable)
 {
 	if (active.depth_test_enable == depth_test_enable)
 		return;
-	vk::CommandBuffer::setDepthTestEnable(depth_test_enable);
+	vkCmdSetDepthTestEnable(command_buffer, depth_test_enable);
 	active.depth_test_enable = depth_test_enable;
 }
 
-void CommandBuffer::setDepthWriteEnable(vk::Bool32 depth_write_enable)
+void CommandBuffer::setDepthWriteEnable(VkBool32 depth_write_enable)
 {
 	if (active.depth_write_enable == depth_write_enable)
 		return;
-	vk::CommandBuffer::setDepthWriteEnable(depth_write_enable);
+	vkCmdSetDepthWriteEnable(command_buffer, depth_write_enable);
 	active.depth_write_enable = depth_write_enable;
 }
 
-void CommandBuffer::setDepthCompareOp(vk::CompareOp depth_compare_op)
+void CommandBuffer::setDepthCompareOp(VkCompareOp depth_compare_op)
 {
 	if (active.depth_compare_op == depth_compare_op)
 		return;
-	vk::CommandBuffer::setDepthCompareOp(depth_compare_op);
+	vkCmdSetDepthCompareOp(command_buffer, depth_compare_op);
 	active.depth_compare_op = depth_compare_op;
 }
 
-void CommandBuffer::setDepthBoundsTestEnable(vk::Bool32 depth_bound_test_enable)
+void CommandBuffer::setDepthBoundsTestEnable(VkBool32 depth_bound_test_enable)
 {
 	if (active.depth_bound_test_enable == depth_bound_test_enable)
 		return;
-	vk::CommandBuffer::setDepthBoundsTestEnable(depth_bound_test_enable);
+	vkCmdSetDepthBoundsTestEnable(command_buffer, depth_bound_test_enable);
 	active.depth_bound_test_enable = depth_bound_test_enable;
 }
 
-void CommandBuffer::setStencilTestEnable(vk::Bool32 stencil_test_enable)
+void CommandBuffer::setStencilTestEnable(VkBool32 stencil_test_enable)
 {
 	if (active.stencil_test_enable == stencil_test_enable)
 		return;
-	vk::CommandBuffer::setStencilTestEnable(stencil_test_enable);
+	vkCmdSetStencilTestEnable(command_buffer, stencil_test_enable);
 	active.stencil_test_enable = stencil_test_enable;
 }
 
-void CommandBuffer::setStencilOp(vk::StencilFaceFlags face_mask, vk::StencilOp fail_op, vk::StencilOp pass_op, vk::StencilOp depth_fail_op, vk::CompareOp compare_op)
+void CommandBuffer::setStencilOp(VkStencilFaceFlags face_mask, VkStencilOp fail_op, VkStencilOp pass_op, VkStencilOp depth_fail_op, VkCompareOp compare_op)
 {
 	if (active.stencil_op_face_mask == face_mask &&
 		active.stencil_op_fail_op == fail_op &&
@@ -372,7 +391,7 @@ void CommandBuffer::setStencilOp(vk::StencilFaceFlags face_mask, vk::StencilOp f
 		active.stencil_op_depth_fail_op == depth_fail_op &&
 		active.stencil_op_compare_op == compare_op)
 		return;
-	vk::CommandBuffer::setStencilOp(face_mask, fail_op, pass_op, depth_fail_op, compare_op);
+	vkCmdSetStencilOp(command_buffer, face_mask, fail_op, pass_op, depth_fail_op, compare_op);
 	active.stencil_op_face_mask = face_mask;
 	active.stencil_op_fail_op = fail_op;
 	active.stencil_op_pass_op = pass_op;
@@ -380,28 +399,102 @@ void CommandBuffer::setStencilOp(vk::StencilFaceFlags face_mask, vk::StencilOp f
 	active.stencil_op_compare_op = compare_op;
 }
 
-void CommandBuffer::setRasterizerDiscardEnable(vk::Bool32 rasterizer_discard_enable)
+void CommandBuffer::setRasterizerDiscardEnable(VkBool32 rasterizer_discard_enable)
 {
 	if (active.rasterizer_discard_enable == rasterizer_discard_enable)
 		return;
-	vk::CommandBuffer::setRasterizerDiscardEnable(rasterizer_discard_enable);
+	vkCmdSetRasterizerDiscardEnable(command_buffer, rasterizer_discard_enable);
 	active.rasterizer_discard_enable = rasterizer_discard_enable;
 }
 
-void CommandBuffer::setDepthBiasEnable(vk::Bool32 depth_bias_enable)
+void CommandBuffer::setDepthBiasEnable(VkBool32 depth_bias_enable)
 {
 	if (active.depth_bias_enable == depth_bias_enable)
 		return;
-	vk::CommandBuffer::setDepthBiasEnable(depth_bias_enable);
+	vkCmdSetDepthBiasEnable(command_buffer, depth_bias_enable);
 	active.depth_bias_enable = depth_bias_enable;
 }
 
-void CommandBuffer::setPrimitiveRestartEnable(vk::Bool32 primitive_restart_enable)
+void CommandBuffer::setPrimitiveRestartEnable(VkBool32 primitive_restart_enable)
 {
 	if (active.primitive_restart_enable == primitive_restart_enable)
 		return;
-	vk::CommandBuffer::setPrimitiveRestartEnable(primitive_restart_enable);
+	vkCmdSetPrimitiveRestartEnable(command_buffer, primitive_restart_enable);
 	active.primitive_restart_enable = primitive_restart_enable;
+}
+
+void CommandBuffer::executeCommands(const std::vector<VkCommandBuffer>& command_buffers) const
+{
+	vkCmdExecuteCommands(command_buffer, command_buffers.size(), command_buffers.data());
+}
+
+void CommandBuffer::copyBuffer(VkBuffer source, VkBuffer destination, const std::vector<VkBufferCopy>& copy_regions) const
+{
+	vkCmdCopyBuffer(command_buffer, source, destination, copy_regions.size(), copy_regions.data());
+}
+
+void CommandBuffer::pipelineBarrier(VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDependencyFlags dependency, const std::vector<VkMemoryBarrier>& memory_barriers, const std::vector<VkBufferMemoryBarrier>& buffer_barriers, const std::vector<VkImageMemoryBarrier>& image_barriers) const
+{
+	vkCmdPipelineBarrier(command_buffer, source_stage_mask, destination_stage_mask, dependency, memory_barriers.size(), memory_barriers.data(), buffer_barriers.size(), buffer_barriers.data(), image_barriers.size(), image_barriers.data());
+}
+
+void CommandBuffer::pipelineBarrier(VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDependencyFlags dependency, const std::vector<VkBufferMemoryBarrier>& buffer_barriers, const std::vector<VkMemoryBarrier>& memory_barriers) const
+{
+	pipelineBarrier(source_stage_mask, destination_stage_mask, dependency, memory_barriers, buffer_barriers, {});
+}
+void CommandBuffer::pipelineBarrier(VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDependencyFlags dependency, const std::vector<VkImageMemoryBarrier>& image_barriers, const std::vector<VkMemoryBarrier>& memory_barriers) const
+{
+	pipelineBarrier(source_stage_mask, destination_stage_mask, dependency, memory_barriers, {}, image_barriers);
+}
+
+void CommandBuffer::blitImage(VkImage source, VkImageLayout source_layout, VkImage destination, VkImageLayout destination_layout, const std::vector<VkImageBlit>& blit_regions, VkFilter filter) const
+{
+	vkCmdBlitImage(command_buffer, source, source_layout, destination, destination_layout, blit_regions.size(), blit_regions.data(), filter);
+}
+
+void CommandBuffer::copyBufferToImage(VkBuffer buffer, VkImage image, VkImageLayout image_layout, const std::vector<VkBufferImageCopy>& copy_regions) const
+{
+	vkCmdCopyBufferToImage(command_buffer, buffer, image, image_layout, copy_regions.size(), copy_regions.data());
+}
+
+void CommandBuffer::copyImageToBuffer(VkImage image, VkImageLayout image_layout, VkBuffer buffer, const std::vector<VkBufferImageCopy>& copy_regions) const
+{
+	vkCmdCopyImageToBuffer(command_buffer, image, image_layout, buffer, copy_regions.size(), copy_regions.data());
+}
+
+void CommandBuffer::copyImage(VkImage source, VkImageLayout source_layout, VkImage destination, VkImageLayout destination_layout, const std::vector<VkImageCopy>& copy_regions) const
+{
+	vkCmdCopyImage(command_buffer, source, source_layout, destination, destination_layout, copy_regions.size(), copy_regions.data());
+}
+
+void CommandBuffer::dispatch(uint32_t global_invocation_count_x, uint32_t global_invocation_count_y, uint32_t global_invocation_count_z) const
+{
+	vkCmdDispatch(command_buffer, global_invocation_count_x, global_invocation_count_y, global_invocation_count_z);
+}
+
+void CommandBuffer::pushConstants(VkPipelineStageFlags stages, uint32_t offset, uint32_t size, const void* data) const
+{
+	vkCmdPushConstants(command_buffer, *active.pipeline_layout, stages, offset, size, data);
+}
+
+void CommandBuffer::draw(uint32_t vertices, uint32_t instances, uint32_t first_vertex, uint32_t first_instance) const
+{
+	vkCmdDraw(command_buffer, vertices, instances, first_vertex, first_instance);
+}
+
+void CommandBuffer::drawIndexed(uint32_t indices, uint32_t instances, uint32_t first_index, uint32_t vertex_offset, uint32_t first_instance) const
+{
+	vkCmdDrawIndexed(command_buffer, indices, instances, first_index, vertex_offset, first_instance);
+}
+
+void CommandBuffer::drawIndirect(VkBuffer indirect_buffer, uint32_t offset, uint32_t draw_count, uint32_t stride) const
+{
+	vkCmdDrawIndirect(command_buffer, indirect_buffer, offset, draw_count, stride);
+}
+
+void CommandBuffer::drawIndexedIndirect(VkBuffer indirect_buffer, uint32_t offset, uint32_t draw_count, uint32_t stride) const
+{
+	vkCmdDrawIndexedIndirect(command_buffer, indirect_buffer, offset, draw_count, stride);
 }
 
 void CommandBuffer::submit(const CommandBufferSubmitInfo& info)
@@ -410,9 +503,10 @@ void CommandBuffer::submit(const CommandBufferSubmitInfo& info)
 	if (!recorded)
 		return;
 
-	vk::SubmitInfo submit_info{};
+	VkSubmitInfo submit_info{};
+	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = this;
+	submit_info.pCommandBuffers = &command_buffer;
 	
 	submit_info.pWaitDstStageMask = info.wait_stages;
 	submit_info.waitSemaphoreCount = info.wait_semaphores.size();
@@ -424,7 +518,7 @@ void CommandBuffer::submit(const CommandBufferSubmitInfo& info)
 	if ((const VkFence&)info.fence != VK_NULL_HANDLE)
 		Graphics::logical_device->resetFences({ info.fence });
 	
-	getQueue().submit({ submit_info }, info.fence);
+	vkQueueSubmit(getQueue(), 1, &submit_info, info.fence);
 }
 
 void CommandBuffer::submitIdle()
@@ -433,23 +527,24 @@ void CommandBuffer::submitIdle()
 	if (!recorded)
 		return;
 
-	vk::SubmitInfo submit_info{};
+	VkSubmitInfo submit_info{};
+	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = this;
+	submit_info.pCommandBuffers = &command_buffer;
 
-	vk::Fence fence = Graphics::logical_device->createFence({});
-	getQueue().submit({ submit_info }, fence);	
+	VkFence fence = Graphics::logical_device->createFence({});
+	vkQueueSubmit(getQueue(), 1, &submit_info, fence);
 	Graphics::logical_device->waitForFences({ fence });	
 	Graphics::logical_device->destroyFence(fence);
 }
 
-vk::Queue CommandBuffer::getQueue() const
+VkQueue CommandBuffer::getQueue() const
 {
 	switch (queue_type) 
 	{
-		case vk::QueueFlagBits::eGraphics: return Graphics::logical_device->getGraphicsQueue(); 
-		case vk::QueueFlagBits::eTransfer: return Graphics::logical_device->getTransferQueue();
-		case vk::QueueFlagBits::eCompute: return Graphics::logical_device->getComputeQueue();
+		case VK_QUEUE_GRAPHICS_BIT: return Graphics::logical_device->getGraphicsQueue(); 
+		case VK_QUEUE_TRANSFER_BIT: return Graphics::logical_device->getTransferQueue();
+		case VK_QUEUE_COMPUTE_BIT: return Graphics::logical_device->getComputeQueue();
 	}
 
 	return Graphics::logical_device->getGraphicsQueue(); //Or nullptr

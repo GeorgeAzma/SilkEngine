@@ -2,9 +2,9 @@
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
 
-DescriptorSetLayout& DescriptorSetLayout::addBinding(uint32_t binding, vk::DescriptorType descriptor_type, vk::ShaderStageFlags shader_stages, size_t count)
+DescriptorSetLayout& DescriptorSetLayout::addBinding(uint32_t binding, VkDescriptorType descriptor_type, VkShaderStageFlags shader_stages, size_t count)
 {
-	vk::DescriptorSetLayoutBinding layout_binding{};
+	VkDescriptorSetLayoutBinding layout_binding{};
 	layout_binding.binding = binding;
 	layout_binding.descriptorType = descriptor_type;
 	layout_binding.descriptorCount = count;
@@ -21,12 +21,13 @@ void DescriptorSetLayout::build()
 	bindings_vector.resize(bindings.size());
 	for (const auto& binding : bindings) 
 		bindings_vector[index++] = binding.second;
-	std::sort(bindings_vector.begin(), bindings_vector.end(), [](const vk::DescriptorSetLayoutBinding& l, const vk::DescriptorSetLayoutBinding& r)->bool { return l.binding < r.binding; });
+	std::sort(bindings_vector.begin(), bindings_vector.end(), [](const VkDescriptorSetLayoutBinding& l, const VkDescriptorSetLayoutBinding& r)->bool { return l.binding < r.binding; });
 
-	vk::DescriptorSetLayoutCreateInfo layout_info{};
-	layout_info.bindingCount = bindings_vector.size();
-	layout_info.pBindings = bindings_vector.data();
-	layout = Graphics::logical_device->createDescriptorSetLayout(layout_info);
+	VkDescriptorSetLayoutCreateInfo ci{};
+	ci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	ci.bindingCount = bindings_vector.size();
+	ci.pBindings = bindings_vector.data();
+	layout = Graphics::logical_device->createDescriptorSetLayout(ci);
 }
 
 DescriptorSetLayout::~DescriptorSetLayout()

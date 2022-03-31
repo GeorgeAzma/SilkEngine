@@ -126,11 +126,11 @@ void Graphics::screenshot(std::string_view file)
 	props.height = height;
 	props.create_sampler = false;
 	props.create_view = false;
-	props.layout = vk::ImageLayout::eTransferDstOptimal;
-	props.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc;
+	props.layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	props.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 	props.memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
 	props.format = swap_chain->getSurfaceFormat().format;
-	props.tiling = vk::ImageTiling::eLinear;
+	props.tiling = VK_IMAGE_TILING_LINEAR;
 	props.mipmap = false;
 	props.sampler_props.anisotropy = false;
 	shared<Image2D> destination = makeShared<Image2D>(props);
@@ -140,7 +140,7 @@ void Graphics::screenshot(std::string_view file)
 	if (!blit_supported)
 	{
 		//Change layout to RGBA - 4.5ms
-		StorageBuffer image_storage(destination->getSize(), VMA_MEMORY_USAGE_GPU_TO_CPU, vk::BufferUsageFlagBits::eTransferDst);
+		StorageBuffer image_storage(destination->getSize(), VMA_MEMORY_USAGE_GPU_TO_CPU, VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 		destination->copyToBuffer(image_storage);
 
 		CommandBuffer command_buffer;
@@ -170,7 +170,7 @@ void Graphics::screenshot(std::string_view file)
 	SK_TRACE("Screenshot saved at {0}", file);
 }
 
-void Graphics::vulkanAssert(vk::Result result)
+void Graphics::vulkanAssert(VkResult result)
 {
-	SK_ASSERT(result == vk::Result::eSuccess, std::string("Vulkan: ") + EnumInfo::stringifyResult(result));
+	SK_ASSERT(result == VK_SUCCESS, std::string("Vulkan: ") + EnumInfo::stringifyResult(result));
 }

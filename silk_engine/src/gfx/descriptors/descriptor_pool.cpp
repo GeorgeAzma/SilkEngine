@@ -7,7 +7,7 @@ DescriptorPool::~DescriptorPool()
 	Graphics::logical_device->destroyDescriptorPool(descriptor_pool);
 }
 
-DescriptorPool& DescriptorPool::addSize(vk::DescriptorType type, uint32_t count)
+DescriptorPool& DescriptorPool::addSize(VkDescriptorType type, uint32_t count)
 {
 	sizes.emplace_back(type, count);
 	return *this;
@@ -21,17 +21,19 @@ DescriptorPool& DescriptorPool::setMaxSets(uint32_t count)
 
 void DescriptorPool::build()
 {
-	vk::DescriptorPoolCreateInfo ci{};
+	VkDescriptorPoolCreateInfo ci{};
+	ci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	ci.poolSizeCount = sizes.size();
 	ci.pPoolSizes = sizes.data();
 	ci.maxSets = max_sets;
 	descriptor_pool = Graphics::logical_device->createDescriptorPool(ci);
 }
 
-vk::Result DescriptorPool::allocate(vk::DescriptorSet& descriptor_set, const vk::DescriptorSetLayout& descriptor_set_layout)
+VkResult DescriptorPool::allocate(VkDescriptorSet& descriptor_set, const VkDescriptorSetLayout& descriptor_set_layout)
 {
 	++allocated_descriptor_sets;
-	vk::DescriptorSetAllocateInfo alloc_info{};
+	VkDescriptorSetAllocateInfo alloc_info{};
+	alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	alloc_info.descriptorPool = descriptor_pool;
 	alloc_info.descriptorSetCount = 1;
 	alloc_info.pSetLayouts = &descriptor_set_layout;

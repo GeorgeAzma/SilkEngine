@@ -24,8 +24,8 @@ std::vector<uint32_t> QueueFamilyIndices::getIndices() const
 PhysicalDevice::PhysicalDevice()
 {
 	physical_device = chooseMostSuitablePhysicalDevice(Graphics::instance->getAvailablePhysicalDevices());
-	properties = physical_device.getProperties();
-	features = physical_device.getFeatures();
+	vkGetPhysicalDeviceProperties(physical_device, &properties);
+	vkGetPhysicalDeviceFeatures(physical_device, &features);
 	queue_family_indices = findQueueFamilies(physical_device);
 	updateSurfaceDetails();
 	max_usable_sample_count = getMaxSampleCount(properties.limits.framebufferColorSampleCounts & properties.limits.framebufferDepthSampleCounts);
@@ -33,29 +33,37 @@ PhysicalDevice::PhysicalDevice()
 	stencil_format = findStencilFormat();
 }
 
-vk::Device PhysicalDevice::createLogicalDevice(const vk::DeviceCreateInfo& create_info) const
+VkDevice PhysicalDevice::createLogicalDevice(const VkDeviceCreateInfo& create_info) const
 {
-	return physical_device.createDevice(create_info);
+	VkDevice device = VK_NULL_HANDLE;
+	vkCreateDevice(physical_device, &create_info, nullptr, &device);
+	return device;
 }
-QueueFamilyIndices PhysicalDevice::findQueueFamilies(vk::PhysicalDevice physical_device)
+QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice physical_device)
 {
 	QueueFamilyIndices queue_family_indices = {};
 
-	auto queue_families = physical_device.getQueueFamilyProperties();
+	
+	uint32_t queue_family_count = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queue_family_count, nullptr);
+	std::vector<VkQueueFamilyProperties> queue_family_properties(queue_family_count);
+	vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queue_family_count, queue_family_properties.data());
 
-	for (uint32_t i = 0; i < queue_families.size(); ++i)
+	for (uint32_t i = 0; i < queue_family_properties.size(); ++i)
 	{
-		const auto& queue_family = queue_families[i];
-		if (queue_family.queueFlags & vk::QueueFlagBits::eGraphics)
+		const auto& queue_family = queue_family_properties[i];
+		if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 			queue_family_indices.graphics = i;
 		
-		if (queue_family.queueFlags & vk::QueueFlagBits::eCompute)
+		if (queue_family.queueFlags & VK_QUEUE_COMPUTE_BIT)
 			queue_family_indices.compute = i;
 
-		if (queue_family.queueFlags & vk::QueueFlagBits::eTransfer)
+		if (queue_family.queueFlags & VK_QUEUE_TRANSFER_BIT)
 			queue_family_indices.transfer = i;
 
-		if (physical_device.getSurfaceSupportKHR(i, *Graphics::surface))
+		VkBool32 supported = false;
+		vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, i, *Graphics::surface, &supported);
+		if (supported)
 			queue_family_indices.present = i;
 
 		if (queue_family_indices.isSuitable())
@@ -65,71 +73,82 @@ QueueFamilyIndices PhysicalDevice::findQueueFamilies(vk::PhysicalDevice physical
 	return queue_family_indices;
 }
 
-vk::FormatProperties PhysicalDevice::getFormatProperties(vk::Format format) const
+VkFormatProperties PhysicalDevice::getFormatProperties(VkFormat format) const
 {
-	return physical_device.getFormatProperties(format);
+	VkFormatProperties format_properties{};
+	vkGetPhysicalDeviceFormatProperties(physical_device, format, &format_properties);
+	return format_properties;
 }
 
-vk::ImageFormatProperties PhysicalDevice::getImageFormatProperties(vk::Format format, vk::ImageType type, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::ImageCreateFlags flags) const
+VkImageFormatProperties PhysicalDevice::getImageFormatProperties(VkFormat format, VkImageType type, VkImageTiling tiling, VkImageUsageFlags usage, VkImageCreateFlags flags) const
 {
-	return physical_device.getImageFormatProperties(format, type, tiling, usage, flags);
+	VkImageFormatProperties image_format_properties{};
+	vkGetPhysicalDeviceImageFormatProperties(physical_device, format, type, tiling, usage, flags, &image_format_properties);
+	return image_format_properties;
 }
 
 void PhysicalDevice::updateSurfaceCapabilities()
 {
-	surface_capabilities = physical_device.getSurfaceCapabilitiesKHR(*Graphics::surface);
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, *Graphics::surface, &surface_capabilities);
 }
 
 void PhysicalDevice::updateSurfaceDetails()
 {
-	surface_capabilities = physical_device.getSurfaceCapabilitiesKHR(*Graphics::surface);
-	surface_formats = physical_device.getSurfaceFormatsKHR(*Graphics::surface);
-	present_modes = physical_device.getSurfacePresentModesKHR(*Graphics::surface);
+	updateSurfaceCapabilities();
+
+	uint32_t surface_format_count = 0;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, *Graphics::surface, &surface_format_count, nullptr);
+	surface_formats.resize(surface_format_count);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, *Graphics::surface, &surface_format_count, surface_formats.data());
+
+	uint32_t present_mode_count = 0;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, *Graphics::surface, &present_mode_count, nullptr);
+	present_modes.resize(present_mode_count);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, *Graphics::surface, &present_mode_count, present_modes.data());
 }
 
-vk::Format PhysicalDevice::findSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features) const
+VkFormat PhysicalDevice::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const
 {
-	for (vk::Format format : candidates)
+	for (VkFormat format : candidates)
 	{
-		vk::FormatProperties props = getFormatProperties(format);
-		if ((tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features
-			|| (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features)))
+		VkFormatProperties props = getFormatProperties(format);
+		if ((tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features
+			|| (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)))
 			return format;
 	}
 
 	SK_ERROR("Vulkan: Couldn't find supported format");
-	return vk::Format(0);
+	return VkFormat(0);
 }
 
-vk::Format PhysicalDevice::findDepthFormat() const
+VkFormat PhysicalDevice::findDepthFormat() const
 {
-	using enum vk::Format;
 	return findSupportedFormat
 	(
-		{ eD32Sfloat,
-		eD32SfloatS8Uint,
-		eD24UnormS8Uint },
-		vk::ImageTiling::eOptimal,
-		vk::FormatFeatureFlagBits::eDepthStencilAttachment
+		{ VK_FORMAT_D32_SFLOAT,
+		VK_FORMAT_D32_SFLOAT_S8_UINT,
+		VK_FORMAT_D24_UNORM_S8_UINT },
+		VK_IMAGE_TILING_OPTIMAL,
+		VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
 	);
 }
 
-vk::Format PhysicalDevice::findStencilFormat() const
+VkFormat PhysicalDevice::findStencilFormat() const
 {
-	using enum vk::Format;
+	using enum VkFormat;
 	return findSupportedFormat
 	(
-		{ eD32SfloatS8Uint,
-		eD24UnormS8Uint,
-		eS8Uint },
-		vk::ImageTiling::eOptimal,
-		vk::FormatFeatureFlagBits::eDepthStencilAttachment
+		{ VK_FORMAT_D32_SFLOAT_S8_UINT,
+		VK_FORMAT_D24_UNORM_S8_UINT,
+		VK_FORMAT_S8_UINT },
+		VK_IMAGE_TILING_OPTIMAL,
+		VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
 	);
 }
 
-vk::PhysicalDevice PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vector<vk::PhysicalDevice>& physical_devices)
+VkPhysicalDevice PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vector<VkPhysicalDevice>& physical_devices)
 {
-	std::multimap<int, vk::PhysicalDevice> candidates;
+	std::multimap<int, VkPhysicalDevice> candidates;
 	for (const auto& device : physical_devices)
 	{
 		int score = ratePhysicalDevice(device);
@@ -144,7 +163,7 @@ vk::PhysicalDevice PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::v
 }
 
 // This function chooses the "best" gpu
-int PhysicalDevice::ratePhysicalDevice(vk::PhysicalDevice physical_device)
+int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
 {
 	int score = 0;
 
@@ -156,23 +175,34 @@ int PhysicalDevice::ratePhysicalDevice(vk::PhysicalDevice physical_device)
 	if (!extensions_supported) 
 		return -1;
 
-	auto surface_capabilities = physical_device.getSurfaceCapabilitiesKHR(*Graphics::surface);
-	auto surface_formats = physical_device.getSurfaceFormatsKHR(*Graphics::surface);
-	auto present_modes = physical_device.getSurfacePresentModesKHR(*Graphics::surface);
+	VkSurfaceCapabilitiesKHR surface_capabilities{};
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, *Graphics::surface, &surface_capabilities);
+
+	uint32_t surface_format_count = 0;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, *Graphics::surface, &surface_format_count, nullptr);
+	std::vector<VkSurfaceFormatKHR> surface_formats(surface_format_count);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, *Graphics::surface, &surface_format_count, surface_formats.data());
+
+	uint32_t present_mode_count = 0;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, *Graphics::surface, &present_mode_count, nullptr);
+	std::vector<VkPresentModeKHR> present_modes(present_mode_count);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, *Graphics::surface, &present_mode_count, present_modes.data());
 
 	bool is_swap_chain_adequate = !surface_formats.empty() &&
 		!present_modes.empty();
 	if (!is_swap_chain_adequate) 
 		return -1;
 
-	auto properties = physical_device.getProperties();
-	auto features = physical_device.getFeatures();
+	VkPhysicalDeviceProperties properties{};
+	vkGetPhysicalDeviceProperties(physical_device, &properties);
+	VkPhysicalDeviceFeatures features{};
+	vkGetPhysicalDeviceFeatures(physical_device, &features);
 
 	//TODO: add critical feature dependencies as engine needs it
 	if (!(features.multiDrawIndirect && features.samplerAnisotropy))
 		return -1;
 
-	score += (properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) * 500;
+	score += (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) * 500;
 	score += features.multiDrawIndirect * 250;
 	score += features.geometryShader * 200;
 	score += features.tessellationShader * 100;
@@ -233,9 +263,12 @@ int PhysicalDevice::ratePhysicalDevice(vk::PhysicalDevice physical_device)
 	return score;
 }
 
-bool PhysicalDevice::checkPhysicalDeviceExtensionSupport(const std::vector<const char*>& required_extensions, vk::PhysicalDevice physical_device)
+bool PhysicalDevice::checkPhysicalDeviceExtensionSupport(const std::vector<const char*>& required_extensions, VkPhysicalDevice physical_device)
 {
-	auto available_extensions = physical_device.enumerateDeviceExtensionProperties();
+	uint32_t available_extension_count = 0;
+	vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &available_extension_count, nullptr);
+	std::vector<VkExtensionProperties> available_extensions(available_extension_count);
+	vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &available_extension_count, available_extensions.data());
 
 	for (const auto& required_extension : required_extensions)
 	{
@@ -250,14 +283,13 @@ bool PhysicalDevice::checkPhysicalDeviceExtensionSupport(const std::vector<const
 	return true;
 }
 
-vk::SampleCountFlagBits PhysicalDevice::getMaxSampleCount(vk::SampleCountFlags counts)
+VkSampleCountFlagBits PhysicalDevice::getMaxSampleCount(VkSampleCountFlags counts)
 {
-	using enum vk::SampleCountFlagBits;
-	if (counts & e64) return e64;
-	if (counts & e32) return e32;
-	if (counts & e16) return e16;
-	if (counts & e8) return e8;
-	if (counts & e4) return e4;
-	if (counts & e2) return e2;
-	return e1;
+	if (counts & VK_SAMPLE_COUNT_64_BIT) return VK_SAMPLE_COUNT_64_BIT;
+	if (counts & VK_SAMPLE_COUNT_32_BIT) return VK_SAMPLE_COUNT_32_BIT;
+	if (counts & VK_SAMPLE_COUNT_16_BIT) return VK_SAMPLE_COUNT_16_BIT;
+	if (counts & VK_SAMPLE_COUNT_8_BIT) return VK_SAMPLE_COUNT_8_BIT;
+	if (counts & VK_SAMPLE_COUNT_4_BIT) return VK_SAMPLE_COUNT_4_BIT;
+	if (counts & VK_SAMPLE_COUNT_2_BIT) return VK_SAMPLE_COUNT_2_BIT;
+	return VK_SAMPLE_COUNT_1_BIT;
 }

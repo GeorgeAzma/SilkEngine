@@ -4,10 +4,11 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/buffers/command_buffer.h"
 
-QueryPool::QueryPool(vk::QueryType query_type, uint32_t query_count, vk::QueryPipelineStatisticFlags pipeline_statistic_flags)
+QueryPool::QueryPool(VkQueryType query_type, uint32_t query_count, VkQueryPipelineStatisticFlags pipeline_statistic_flags)
 	: query_type(query_type), pipeline_statistic_flags(pipeline_statistic_flags), queries(query_count, VK_FALSE)
 {
-	vk::QueryPoolCreateInfo ci{};
+	VkQueryPoolCreateInfo ci{};
+	ci.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
 	ci.queryType = query_type;
 	ci.queryCount = query_count;
 	ci.pipelineStatistics = pipeline_statistic_flags;
@@ -19,7 +20,7 @@ QueryPool::~QueryPool()
 	Graphics::logical_device->destroyQueryPool(query_pool);
 }
 
-void QueryPool::begin(uint32_t index, vk::QueryControlFlags flags)
+void QueryPool::begin(uint32_t index, VkQueryControlFlags flags)
 {
 	if (queries[index])
 		return;
@@ -40,19 +41,19 @@ uint64_t QueryPool::getResult(uint32_t index, bool wait)
 
 	switch (query_type)
 	{
-	case vk::QueryType::eOcclusion:
+	case VK_QUERY_TYPE_OCCLUSION:
 		data_count = 1;
 		break;
-	case vk::QueryType::ePipelineStatistics:
+	case VK_QUERY_TYPE_PIPELINE_STATISTICS:
 		data_count = math::getEnabledFlagsCount((const VkQueryPipelineStatisticFlags&)pipeline_statistic_flags);		
 		break;
-	case vk::QueryType::eTimestamp:
+	case VK_QUERY_TYPE_TIMESTAMP:
 		data_count = 1;
 		break;
 	}
 	uint32_t data_size = data_count * sizeof(uint64_t);
 
-	results = (std::vector<uint64_t>)Graphics::logical_device->getQueryPoolResults<uint64_t>(query_pool, index, 1, data_size, data_size, wait ? (vk::QueryResultFlagBits::e64 | vk::QueryResultFlagBits::eWait) : vk::QueryResultFlagBits::e64);
+	results = (std::vector<uint64_t>)Graphics::logical_device->getQueryPoolResults<uint64_t>(query_pool, index, 1, data_size, data_size, VK_QUERY_RESULT_64_BIT | (wait * VK_QUERY_RESULT_WAIT_BIT));
 
 	return results.front();
 }

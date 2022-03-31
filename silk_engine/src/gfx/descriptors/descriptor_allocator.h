@@ -6,24 +6,24 @@ class DescriptorAllocator
 {
 	struct PoolSizes
 	{
-		std::vector<std::pair<vk::DescriptorType, float>> sizes =
+		std::vector<std::pair<VkDescriptorType, float>> sizes =
 		{
-			{ vk::DescriptorType::eSampler, 1.0f },
-			{ vk::DescriptorType::eCombinedImageSampler, 4.0f },
-			{ vk::DescriptorType::eSampledImage, 1.0f },
-			{ vk::DescriptorType::eStorageImage, 4.0f },
-			{ vk::DescriptorType::eUniformTexelBuffer, 1.0f },
-			{ vk::DescriptorType::eStorageTexelBuffer, 1.0f },
-			{ vk::DescriptorType::eUniformBuffer, 4.0f },
-			{ vk::DescriptorType::eStorageBuffer, 4.0f },
-			{ vk::DescriptorType::eUniformBufferDynamic, 1.0f },
-			{ vk::DescriptorType::eStorageBufferDynamic, 1.0f },
-			{ vk::DescriptorType::eInputAttachment, 1.0f }
+			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1.0f },
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4.0f },
+			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1.0f },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 4.0f },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1.0f },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1.0f },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 4.0f },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 4.0f },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1.0f },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1.0f },
+			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1.0f }
 		};
 	};
 public:
 	static void reset();
-	static shared<DescriptorPool> allocate(vk::DescriptorSet& descriptor_set, const vk::DescriptorSetLayout& descriptor_set_layout);
+	static shared<DescriptorPool> allocate(VkDescriptorSet& descriptor_set, const VkDescriptorSetLayout& descriptor_set_layout);
 	static void cleanup();
 
 private:

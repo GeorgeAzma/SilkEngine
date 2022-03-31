@@ -49,7 +49,7 @@ target_precompile_headers(SilkEngine PUBLIC
 <glm/gtx/norm.hpp> # length2(), distance2()
 <glm/gtc/constants.hpp> # pi, etc
 <glm/gtc/matrix_transform.hpp> # ortho() perspective() etc.
-<vulkan/vulkan.hpp>
+<vulkan/vulkan.h>
 <vk_mem_alloc.h>
 <GLFW/glfw3.h>
 

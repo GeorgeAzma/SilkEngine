@@ -11,11 +11,11 @@ public:
 
 	GraphicsPipeline& setShader(const shared<Shader>& shader, const std::vector<Constant>& constants = {});
 	GraphicsPipeline& setVertexLayout(const BufferLayout& layout);
-	GraphicsPipeline& setSampleCount(vk::SampleCountFlagBits sample_count);
-	GraphicsPipeline& setRenderPass(vk::RenderPass render_pass);
+	GraphicsPipeline& setSampleCount(VkSampleCountFlagBits sample_count);
+	GraphicsPipeline& setRenderPass(VkRenderPass render_pass);
 	GraphicsPipeline& setSubpass(uint32_t subpass);
-	GraphicsPipeline& setDepthCompareOp(vk::CompareOp depth_compare_op);
-	GraphicsPipeline& addDynamicState(vk::DynamicState dynamic_state);
+	GraphicsPipeline& setDepthCompareOp(VkCompareOp depth_compare_op);
+	GraphicsPipeline& addDynamicState(VkDynamicState dynamic_state);
 	GraphicsPipeline& enable(EnableTag tag);
 
 	void build();
@@ -25,18 +25,18 @@ private:
 	void create() override;
 
 private:
-	std::vector<vk::DynamicState> dynamic_states{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
-	vk::PipelineVertexInputStateCreateInfo vertex_input_info{};
-	vk::PipelineRasterizationStateCreateInfo rasterizer{};
-	vk::PipelineMultisampleStateCreateInfo multisampling{};
-	vk::PipelineDepthStencilStateCreateInfo depth_stencil_info{};
-	vk::PipelineColorBlendAttachmentState color_blend_attachment{};
-	vk::PipelineColorBlendStateCreateInfo color_blending{};
-	vk::PipelineViewportStateCreateInfo viewport_info{};
-	vk::PipelineInputAssemblyStateCreateInfo input_assembly_info{};
-	vk::PipelineDynamicStateCreateInfo dynamic_state{};
-	vk::RenderPass render_pass = VK_NULL_HANDLE;
+	std::vector<VkDynamicState> dynamic_states{ VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+	VkPipelineVertexInputStateCreateInfo vertex_input_info{};
+	VkPipelineRasterizationStateCreateInfo rasterizer{};
+	VkPipelineMultisampleStateCreateInfo multisampling{};
+	VkPipelineDepthStencilStateCreateInfo depth_stencil_info{};
+	VkPipelineColorBlendAttachmentState color_blend_attachment{};
+	VkPipelineColorBlendStateCreateInfo color_blending{};
+	VkPipelineViewportStateCreateInfo viewport_info{};
+	VkPipelineInputAssemblyStateCreateInfo input_assembly_info{};
+	VkPipelineDynamicStateCreateInfo dynamic_state{};
+	VkRenderPass render_pass = VK_NULL_HANDLE;
 	uint32_t subpass = 0;
 	BufferLayout buffer_layout = {};
-	vk::GraphicsPipelineCreateInfo ci{};
+	VkGraphicsPipelineCreateInfo ci{};
 };

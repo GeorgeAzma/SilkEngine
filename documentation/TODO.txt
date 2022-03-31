@@ -3,6 +3,7 @@
 - faster immidiate drawing
 - Whenever you bind something with command buffer, it saves the state and when you submit it, it resets the state
 - Fast Culling
+- Replace user used vulkan enums with engine enums
 - Handle normal/other maps and materials in shader
 - Stream data instead of pre-initializing it
 - Better material system

@@ -7,8 +7,7 @@
 
 Surface::Surface()
 {
-	VkSurfaceKHR& vk_surface = (VkSurfaceKHR&)surface;
-	Graphics::vulkanAssert(vk::Result(glfwCreateWindowSurface(vk::Instance(*Graphics::instance), Window::getGLFWWindow(), nullptr, &vk_surface)));
+	Graphics::vulkanAssert(glfwCreateWindowSurface(*Graphics::instance, Window::getGLFWWindow(), nullptr, &surface));
 }
 
 Surface::~Surface()

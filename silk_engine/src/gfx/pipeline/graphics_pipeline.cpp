@@ -7,27 +7,42 @@
 
 GraphicsPipeline::GraphicsPipeline()
 {
-	input_assembly_info.topology = vk::PrimitiveTopology::eTriangleList;
+	input_assembly_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+	input_assembly_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
+	viewport_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 	viewport_info.viewportCount = 1;
 	viewport_info.scissorCount = 1;
 
-	rasterizer.polygonMode = vk::PolygonMode::eFill;
+	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = vk::CullModeFlagBits::eBack;
-	rasterizer.frontFace = vk::FrontFace::eCounterClockwise;
+	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
-	depth_stencil_info.depthCompareOp = vk::CompareOp::eLessOrEqual;
+	depth_stencil_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+	depth_stencil_info.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
 
-	color_blend_attachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-	color_blend_attachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
-	color_blend_attachment.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
-	color_blend_attachment.colorBlendOp = vk::BlendOp::eAdd;
-	color_blend_attachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
-	color_blend_attachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
-	color_blend_attachment.alphaBlendOp = vk::BlendOp::eAdd;
+	color_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+	color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+	color_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+	color_blend_attachment.colorBlendOp = VK_BLEND_OP_ADD;
+	color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+	color_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+	color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
+	color_blending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 	color_blending.attachmentCount = 1;
+
+	dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+
+	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+	vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+
+	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+
+	ci.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 }
 
 GraphicsPipeline& GraphicsPipeline::setShader(const shared<Shader>& shader, const std::vector<Constant>& constants)
@@ -51,7 +66,7 @@ GraphicsPipeline& GraphicsPipeline::setShader(const shared<Shader>& shader, cons
 				continue;
 		
 			size_t old_size = stage_specialization_info.constant_data.size();
-			vk::SpecializationMapEntry entry{};
+			VkSpecializationMapEntry entry{};
 			entry.constantID = shader_constant.id;
 			entry.offset = old_size;
 			entry.size = constant.size;
@@ -60,14 +75,15 @@ GraphicsPipeline& GraphicsPipeline::setShader(const shared<Shader>& shader, cons
 			std::memcpy(stage_specialization_info.constant_data.data() + old_size, constant.data, constant.size);
 		}
 		
-		vk::SpecializationInfo specialization_info{};
+		VkSpecializationInfo specialization_info{};
 		specialization_info.mapEntryCount = stage_specialization_info.entries.size();
 		specialization_info.pMapEntries = stage_specialization_info.entries.data();
 		specialization_info.dataSize = stage_specialization_info.constant_data.size();
 		specialization_info.pData = stage_specialization_info.constant_data.data();
 		stage_specialization_info.specialization_info = std::move(specialization_info);
 
-		vk::PipelineShaderStageCreateInfo shader_stage_info{};
+		VkPipelineShaderStageCreateInfo shader_stage_info{};
+		shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		shader_stage_info.stage = stage.stage;
 		shader_stage_info.module = stage.module;
 		shader_stage_info.pName = "main";
@@ -99,13 +115,13 @@ GraphicsPipeline& GraphicsPipeline::setVertexLayout(const BufferLayout& buffer_l
 	return *this;
 }
 
-GraphicsPipeline& GraphicsPipeline::setSampleCount(vk::SampleCountFlagBits sample_count)
+GraphicsPipeline& GraphicsPipeline::setSampleCount(VkSampleCountFlagBits sample_count)
 {
 	multisampling.rasterizationSamples = sample_count;
 	return *this;
 }
 
-GraphicsPipeline& GraphicsPipeline::setRenderPass(vk::RenderPass render_pass)
+GraphicsPipeline& GraphicsPipeline::setRenderPass(VkRenderPass render_pass)
 {
 	this->render_pass = render_pass;
 	return *this;
@@ -117,13 +133,13 @@ GraphicsPipeline& GraphicsPipeline::setSubpass(uint32_t subpass)
 	return *this;
 }
 
-GraphicsPipeline& GraphicsPipeline::setDepthCompareOp(vk::CompareOp depth_compare_op)
+GraphicsPipeline& GraphicsPipeline::setDepthCompareOp(VkCompareOp depth_compare_op)
 {
 	depth_stencil_info.depthCompareOp = depth_compare_op;
 	return *this;
 }
 
-GraphicsPipeline& GraphicsPipeline::addDynamicState(vk::DynamicState dynamic_state)
+GraphicsPipeline& GraphicsPipeline::addDynamicState(VkDynamicState dynamic_state)
 {
 	dynamic_states.emplace_back(dynamic_state);
 	return *this;
@@ -195,7 +211,7 @@ void GraphicsPipeline::build()
 
 void GraphicsPipeline::bind()
 {
-	Graphics::getActiveCommandBuffer().bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline, layout);
+	Graphics::getActiveCommandBuffer().bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline, layout);
 }
 
 void GraphicsPipeline::create()

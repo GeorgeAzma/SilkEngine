@@ -15,7 +15,7 @@ ComputePipeline::ComputePipeline(const shared<Shader>& shader, const std::vector
 	{
 		const auto& shader_constant = shader->getConstants().at(constant.name);
 		size_t old_size = stage_specialization_info.constant_data.size();
-		vk::SpecializationMapEntry entry{};
+		VkSpecializationMapEntry entry{};
 		entry.constantID = shader_constant.id;
 		entry.offset = old_size;
 		entry.size = constant.size;
@@ -24,15 +24,15 @@ ComputePipeline::ComputePipeline(const shared<Shader>& shader, const std::vector
 		std::memcpy(stage_specialization_info.constant_data.data() + old_size, constant.data, constant.size);
 	}
 
-	vk::SpecializationInfo specialization_info{};
+	VkSpecializationInfo specialization_info{};
 	specialization_info.mapEntryCount = stage_specialization_info.entries.size();
 	specialization_info.pMapEntries = stage_specialization_info.entries.data();
 	specialization_info.dataSize = stage_specialization_info.constant_data.size();
 	specialization_info.pData = stage_specialization_info.constant_data.data();
 	stage_specialization_info.specialization_info = std::move(specialization_info);
 
-	vk::PipelineShaderStageCreateInfo shader_stage_info{};
-	shader_stage_info.stage = vk::ShaderStageFlagBits::eCompute;
+	VkPipelineShaderStageCreateInfo shader_stage_info{};
+	shader_stage_info.stage = VK_SHADER_STAGE_COMPUTE_BIT;
 	shader_stage_info.module = shader->getStages().front().module;
 	shader_stage_info.pName = "main";
 	shader_stage_info.pSpecializationInfo = &stage_specialization_info.specialization_info;
@@ -48,17 +48,20 @@ ComputePipeline::ComputePipeline(const shared<Shader>& shader, const std::vector
 	for (auto&& [set, descriptor_set] : shader->getDescriptorSets())
 		descriptor_set_layouts.emplace_back(descriptor_set->getLayout());
 
+	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipeline_layout_info.setLayoutCount = descriptor_set_layouts.size();
 	pipeline_layout_info.pSetLayouts = descriptor_set_layouts.data();
 	pipeline_layout_info.pushConstantRangeCount = push_constant_ranges.size();
 	pipeline_layout_info.pPushConstantRanges = push_constant_ranges.data();
+
+	ci.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
 
 	create();
 }
 
 void ComputePipeline::bind()
 {
-	Graphics::getActiveCommandBuffer().bindPipeline(vk::PipelineBindPoint::eCompute, pipeline, layout);
+	Graphics::getActiveCommandBuffer().bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, pipeline, layout);
 }
 
 void ComputePipeline::dispatch(uint32_t global_invocation_count_x, uint32_t global_invocation_count_y, uint32_t global_invocation_count_z) const

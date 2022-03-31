@@ -120,8 +120,8 @@ private:
 	static inline std::array<Light, MAX_LIGHTS> lights;
 
 	static inline CommandBuffer* command_buffer = nullptr;
-	static inline vk::Fence previous_frame_finished = VK_NULL_HANDLE;
-	static inline vk::Semaphore swap_chain_image_available = VK_NULL_HANDLE;
-	static inline vk::Semaphore render_finished = VK_NULL_HANDLE;
+	static inline VkFence previous_frame_finished = VK_NULL_HANDLE;
+	static inline VkSemaphore swap_chain_image_available = VK_NULL_HANDLE;
+	static inline VkSemaphore render_finished = VK_NULL_HANDLE;
 	static inline std::unordered_map<TypeId, shared<Subrender>> subrenders;
 };

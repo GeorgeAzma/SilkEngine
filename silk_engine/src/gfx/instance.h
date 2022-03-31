@@ -4,21 +4,22 @@ class Instance : NonCopyable
 {
     static constexpr const char* app_name = "Sandbox";
     static constexpr const char* engine_name = "Silk Engine";
+
 public:
     Instance();
     ~Instance();
 
-    void destroySurface(vk::SurfaceKHR surface) const { instance.destroySurfaceKHR(surface); }
+    void destroySurface(VkSurfaceKHR surface) const;
 
-    const std::vector<vk::PhysicalDevice>& getAvailablePhysicalDevices() { return physical_devices; }
-    operator const vk::Instance& () const { return instance; }
+    const std::vector<VkPhysicalDevice>& getAvailablePhysicalDevices() { return physical_devices; }
+    operator const VkInstance& () const { return instance; }
 
 private:
     bool checkExtensionSupport(const std::vector<const char*>& required_extensions) const;
     bool checkValidationLayerSupport(const std::vector<const char*>& required_layers) const;
 
 private:
-    vk::Instance instance;
-    std::vector<vk::PhysicalDevice> physical_devices; 
-    vk::DebugUtilsMessengerEXT debug_messenger;
+    VkInstance instance = VK_NULL_HANDLE;
+    std::vector<VkPhysicalDevice> physical_devices; 
+    VkDebugUtilsMessengerEXT debug_messenger;
 };

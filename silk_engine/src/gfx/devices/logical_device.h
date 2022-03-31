@@ -1,5 +1,7 @@
 #pragma once
 
+#include "queue_family.h"
+
 class LogicalDevice : NonCopyable
 {
 public:
@@ -7,66 +9,69 @@ public:
 	~LogicalDevice();
 
 	void waitIdle() const;
-	vk::CommandPool createCommandPool(const vk::CommandPoolCreateInfo& ci) const;
-	void destroyCommandPool(vk::CommandPool command_pool) const;
-	vk::QueryPool createQueryPool(const vk::QueryPoolCreateInfo& ci) const;
-	void destroyQueryPool(vk::QueryPool query_pool) const;
-	void resetQueryPool(vk::QueryPool query_pool, uint32_t first_query = 0, uint32_t query_count = 1) const;
+	VkCommandPool createCommandPool(const VkCommandPoolCreateInfo& ci) const;
+	void destroyCommandPool(VkCommandPool command_pool) const;
+	VkQueryPool createQueryPool(const VkQueryPoolCreateInfo& ci) const;
+	void destroyQueryPool(VkQueryPool query_pool) const;
+	void resetQueryPool(VkQueryPool query_pool, uint32_t first_query = 0, uint32_t query_count = 1) const;
 	template<typename T>
-	auto getQueryPoolResults(vk::QueryPool query_pool, uint32_t first_query, uint32_t query_count, size_t data_size, vk::DeviceSize stride, vk::QueryResultFlags query_result_flags) const 
+	auto getQueryPoolResults(VkQueryPool query_pool, uint32_t first_query, uint32_t query_count, size_t data_size, VkDeviceSize stride, VkQueryResultFlags flags) const
 	{
-		return logical_device.getQueryPoolResults<T>(query_pool, first_query, query_count, data_size, stride, query_result_flags);
+		T data{};
+		vkGetQueryPoolResults(logical_device, query_pool, first_query, query_count, data_size, &data, stride, flags);
+		return data;
 	}
-	std::vector<vk::CommandBuffer> allocateCommandBuffers(const vk::CommandBufferAllocateInfo& allocate_info) const;
-	void freeCommandBuffers(vk::CommandPool command_pool, const std::vector<vk::CommandBuffer>& command_buffers) const;
-	void resetFences(const std::vector<vk::Fence>& fences) const;
-	vk::Fence createFence(const vk::FenceCreateInfo& fence_info) const;
-	void destroyFence(vk::Fence fence) const;
-	vk::Semaphore createSemaphore(const vk::SemaphoreCreateInfo& semaphore_info) const;
-	void destroySemaphore(vk::Semaphore semaphore) const;
-	vk::Result waitForFences(const std::vector<vk::Fence>& fences, vk::Bool32 wait_all = VK_TRUE, uint64_t timeout = UINT64_MAX) const;
-	vk::Framebuffer createFramebuffer(const vk::FramebufferCreateInfo& framebuffer_info) const;
-	void destroyFramebuffer(vk::Framebuffer framebuffer) const;
-	vk::DescriptorPool createDescriptorPool(const vk::DescriptorPoolCreateInfo& descriptor_pool_info) const;
-	void resetDescriptorPool(vk::DescriptorPool descriptor_pool, vk::DescriptorPoolResetFlags flags = {}) const;
-	void destroyDescriptorPool(vk::DescriptorPool descriptor_pool) const;
-	std::vector<vk::DescriptorSet> allocateDescriptorSets(const vk::DescriptorSetAllocateInfo& descriptor_set_allocate_info) const;
-	vk::Result allocateDescriptorSets(const vk::DescriptorSetAllocateInfo& alloc_info, vk::DescriptorSet& descriptor_set) const;
-	void updateDescriptorSets(const std::vector<vk::WriteDescriptorSet>& writes) const;
-	vk::DescriptorSetLayout createDescriptorSetLayout(const vk::DescriptorSetLayoutCreateInfo& descriptor_set_layout_create_info) const;
-	void destroyDescriptorSetLayout(vk::DescriptorSetLayout descriptor_set_layout) const;
-	vk::SubresourceLayout getImageSubresourceLayout(vk::Image image, const vk::ImageSubresource& image_subresource) const;
-	vk::ImageView createImageView(const vk::ImageViewCreateInfo& image_view_info) const;
-	void destroyImageView(vk::ImageView image_view) const;
-	vk::Sampler createSampler(const vk::SamplerCreateInfo& sampler_info) const;
-	void destroySampler(vk::Sampler sampler) const;
-	vk::PipelineLayout createPipelineLayout(const vk::PipelineLayoutCreateInfo& pipeline_layout_info) const;
-	void destroyPipelineLayout(vk::PipelineLayout pipeline_layout) const;
-	vk::Pipeline createComputePipeline(vk::PipelineCache pipeline_cache, const vk::ComputePipelineCreateInfo& compute_pipeline_info) const;
-	vk::Pipeline createGraphicsPipeline(vk::PipelineCache pipeline_cache, const vk::GraphicsPipelineCreateInfo& graphics_pipeline_info) const;
-	void destroyPipeline(vk::Pipeline pipeline) const;
-	vk::RenderPass createRenderPass(const vk::RenderPassCreateInfo& render_pass_info) const;
-	void destroyRenderPass(vk::RenderPass render_pass) const;
-	vk::ShaderModule createShaderModule(const vk::ShaderModuleCreateInfo& shader_module_info) const;
-	void destroyShaderModule(vk::ShaderModule shader_module) const;
-	vk::SwapchainKHR createSwapChain(const vk::SwapchainCreateInfoKHR& swap_chain_info) const;
-	void destroySwapChain(vk::SwapchainKHR swap_chain) const;
-	uint32_t acquireNextImage(vk::SwapchainKHR swap_chain, uint64_t timeout, VkSemaphore semaphore, VkFence fence) const;
-	vk::Result acquireNextImage(vk::SwapchainKHR swap_chain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* image_index) const;
-	std::vector<vk::Image> getSwapChainImages(vk::SwapchainKHR swap_chain) const;
+	std::vector<VkCommandBuffer> allocateCommandBuffers(const VkCommandBufferAllocateInfo& allocate_info) const;
+	void freeCommandBuffers(VkCommandPool command_pool, const std::vector<VkCommandBuffer>& command_buffers) const;
+	void resetFences(const std::vector<VkFence>& fences) const;
+	VkFence createFence(const VkFenceCreateFlags& flags = {}) const;
+	void destroyFence(VkFence fence) const;
+	VkSemaphore createSemaphore(const VkSemaphoreCreateFlags& flags = {}) const;
+	void destroySemaphore(VkSemaphore semaphore) const;
+	VkResult waitForFences(const std::vector<VkFence>& fences, VkBool32 wait_all = VK_TRUE, uint64_t timeout = UINT64_MAX) const;
+	VkFramebuffer createFramebuffer(const VkFramebufferCreateInfo& framebuffer_info) const;
+	void destroyFramebuffer(VkFramebuffer framebuffer) const;
+	VkDescriptorPool createDescriptorPool(const VkDescriptorPoolCreateInfo& descriptor_pool_info) const;
+	void resetDescriptorPool(VkDescriptorPool descriptor_pool, VkDescriptorPoolResetFlags flags = {}) const;
+	void destroyDescriptorPool(VkDescriptorPool descriptor_pool) const;
+	std::vector<VkDescriptorSet> allocateDescriptorSets(const VkDescriptorSetAllocateInfo& descriptor_set_allocate_info) const;
+	VkResult allocateDescriptorSets(const VkDescriptorSetAllocateInfo& alloc_info, VkDescriptorSet& descriptor_set) const;
+	void updateDescriptorSets(const std::vector<VkWriteDescriptorSet>& writes) const;
+	VkDescriptorSetLayout createDescriptorSetLayout(const VkDescriptorSetLayoutCreateInfo& descriptor_set_layout_create_info) const;
+	void destroyDescriptorSetLayout(VkDescriptorSetLayout descriptor_set_layout) const;
+	VkSubresourceLayout getImageSubresourceLayout(VkImage image, const VkImageSubresource& image_subresource) const;
+	VkImageView createImageView(const VkImageViewCreateInfo& image_view_info) const;
+	void destroyImageView(VkImageView image_view) const;
+	VkSampler createSampler(const VkSamplerCreateInfo& sampler_info) const;
+	void destroySampler(VkSampler sampler) const;
+	VkPipelineLayout createPipelineLayout(const VkPipelineLayoutCreateInfo& pipeline_layout_info) const;
+	void destroyPipelineLayout(VkPipelineLayout pipeline_layout) const;
+	VkPipeline createComputePipeline(VkPipelineCache pipeline_cache, const VkComputePipelineCreateInfo& compute_pipeline_info) const;
+	VkPipeline createGraphicsPipeline(VkPipelineCache pipeline_cache, const VkGraphicsPipelineCreateInfo& graphics_pipeline_info) const;
+	void destroyPipeline(VkPipeline pipeline) const;
+	VkRenderPass createRenderPass(const VkRenderPassCreateInfo& render_pass_info) const;
+	void destroyRenderPass(VkRenderPass render_pass) const;
+	VkShaderModule createShaderModule(const VkShaderModuleCreateInfo& shader_module_info) const;
+	void destroyShaderModule(VkShaderModule shader_module) const;
+	VkSwapchainKHR createSwapChain(const VkSwapchainCreateInfoKHR& swap_chain_info) const;
+	void destroySwapChain(VkSwapchainKHR swap_chain) const;
+	uint32_t acquireNextImage(VkSwapchainKHR swap_chain, uint64_t timeout, VkSemaphore semaphore, VkFence fence) const;
+	VkResult acquireNextImage(VkSwapchainKHR swap_chain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* image_index) const;
+	std::vector<VkImage> getSwapChainImages(VkSwapchainKHR swap_chain) const;
 
-	operator const vk::Device& () const { return logical_device; }
-	const vk::Queue& getGraphicsQueue() const { return graphics_queue; }
-	const vk::Queue& getTransferQueue() const { return transfer_queue; }
-	const vk::Queue& getPresentQueue() const { return present_queue; }
-	const vk::Queue& getComputeQueue() const { return compute_queue; }
+	operator const VkDevice& () const { return logical_device; }
+	const Queue& getGraphicsQueue() const { return *graphics_queue; }
+	const Queue& getTransferQueue() const { return *transfer_queue; }
+	const Queue& getPresentQueue() const { return *present_queue; }
+	const Queue& getComputeQueue() const { return *compute_queue; }
 
 	static constexpr std::vector<const char*> getRequiredExtensions() { return { "VK_KHR_swapchain" }; }
 
 private:
-	vk::Queue graphics_queue;
-	vk::Queue transfer_queue;
-	vk::Queue present_queue;
-	vk::Queue compute_queue;
-	vk::Device logical_device;
+	std::unordered_map<uint32_t, shared<QueueFamily>> queue_families;
+	shared<Queue> graphics_queue = nullptr;
+	shared<Queue> transfer_queue = nullptr;
+	shared<Queue> present_queue = nullptr;
+	shared<Queue> compute_queue = nullptr;
+	VkDevice logical_device = VK_NULL_HANDLE;
 };

@@ -6,16 +6,15 @@
 #include "gfx/devices/physical_device.h"
 #include "gfx/graphics.h"
 
-Buffer::Buffer(vk::DeviceSize size, vk::BufferUsageFlags usage, VmaMemoryUsage vma_usage)
+Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_usage)
 	: size(size), needs_staging(EnumInfo::needsStaging(vma_usage))
 {
+	ci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	ci.size = size;
 	ci.usage = usage;
-	ci.sharingMode = vk::SharingMode::eExclusive;
-	allocation_create_info.usage = vma_usage;	
-	const VkBufferCreateInfo& vk_ci = (const VkBufferCreateInfo&)ci;
-	VkBuffer& vk_buffer = (VkBuffer&)buffer;
-	Graphics::vulkanAssert(vk::Result(vmaCreateBuffer(*Graphics::allocator, &vk_ci, &allocation_create_info, &vk_buffer, &allocation, nullptr)));
+	ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	allocation_ci.usage = vma_usage;
+	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &ci, &allocation_ci, &buffer, &allocation, nullptr));
 	SK_TRACE("Buffer created with size: {}", size);
 } 
 
@@ -26,7 +25,7 @@ Buffer::~Buffer()
 	SK_TRACE("Buffer destroyed: {}", size);
 }
 
-void Buffer::resize(vk::DeviceSize size)
+void Buffer::resize(VkDeviceSize size)
 {
 	if (size == this->size)
 		return;
@@ -35,9 +34,7 @@ void Buffer::resize(vk::DeviceSize size)
 	delete[] data;
 	data = nullptr;
 	vmaDestroyBuffer(*Graphics::allocator, buffer, allocation);
-	const VkBufferCreateInfo& vk_ci = (const VkBufferCreateInfo&)ci;
-	VkBuffer& vk_buffer = (VkBuffer&)buffer;
-	Graphics::vulkanAssert(vk::Result(vmaCreateBuffer(*Graphics::allocator, &vk_ci, &allocation_create_info, &vk_buffer, &allocation, nullptr)));
+	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &ci, &allocation_ci, &buffer, &allocation, nullptr));
 	SK_TRACE("Buffer resized: {}", size);
 }
 
@@ -113,9 +110,9 @@ void Buffer::getData(void* data, size_t size) const
 	}
 }
 
-void Buffer::insertMemoryBarrier(const vk::Buffer& buffer, vk::AccessFlags source_access_mask, vk::AccessFlags destination_access_mask, vk::PipelineStageFlags source_stage_mask, vk::PipelineStageFlags destination_stage_mask, vk::DeviceSize offset, vk::DeviceSize size)
+void Buffer::insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDeviceSize offset, VkDeviceSize size)
 {
-	vk::BufferMemoryBarrier barrier = {};
+	VkBufferMemoryBarrier barrier = {};
 	barrier.srcAccessMask = source_access_mask;
 	barrier.dstAccessMask = destination_access_mask;
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -123,15 +120,15 @@ void Buffer::insertMemoryBarrier(const vk::Buffer& buffer, vk::AccessFlags sourc
 	barrier.buffer = buffer;
 	barrier.offset = offset;
 	barrier.size = size;
-	Graphics::getActiveCommandBuffer().pipelineBarrier(source_stage_mask, destination_stage_mask, vk::DependencyFlags(0), {}, {barrier}, {});
+	Graphics::getActiveCommandBuffer().pipelineBarrier(source_stage_mask, destination_stage_mask, VkDependencyFlags(0), {}, {barrier}, {});
 }
 
-void Buffer::copy(vk::Buffer destination, vk::Buffer source, vk::DeviceSize size, vk::DeviceSize dst_offset, vk::DeviceSize src_offset)
+void Buffer::copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDeviceSize dst_offset, VkDeviceSize src_offset)
 {
 	CommandBuffer command_buffer;
 	command_buffer.begin();
 
-	vk::BufferCopy copy_region{};
+	VkBufferCopy copy_region{};
 	copy_region.srcOffset = src_offset;
 	copy_region.dstOffset = dst_offset;
 	copy_region.size = size;

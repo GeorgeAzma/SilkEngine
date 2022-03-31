@@ -5,5 +5,5 @@
 class UniformBuffer : public Buffer
 {
 public:
-	UniformBuffer(vk::DeviceSize size);
+	UniformBuffer(VkDeviceSize size);
 };

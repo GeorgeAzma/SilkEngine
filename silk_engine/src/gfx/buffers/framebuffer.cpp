@@ -2,14 +2,15 @@
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
 
-Framebuffer::Framebuffer(vk::RenderPass render_pass, const std::vector<shared<Image2D>>& attachments, uint32_t width, uint32_t height)
+Framebuffer::Framebuffer(VkRenderPass render_pass, const std::vector<shared<Image2D>>& attachments, uint32_t width, uint32_t height)
     : width(width), height(height), attachments(attachments)
 {
-    std::vector<vk::ImageView> attachment_views(this->attachments.size());
+    std::vector<VkImageView> attachment_views(this->attachments.size());
     for (size_t i = 0; i < this->attachments.size(); ++i)
         attachment_views[i] = this->attachments[i]->getDescriptorInfo().imageView;
 
-    vk::FramebufferCreateInfo ci{};
+    VkFramebufferCreateInfo ci{};
+    ci.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     ci.renderPass = render_pass;
     ci.attachmentCount = attachment_views.size();
     ci.pAttachments = attachment_views.data();

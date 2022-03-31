@@ -26,8 +26,8 @@ void Resources::init()
                 Image2DProps image_props{};
                 image_props.width = 1;
                 image_props.height = 1;
-                image_props.sampler_props.min_filter = vk::Filter::eNearest;
-                image_props.sampler_props.mag_filter = vk::Filter::eNearest;
+                image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
+                image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
                 image_props.sampler_props.linear_mipmap = false;
                 image_props.sampler_props.anisotropy = false;
                 image_props.mipmap = false;
@@ -43,8 +43,8 @@ void Resources::init()
                 Image2DProps image_props{};
                 image_props.width = 1;
                 image_props.height = 1;
-                image_props.sampler_props.min_filter = vk::Filter::eNearest;
-                image_props.sampler_props.mag_filter = vk::Filter::eNearest;
+                image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
+                image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
                 image_props.sampler_props.linear_mipmap = false;
                 image_props.sampler_props.anisotropy = false;
                 image_props.mipmap = false;
@@ -58,12 +58,12 @@ void Resources::init()
                 Image2DProps image_props{};
                 image_props.width = 2;
                 image_props.height = 2;
-                image_props.sampler_props.min_filter = vk::Filter::eNearest;
-                image_props.sampler_props.mag_filter = vk::Filter::eNearest;
+                image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
+                image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
                 image_props.sampler_props.linear_mipmap = false;
                 image_props.sampler_props.anisotropy = false;
-                image_props.sampler_props.u_wrap = vk::SamplerAddressMode::eClampToEdge;
-                image_props.sampler_props.v_wrap = vk::SamplerAddressMode::eClampToEdge;
+                image_props.sampler_props.u_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+                image_props.sampler_props.v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
                 image_props.mipmap = false;
                 constexpr glm::u8vec4 null_data[4] = { { 0, 0, 0, 255 }, { 255, 0, 255, 255 }, { 255, 0, 255, 255 }, { 0, 0, 0, 255 } };
                 image_props.data = null_data;
@@ -119,12 +119,12 @@ void Resources::init()
 
         addGraphicsPipeline("3D", [] 
             {
-                vk::Bool32 lit = false;
+                VkBool32 lit = false;
                 shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
                 graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
                     .enable(EnableTag::DEPTH_TEST)
                     .enable(EnableTag::DEPTH_WRITE)
-                    .setShader(getShader("3D"), { { "lit", &lit, sizeof(vk::Bool32) } })
+                    .setShader(getShader("3D"), { { "lit", &lit, sizeof(VkBool32) } })
                     .setVertexLayout({ { Type::VEC3 }, { Type::VEC2 }, { Type::VEC3 }, { Type::VEC4 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
                     .setSampleCount(Graphics::swap_chain->getSampleCount())
                     .setRenderPass(*Graphics::swap_chain->getRenderPass())
@@ -138,7 +138,7 @@ void Resources::init()
                 graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
                     .enable(EnableTag::DEPTH_TEST)
                     .enable(EnableTag::DEPTH_WRITE)
-                    .setDepthCompareOp(vk::CompareOp::eAlways)
+                    .setDepthCompareOp(VK_COMPARE_OP_ALWAYS)
                     .setShader(getShader("2D"))
                     .setVertexLayout({ { Type::VEC2 }, { Type::VEC2 }, { Type::VEC4 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
                     .setSampleCount(Graphics::swap_chain->getSampleCount())
@@ -154,7 +154,7 @@ void Resources::init()
                 graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
                     .enable(EnableTag::DEPTH_TEST)
                     .enable(EnableTag::DEPTH_WRITE)
-                    .setDepthCompareOp(vk::CompareOp::eAlways)
+                    .setDepthCompareOp(VK_COMPARE_OP_ALWAYS)
                     .setShader(getShader("Font"))
                     .setVertexLayout({ { Type::VEC2 }, { Type::VEC2 }, { Type::VEC4 }, { Type::MAT4, 1 }, { Type::UINT, 1 }, { Type::VEC4, 1 } })
                     .setSampleCount(Graphics::swap_chain->getSampleCount())
@@ -215,7 +215,7 @@ shared<Font> Resources::getFont(std::string_view name)
     return fetch(fonts, name);
 }
 
-shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<vk::DescriptorSetLayoutBinding>& bindings)
+shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
     auto layout = descriptor_set_layouts.find({ bindings });
     if (layout != descriptor_set_layouts.end())
@@ -291,7 +291,7 @@ size_t Resources::DescriptorSetLayoutInfo::hash() const
 {
     size_t result = std::hash<size_t>()(bindings.size());
 
-    for (const vk::DescriptorSetLayoutBinding& b : bindings)
+    for (const VkDescriptorSetLayoutBinding& b : bindings)
     {
         size_t binding_hash = b.binding | (VkDescriptorType(b.descriptorType) << 8) | (uint32_t(b.descriptorCount) << 16) | (VkShaderStageFlags(b.stageFlags) << 24);
         result ^= std::hash<size_t>()(binding_hash);

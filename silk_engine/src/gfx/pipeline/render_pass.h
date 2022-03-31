@@ -2,15 +2,15 @@
 
 struct AttachmentProps
 {
-	vk::Format format = vk::Format::eB8G8R8A8Unorm;
-	vk::ImageLayout layout = vk::ImageLayout::eColorAttachmentOptimal;
-	std::optional<vk::ClearValue> clear_value = {};
-	vk::SampleCountFlagBits samples = vk::SampleCountFlagBits::e1;
-	vk::AttachmentLoadOp load_operation = vk::AttachmentLoadOp::eClear;
-	vk::AttachmentStoreOp store_operation = vk::AttachmentStoreOp::eStore;
-	vk::AttachmentLoadOp stencil_load_operation = vk::AttachmentLoadOp::eDontCare;
-	vk::AttachmentStoreOp stencil_store_operation = vk::AttachmentStoreOp::eDontCare;
-	vk::ImageLayout initial_layout = vk::ImageLayout::eUndefined;
+	VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
+	VkImageLayout layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	std::optional<VkClearValue> clear_value = {};
+	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
+	VkAttachmentLoadOp load_operation = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	VkAttachmentStoreOp store_operation = VK_ATTACHMENT_STORE_OP_STORE;
+	VkAttachmentLoadOp stencil_load_operation = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	VkAttachmentStoreOp stencil_store_operation = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 };
 
 struct Attachment
@@ -19,15 +19,15 @@ struct Attachment
 	{
 		COLOR, DEPTH_STENCIL, RESOLVE
 	};
-	vk::AttachmentDescription description{};
-	vk::AttachmentReference reference{};
-	vk::ClearValue clear_value{};
+	VkAttachmentDescription description{};
+	VkAttachmentReference reference{};
+	VkClearValue clear_value{};
 	Type type = Type::COLOR;
 };
 
 struct Subpass
 {
-	std::vector<vk::AttachmentReference> input_attachment_references;
+	std::vector<VkAttachmentReference> input_attachment_references;
 	std::vector<Attachment> attachments;
 	bool multisampled = false;
 };
@@ -42,13 +42,13 @@ public:
 
 	void build();
 
-	void begin(vk::Framebuffer framebuffer, vk::SubpassContents subpass_contents = vk::SubpassContents::eInline);
-	void nextSubpass(vk::SubpassContents subpass_contents = vk::SubpassContents::eInline);
+	void begin(VkFramebuffer framebuffer, VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
+	void nextSubpass(VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
 	void end();
 
-	operator const vk::RenderPass& () const { return render_pass; }
+	operator const VkRenderPass& () const { return render_pass; }
 
 private:
-	vk::RenderPass render_pass;
+	VkRenderPass render_pass;
 	std::vector<Subpass> subpasses;
 };

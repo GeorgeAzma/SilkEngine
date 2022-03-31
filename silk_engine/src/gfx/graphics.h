@@ -52,7 +52,7 @@ public:
 	static void setActiveCommandBuffer(CommandBuffer* command_buffer);
 	static void setActivePrimaryCommandBuffer(CommandBuffer* command_buffer);
 	static void screenshot(std::string_view file);
-	static void vulkanAssert(vk::Result result);
+	static void vulkanAssert(VkResult result);
 
 public:
 	static inline Instance* instance = nullptr;

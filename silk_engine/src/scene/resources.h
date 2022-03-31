@@ -37,7 +37,7 @@ public:
 	static shared<ComputePipeline> getComputePipeline(std::string_view name);
 	static shared<Image2D> getImage(std::string_view name);
 	static shared<Font> getFont(std::string_view path);
-	static shared<DescriptorSetLayout> getDescriptorSetLayout(const std::vector<vk::DescriptorSetLayoutBinding>& bindings);
+	static shared<DescriptorSetLayout> getDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
 	static void addMesh(std::string_view name, const std::function<shared<Mesh>()>& mesh);
 	static void addModel(std::string_view name, const std::function<shared<Model>()>& model);
@@ -76,7 +76,7 @@ private:
 	static inline std::unordered_map<std::string_view, Resource<Font>> fonts;
 	struct DescriptorSetLayoutInfo
 	{
-		std::vector<vk::DescriptorSetLayoutBinding> bindings;
+		std::vector<VkDescriptorSetLayoutBinding> bindings;
 
 		bool operator==(const DescriptorSetLayoutInfo& other) const;
 		size_t hash() const;

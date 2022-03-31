@@ -5,10 +5,10 @@
 class Buffer : NonCopyable
 {
 public:
-	Buffer(vk::DeviceSize size, vk::BufferUsageFlags usage, VmaMemoryUsage vma_usage);
+	Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_usage);
 	virtual ~Buffer();
 
-	void resize(vk::DeviceSize size);
+	void resize(VkDeviceSize size);
 
 	void map(void** data) const;
 	void unmap() const;
@@ -18,26 +18,26 @@ public:
 
 	void getData(void* data, size_t size = 0) const;
 	bool isMapped() const { return mapped; }
-	vk::DeviceSize getSize() const { return size; }
+	VkDeviceSize getSize() const { return size; }
 
 	VmaAllocation getAllocation() const { return allocation; }
-	operator vk::DescriptorBufferInfo () const { return { buffer, 0, size }; }
-	operator const vk::Buffer& () const { return buffer; }
+	operator VkDescriptorBufferInfo () const { return { buffer, 0, size }; }
+	operator const VkBuffer& () const { return buffer; }
 
 public:
-	static void copy(vk::Buffer destination, vk::Buffer source, vk::DeviceSize size, vk::DeviceSize dst_offset = 0, vk::DeviceSize src_offset = 0);
+	static void copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDeviceSize dst_offset = 0, VkDeviceSize src_offset = 0);
 
 protected:
-	static void insertMemoryBarrier(const vk::Buffer& buffer, vk::AccessFlags source_access_mask, vk::AccessFlags destination_access_mask, vk::PipelineStageFlags source_stage_mask, vk::PipelineStageFlags destination_stage_mask, vk::DeviceSize offset, vk::DeviceSize size);
+	static void insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDeviceSize offset, VkDeviceSize size);
 
 protected:
-	vk::Buffer buffer;
-	vk::DeviceSize size;
+	VkBuffer buffer = VK_NULL_HANDLE;
+	VkDeviceSize size = 0;
 
 private:
-	vk::BufferCreateInfo ci{};
-	VmaAllocationCreateInfo allocation_create_info{};
-	VmaAllocation allocation;
+	VkBufferCreateInfo ci{};
+	VmaAllocationCreateInfo allocation_ci{};
+	VmaAllocation allocation = VK_NULL_HANDLE;
 	uint8_t* data = nullptr;
 	const bool needs_staging = false;
 	mutable bool mapped = false;

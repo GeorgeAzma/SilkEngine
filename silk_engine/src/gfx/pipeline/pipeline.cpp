@@ -11,7 +11,7 @@ Pipeline::~Pipeline()
 void Pipeline::pushConstant(std::string_view name, const void* data) const
 {
 	const auto& push_constant = getShader()->getPushConstants().at(name);
-	Graphics::getActiveCommandBuffer().pushConstants(layout, push_constant.stageFlags, push_constant.offset, push_constant.size, data);
+	Graphics::getActiveCommandBuffer().pushConstants(push_constant.stageFlags, push_constant.offset, push_constant.size, data);
 }
 
 void Pipeline::destroy()

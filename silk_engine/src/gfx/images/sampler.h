@@ -2,11 +2,11 @@
 
 struct SamplerProps
 {
-	vk::Filter min_filter = vk::Filter::eLinear;
-	vk::Filter mag_filter = vk::Filter::eLinear;
-	vk::SamplerAddressMode u_wrap = vk::SamplerAddressMode::eClampToEdge;
-	vk::SamplerAddressMode v_wrap = vk::SamplerAddressMode::eClampToEdge;
-	vk::SamplerAddressMode w_wrap = vk::SamplerAddressMode::eClampToEdge;
+	VkFilter min_filter = VK_FILTER_LINEAR;
+	VkFilter mag_filter = VK_FILTER_LINEAR;
+	VkSamplerAddressMode u_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+	VkSamplerAddressMode v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+	VkSamplerAddressMode w_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	bool anisotropy = false;
 	bool linear_mipmap = true;
 	uint32_t mip_levels = 1;
@@ -18,8 +18,8 @@ public:
 	Sampler(const SamplerProps& props = {});
 	~Sampler();
 
-	operator const vk::Sampler& () const { return sampler; }
+	operator const VkSampler& () const { return sampler; }
 
 private:
-	vk::Sampler sampler;
+	VkSampler sampler = VK_NULL_HANDLE;
 };

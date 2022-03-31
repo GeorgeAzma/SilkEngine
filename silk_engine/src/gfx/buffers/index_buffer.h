@@ -3,15 +3,25 @@
 #include "buffer.h"
 #include "gfx/enums.h"
 
+enum class IndexType
+{
+	UINT16,
+	UINT32
+};
+
 class IndexBuffer : public Buffer
 {
 public:
-	IndexBuffer(const void* data, vk::DeviceSize count, IndexType index_type = IndexType::UINT32, VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY);
+	IndexBuffer(const void* data, VkDeviceSize count, IndexType index_type = IndexType::UINT32, VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY);
 
-	void bind();
+	void bind(VkDeviceSize offset = 0);
 
 	IndexType getIndexType() const { return index_type; }
-	vk::DeviceSize getCount() const { return size / EnumInfo::size(index_type); }
+	VkDeviceSize getCount() const { return size / indexTypeSize(index_type); }
+
+private:
+	static VkIndexType indexType(IndexType index_type);
+	static size_t indexTypeSize(IndexType index_type);
 
 private:
 	IndexType index_type;

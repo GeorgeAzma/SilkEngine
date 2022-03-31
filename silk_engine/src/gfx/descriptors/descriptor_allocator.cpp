@@ -16,18 +16,18 @@ void DescriptorAllocator::reset()
 	current_pool = nullptr;
 }
 
-shared<DescriptorPool> DescriptorAllocator::allocate(vk::DescriptorSet& descriptor_set, const vk::DescriptorSetLayout& descriptor_set_layout)
+shared<DescriptorPool> DescriptorAllocator::allocate(VkDescriptorSet& descriptor_set, const VkDescriptorSetLayout& descriptor_set_layout)
 {
 	if (!current_pool)
 	{
 		current_pool = grabPool();
 	}
-	vk::Result alloc_result = current_pool->allocate(descriptor_set, descriptor_set_layout);
+	VkResult alloc_result = current_pool->allocate(descriptor_set, descriptor_set_layout);
 	bool need_realloc = false;
 	switch (alloc_result)
 	{
-		case vk::Result::eErrorFragmentedPool:
-		case vk::Result::eErrorOutOfPoolMemory:
+		case VK_ERROR_FRAGMENTED_POOL:
+		case VK_ERROR_OUT_OF_POOL_MEMORY:
 			need_realloc = true;
 			break;
 		default:
@@ -38,7 +38,7 @@ shared<DescriptorPool> DescriptorAllocator::allocate(vk::DescriptorSet& descript
 	{
 		current_pool = grabPool();
 		alloc_result = current_pool->allocate(descriptor_set, descriptor_set_layout);
-		if (alloc_result == vk::Result::eSuccess)
+		if (alloc_result == VK_SUCCESS)
 			return current_pool;
 	}
 	

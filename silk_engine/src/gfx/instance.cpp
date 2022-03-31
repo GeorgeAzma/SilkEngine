@@ -61,9 +61,11 @@ static void vkDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMes
 
 Instance::Instance()
 {
-    vk::ApplicationInfo app_info(app_name, 1, engine_name, 1, EnumInfo::apiVersion(Graphics::API_VERSION));
-
-    //Get required extensions and see if they are supported
+    VkApplicationInfo app_info{};
+    app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    app_info.apiVersion = EnumInfo::apiVersion(Graphics::API_VERSION);
+    app_info.pApplicationName = app_name;
+    app_info.pEngineName = engine_name;
 
     uint32_t glfw_extension_count = 0;
     const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
@@ -83,44 +85,60 @@ Instance::Instance()
     SK_ASSERT(checkValidationLayerSupport(required_validation_layers),
         "Vulkan: Required validation layers(s) not found");
     
-    using enum vk::DebugUtilsMessageSeverityFlagBitsEXT;
-    using enum vk::DebugUtilsMessageTypeFlagBitsEXT;
-    vk::DebugUtilsMessengerCreateInfoEXT debug_messenger_ci{};
-    debug_messenger_ci.messageSeverity = eError | eWarning;
-    debug_messenger_ci.messageType = eGeneral | eValidation | ePerformance;
+    VkDebugUtilsMessengerCreateInfoEXT debug_messenger_ci{};
+    debug_messenger_ci.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    debug_messenger_ci.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
+    debug_messenger_ci.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
     debug_messenger_ci.pfnUserCallback = debugCallback;
 #endif
 
-    vk::InstanceCreateInfo ci({}, &app_info, required_validation_layers, required_extensions);
+    VkInstanceCreateInfo ci{};
+    ci.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    ci.pApplicationInfo = &app_info;
+    ci.enabledLayerCount = required_validation_layers.size();
+    ci.ppEnabledLayerNames = required_validation_layers.data();
+    ci.enabledExtensionCount = required_extensions.size();
+    ci.ppEnabledExtensionNames = required_extensions.data();
 
 #ifdef SK_ENABLE_DEBUG_OUTPUT
-    ci.setPNext(&debug_messenger_ci);
+    ci.pNext = &debug_messenger_ci;
 #endif
    
-    instance = vk::createInstance(ci);
+    vkCreateInstance(&ci, nullptr, &instance);
 
 #ifdef SK_ENABLE_DEBUG_OUTPUT
-    debug_messenger = instance.createDebugUtilsMessengerEXT(debug_messenger_ci);
+    vkCreateDebugUtilsMessengerEXT(instance, &debug_messenger_ci, nullptr, &debug_messenger);
 #endif
 
-    physical_devices = instance.enumeratePhysicalDevices();
+    uint32_t physical_device_count = 0;
+    vkEnumeratePhysicalDevices(instance, &physical_device_count, nullptr);
+    physical_devices.resize(physical_device_count);
+    vkEnumeratePhysicalDevices(instance, &physical_device_count, physical_devices.data());
 }
 
 Instance::~Instance()
 {
 #ifdef SK_ENABLE_DEBUG_OUTPUT
-    instance.destroyDebugUtilsMessengerEXT(debug_messenger);
+    vkDestroyDebugUtilsMessengerEXT(instance, debug_messenger, nullptr);
 #endif
-    instance.destroy();
+    vkDestroyInstance(instance, nullptr);
+}
+
+void Instance::destroySurface(VkSurfaceKHR surface) const
+{ 
+    vkDestroySurfaceKHR(instance, surface, nullptr);
 }
 
 bool Instance::checkExtensionSupport(const std::vector<const char *> &required_extensions) const
 {
-    std::vector<vk::ExtensionProperties> available_extensions = vk::enumerateInstanceExtensionProperties();
-    for (const char *required_extension : required_extensions)
+    uint32_t available_extension_count = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &available_extension_count, nullptr);
+    std::vector<VkExtensionProperties> available_extensions(available_extension_count);
+    vkEnumerateInstanceExtensionProperties(nullptr, &available_extension_count, available_extensions.data());
+    for (auto required_extension : required_extensions)
     {
         bool extension_found = false;
-        for (vk::ExtensionProperties available_extension : available_extensions)
+        for (VkExtensionProperties available_extension : available_extensions)
         {
             if (strcmp(available_extension.extensionName, required_extension) == 0)
             {
@@ -137,11 +155,14 @@ bool Instance::checkExtensionSupport(const std::vector<const char *> &required_e
 bool Instance::checkValidationLayerSupport(const std::vector<const char *> &required_layers) const
 {
 #ifdef SK_ENABLE_DEBUG_OUTPUT
-    std::vector<vk::LayerProperties> available_layers = vk::enumerateInstanceLayerProperties();
+    uint32_t available_layer_count = 0;
+    vkEnumerateInstanceLayerProperties(&available_layer_count, nullptr);
+    std::vector<VkLayerProperties> available_layers(available_layer_count);
+    vkEnumerateInstanceLayerProperties(&available_layer_count, available_layers.data());
     for (const char *required_layer : required_layers)
     {
         bool layer_found = false;
-        for (vk::LayerProperties available_layer : available_layers)
+        for (VkLayerProperties available_layer : available_layers)
         {
             if (strcmp(available_layer.layerName, required_layer) == 0)
             {

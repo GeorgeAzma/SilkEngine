@@ -6,8 +6,8 @@ public:
 	Surface();
 	~Surface();
 
-	operator const vk::SurfaceKHR& () const { return surface; }
+	operator const VkSurfaceKHR& () const { return surface; }
 
 private:
-	vk::SurfaceKHR surface;
+	VkSurfaceKHR surface;
 };

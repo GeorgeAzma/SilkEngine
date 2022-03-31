@@ -128,7 +128,8 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 			SK_TRACE("Shader cache created: {0}", file_cache_path);
 		}
 
-		vk::ShaderModuleCreateInfo ci{};
+		VkShaderModuleCreateInfo ci{};
+		ci.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 		ci.codeSize = stage.binary.size() * sizeof(uint32_t);
 		ci.pCode = stage.binary.data();
 		stage.module = Graphics::logical_device->createShaderModule(ci);
@@ -144,25 +145,25 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 		spirv_cross::ShaderResources shader_resources = spirv_compiler.get_shader_resources();
 		
 		for (const spirv_cross::Resource& sampled_image : shader_resources.sampled_images)
-			loadResource(sampled_image, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eCombinedImageSampler);
+			loadResource(sampled_image, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 	
 		for (const spirv_cross::Resource& seperate_image : shader_resources.separate_images)
-			loadResource(seperate_image, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eSampledImage);
+			loadResource(seperate_image, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
 	
 		for (const spirv_cross::Resource& seperate_sampler : shader_resources.separate_samplers)
-			loadResource(seperate_sampler, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eSampler);
+			loadResource(seperate_sampler, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_SAMPLER);
 	
 		for (const spirv_cross::Resource& storage_buffer : shader_resources.storage_buffers)
-			loadResource(storage_buffer, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eStorageBuffer);
+			loadResource(storage_buffer, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 	
 		for (const spirv_cross::Resource& storage_image : shader_resources.storage_images)
-			loadResource(storage_image, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eStorageImage);
+			loadResource(storage_image, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
 	
 		for (const spirv_cross::Resource& subpass_input : shader_resources.subpass_inputs)
-			loadResource(subpass_input, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eInputAttachment);
+			loadResource(subpass_input, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT);
 	
 		for (const spirv_cross::Resource& uniform_buffer : shader_resources.uniform_buffers)
-			loadResource(uniform_buffer, spirv_compiler, shader_resources, stage_flag, vk::DescriptorType::eUniformBuffer);
+			loadResource(uniform_buffer, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 	
 		for (const spirv_cross::Resource& push_constant : shader_resources.push_constant_buffers)
 			loadPushConstant(push_constant, spirv_compiler, shader_resources, stage_flag);
@@ -203,13 +204,13 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 	SK_TRACE("Shader loaded: {0}", path);
 }
 
-void Shader::set(std::string_view resource_name, const std::vector<vk::DescriptorBufferInfo>& buffer_infos)
+void Shader::set(std::string_view resource_name, const std::vector<VkDescriptorBufferInfo>& buffer_infos)
 {
 	const auto& resource_location = resource_locations.at(resource_name);
 	descriptor_sets.at(resource_location.set)->setBufferInfo(resource_location.write_index, buffer_infos);
 }
 
-void Shader::set(std::string_view resource_name, const std::vector<vk::DescriptorImageInfo>& image_infos)
+void Shader::set(std::string_view resource_name, const std::vector<VkDescriptorImageInfo>& image_infos)
 {
 	const auto& resource_location = resource_locations.at(resource_name);
 	descriptor_sets.at(resource_location.set)->setImageInfo(resource_location.write_index, image_infos);
@@ -259,7 +260,7 @@ std::unordered_map<uint32_t, std::string> Shader::parse(const std::filesystem::p
 	return shader_sources;
 }
 
-void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, vk::ShaderStageFlags stage, vk::DescriptorType type)
+void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, VkShaderStageFlags stage, VkDescriptorType type)
 {
 	for (Resource& resource : this->resources)
 	{
@@ -294,7 +295,7 @@ void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spi
 	this->resources.emplace_back(std::move(resource));
 }
 
-void Shader::loadPushConstant(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, vk::ShaderStageFlags stage)
+void Shader::loadPushConstant(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, VkShaderStageFlags stage)
 {
 	auto ranges = compiler.get_active_buffer_ranges(resources.push_constant_buffers.front().id);
 	for (auto& range : ranges)
@@ -307,7 +308,7 @@ void Shader::loadPushConstant(const spirv_cross::Resource& spirv_resource, const
 				return;
 			}
 		}
-		vk::PushConstantRange push_constant_range{};
+		VkPushConstantRange push_constant_range{};
 		push_constant_range.offset = range.offset;
 		push_constant_range.size = range.range;
 		push_constant_range.stageFlags = stage;
@@ -358,20 +359,20 @@ shaderc_env_version Shader::shadercApiVersion(APIVersion api_version)
 	return shaderc_env_version(0);
 }
 
-vk::ShaderStageFlagBits Shader::getVulkanType(Type shader_type)
+VkShaderStageFlagBits Shader::getVulkanType(Type shader_type)
 {
 	switch (shader_type)
 	{
-	case Type::VERTEX: return vk::ShaderStageFlagBits::eVertex;
-	case Type::FRAGMENT: return vk::ShaderStageFlagBits::eFragment;
-	case Type::GEOMETRY: return vk::ShaderStageFlagBits::eGeometry;
-	case Type::COMPUTE: return vk::ShaderStageFlagBits::eCompute;
-	case Type::TESSELATION_CONTROL: return vk::ShaderStageFlagBits::eTessellationControl;
-	case Type::TESSELATION_EVALUATION: return vk::ShaderStageFlagBits::eTessellationEvaluation;
+	case Type::VERTEX: return VK_SHADER_STAGE_VERTEX_BIT;
+	case Type::FRAGMENT: return VK_SHADER_STAGE_FRAGMENT_BIT;
+	case Type::GEOMETRY: return VK_SHADER_STAGE_GEOMETRY_BIT;
+	case Type::COMPUTE: return VK_SHADER_STAGE_COMPUTE_BIT;
+	case Type::TESSELATION_CONTROL: return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+	case Type::TESSELATION_EVALUATION: return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
 	}
 
 	SK_ERROR("Unsupported shader type specified: {0}.", shader_type);
-	return vk::ShaderStageFlagBits(0);
+	return VkShaderStageFlagBits(0);
 }
 
 std::string Shader::getTypeFileExtension(Shader::Type shader_type)

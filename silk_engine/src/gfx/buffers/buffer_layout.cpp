@@ -16,7 +16,7 @@ BufferLayout::BufferLayout(const std::initializer_list<BufferElement>& elements)
 		size_t rows = actual_rows + ((size % sizeof(glm::vec4)) > 0);
 		for (size_t i = 0; i < rows; ++i)
 		{
-			vk::VertexInputAttributeDescription attribute_description{};
+			VkVertexInputAttributeDescription attribute_description{};
 			attribute_description.format = EnumInfo::type(element.type);
 			attribute_description.location = location;
 
@@ -44,13 +44,13 @@ BufferLayout::BufferLayout(const std::initializer_list<BufferElement>& elements)
 	binding_descriptions.emplace_back();
 	binding_descriptions[0].binding = 0;
 	binding_descriptions[0].stride = offset;
-	binding_descriptions[0].inputRate = vk::VertexInputRate::eVertex;
+	binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
 	if (is_instanced)
 	{
 		binding_descriptions.emplace_back();
 		binding_descriptions[1].binding = 1;
 		binding_descriptions[1].stride = instance_offset;
-		binding_descriptions[1].inputRate = vk::VertexInputRate::eInstance;
+		binding_descriptions[1].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
 	}
 }

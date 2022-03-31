@@ -1,11 +1,11 @@
 #include "indirect_buffer.h"
 #include "staging_buffer.h"
 
-IndirectBuffer::IndirectBuffer(vk::DeviceSize size)
+IndirectBuffer::IndirectBuffer(VkDeviceSize size)
 	: Buffer(size, 
-		vk::BufferUsageFlagBits::eStorageBuffer | 
-		vk::BufferUsageFlagBits::eTransferDst |
-		vk::BufferUsageFlagBits::eIndirectBuffer,
+		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | 
+		VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+		VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
 		VMA_MEMORY_USAGE_CPU_TO_GPU)
 {
 }

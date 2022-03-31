@@ -12,14 +12,14 @@
 void Renderer::init()
 {
 	instance_batches.reserve(Graphics::MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
-	indirect_buffer = makeUnique<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(vk::DrawIndexedIndirectCommand));
+	indirect_buffer = makeUnique<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
 	global_uniform_buffer = makeUnique<UniformBuffer>(sizeof(GlobalUniformData));
 	lights.fill(Light{});
 	active.image = Resources::white_image;
 
-	previous_frame_finished = Graphics::logical_device->createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
-	swap_chain_image_available = Graphics::logical_device->createSemaphore({});
-	render_finished = Graphics::logical_device->createSemaphore({});
+	previous_frame_finished = Graphics::logical_device->createFence(VK_FENCE_CREATE_SIGNALED_BIT);
+	swap_chain_image_available = Graphics::logical_device->createSemaphore();
+	render_finished = Graphics::logical_device->createSemaphore();
 
 	command_buffer = new CommandBuffer();
 }
@@ -159,7 +159,7 @@ void Renderer::update(Camera* camera)
 
 	//Set viewport
 	command_buffer->begin();
-	vk::Viewport viewport = {};
+	VkViewport viewport = {};
 	viewport.x = 0.0f;
 	viewport.y = Graphics::swap_chain->getExtent().height;
 	viewport.width = Graphics::swap_chain->getExtent().width;
@@ -168,13 +168,13 @@ void Renderer::update(Camera* camera)
 	viewport.maxDepth = 1.0f;
 	Graphics::getActiveCommandBuffer().setViewport({ viewport });
 
-	vk::Rect2D scissor = {};
-	scissor.offset = vk::Offset2D{ 0, 0 };
-	scissor.extent = vk::Extent2D{ (uint32_t)Graphics::swap_chain->getExtent().width, (uint32_t)Graphics::swap_chain->getExtent().height };
+	VkRect2D scissor = {};
+	scissor.offset = VkOffset2D{ 0, 0 };
+	scissor.extent = VkExtent2D{ (uint32_t)Graphics::swap_chain->getExtent().width, (uint32_t)Graphics::swap_chain->getExtent().height };
 	Graphics::getActiveCommandBuffer().setScissor({ scissor });
 
 	//Draw instances
-	Graphics::swap_chain->getRenderPass()->begin(*Graphics::swap_chain->getActiveFramebuffer(), vk::SubpassContents::eInline);
+	Graphics::swap_chain->getRenderPass()->begin(*Graphics::swap_chain->getActiveFramebuffer(), VK_SUBPASS_CONTENTS_INLINE);
 	size_t draw_index = 0;
 	for (auto& instance_batch : instance_batches)
 	{
@@ -186,7 +186,7 @@ void Renderer::update(Camera* camera)
 			instance_batch.instance_images.updateDescriptorSet(instance_batch.descriptor_sets[images->set], images->write_index);
 
 		instance_batch.bind();
-		Graphics::getActiveCommandBuffer().drawIndexedIndirect(*indirect_buffer, draw_index * sizeof(vk::DrawIndexedIndirectCommand), 1, sizeof(vk::DrawIndexedIndirectCommand));
+		Graphics::getActiveCommandBuffer().drawIndexedIndirect(*indirect_buffer, draw_index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
 		++draw_index;
 	}
 
@@ -198,7 +198,7 @@ void Renderer::update(Camera* camera)
 	//End draw
 	Graphics::swap_chain->getRenderPass()->end();
 	CommandBufferSubmitInfo submit_info{};
-	vk::PipelineStageFlags wait_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+	VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	submit_info.wait_stages = &wait_stage;
 	submit_info.wait_semaphores = { swap_chain_image_available };
 	submit_info.signal_semaphores = { render_finished };
@@ -354,7 +354,7 @@ void Renderer::updateUniformData(Camera* camera)
 void Renderer::updateDrawCommands()
 {	
 	bool any_needs_update = false;
-	static std::vector<vk::DrawIndexedIndirectCommand> draw_commands;
+	static std::vector<VkDrawIndexedIndirectCommand> draw_commands;
 	draw_commands.resize(instance_batches.size());
 	for (size_t i = 0; i < instance_batches.size(); ++i)
 	{
@@ -362,7 +362,7 @@ void Renderer::updateDrawCommands()
 		{
 			instance_batches[i].instance_buffer->setData(instance_batches[i].instance_data.data(), instance_batches[i].instance_data.size() * sizeof(InstanceData));
 			instance_batches[i].needs_update = false;
-			vk::DrawIndexedIndirectCommand draw_command{};
+			VkDrawIndexedIndirectCommand draw_command{};
 			draw_command.instanceCount = instance_batches[i].instance_data.size();
 			draw_command.indexCount = instance_batches[i].instance->mesh->indices.size();
 			draw_commands[i] = std::move(draw_command);
@@ -370,5 +370,5 @@ void Renderer::updateDrawCommands()
 		}
 	}
 	if (any_needs_update)
-		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(vk::DrawIndexedIndirectCommand));
+		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand));
 }

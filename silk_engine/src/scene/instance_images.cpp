@@ -59,7 +59,7 @@ void InstanceImages::updateDescriptorSet(DescriptorSet& descriptor_set, uint32_t
 {
 	if (need_update)
 	{
-		std::vector<vk::DescriptorImageInfo> descriptor_images(max_images, Resources::white_image->getDescriptorInfo());
+		std::vector<VkDescriptorImageInfo> descriptor_images(max_images, Resources::white_image->getDescriptorInfo());
 		for (size_t i = 0; i < images.size(); ++i)
 			descriptor_images[i] = *images[i];
 
