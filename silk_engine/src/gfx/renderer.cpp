@@ -17,7 +17,7 @@ void Renderer::init()
 	lights.fill(Light{});
 	active.image = Resources::white_image;
 
-	previous_frame_finished = Graphics::logical_device->createFence(VK_FENCE_CREATE_SIGNALED_BIT);
+	previous_frame_finished = Graphics::logical_device->createFence(true);
 	swap_chain_image_available = Graphics::logical_device->createSemaphore();
 	render_finished = Graphics::logical_device->createSemaphore();
 
@@ -45,6 +45,7 @@ void Renderer::reset()
 	active.image = Resources::white_image;
 	active.transform = glm::mat4(1);
 	active.color = glm::vec4(1);
+	active.transformed = false;
 }
 
 void Renderer::triangle(float x, float y, float width, float height)
@@ -130,22 +131,24 @@ void Renderer::ellipsoid(float x, float y, float z, float width, float height, f
 
 void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
 {
-	shared<RenderedInstance> instance = makeShared<RenderedInstance>();
-	instance->mesh = mesh;
-	instance->material = graphics_pipeline;
-	instance->images = { active.image };
-	instances.emplace_back(instance);
+		shared<RenderedInstance> instance = makeShared<RenderedInstance>();
+		instance->mesh = mesh;
+		instance->material = graphics_pipeline;
+		instance->images = { active.image };
+		instances.emplace_back(instance);
 
-	InstanceData data{};
-	data.transform = glm::mat4
-	(
-		width, 0, 0, 0,
-		0, height, 0, 0,
-		0, 0, depth, 0,
-		x, y, z, 1
-	) * active.transform;
-	data.color = active.color;
-	createInstance(instance, std::move(data));
+		InstanceData data{};
+		data.transform = glm::mat4
+		(
+			width, 0, 0, 0,
+			0, height, 0, 0,
+			0, 0, depth, 0,
+			x, y, z, 1
+		);
+		if (active.transformed)
+			data.transform *= active.transform;
+		data.color = active.color;
+		createInstance(instance, std::move(data));
 }
 
 void Renderer::update(Camera* camera)

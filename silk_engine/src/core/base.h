@@ -2,6 +2,8 @@
 
 #include "platform.h"
 
+constexpr const char* ENGINE_NAME = "SilkEngine";
+
 #ifndef SK_DIST
 #define SK_ENABLE_DEBUG_OUTPUT
 #endif

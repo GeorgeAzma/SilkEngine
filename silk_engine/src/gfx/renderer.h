@@ -17,6 +17,7 @@ class Renderer
 		glm::vec4 color;
 		shared<Image2D> image;
 		glm::mat4 transform;
+		bool transformed;
 	} active;
 
 public:
@@ -74,7 +75,7 @@ public:
 	}
 
 	//States
-	static void transform(const glm::mat4& transform) { active.transform = transform; }
+	static void transform(const glm::mat4& transform) { active.transformed = transform != glm::mat4(1); active.transform = transform; }
 	static void color(const Color& color) { active.color = color; }
 	static void image(const shared<Image2D>& image) { active.image = image; }
 

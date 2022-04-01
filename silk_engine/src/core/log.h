@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef SK_ENABLE_DEBUG_OUTPUT
-    #include <spdlog/spdlog.h>
+    #include <spdlog/logger.h>
     #include <spdlog/fmt/ostr.h>
 
     class Log
@@ -9,12 +9,12 @@
     public:
         static void init();
     
-        static std::shared_ptr<spdlog::logger> &getCoreLogger() { return core_logger; }
-        static std::shared_ptr<spdlog::logger> &getClientLogger() { return client_logger; }
+        static shared<spdlog::logger> &getCoreLogger() { return core_logger; }
+        static shared<spdlog::logger> &getClientLogger() { return client_logger; }
     
     private:
-        static std::shared_ptr<spdlog::logger> core_logger;
-        static std::shared_ptr<spdlog::logger> client_logger;
+        static shared<spdlog::logger> core_logger;
+        static shared<spdlog::logger> client_logger;
     };
 
     #ifdef SK_CORE

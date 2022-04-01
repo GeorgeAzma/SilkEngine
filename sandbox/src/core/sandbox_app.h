@@ -12,6 +12,8 @@ public:
     SandboxApp(ApplicationCommandLineArgs args);
     void onUpdate();
     ~SandboxApp();
+    
+    virtual std::string getName() const override { return "Sandbox"; }
 
 private:
     shared<Scene> scene;

@@ -17,12 +17,12 @@ struct TransformComponent
 
 struct ImageComponent
 {
-	ImageComponent(shared<Image2D> image) : images({ image }) {}
+	ImageComponent(const shared<Image2D>& image) : images({ image }) {}
 	ImageComponent(const std::vector<shared<Image2D>>& images) : images(images) {}
 
 	std::vector<shared<Image2D>> images;
 
-	ImageComponent& operator=(shared<Image2D> image) 
+	ImageComponent& operator=(const shared<Image2D>& image) 
 	{ 
 		if (images.size()) 
 			images[0] = image; 

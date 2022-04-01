@@ -65,7 +65,7 @@ Instance::Instance()
     app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     app_info.apiVersion = EnumInfo::apiVersion(Graphics::API_VERSION);
     app_info.pApplicationName = app_name;
-    app_info.pEngineName = engine_name;
+    app_info.pEngineName = ENGINE_NAME;
 
     uint32_t glfw_extension_count = 0;
     const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);

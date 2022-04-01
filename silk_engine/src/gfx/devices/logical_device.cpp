@@ -105,11 +105,11 @@ void LogicalDevice::resetFences(const std::vector<VkFence>& fences) const
 	vkResetFences(logical_device, fences.size(), fences.data());
 }
 
-VkFence LogicalDevice::createFence(const VkFenceCreateFlags& flags) const
+VkFence LogicalDevice::createFence(bool signaled) const
 {
 	VkFenceCreateInfo fence_info{};
 	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fence_info.flags = flags;
+	fence_info.flags = signaled * VK_FENCE_CREATE_SIGNALED_BIT;
 	VkFence fence = VK_NULL_HANDLE;
 	vkCreateFence(logical_device, &fence_info, nullptr, &fence);
 	return fence;

@@ -3,7 +3,6 @@
 class Instance : NonCopyable
 {
     static constexpr const char* app_name = "Sandbox";
-    static constexpr const char* engine_name = "Silk Engine";
 
 public:
     Instance();

@@ -24,7 +24,7 @@ public:
 	std::vector<VkCommandBuffer> allocateCommandBuffers(const VkCommandBufferAllocateInfo& allocate_info) const;
 	void freeCommandBuffers(VkCommandPool command_pool, const std::vector<VkCommandBuffer>& command_buffers) const;
 	void resetFences(const std::vector<VkFence>& fences) const;
-	VkFence createFence(const VkFenceCreateFlags& flags = {}) const;
+	VkFence createFence(bool signaled = false) const;
 	void destroyFence(VkFence fence) const;
 	VkSemaphore createSemaphore(const VkSemaphoreCreateFlags& flags = {}) const;
 	void destroySemaphore(VkSemaphore semaphore) const;

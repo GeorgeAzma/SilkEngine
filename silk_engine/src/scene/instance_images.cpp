@@ -12,8 +12,13 @@ InstanceImages::InstanceImages(uint32_t max_images)
 uint32_t InstanceImages::add(const std::vector<shared<Image2D>>& new_images)
 {
 	SK_ASSERT(new_images.size(), "You should specify more than 0 images to add");
+
+	if (images.size() + new_images.size() > max_images)
+		return UINT32_MAX;
+
 	bool found = false;
-	for (int64_t i = 0; i < ((int64_t)images.size() - ((int64_t)new_images.size() - 1)); ++i)
+	size_t s = images.size() - (new_images.size() - 1);
+	for (size_t i = 0; i < s; ++i)
 	{
 		found = true;
 		for (size_t j = 0; j < new_images.size(); ++j)
@@ -35,9 +40,6 @@ uint32_t InstanceImages::add(const std::vector<shared<Image2D>>& new_images)
 			return i;
 		}
 	}
-
-	if (images.size() + new_images.size() > max_images)
-		return UINT32_MAX;
 
 	size_t image_index = images.size();
 	images.insert(images.end(), new_images.begin(), new_images.end());

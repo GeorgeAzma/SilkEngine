@@ -19,8 +19,10 @@ struct ApplicationCommandLineArgs
 class Application
 {
 public:
-    Application(const char *name = "App", ApplicationCommandLineArgs args = {});
+    Application(ApplicationCommandLineArgs args = {});
     virtual ~Application();
+
+    virtual std::string getName() const { return "App"; }
 
     ApplicationCommandLineArgs getCommandLineArgs() const { return command_line_args; }
 

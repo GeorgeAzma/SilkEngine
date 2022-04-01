@@ -13,7 +13,7 @@
 #include "gfx/renderer.h"
 #include "gfx/descriptors/descriptor_allocator.h"
 
-Application::Application(const char* name, ApplicationCommandLineArgs args)
+Application::Application(ApplicationCommandLineArgs args)
     : command_line_args(args), app_update(0.0)
 {
     Log::init(); 
