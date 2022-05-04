@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bitmap.h"
+#include "image_format.h"
 #include "gfx/buffers/staging_buffer.h"
 #include "image_view.h"
 #include "sampler.h"
@@ -10,7 +11,7 @@ struct CubemapProps
 {
 	uint32_t width = 0;
 	uint32_t height = 0;
-	VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
+	ImageFormat format = ImageFormat::BGRA;
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -28,7 +29,7 @@ struct CubemapProps
 struct Image1DProps
 {
 	uint32_t width = 0;
-	VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
+	ImageFormat format = ImageFormat::BGRA;
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -47,7 +48,7 @@ struct Image2DProps
 {
 	uint32_t width = 0;
 	uint32_t height = 0;
-	VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
+	ImageFormat format = ImageFormat::BGRA;
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -66,7 +67,7 @@ struct ImageArrayProps
 {
 	uint32_t width = 0;
 	uint32_t height = 0;
-	VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
+	ImageFormat format = ImageFormat::BGRA;
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -87,7 +88,7 @@ struct ImageProps
 	uint32_t width = 0;
 	uint32_t height = 0;
 	uint32_t depth = 1;
-	VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
+	ImageFormat format = ImageFormat::BGRA;
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -212,14 +213,14 @@ public:
 
 	uint32_t getWidth() const { return props.width; }
 	uint32_t getHeight() const { return props.height; }
-	VkFormat getFormat() const { return props.format; }
-	size_t getSize() const { return props.width * props.height * props.depth * props.array_layers * formatSize(props.format); }
+	ImageFormat getFormat() const { return props.format; }
+	size_t getSize() const { return props.width * props.height * props.depth * props.array_layers * ImageFormatEnum::getSize(props.format); }
 	uint32_t mipLevels() const { return mip_levels; }
 	const ImageProps& getProps() const { return props; }
 	const VkDescriptorImageInfo& getDescriptorInfo() const { return descriptor_image_info; }
 	void setLayout(VkImageLayout layout) { descriptor_image_info.imageLayout = layout; }
 	VmaAllocation getAllocation() const { return allocation; }
-	VkImageAspectFlags getAspectFlags() const { return getAspectFlags(props.format); }
+	//VkImageAspectFlags getAspectFlags() const { return getAspectFlags(props.format); } //TODO: Maybe delete
 	bool isMapped() const { return mapped; }
 
 	void setData(void* data, uint32_t base_array_layer = 0, uint32_t array_layers = 1);
@@ -243,15 +244,6 @@ protected:
 
 protected:
 	static void insertMemoryBarrier(const VkImage& image, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkImageAspectFlags aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t array_layers, uint32_t base_array_layer);
-
-public:
-	static VkFormat getDefaultFormatFromChannelCount(int channels);
-	static bool hasStencil(VkFormat format);
-	static bool hasDepth(VkFormat format);
-	static VkImageAspectFlags getAspectFlags(VkFormat format);
-	static size_t channelCount(VkFormat format);
-	static DeviceType formatToType(VkFormat format);
-	static size_t formatSize(VkFormat format);
 
 protected:
 	VkImage image = VK_NULL_HANDLE;

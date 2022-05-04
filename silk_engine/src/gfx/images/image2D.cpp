@@ -6,7 +6,7 @@ Image2D::Image2D(const Image2DProps& props)
 	create(this->props);
 }
 
-Image2D::Image2D(uint32_t width, uint32_t height, VkFormat format)
+Image2D::Image2D(uint32_t width, uint32_t height, ImageFormat format)
 {
 	Image2DProps props{};
 	props.width = width;
@@ -26,7 +26,7 @@ Image2D::Image2D(std::string_view file, const Image2DProps& props)
 	if (data.channels == 3)
 		data.align4();
 	this->props.data = data.data.data();
-	this->props.format = getDefaultFormatFromChannelCount(data.channels);
+	this->props.format = ImageFormatEnum::fromChannelCount(data.channels);
 	create(this->props);
 }
 

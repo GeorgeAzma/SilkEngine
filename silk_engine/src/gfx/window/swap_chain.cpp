@@ -58,7 +58,7 @@ void SwapChain::createFramebuffers()
 	Image2DProps props{};
 	props.width = extent.width;
 	props.height = extent.height;
-	props.format = Graphics::physical_device->getDepthFormat();
+	props.format = ImageFormatEnum::fromVulkanType(Graphics::physical_device->getDepthFormat());
 	props.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 	props.create_sampler = false;
 	props.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -66,7 +66,7 @@ void SwapChain::createFramebuffers()
 	props.samples = sample_count;
 	depth = makeShared<Image2D>(props);
 
-	props.format = surface_format.format;
+	props.format = ImageFormatEnum::fromVulkanType(surface_format.format);
 	props.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
 	msaa_image = makeShared<Image2D>(props);
@@ -161,7 +161,7 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 		props.height = extent.height;
 		props.create_sampler = false;
 		props.mipmap = false;
-		props.format = surface_format.format;
+		props.format = ImageFormatEnum::fromVulkanType(surface_format.format);
 		props.layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 		props.initial_layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 		this->images[i] = makeShared<Image2D>(images[i], props);

@@ -116,7 +116,7 @@ void Graphics::screenshot(std::string_view file)
 {
 	int width = swap_chain->getExtent().width;
 	int height = swap_chain->getExtent().height;
-	int channels = Image::channelCount(swap_chain->getSurfaceFormat().format);
+	int channels = ImageFormatEnum::getChannelCount(ImageFormatEnum::fromVulkanType(swap_chain->getSurfaceFormat().format));
 	size_t pixels = width * height;
 	 
 	//Create/Copy Image - 2ms
@@ -128,7 +128,7 @@ void Graphics::screenshot(std::string_view file)
 	props.layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	props.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 	props.memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
-	props.format = swap_chain->getSurfaceFormat().format;
+	props.format = ImageFormatEnum::fromVulkanType(swap_chain->getSurfaceFormat().format);
 	props.tiling = VK_IMAGE_TILING_LINEAR;
 	props.mipmap = false;
 	props.sampler_props.anisotropy = false;

@@ -18,6 +18,7 @@ Image::~Image()
 
 void Image::create(const ImageProps& props)
 {
+	this->props = props;
 	needs_staging = EnumInfo::needsStaging(props.memory_usage);
 	SK_ASSERT((props.is_1D ? (props.height == 1 && props.depth == 1) : true), "If image is 1D it's height and depth must be 1");
 	SK_ASSERT(((!props.is_1D && ! props.is_cubemap) ? (props.depth == 1) : true), "If image is 2D it's depth must be 1");
@@ -29,7 +30,7 @@ void Image::create(const ImageProps& props)
 		VkImageCreateInfo ci{};
 		ci.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		ci.imageType = props.is_1D ? VK_IMAGE_TYPE_1D : (props.depth == 1 ? VK_IMAGE_TYPE_2D : VK_IMAGE_TYPE_3D);
-		ci.format = props.format;
+		ci.format = ImageFormatEnum::toVulkanType(props.format);
 		ci.tiling = props.tiling;
 		ci.usage = props.usage;
 		ci.flags = props.is_cubemap * VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
@@ -91,7 +92,7 @@ void Image::transitionLayout(VkImageLayout new_layout)
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.image = image;
-	barrier.subresourceRange.aspectMask = getAspectFlags();
+	barrier.subresourceRange.aspectMask = ImageFormatEnum::getVulkanAspectFlags(props.format);
 	barrier.subresourceRange.baseMipLevel = 0;
 	barrier.subresourceRange.levelCount = mip_levels;
 	barrier.subresourceRange.baseArrayLayer = 0;
@@ -188,13 +189,13 @@ void Image::insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags 
 {
 	if (descriptor_image_info.imageLayout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
 		return;
-	insertMemoryBarrier(image, source_access_mask, destination_access_mask, old_layout, new_layout, source_stage_mask, destination_stage_mask, getAspectFlags(), mip_levels, base_mip_level, props.array_layers, base_array_layer);
+	insertMemoryBarrier(image, source_access_mask, destination_access_mask, old_layout, new_layout, source_stage_mask, destination_stage_mask, ImageFormatEnum::getVulkanAspectFlags(props.format), mip_levels, base_mip_level, props.array_layers, base_array_layer);
 	descriptor_image_info.imageLayout = new_layout;
 }
 
 bool Image::isFeatureSupported(VkFormatFeatureFlags feature) const
 {
-	VkFormatProperties format_properties = Graphics::physical_device->getFormatProperties(props.format);
+	VkFormatProperties format_properties = Graphics::physical_device->getFormatProperties(ImageFormatEnum::toVulkanType(props.format));
 	const VkFormatFeatureFlags& features = (props.tiling == VK_IMAGE_TILING_OPTIMAL) ? format_properties.optimalTilingFeatures : format_properties.linearTilingFeatures;
 	return bool(features & feature);
 }
@@ -214,14 +215,14 @@ void Image::copyFromBuffer(VkBuffer buffer)
 		region.bufferOffset = 0;
 		region.bufferRowLength = 0;
 		region.bufferImageHeight = 0;
-		region.imageSubresource.aspectMask = getAspectFlags();
+		region.imageSubresource.aspectMask = ImageFormatEnum::getVulkanAspectFlags(props.format);
 		region.imageSubresource.mipLevel = 0;
 		region.imageSubresource.baseArrayLayer = layer;
 		region.imageSubresource.layerCount = 1;
 		region.imageOffset = VkOffset3D(0, 0, 0);
 		region.imageExtent = VkExtent3D(props.width, props.height, props.depth);
 
-		offset += props.width * props.height * props.depth * formatSize(props.format);
+		offset += props.width * props.height * props.depth * ImageFormatEnum::getSize(props.format);
 
 		regions[layer] = std::move(region);
 	}
@@ -243,7 +244,7 @@ void Image::copyToBuffer(VkBuffer buffer, uint32_t base_array_layer, uint32_t ar
 	region.bufferOffset = 0;
 	region.bufferImageHeight = props.height;
 	region.bufferRowLength = props.width;
-	region.imageSubresource.aspectMask = getAspectFlags();
+	region.imageSubresource.aspectMask = ImageFormatEnum::getVulkanAspectFlags(props.format);
 	region.imageSubresource.baseArrayLayer = base_array_layer;
 	region.imageSubresource.layerCount = array_layers;
 	region.imageSubresource.mipLevel = 0;
@@ -275,7 +276,7 @@ void Image::generateMipmaps()
 	if (mip_levels <= 1)
 		return;
 
-	VkFormatProperties format_properties = Graphics::physical_device->getFormatProperties(props.format);
+	VkFormatProperties format_properties = Graphics::physical_device->getFormatProperties(ImageFormatEnum::toVulkanType(props.format));
 
 	SK_ASSERT(format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT,
 		"Image format does not support src blitting");
@@ -290,7 +291,7 @@ void Image::generateMipmaps()
 	barrier.image = image;
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.subresourceRange.aspectMask = getAspectFlags();
+	barrier.subresourceRange.aspectMask = ImageFormatEnum::getVulkanAspectFlags(props.format);
 	barrier.subresourceRange.baseArrayLayer = 0;
 	barrier.subresourceRange.layerCount = props.array_layers;
 	barrier.subresourceRange.levelCount = 1;
@@ -349,8 +350,8 @@ void Image::generateMipmaps()
 
 void Image::setData(void* data, uint32_t base_array_layer, uint32_t array_layers)
 {
-	VkImageSubresource image_subresource = {};
-	image_subresource.aspectMask = getAspectFlags();
+	VkImageSubresource image_subresource{};
+	image_subresource.aspectMask = ImageFormatEnum::getVulkanAspectFlags(props.format);
 	image_subresource.mipLevel = 0;
 	image_subresource.arrayLayer = base_array_layer;
 	VkSubresourceLayout subresource_layout = Graphics::logical_device->getImageSubresourceLayout(image, image_subresource);
@@ -375,8 +376,8 @@ void Image::setData(void* data, uint32_t base_array_layer, uint32_t array_layers
 
 void Image::getData(void* data, uint32_t base_array_layer, uint32_t array_layers)
 {
-	VkImageSubresource image_subresource = {};
-	image_subresource.aspectMask = getAspectFlags();
+	VkImageSubresource image_subresource{};
+	image_subresource.aspectMask = ImageFormatEnum::getVulkanAspectFlags(props.format);
 	image_subresource.mipLevel = 0;
 	image_subresource.arrayLayer = base_array_layer;
 	VkSubresourceLayout subresource_layout = Graphics::logical_device->getImageSubresourceLayout(image, image_subresource);
@@ -426,14 +427,14 @@ bool Image::copyImage(const shared<Image>& destination, uint32_t array_layer)
 	//If source and destination support blit we'll blit as this also does automatic format conversion (e.g. from BGR to RGB).
 	if (supports_blit) 
 	{
-		VkImageBlit blit = {};
-		blit.srcSubresource.aspectMask = getAspectFlags();
+		VkImageBlit blit{};
+		blit.srcSubresource.aspectMask = ImageFormatEnum::getVulkanAspectFlags(props.format);
 		blit.srcSubresource.mipLevel = 0;
 		blit.srcSubresource.baseArrayLayer = array_layer;
 		blit.srcSubresource.layerCount = 1;
 		blit.srcOffsets[0] = VkOffset3D(0, 0, 0);
 		blit.srcOffsets[1] = VkOffset3D((int32_t)props.width, (int32_t)props.height, (int32_t)props.depth);
-		blit.dstSubresource.aspectMask = destination->getAspectFlags();
+		blit.dstSubresource.aspectMask = ImageFormatEnum::getVulkanAspectFlags(destination->getProps().format);
 		blit.dstSubresource.mipLevel = 0;
 		blit.dstSubresource.baseArrayLayer = 0;
 		blit.dstSubresource.layerCount = 1;
@@ -445,11 +446,11 @@ bool Image::copyImage(const shared<Image>& destination, uint32_t array_layer)
 	{
 		//Otherwise use image copy (requires us to manually flip components).
 		VkImageCopy region{};
-		region.srcSubresource.aspectMask = getAspectFlags();
+		region.srcSubresource.aspectMask = ImageFormatEnum::getVulkanAspectFlags(props.format);
 		region.srcSubresource.mipLevel = 0;
 		region.srcSubresource.baseArrayLayer = array_layer;
 		region.srcSubresource.layerCount = 1;
-		region.dstSubresource.aspectMask = destination->getAspectFlags();
+		region.dstSubresource.aspectMask = ImageFormatEnum::getVulkanAspectFlags(destination->getProps().format);
 		region.dstSubresource.mipLevel = 0;
 		region.dstSubresource.baseArrayLayer = 0;
 		region.dstSubresource.layerCount = 1;
@@ -479,188 +480,4 @@ void Image::unmap() const
 		return;
 	vmaUnmapMemory(*Graphics::allocator, allocation);
 	mapped = false;
-}
-
-VkFormat Image::getDefaultFormatFromChannelCount(int channels)
-{
-	switch (channels)
-	{
-	case 0: return VkFormat(0);
-	case 1: return VK_FORMAT_R8_UNORM;
-	case 2: return VK_FORMAT_R8G8_UNORM;
-	case 3: return VK_FORMAT_R8G8B8_UNORM;
-	case 4: return VK_FORMAT_R8G8B8A8_UNORM;
-	}
-
-	SK_ERROR("Unsupported channel count specified: {0}", channels);
-	return VkFormat(0);
-}
-
-bool Image::hasStencil(VkFormat format)
-{
-	using enum VkFormat;
-	return format == VK_FORMAT_D32_SFLOAT_S8_UINT
-		|| format == VK_FORMAT_D24_UNORM_S8_UINT
-		|| format == VK_FORMAT_D16_UNORM_S8_UINT
-		|| format == VK_FORMAT_S8_UINT;
-}
-
-bool Image::hasDepth(VkFormat format)
-{
-	return format == VK_FORMAT_D32_SFLOAT 
-		|| format == VK_FORMAT_D32_SFLOAT_S8_UINT
-		|| format == VK_FORMAT_D24_UNORM_S8_UINT
-		|| format == VK_FORMAT_D16_UNORM_S8_UINT;
-}
-
-VkImageAspectFlags Image::getAspectFlags(VkFormat format)
-{
-	if (!hasDepth(format))
-		return VK_IMAGE_ASPECT_COLOR_BIT;
-
-	if (hasStencil(format))
-		return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-
-	return VK_IMAGE_ASPECT_DEPTH_BIT;
-}
-
-size_t Image::channelCount(VkFormat format)
-{
-	switch (format)
-	{
-	case VK_FORMAT_R8_SINT:				return 1;
-	case VK_FORMAT_R8_UINT:				return 1;
-	case VK_FORMAT_R16_SINT:				return 1;
-	case VK_FORMAT_R16_UINT:				return 1;
-	case VK_FORMAT_R32_SINT:				return 1;
-	case VK_FORMAT_R32_UINT:				return 1;
-	case VK_FORMAT_R32_SFLOAT:			return 1;
-	case VK_FORMAT_R64_SFLOAT:			return 1;
-	case VK_FORMAT_R32G32_SFLOAT:		return 2;
-	case VK_FORMAT_R32G32B32_SFLOAT:		return 3;
-	case VK_FORMAT_R32G32B32A32_SFLOAT:	return 4;
-	case VK_FORMAT_R32G32_SINT:			return 2;
-	case VK_FORMAT_R32G32B32_SINT:		return 3;
-	case VK_FORMAT_R32G32B32A32_SINT:	return 4;
-	case VK_FORMAT_R32G32_UINT:			return 2;
-	case VK_FORMAT_R32G32B32_UINT:		return 3;
-	case VK_FORMAT_R32G32B32A32_UINT:	return 4;
-	case VK_FORMAT_R64G64_SFLOAT:		return 2;
-	case VK_FORMAT_R64G64B64_SFLOAT:		return 3;
-	case VK_FORMAT_R64G64B64A64_SFLOAT:	return 4;
-	case VK_FORMAT_R8_SRGB:				return 1;
-	case VK_FORMAT_R8G8_SRGB:			return 2;
-	case VK_FORMAT_R8G8B8_SRGB:			return 3;
-	case VK_FORMAT_R8G8B8A8_SRGB:		return 4;
-	case VK_FORMAT_R8_UNORM:				return 1;
-	case VK_FORMAT_R8G8_UNORM:			return 2;
-	case VK_FORMAT_R8G8B8_UNORM:			return 3;
-	case VK_FORMAT_R8G8B8A8_UNORM:		return 4;
-	case VK_FORMAT_D16_UNORM:			return 1;
-	case VK_FORMAT_D16_UNORM_S8_UINT:		return 1;
-	case VK_FORMAT_D24_UNORM_S8_UINT:		return 1;
-	case VK_FORMAT_D32_SFLOAT:			return 1;
-	case VK_FORMAT_D32_SFLOAT_S8_UINT:		return 1;
-	case VK_FORMAT_B8G8R8_SRGB:			return 3;
-	case VK_FORMAT_B8G8R8A8_SRGB:		return 4;
-	case VK_FORMAT_B8G8R8_UNORM:			return 3;
-	case VK_FORMAT_B8G8R8A8_UNORM:		return 4;
-	}
-
-	SK_ERROR("Unsupported format specified: {0}.", format);
-	return 0;
-}
-
-DeviceType Image::formatToType(VkFormat format)
-{
-	switch (format)
-	{
-	case VK_FORMAT_R8_SINT:				return DeviceType::BYTE;
-	case VK_FORMAT_R8_UINT:				return DeviceType::UBYTE;
-	case VK_FORMAT_R16_SINT:			return DeviceType::SHORT;
-	case VK_FORMAT_R16_UINT:			return DeviceType::USHORT;
-	case VK_FORMAT_R32_SINT:			return DeviceType::INT;
-	case VK_FORMAT_R32_UINT:			return DeviceType::UINT;
-	case VK_FORMAT_R32_SFLOAT:			return DeviceType::FLOAT;
-	case VK_FORMAT_R64_SFLOAT:			return DeviceType::DOUBLE;
-	case VK_FORMAT_R32G32_SFLOAT:		return DeviceType::VEC2;
-	case VK_FORMAT_R32G32B32_SFLOAT:	return DeviceType::VEC3;
-	case VK_FORMAT_R32G32B32A32_SFLOAT:	return DeviceType::VEC4;
-	case VK_FORMAT_R32G32_SINT:			return DeviceType::IVEC2;
-	case VK_FORMAT_R32G32B32_SINT:		return DeviceType::VEC3I;
-	case VK_FORMAT_R32G32B32A32_SINT:	return DeviceType::VEC4I;
-	case VK_FORMAT_R32G32_UINT:			return DeviceType::VEC2U;
-	case VK_FORMAT_R32G32B32_UINT:		return DeviceType::VEC3U;
-	case VK_FORMAT_R32G32B32A32_UINT:	return DeviceType::VEC4U;
-	case VK_FORMAT_R64G64_SFLOAT:		return DeviceType::VEC2D;
-	case VK_FORMAT_R64G64B64_SFLOAT:	return DeviceType::VEC3D;
-	case VK_FORMAT_R64G64B64A64_SFLOAT:	return DeviceType::VEC4D;
-	case VK_FORMAT_R8_SRGB:				return DeviceType::FLOAT;
-	case VK_FORMAT_R8G8_SRGB:			return DeviceType::VEC2;
-	case VK_FORMAT_R8G8B8_SRGB:			return DeviceType::VEC3;
-	case VK_FORMAT_R8G8B8A8_SRGB:		return DeviceType::VEC4;
-	case VK_FORMAT_R8_UNORM:			return DeviceType::FLOAT;
-	case VK_FORMAT_R8G8_UNORM:			return DeviceType::VEC2;
-	case VK_FORMAT_R8G8B8_UNORM:		return DeviceType::VEC3;
-	case VK_FORMAT_R8G8B8A8_UNORM:		return DeviceType::VEC4;
-	case VK_FORMAT_D16_UNORM:			return DeviceType::UINT;
-	case VK_FORMAT_D16_UNORM_S8_UINT:	return DeviceType::UINT;
-	case VK_FORMAT_D24_UNORM_S8_UINT:	return DeviceType::UINT;
-	case VK_FORMAT_D32_SFLOAT:			return DeviceType::FLOAT;
-	case VK_FORMAT_D32_SFLOAT_S8_UINT:	return DeviceType::DOUBLE;
-	case VK_FORMAT_B8G8R8_SRGB:			return DeviceType::VEC3;
-	case VK_FORMAT_B8G8R8A8_SRGB:		return DeviceType::VEC4;
-	case VK_FORMAT_B8G8R8_UNORM:		return DeviceType::VEC3;
-	case VK_FORMAT_B8G8R8A8_UNORM:		return DeviceType::VEC4;
-	}
-
-	SK_ERROR("Unsupported format specified: {0}.", format);
-	return DeviceType(0);
-}
-
-size_t Image::formatSize(VkFormat format)
-{
-	switch (format)
-	{
-	case VK_FORMAT_R8_SINT:				return 1;
-	case VK_FORMAT_R8_UINT:				return 1;
-	case VK_FORMAT_R16_SINT:			return 2;
-	case VK_FORMAT_R16_UINT:			return 2;
-	case VK_FORMAT_R32_SINT:			return 4;
-	case VK_FORMAT_R32_UINT:			return 4;
-	case VK_FORMAT_R32_SFLOAT:			return 4;
-	case VK_FORMAT_R64_SFLOAT:			return 8;
-	case VK_FORMAT_R32G32_SFLOAT:		return 8;
-	case VK_FORMAT_R32G32B32_SFLOAT:	return 12;
-	case VK_FORMAT_R32G32B32A32_SFLOAT:	return 16;
-	case VK_FORMAT_R32G32_SINT:			return 8;
-	case VK_FORMAT_R32G32B32_SINT:		return 12;
-	case VK_FORMAT_R32G32B32A32_SINT:	return 16;
-	case VK_FORMAT_R32G32_UINT:			return 8;
-	case VK_FORMAT_R32G32B32_UINT:		return 12;
-	case VK_FORMAT_R32G32B32A32_UINT:	return 16;
-	case VK_FORMAT_R64G64_SFLOAT:		return 16;
-	case VK_FORMAT_R64G64B64_SFLOAT:	return 24;
-	case VK_FORMAT_R64G64B64A64_SFLOAT:	return 32;
-	case VK_FORMAT_R8_SRGB:				return 1;
-	case VK_FORMAT_R8G8_SRGB:			return 2;
-	case VK_FORMAT_R8G8B8_SRGB:			return 3;
-	case VK_FORMAT_R8G8B8A8_SRGB:		return 4;
-	case VK_FORMAT_R8_UNORM:			return 1;
-	case VK_FORMAT_R8G8_UNORM:			return 2;
-	case VK_FORMAT_R8G8B8_UNORM:		return 3;
-	case VK_FORMAT_R8G8B8A8_UNORM:		return 4;
-	case VK_FORMAT_D16_UNORM:			return 2;
-	case VK_FORMAT_D16_UNORM_S8_UINT:	return 3;
-	case VK_FORMAT_D24_UNORM_S8_UINT:	return 4;
-	case VK_FORMAT_D32_SFLOAT:			return 8;
-	case VK_FORMAT_D32_SFLOAT_S8_UINT:	return 4;
-	case VK_FORMAT_B8G8R8_SRGB:			return 3;
-	case VK_FORMAT_B8G8R8A8_SRGB:		return 4;
-	case VK_FORMAT_B8G8R8_UNORM:		return 3;
-	case VK_FORMAT_B8G8R8A8_UNORM:		return 4;
-	}
-
-	SK_ERROR("Unsupported format specified: {0}.", format);
-	return 0;
 }

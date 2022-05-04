@@ -31,11 +31,11 @@ enum class DeviceType
 	MAT4D
 };
 
-class DeviceTypeInfo
+class DeviceTypeEnum
 {
 public:
-	static VkFormat format(DeviceType type);
-	static size_t size(DeviceType type);
-	static size_t count(DeviceType type);
-	static size_t rows(DeviceType type);
+	static VkFormat toVulkanType(DeviceType type);
+	static size_t getSize(DeviceType type);
+	static size_t getCount(DeviceType type);
+	static size_t getRows(DeviceType type);
 };

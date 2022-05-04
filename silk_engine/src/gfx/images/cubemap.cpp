@@ -12,7 +12,7 @@ Cubemap::Cubemap(const std::vector<std::string>& files, const CubemapProps& prop
 	if (data.channels == 3)
 		data.align4();
 	this->props.data = data.data.data();
-	this->props.format = getDefaultFormatFromChannelCount(data.channels);
+	this->props.format = ImageFormatEnum::fromChannelCount(data.channels);
 	create(this->props);
 }
 

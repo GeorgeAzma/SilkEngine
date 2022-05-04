@@ -4,7 +4,7 @@
 #include "gfx/enums.h"
 #include "gfx/devices/logical_device.h"
 
-ImageView::ImageView(VkImage image, VkFormat format, uint32_t mip_levels, size_t layer_count, ImageViewType view_type)
+ImageView::ImageView(VkImage image, ImageFormat format, uint32_t mip_levels, size_t layer_count, ImageViewType view_type)
 {
 	VkImageViewCreateInfo ci{};
 	ci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -30,9 +30,9 @@ ImageView::ImageView(VkImage image, VkFormat format, uint32_t mip_levels, size_t
 		break;
 	}
 	ci.viewType = image_view_type;
-	ci.format = format;
+	ci.format = ImageFormatEnum::toVulkanType(format);
 	ci.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
-	ci.subresourceRange.aspectMask = Image::getAspectFlags(format);
+	ci.subresourceRange.aspectMask = ImageFormatEnum::getVulkanAspectFlags(format);
 	ci.subresourceRange.baseMipLevel = 0;
 	ci.subresourceRange.levelCount = mip_levels;
 	ci.subresourceRange.baseArrayLayer = 0;

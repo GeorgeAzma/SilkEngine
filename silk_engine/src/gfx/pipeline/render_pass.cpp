@@ -35,7 +35,8 @@ RenderPass& RenderPass::addAttachment(const AttachmentProps& props)
     
     VkAttachmentReference attachment_reference{};
     attachment_reference.attachment = subpasses.back().attachments.size();
-    if (Image::hasDepth(attachment_description.format) || Image::hasStencil(attachment_description.format))
+    if (ImageFormatEnum::hasDepth(ImageFormatEnum::fromVulkanType(attachment_description.format)) || 
+        ImageFormatEnum::hasStencil(ImageFormatEnum::fromVulkanType(attachment_description.format)))
     {
         attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         type = Attachment::Type::DEPTH_STENCIL;

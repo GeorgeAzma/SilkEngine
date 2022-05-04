@@ -22,10 +22,10 @@ Font::Font(std::string_view file, uint32_t size)
 	FT_Set_Pixel_Sizes(face, 0, size);
 
 	//Get texture atlas dimensions first
-	unsigned int width = 0;
-	unsigned int height = 0;
-	unsigned int row_width = 0;
-	unsigned int row_height = 0;
+	uint32_t width = 0;
+	uint32_t height = 0;
+	uint32_t row_width = 0;
+	uint32_t row_height = 0;
 	
 	//This is just random assumption to make aspect ratio as tight as possible
 	const unsigned int max_width = size * sqrt(MAX_CHARACTER_COUNT); 
@@ -94,7 +94,7 @@ Font::Font(std::string_view file, uint32_t size)
 	texture_atlas_props.width = width;
 	texture_atlas_props.height = height;
 	texture_atlas_props.data = texture_atlas_data.data();
-	texture_atlas_props.format = VK_FORMAT_R8_UNORM;
+	texture_atlas_props.format = ImageFormat::RED;
 	texture_atlas = makeShared<Image2D>(texture_atlas_props);
 }
 
