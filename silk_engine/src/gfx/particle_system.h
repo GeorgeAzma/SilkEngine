@@ -7,32 +7,28 @@
 struct ParticleProps
 {
 	glm::vec3 position = glm::vec3(0);
-	float life_time = 1.0f;
+	glm::vec3 velocity = glm::vec3(0);
+	glm::vec3 velocity_variation = glm::vec3(0);
+	glm::vec3 acceleration = glm::vec3(0);
 	glm::vec4 color_begin = glm::vec4(1);
 	glm::vec4 color_end = glm::vec4(1);
-	glm::vec3 velocity = glm::vec3(0);
 	float size_begin = 1;
-	glm::vec3 velocity_variation = glm::vec3(0);
 	float size_end = 1;
 	shared<Image2D> image = nullptr;
+	float life_time = 1.0f;
+};
+
+struct ParticleSpoutProps
+{
+	ParticleProps particle_properties;
+	float duration = 0.0f;
+	float particles_per_emission = 1;
+	glm::vec3(*update_position)() = nullptr;
 };
 
 struct Particles
 {
-	static inline const ParticleProps flame{ {0, 0, 0}, 1.0f, {1, 0.75f, 0, 1}, {1, 0, 0, 0.25f}, glm::vec3(0, 3, 0), .25f, glm::vec3(1), .01f };
-};
-
-
-struct ParticleSpout
-{
-	ParticleSpout(const ParticleProps& props = Particles::flame, uint32_t emitions_per_second = 64, uint32_t particles_per_emition = 8)
-		: props(props), emitions_per_second(FixedUpdate(emitions_per_second)), particles_per_emition(particles_per_emition)
-	{
-	}
-
-	ParticleProps props;
-	FixedUpdate emitions_per_second;
-	uint32_t particles_per_emition;
+	static inline const ParticleProps flame{ {0, 0, 0}, { 0, 3, 0 }, { 1, 1, 1 }, { 0, 0, 0 }, {1, 0.75f, 0, 1}, {1, 0, 0, 0.25f}, .25f, .01f, nullptr, 1.0f };
 };
 
 class ParticleSystem
@@ -41,6 +37,7 @@ class ParticleSystem
 	{
 		glm::vec3 position;
 		glm::vec3 velocity;
+		glm::vec3 acceleration;
 		glm::vec4 color_begin;
 		glm::vec4 color_end;
 		float rotation_begin;
@@ -52,22 +49,34 @@ class ParticleSystem
 		uint32_t texture_index = 0;
 	};
 
-public:
-	static constexpr size_t MAX_PARTICLES = 262144;
+	struct ParticleSpout
+	{
+		ParticleProps particle_properties;
+		float duration;
+		float particles_per_emission;
+		glm::vec3(*update_position)();
+		float passed_duration;
+	};
 
-public:
-	static void init();
-	static void emit(const ParticleProps& props);
-	static void update();
-
-private:
-	static inline std::vector<Particle> particles;
 	struct ParticleData
 	{
 		glm::mat4 model;
 		uint32_t texture_index;
 		glm::vec4 color;
 	};
+
+public:
+	static constexpr size_t MAX_PARTICLES = 262144;
+
+public:
+	static void init();
+	static void addSpout(const ParticleSpoutProps& props);
+	static void emit(const ParticleProps& props);
+	static void update();
+
+private:
+	static inline std::vector<Particle> particles;
+	static inline std::vector<ParticleSpout> particle_spouts;
 	static inline std::vector<ParticleData> particle_data;
 	static inline shared<VertexArray> vao;
 	static inline shared<VertexBuffer> instance_vbo;

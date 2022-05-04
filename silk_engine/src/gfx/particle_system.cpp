@@ -32,6 +32,17 @@ void ParticleSystem::init()
                                    });
 }
 
+void ParticleSystem::addSpout(const ParticleSpoutProps& props)
+{
+    ParticleSpout spout;
+    spout.duration = props.duration;
+    spout.particles_per_emission = props.particles_per_emission;
+    spout.particle_properties = props.particle_properties;
+    spout.passed_duration = 0.0f;
+    spout.update_position = props.update_position;
+    particle_spouts.emplace_back(std::move(spout));
+}
+
 void ParticleSystem::emit(const ParticleProps& props)
 {
     if (particles.size() >= MAX_PARTICLES) 
@@ -40,7 +51,8 @@ void ParticleSystem::emit(const ParticleProps& props)
     particles.emplace_back
     (
         props.position,
-        props.velocity,
+        props.velocity + props.velocity_variation * (float)RNG::Float() * RNG::Vec3(),
+        props.acceleration,
         props.color_begin,
         props.color_end,
         RNG::Float() * glm::two_pi<float>(),
@@ -55,16 +67,35 @@ void ParticleSystem::emit(const ParticleProps& props)
 
 void ParticleSystem::update()
 {
-    for (auto& p : particles)
+    float dt = float(Time::dt);
+    for (size_t i = 0; i < particle_spouts.size(); ++i)
     {
+        auto& ps = particle_spouts[i];
+        if (ps.passed_duration > ps.duration)
+        {
+            std::swap(ps, particle_spouts.back());
+            particle_spouts.pop_back();
+            continue;
+        }
+        if (ps.update_position)
+            ps.particle_properties.position = ps.update_position();
+        for (size_t i = 0; i < ps.particles_per_emission; ++i)
+            emit(ps.particle_properties);
+        ps.passed_duration += dt;
+    }
+
+    for (size_t i = 0; i < particles.size(); ++i)
+    {
+        auto& p = particles[i];
         if (p.life_remaining <= 0)
         {
             std::swap(p, particles.back());
             particles.pop_back();
             continue;
         }
-        p.life_remaining -= Time::dt;
-        p.position += p.velocity * float(Time::dt);
+        p.life_remaining -= dt;
+        p.velocity += p.acceleration * dt;
+        p.position += p.velocity * dt;
     }
 
     Resources::pool.forEach(particles.size(), [](size_t i)

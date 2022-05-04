@@ -133,11 +133,12 @@ InputDevice Input::getActiveInputDevice()
 void Input::setCursor(std::string_view file, CursorHotSpot hot_spot)
 {
 	std::string path = std::string("cursors/") + file.data();
-	Bitmap bitmap_data = Image2D::load(path);
+	Bitmap data{};
+	data.load(path);
 	GLFWimage cursor_image[1];
-	cursor_image[0].height = bitmap_data.height;
-	cursor_image[0].width = bitmap_data.width;
-	cursor_image[0].pixels = bitmap_data.data.data();
+	cursor_image[0].height = data.height;
+	cursor_image[0].width = data.width;
+	cursor_image[0].pixels = data.data.data();
 
 	glfwDestroyCursor(cursor);
 
@@ -145,44 +146,44 @@ void Input::setCursor(std::string_view file, CursorHotSpot hot_spot)
 	switch (hot_spot)
 	{
 	case CursorHotSpot::TOP:
-		x = bitmap_data.width / 2;
-		y = bitmap_data.height - 1;
+		x = data.width / 2;
+		y = data.height - 1;
 		break;
 	case CursorHotSpot::BOTTOM:
-		x = bitmap_data.width / 2;
+		x = data.width / 2;
 		y = 0;
 		break;
 	case CursorHotSpot::LEFT:
 		x = 0;
-		y = bitmap_data.height / 2;
+		y = data.height / 2;
 		break;
 	case CursorHotSpot::RIGHT:
-		x = bitmap_data.width - 1;
-		y = bitmap_data.height / 2;
+		x = data.width - 1;
+		y = data.height / 2;
 		break;
 	case CursorHotSpot::TOP_LEFT:
 		x = 0;
-		y = bitmap_data.height - 1;
+		y = data.height - 1;
 		break;
 	case CursorHotSpot::TOP_RIGHT:
-		x = bitmap_data.width - 1;
-		y = bitmap_data.height - 1;
+		x = data.width - 1;
+		y = data.height - 1;
 		break;
 	case CursorHotSpot::BOTTOM_LEFT:
 		x = 0;
 		y = 0;
 		break;
 	case CursorHotSpot::BOTTOM_RIGHT:
-		x = bitmap_data.width - 1;
+		x = data.width - 1;
 		y = 0;
 		break;
 	case CursorHotSpot::CENTER:
-		x = bitmap_data.width / 2;
-		y = bitmap_data.height / 2;
+		x = data.width / 2;
+		y = data.height / 2;
 		break;
 	default:
-		x = bitmap_data.width - 1;
-		y = bitmap_data.height - 1;
+		x = data.width - 1;
+		y = data.height - 1;
 		break;
 	}
 

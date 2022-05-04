@@ -9,10 +9,4 @@ public:
 	ImageArray(const ImageArrayProps& props);
 
 	uint32_t getArrayLayers() const { return props.array_layers; }
-	std::vector<std::string> getPaths() const { return paths; }
-
-	static Bitmap load(const std::vector<std::string>& files);
-
-private:
-	std::vector<std::string> paths;
 };

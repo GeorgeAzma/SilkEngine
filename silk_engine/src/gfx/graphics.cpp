@@ -21,8 +21,6 @@
 #include "scene/scene_manager.h"
 #include "renderer.h"
 #include "gfx/pipeline/compute_pipeline.h"
-
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
 void Graphics::init()

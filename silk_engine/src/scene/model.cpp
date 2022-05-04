@@ -182,9 +182,10 @@ std::vector<Bitmap> RawModel::loadMaterialTextures(aiMaterial* mat, aiTextureTyp
         }
         else
         {
-            Bitmap image_data = Image2D::load(directory + '/' + str.C_Str());
+            Bitmap image_data{};
+            image_data.load(directory + '/' + str.C_Str());
             if (image_data.channels == 3)
-                Image::align4(image_data);
+                image_data.align4();
             image_cache.emplace(str.C_Str(), image_data);
             images.emplace_back(std::move(image_data));
         }

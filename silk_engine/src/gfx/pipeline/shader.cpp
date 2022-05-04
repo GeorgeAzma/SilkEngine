@@ -46,7 +46,6 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 {
 	for (const auto& stage : stages)
 		Graphics::logical_device->destroyShaderModule(stage.module);
-	//TODO: This doesn't support recompiling shaders when shader resources changed (we'd have to recompile pipelines and do some funky stuff, not worth the effort)
 	stages.clear();
 	resources.clear();
 	local_size = glm::vec3(0);

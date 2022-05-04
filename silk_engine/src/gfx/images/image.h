@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bitmap.h"
 #include "gfx/buffers/staging_buffer.h"
 #include "image_view.h"
 #include "sampler.h"
@@ -204,16 +205,6 @@ struct ImageProps
 	}
 };
 
-struct Bitmap
-{
-	int width;
-	int height;
-	int channels;
-	std::vector<uint8_t> data;
-
-	size_t size() const { return width * height * channels * sizeof(uint8_t); }
-};
-
 class Image : NonCopyable
 {
 public:
@@ -230,8 +221,6 @@ public:
 	VmaAllocation getAllocation() const { return allocation; }
 	VkImageAspectFlags getAspectFlags() const { return getAspectFlags(props.format); }
 	bool isMapped() const { return mapped; }
-
-	static void align4(Bitmap& image);
 
 	void setData(void* data, uint32_t base_array_layer = 0, uint32_t array_layers = 1);
 	void getData(void* data, uint32_t base_array_layer = 0, uint32_t array_layers = 1);

@@ -16,22 +16,6 @@ Image::~Image()
 		vmaDestroyImage(*Graphics::allocator, image, allocation);
 }
 
-void Image::align4(Bitmap& image)
-{
-	//TODO: This can be done in compute shader
-	int old_channels = image.channels;
-	image.channels = 4;
-
-	size_t size = image.width * image.height;
-	std::vector<uint8_t> aligned_image(size * 4, 0);
-	for (size_t i = 0; i < size; ++i)
-	{
-		std::memcpy(aligned_image.data() + i * 4, image.data.data() + i * old_channels, old_channels * sizeof(uint8_t));
-		aligned_image[i * 4 + 3] = 255;
-	}
-	image.data = std::move(aligned_image);
-}
-
 void Image::create(const ImageProps& props)
 {
 	needs_staging = EnumInfo::needsStaging(props.memory_usage);

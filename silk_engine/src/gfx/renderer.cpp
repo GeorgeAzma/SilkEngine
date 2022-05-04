@@ -290,7 +290,6 @@ void Renderer::addInstanceBatch(const shared<RenderedInstance>& instance, const 
 	for (auto&& [set, descriptor_set] : new_batch.instance->material->getShader()->getDescriptorSets())
 		new_batch.descriptor_sets[set] = *descriptor_set;
 
-
 	instance->instance_batch_index = instance_batches.size() - 1;
 	instance->instance_data_index = instance_batches.back().instance_data.size() - 1;
 }
