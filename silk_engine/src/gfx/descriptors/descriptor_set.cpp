@@ -68,8 +68,7 @@ void DescriptorSet::bind(size_t first_set)
 	else
 		update();
 
-	auto& command_buffer = Graphics::getActiveCommandBuffer();
-	command_buffer.bindDescriptorSets(first_set, { descriptor_set });
+	Graphics::getActiveCommandBuffer().bindDescriptorSets(first_set, { descriptor_set });
 }
 
 void DescriptorSet::setImageInfo(size_t write_index, const std::vector<VkDescriptorImageInfo>& image_info)

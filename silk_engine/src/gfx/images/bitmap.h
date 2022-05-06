@@ -13,5 +13,6 @@ public:
 	void save(std::string_view file);
 	void savePNG(std::string_view file);
 	void align4();
+	void allocate() { data.resize(width * height * channels); }
 	size_t size() const { return width * height * channels * sizeof(uint8_t); }
 };

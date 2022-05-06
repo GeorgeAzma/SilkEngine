@@ -20,49 +20,54 @@ Font::Font(std::string_view file, uint32_t size)
 	SK_ASSERT(!result, "FreeType: Couldn't create new face");
 
 	FT_Set_Pixel_Sizes(face, 0, size);
-
-	//Get texture atlas dimensions first
+	
+	//Step 1: Get texture atlas dimensions
 	uint32_t width = 0;
 	uint32_t height = 0;
 	uint32_t row_width = 0;
 	uint32_t row_height = 0;
-	
-	//This is just random assumption to make aspect ratio as tight as possible
-	const unsigned int max_width = size * sqrt(MAX_CHARACTER_COUNT); 
+
+	uint32_t padding = 0; //For SDF
+
+	//This is just random assumption to make aspect ratio of texture atlas as close to 1 as possible
+	const unsigned int max_width = (size + padding) * sqrt(MAX_CHARACTER_COUNT); 
 	SK_ASSERT(max_width > 0, "FreeType: Invalid texture input, it is too small");
 
 	for (size_t i = 0; i < MAX_CHARACTER_COUNT; ++i)
 	{
 		FT_Error result = FT_Load_Char(face, i, FT_LOAD_RENDER);
 		SK_ASSERT(!result, "FreeType: Couldn't load character: {0}, from file {1}", i, path);
-
-		if (row_width + face->glyph->bitmap.width + 1 >= max_width)
+		if (row_width + face->glyph->bitmap.width + 1 + padding >= max_width)
 		{
 			width = std::max(width, row_width);
 			height += row_height;
 			row_width = 0;
 			row_height = 0;
 		}
-		row_width += face->glyph->bitmap.width + 1;
-		row_height = std::max(row_height, face->glyph->bitmap.rows);
+		row_width += face->glyph->bitmap.width + 1 + padding;
+		row_height = std::max(row_height, face->glyph->bitmap.rows + padding);
 	}
 	width = std::max(width, row_width);
 	height += row_height;
 
 
-	std::vector<uint8_t> texture_atlas_data(width * height);
+	//Step 2: Load glyphs onto a texture atlas
+	Bitmap texture_atlas_bitmap{};
+	texture_atlas_bitmap.width = width;
+	texture_atlas_bitmap.height = height;
+	texture_atlas_bitmap.channels = 1;
+	texture_atlas_bitmap.allocate();
 
 	int origin_x = 0;
 	int origin_y = 0;
 	row_height = 0;
 
-	//Load glyphs onto a texture atlas
 	for (size_t i = 0; i < MAX_CHARACTER_COUNT; ++i)
 	{
 		FT_Error result = FT_Load_Char(face, i, FT_LOAD_RENDER);
 		SK_ASSERT(!result, "FreeType: Couldn't load character: {0}, from file {1}, Error: {2}", i, path, FT_Error_String(result));
 		
-		if (origin_x + face->glyph->bitmap.width + 1 >= max_width)
+		if (origin_x + face->glyph->bitmap.width + 1 + padding >= max_width)
 		{
 			origin_y += row_height;
 			row_height = 0;
@@ -84,18 +89,20 @@ Font::Font(std::string_view file, uint32_t size)
 		characters[i].texture_coordinate.w = (origin_y + face->glyph->bitmap.rows) / (float)height;
 
 		for (size_t j = 0; j < face->glyph->bitmap.rows; ++j)
-			memcpy(texture_atlas_data.data() + (origin_x + (j + origin_y) * width), face->glyph->bitmap.buffer + j * face->glyph->bitmap.width, face->glyph->bitmap.width);
+			memcpy(texture_atlas_bitmap.data.data() + (origin_x + (j + origin_y) * width), face->glyph->bitmap.buffer + j * face->glyph->bitmap.width, face->glyph->bitmap.width);
 
-		row_height = std::max(row_height, face->glyph->bitmap.rows);
-		origin_x += face->glyph->bitmap.width + 1;
+		row_height = std::max(row_height, face->glyph->bitmap.rows + padding);
+		origin_x += face->glyph->bitmap.width + 1 + padding;
 	}
 
 	Image2DProps texture_atlas_props{};
 	texture_atlas_props.width = width;
 	texture_atlas_props.height = height;
-	texture_atlas_props.data = texture_atlas_data.data();
+	texture_atlas_props.data = texture_atlas_bitmap.data.data();
 	texture_atlas_props.format = ImageFormat::RED;
 	texture_atlas = makeShared<Image2D>(texture_atlas_props);
+
+	texture_atlas_bitmap.save("C:\\Users\\peace\\Desktop\\atlas.png");
 }
 
 Font::~Font()

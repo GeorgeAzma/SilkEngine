@@ -119,7 +119,6 @@ void Graphics::screenshot(std::string_view file)
 	int channels = ImageFormatEnum::getChannelCount(ImageFormatEnum::fromVulkanType(swap_chain->getSurfaceFormat().format));
 	size_t pixels = width * height;
 	 
-	//Create/Copy Image - 2ms
 	Image2DProps props{};
 	props.width = width;
 	props.height = height;
@@ -138,7 +137,6 @@ void Graphics::screenshot(std::string_view file)
 
 	if (!blit_supported)
 	{
-		//Change layout to RGBA - 4.5ms
 		StorageBuffer image_storage(destination->getSize(), VMA_MEMORY_USAGE_GPU_TO_CPU, VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 		destination->copyToBuffer(image_storage);
 
@@ -151,8 +149,6 @@ void Graphics::screenshot(std::string_view file)
 		compute->dispatch(width * height);
 		command_buffer.submitIdle();
 		
-
-		//Write PNG - 350ms
 		void* buffer_data;
 		image_storage.map(&buffer_data);
 		stbi_write_png(file.data(), width, height, channels, buffer_data, 0);
@@ -160,7 +156,6 @@ void Graphics::screenshot(std::string_view file)
 	}
 	else
 	{
-		//Write PNG 350ms
 		std::vector<uint8_t> image_data(destination->getSize());
 		destination->getData(image_data.data());
 		stbi_write_png(file.data(), width, height, channels, image_data.data(), 0);
