@@ -27,7 +27,7 @@ Font::Font(std::string_view file, uint32_t size)
 	uint32_t row_width = 0;
 	uint32_t row_height = 0;
 
-	uint32_t padding = 0; //For SDF
+	uint32_t padding = 0; //For SDF (which is TODO:)
 
 	//This is just random assumption to make aspect ratio of texture atlas as close to 1 as possible
 	const unsigned int max_width = (size + padding) * sqrt(MAX_CHARACTER_COUNT); 

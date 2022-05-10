@@ -256,6 +256,7 @@ void Image::copyToBuffer(VkBuffer buffer, uint32_t base_array_layer, uint32_t ar
 void Image::insertMemoryBarrier(const VkImage& image, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkImageAspectFlags aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t array_layers, uint32_t base_array_layer)
 {
 	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 	barrier.srcAccessMask = source_access_mask;
 	barrier.dstAccessMask = destination_access_mask;
 	barrier.oldLayout = old_layout;

@@ -1,15 +1,14 @@
 - Multiple render passes
 - Deffer command buffer submission
+- Font SDF and effects
 - faster immidiate drawing
 - Whenever you bind something with command buffer, it saves the state and when you submit it, it resets the state
 - Fast Culling
 - Replace user used vulkan enums with engine enums
 - Handle normal/other maps and materials in shader
-- Stream data instead of pre-initializing it
 - Better material system
 - Implement multithreaded secondary command buffer submit system
 - Create system which handles vulkan object creation and update for multiple frames
-- Font rendering
 - Better Descriptor pool system
 - Fix dirty code
 - Caching (Graphics Pipeline etc.)

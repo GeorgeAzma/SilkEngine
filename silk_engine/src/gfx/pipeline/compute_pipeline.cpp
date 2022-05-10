@@ -32,6 +32,7 @@ ComputePipeline::ComputePipeline(const shared<Shader>& shader, const std::vector
 	stage_specialization_info.specialization_info = std::move(specialization_info);
 
 	VkPipelineShaderStageCreateInfo shader_stage_info{};
+	shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	shader_stage_info.stage = VK_SHADER_STAGE_COMPUTE_BIT;
 	shader_stage_info.module = shader->getStages().front().module;
 	shader_stage_info.pName = "main";
