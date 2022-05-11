@@ -54,7 +54,10 @@ uint32_t InstanceImages::add(const std::vector<shared<Image2D>>& new_images)
 void InstanceImages::remove(size_t index, size_t count)
 {
 	for (size_t i = 0; i < count; ++i)
+	{
+		SK_ASSERT(image_owners[index + i] > 0, "Couldn't remove image from instance images");
 		--image_owners[index + i];
+	}
 }
 
 void InstanceImages::updateDescriptorSet(DescriptorSet& descriptor_set, uint32_t write_index)

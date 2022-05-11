@@ -14,15 +14,17 @@ public:
 
     operator const VkSwapchainKHR& () const { return swap_chain; }
 
-    const VkSurfaceFormatKHR& getSurfaceFormat() const { return surface_format; }
+    VkFormat getFormat() const { return surface_format.format; }
+    VkFormat getDepthFormat() const { return depth_format; }
+    VkSampleCountFlagBits getSampleCount() const { return sample_count; }
     const VkExtent2D& getExtent() const { return extent; }
     const std::vector<shared<Framebuffer>>& getFramebuffers() const { return framebuffers; }
     const std::vector<shared<Image2D>>& getImages() const { return images; }
+    size_t getImageCount() const { return images.size(); }
     shared<RenderPass> getRenderPass() const { return render_pass; }
     uint32_t getImageIndex() const { return image_index; }
     shared<Image2D> getActiveImage() const { return images[image_index]; }
     shared<Framebuffer> getActiveFramebuffer() const { return framebuffers[image_index]; }
-    VkSampleCountFlagBits getSampleCount() const { return sample_count; }
     
     void recreate();
 

@@ -50,7 +50,7 @@ void Image::create(const ImageProps& props)
 		allocation_info.usage = props.memory_usage;
 		Graphics::vulkanAssert(VkResult(vmaCreateImage(*Graphics::allocator, &ci, &allocation_info, &image, &allocation, nullptr)));
 	}
-
+	
 	if (staging_buffer.get() != nullptr)
 	{
 		copyFromBuffer(*staging_buffer);
@@ -420,7 +420,7 @@ bool Image::copyImage(const shared<Image>& destination, uint32_t array_layer)
 	//Do the actual blit from the swapchain image to our host visible destination image.
 	CommandBuffer command_buffer;
 	command_buffer.begin();
-	auto destination_old_layout = destination->getDescriptorInfo().imageLayout;
+	auto destination_old_layout = destination->getLayout();
 	destination->insertMemoryBarrier(VK_ACCESS_NONE, VK_ACCESS_TRANSFER_WRITE_BIT, destination_old_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0);
 	auto old_layout = descriptor_image_info.imageLayout;
 	insertMemoryBarrier(VK_ACCESS_MEMORY_READ_BIT, VK_ACCESS_TRANSFER_READ_BIT, old_layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, array_layer);

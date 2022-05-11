@@ -215,12 +215,14 @@ public:
 	uint32_t getHeight() const { return props.height; }
 	ImageFormat getFormat() const { return props.format; }
 	size_t getSize() const { return props.width * props.height * props.depth * props.array_layers * ImageFormatEnum::getSize(props.format); }
-	uint32_t mipLevels() const { return mip_levels; }
+	uint32_t getMipLevels() const { return mip_levels; }
 	const ImageProps& getProps() const { return props; }
 	const VkDescriptorImageInfo& getDescriptorInfo() const { return descriptor_image_info; }
-	void setLayout(VkImageLayout layout) { descriptor_image_info.imageLayout = layout; }
+	const VkImageLayout& getLayout() const { return descriptor_image_info.imageLayout; }
+	const VkImageView& getView() const { return descriptor_image_info.imageView; }
+	const VkSampler& getSampler() const { return descriptor_image_info.sampler; }
+	VkImageAspectFlags getAspectFlags() const { return ImageFormatEnum::getVulkanAspectFlags(props.format); }
 	VmaAllocation getAllocation() const { return allocation; }
-	//VkImageAspectFlags getAspectFlags() const { return getAspectFlags(props.format); } //TODO: Maybe delete
 	bool isMapped() const { return mapped; }
 
 	void setData(void* data, uint32_t base_array_layer = 0, uint32_t array_layers = 1);

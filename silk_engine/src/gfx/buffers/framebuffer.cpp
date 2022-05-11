@@ -8,7 +8,7 @@ Framebuffer::Framebuffer(VkRenderPass render_pass, const std::vector<shared<Imag
 {
     std::vector<VkImageView> attachment_views(this->attachments.size());
     for (size_t i = 0; i < this->attachments.size(); ++i)
-        attachment_views[i] = this->attachments[i]->getDescriptorInfo().imageView;
+        attachment_views[i] = this->attachments[i]->getView();
 
     VkFramebufferCreateInfo ci{};
     ci.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

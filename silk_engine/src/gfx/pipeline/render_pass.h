@@ -4,8 +4,9 @@ struct AttachmentProps
 {
 	VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
 	VkImageLayout layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-	std::optional<VkClearValue> clear_value = {};
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
+
+	std::optional<VkClearValue> clear_value = {};
 	VkAttachmentLoadOp load_operation = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	VkAttachmentStoreOp store_operation = VK_ATTACHMENT_STORE_OP_STORE;
 	VkAttachmentLoadOp stencil_load_operation = VK_ATTACHMENT_LOAD_OP_DONT_CARE;

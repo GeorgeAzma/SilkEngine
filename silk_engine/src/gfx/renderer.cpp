@@ -151,7 +151,7 @@ void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const sha
 		createInstance(instance, std::move(data));
 }
 
-void Renderer::update(Camera* camera)
+void Renderer::begin(Camera* camera)
 {
 	updateUniformData(camera);
 	updateDrawCommands();
@@ -176,8 +176,12 @@ void Renderer::update(Camera* camera)
 	scissor.extent = VkExtent2D{ (uint32_t)Graphics::swap_chain->getExtent().width, (uint32_t)Graphics::swap_chain->getExtent().height };
 	Graphics::getActiveCommandBuffer().setScissor({ scissor });
 
-	//Draw instances
 	Graphics::swap_chain->getRenderPass()->begin(*Graphics::swap_chain->getActiveFramebuffer(), VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void Renderer::render()
+{
+	//Draw instances
 	size_t draw_index = 0;
 	for (auto& instance_batch : instance_batches)
 	{
@@ -197,8 +201,10 @@ void Renderer::update(Camera* camera)
 	for (const auto& subrender : subrenders)
 		if (subrender.second && subrender.second->enabled)
 			subrender.second->render();
+}
 
-	//End draw
+void Renderer::end()
+{
 	Graphics::swap_chain->getRenderPass()->end();
 	CommandBufferSubmitInfo submit_info{};
 	VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;

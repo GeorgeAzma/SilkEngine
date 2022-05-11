@@ -84,7 +84,7 @@ void DescriptorSet::setBufferInfo(size_t write_index, const std::vector<VkDescri
 	SK_ASSERT(buffer_info.size() == write_descriptor_sets[write_index].descriptorCount, "Invalid buffer_info size: {0}, should be {1}", buffer_info.size(), write_descriptor_sets[write_index].descriptorCount);
 	this->buffer_infos[write_index] = buffer_info;
 	write_descriptor_sets[write_index].pBufferInfo = this->buffer_infos[write_index].data();
-	needs_update = true;
+	needs_update = true; //TODO: This might be unnecessary if pBufferInfo == buffer_infos[write_index]
 }
 
 DescriptorSet::DescriptorSet(const DescriptorSet& other)

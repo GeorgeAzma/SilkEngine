@@ -80,15 +80,6 @@ void SandboxApp::onUpdate()
         Graphics::screenshot(fmt::format("data/images/screenshots/screenshot.png"));
     }
 
-    Renderer::color({ 1, 1, 0, 1 });
-    Renderer::image(Resources::getImage("Test1"));
-    for(float x = 0; x < 100; ++x)
-        for (float y = 0; y < 100; ++y)
-            Renderer::rectangle(x * 5, y * 5, 4, 4);
-    
-    Renderer::color({ 1, 1, 0, 1 });
-    Renderer::triangle(0, 0, 100, 100, 200, 0);
-
     //Resources::pool.forEach(entities.size(), 
     //    [&](size_t i) 
     //    {
@@ -96,6 +87,18 @@ void SandboxApp::onUpdate()
     //        entities[i]->update<ColorComponent>([](ColorComponent& color) { color.color = glm::vec4(RNG::Float(), RNG::Float(), RNG::Float(), 1.0f); });
     //    });
     //Resources::pool.wait();
+}
+
+void SandboxApp::onRender()
+{
+    Renderer::color({ 1, 1, 0, 1 });
+    Renderer::image(Resources::getImage("Test1"));
+    for (float x = 0; x < 100; ++x)
+        for (float y = 0; y < 100; ++y)
+            Renderer::rectangle(x * 5, y * 5, 4, 4);
+
+    Renderer::color({ 1, 1, 0, 1 });
+    Renderer::triangle(0, 0, 100, 100, 200, 0);
 }
 
 SandboxApp::~SandboxApp()

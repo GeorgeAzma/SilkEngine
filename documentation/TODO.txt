@@ -10,7 +10,7 @@
 - Implement multithreaded secondary command buffer submit system
 - Create system which handles vulkan object creation and update for multiple frames
 - Better Descriptor pool system
-- Fix dirty code
+- Fix dirty code (Descriptor set, Instance images, render pass)
 - Caching (Graphics Pipeline etc.)
 - OpenAL and audio streaming
 - Video (mp4 etc.)

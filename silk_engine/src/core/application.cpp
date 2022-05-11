@@ -61,7 +61,10 @@ void Application::update()
             Graphics::update();
             onUpdate();
             SceneManager::update();
-            Renderer::update(SceneManager::getActive().get() ? SceneManager::getActive()->getMainCamera() : nullptr);
+            Renderer::begin(SceneManager::getActive().get() ? SceneManager::getActive()->getMainCamera() : nullptr);
+            Renderer::render();
+            //onRender();
+            Renderer::end();
             Timers::update();
             Input::update();
         }

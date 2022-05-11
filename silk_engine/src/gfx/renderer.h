@@ -42,14 +42,16 @@ public:
 
 public:
 	static void init();
-	static void update(Camera* camera = nullptr);
+	static void begin(Camera* camera = nullptr);
+	static void render();
+	static void end();
 	static void cleanup();
 	static void reset();
 
 	template<typename T>
 	static const T* getSubrender()
 	{
-		TypeId type_id = TypeInfo<Subrender>::getTypeId<T>();
+		TypeID type_id = TypeInfo<Subrender>::getTypeID<T>();
 		if (auto it = subrenders.find(type_id);  it != subrenders.end() && it->second)
 			return (T*)(it->second.get());
 		return nullptr;
@@ -58,14 +60,14 @@ public:
 	template<typename T>
 	static void addSubrender()
 	{
-		TypeId type_id = TypeInfo<Subrender>::getTypeId<T>();
+		TypeID type_id = TypeInfo<Subrender>::getTypeID<T>();
 		subrenders.emplace(type_id, makeShared<T>());
 	}
 
 	template<typename T>
 	static void removeSubrender()
 	{
-		TypeId type_id = TypeInfo<Subrender>::getTypeId<T>();
+		TypeID type_id = TypeInfo<Subrender>::getTypeID<T>();
 		subrenders.erase(type_id);
 	}
 
@@ -124,5 +126,5 @@ private:
 	static inline VkFence previous_frame_finished = VK_NULL_HANDLE;
 	static inline VkSemaphore swap_chain_image_available = VK_NULL_HANDLE;
 	static inline VkSemaphore render_finished = VK_NULL_HANDLE;
-	static inline std::unordered_map<TypeId, shared<Subrender>> subrenders;
+	static inline std::unordered_map<TypeID, shared<Subrender>> subrenders;
 };

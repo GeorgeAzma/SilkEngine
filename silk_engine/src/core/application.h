@@ -2,6 +2,7 @@
 
 #include "utils/fixed_update.h"
 #include "event.h"
+#include "gfx/subrender.h"
 
 int main(int argc, char **argv);
 
@@ -28,6 +29,7 @@ public:
 
 protected:
     virtual void onUpdate() = 0;
+    virtual void onRender() = 0;
 
 private:
     void run();

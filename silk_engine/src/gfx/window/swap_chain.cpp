@@ -32,14 +32,13 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	this->present_mode = present_mode;
 
 	depth_format = Graphics::physical_device->getDepthFormat();
-
 	sample_count = Graphics::physical_device->getMaxSampleCount();
 
 	render_pass = makeShared<RenderPass>();
 	render_pass->addSubpass()
-		.addAttachment({ surface_format.format, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, {}, sample_count })
-		.addAttachment({ depth_format, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, {}, sample_count })
-		.addAttachment({ surface_format.format, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR })
+		.addAttachment({ getFormat(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, getSampleCount() })
+		.addAttachment({ getDepthFormat(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, getSampleCount()})
+		.addAttachment({ getFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR })
 		.build();
 
 	create(old_swap_chain);
