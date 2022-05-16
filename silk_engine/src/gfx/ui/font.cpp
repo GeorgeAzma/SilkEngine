@@ -101,8 +101,6 @@ Font::Font(std::string_view file, uint32_t size)
 	texture_atlas_props.data = texture_atlas_bitmap.data.data();
 	texture_atlas_props.format = ImageFormat::RED;
 	texture_atlas = makeShared<Image2D>(texture_atlas_props);
-
-	texture_atlas_bitmap.save("C:\\Users\\peace\\Desktop\\atlas.png");
 }
 
 Font::~Font()

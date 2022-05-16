@@ -11,10 +11,10 @@ public:
 class WindowResizeEvent : public Event
 {
 public:
-    WindowResizeEvent(int width, int height)
+    WindowResizeEvent(uint32_t width, uint32_t height)
         : width(width), height(height) {}
 
-    const int width, height;
+    const uint32_t width, height;
 };
 
 class WindowCloseEvent : public Event
@@ -26,17 +26,17 @@ public:
 class WindowMoveEvent : public Event
 {
 public:
-    WindowMoveEvent(int x, int y)
+    WindowMoveEvent(int32_t x, int32_t y)
         : x(x), y(y) {}
 
-    const int x, y;
+    const int32_t x, y;
 };
 
 //KEY EVENTS
 class KeyPressEvent : public Event
 {
 public:
-    KeyPressEvent(uint16_t key, unsigned int repeat_count)
+    KeyPressEvent(uint16_t key, uint32_t repeat_count)
         : key(key), repeat_count(repeat_count) {}
 
     const int key;
@@ -46,29 +46,29 @@ public:
 class KeyReleaseEvent : public Event
 {
 public:
-    KeyReleaseEvent(int key)
+    KeyReleaseEvent(uint16_t key)
         : key(key) {}
 
-    const int key;
+    const uint16_t key;
  };
 
 //MOUSE EVENTS
 class MousePressEvent : public Event
 {
 public:
-    MousePressEvent(int button)
+    MousePressEvent(uint32_t button)
         : button(button) {}
 
-    const int button;
+    const uint32_t button;
  };
 
 class MouseReleaseEvent : public Event
 {
 public:
-    MouseReleaseEvent(int button)
+    MouseReleaseEvent(uint32_t button)
         : button(button) {}
 
-    const int button;
+    const uint32_t button;
  };
 
 class MouseMoveEvent : public Event
@@ -83,10 +83,10 @@ public:
 class MouseDragEvent : public Event
 {
 public:
-    MouseDragEvent(int button, double x, double y)
+    MouseDragEvent(uint32_t button, double x, double y)
         : button(button), x(x), y(y) {}
 
-    const int button;
+    const uint32_t button;
     const double x, y;
  };
 
@@ -130,10 +130,10 @@ public:
 class JoystickEvent : public Event
 {
 public:
-    JoystickEvent(int id, bool connected)
+    JoystickEvent(uint32_t id, bool connected)
         : id(id), connected(connected) {}
 
-    const int id;
+    const uint32_t id;
     const bool connected;
 };
 

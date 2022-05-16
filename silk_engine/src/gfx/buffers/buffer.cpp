@@ -58,7 +58,7 @@ void Buffer::unmap() const
 
 void Buffer::setData(const void* data, size_t size, size_t offset)
 {
-	if (!data)
+	if (!data || !size)
 		return;
 
 	SK_ASSERT(((size ? size : this->size) + offset) <= this->size, 
@@ -80,6 +80,9 @@ void Buffer::setData(const void* data, size_t size, size_t offset)
 
 void Buffer::setDataChecked(const void* data, size_t size, size_t offset)
 {
+	if (!data || !size)
+		return;
+
 	SK_ASSERT(((size ? size : this->size) + offset) <= this->size,
 		"Vulkan: Can't map memory, it's out of bounds");
 

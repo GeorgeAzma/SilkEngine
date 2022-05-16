@@ -1,6 +1,7 @@
 - Multiple render passes
 - Deffer command buffer submission
 - Font SDF and effects
+- Debug codes that might contain bugs (Framebuffer, Swapchain, Renderpass, Renderer)
 - faster immidiate drawing
 - Whenever you bind something with command buffer, it saves the state and when you submit it, it resets the state
 - Fast Culling

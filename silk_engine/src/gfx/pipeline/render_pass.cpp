@@ -2,7 +2,7 @@
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/enums.h"
-#include "gfx/window/swap_chain.h"
+#include "gfx/window/window.h"
 #include "gfx/buffers/command_buffer.h"
 
 RenderPass::~RenderPass()
@@ -13,7 +13,7 @@ RenderPass::~RenderPass()
 RenderPass& RenderPass::addAttachment(const AttachmentProps& props)
 {
     VkAttachmentDescription attachment_description{};
-    attachment_description.format = props.format;
+    attachment_description.format = ImageFormatEnum::toVulkanType(props.format);
     attachment_description.samples = props.samples;
     attachment_description.loadOp = props.load_operation;
     attachment_description.storeOp = props.store_operation;
@@ -150,8 +150,9 @@ void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_cont
     begin_info.renderPass = render_pass;
     begin_info.framebuffer = framebuffer;
 
-    begin_info.renderArea.offset = VkOffset2D(0, 0);
-    begin_info.renderArea.extent = Graphics::swap_chain->getExtent();
+    begin_info.renderArea.offset = { 0, 0 };
+    begin_info.renderArea.extent.width = Window::getWidth();
+    begin_info.renderArea.extent.height = Window::getHeight();
 
     std::vector<VkClearValue> clear_values(subpasses.back().attachments.size());
     for (size_t i = 0; i < clear_values.size(); ++i)

@@ -14,6 +14,7 @@
 #include "scene/meshes/rectangle_mesh.h"
 #include "core/input/input.h"
 #include "core/input/keys.h"
+#include "gfx/particle_system.h"
    
 SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 {  
@@ -80,17 +81,6 @@ void SandboxApp::onUpdate()
         Graphics::screenshot(fmt::format("data/images/screenshots/screenshot.png"));
     }
 
-    //Resources::pool.forEach(entities.size(), 
-    //    [&](size_t i) 
-    //    {
-    //        entities[i]->update<TransformComponent>([](TransformComponent& transform) {});
-    //        entities[i]->update<ColorComponent>([](ColorComponent& color) { color.color = glm::vec4(RNG::Float(), RNG::Float(), RNG::Float(), 1.0f); });
-    //    });
-    //Resources::pool.wait();
-}
-
-void SandboxApp::onRender()
-{
     Renderer::color({ 1, 1, 0, 1 });
     Renderer::image(Resources::getImage("Test1"));
     for (float x = 0; x < 100; ++x)
@@ -99,6 +89,14 @@ void SandboxApp::onRender()
 
     Renderer::color({ 1, 1, 0, 1 });
     Renderer::triangle(0, 0, 100, 100, 200, 0);
+    
+    //Resources::pool.forEach(entities.size(), 
+    //    [&](size_t i) 
+    //    {
+    //        entities[i]->update<TransformComponent>([](TransformComponent& transform) {});
+    //        entities[i]->update<ColorComponent>([](ColorComponent& color) { color.color = glm::vec4(RNG::Float(), RNG::Float(), RNG::Float(), 1.0f); });
+    //    });
+    //Resources::pool.wait();
 }
 
 SandboxApp::~SandboxApp()

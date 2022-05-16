@@ -104,10 +104,10 @@ Instance::Instance()
     ci.pNext = &debug_messenger_ci;
 #endif
    
-    vkCreateInstance(&ci, nullptr, &instance);
+    Graphics::vulkanAssert(vkCreateInstance(&ci, nullptr, &instance));
 
 #ifdef SK_ENABLE_DEBUG_OUTPUT
-    vkCreateDebugUtilsMessengerEXT(instance, &debug_messenger_ci, nullptr, &debug_messenger);
+    Graphics::vulkanAssert(vkCreateDebugUtilsMessengerEXT(instance, &debug_messenger_ci, nullptr, &debug_messenger));
 #endif
 
     uint32_t physical_device_count = 0;

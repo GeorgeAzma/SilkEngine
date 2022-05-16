@@ -120,7 +120,7 @@ void Resources::init()
                     .enable(EnableTag::DEPTH_WRITE)
                     .setShader(getShader("3D"))
                     .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
-                    .setSampleCount(Graphics::swap_chain->getSampleCount())
+                    .setSamples(Graphics::swap_chain->getSamples())
                     .setRenderPass(*Graphics::swap_chain->getRenderPass())
                     .build();
                 return graphics_pipeline; 
@@ -135,7 +135,7 @@ void Resources::init()
                     .enable(EnableTag::DEPTH_WRITE)
                     .setShader(getShader("3D"), { { "lit", &lit, sizeof(VkBool32) } })
                     .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
-                    .setSampleCount(Graphics::swap_chain->getSampleCount())
+                    .setSamples(Graphics::swap_chain->getSamples())
                     .setRenderPass(*Graphics::swap_chain->getRenderPass())
                     .build();
                 return graphics_pipeline; 
@@ -150,7 +150,7 @@ void Resources::init()
                     .setDepthCompareOp(VK_COMPARE_OP_ALWAYS)
                     .setShader(getShader("2D"))
                     .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
-                    .setSampleCount(Graphics::swap_chain->getSampleCount())
+                    .setSamples(Graphics::swap_chain->getSamples())
                     .setRenderPass(*Graphics::swap_chain->getRenderPass())
                     .build();
                 return graphics_pipeline; 
@@ -166,7 +166,7 @@ void Resources::init()
                     .setDepthCompareOp(VK_COMPARE_OP_ALWAYS)
                     .setShader(getShader("Font"))
                     .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
-                    .setSampleCount(Graphics::swap_chain->getSampleCount())
+                    .setSamples(Graphics::swap_chain->getSamples())
                     .setRenderPass(*Graphics::swap_chain->getRenderPass())
                     .build();
                 return graphics_pipeline;

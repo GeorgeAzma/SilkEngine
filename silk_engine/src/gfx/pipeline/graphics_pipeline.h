@@ -11,7 +11,7 @@ public:
 
 	GraphicsPipeline& setShader(const shared<Shader>& shader, const std::vector<Constant>& constants = {});
 	GraphicsPipeline& setVertexLayout(const BufferLayout& layout);
-	GraphicsPipeline& setSampleCount(VkSampleCountFlagBits sample_count);
+	GraphicsPipeline& setSamples(VkSampleCountFlagBits sample_count);
 	GraphicsPipeline& setRenderPass(VkRenderPass render_pass);
 	GraphicsPipeline& setSubpass(uint32_t subpass);
 	GraphicsPipeline& setDepthCompareOp(VkCompareOp depth_compare_op);

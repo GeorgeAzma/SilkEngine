@@ -8,7 +8,7 @@ ImageArray::ImageArray(const std::vector<std::string>& files, const ImageArrayPr
 	data.load(files);
 	this->props.width = data.width;
 	this->props.height = data.height;
-	this->props.array_layers = files.size();
+	this->props.layers = files.size();
 	if (data.channels == 3)
 		data.align4();
 	this->props.data = data.data.data();

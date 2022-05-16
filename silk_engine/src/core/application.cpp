@@ -12,6 +12,7 @@
 #include "scene/scene_manager.h"
 #include "gfx/renderer.h"
 #include "gfx/descriptors/descriptor_allocator.h"
+#include "gfx/particle_system.h"
 
 Application::Application(ApplicationCommandLineArgs args)
     : command_line_args(args), app_update(0.0)
@@ -26,6 +27,7 @@ Application::Application(ApplicationCommandLineArgs args)
     Graphics::init();
     Resources::init();
     Renderer::init();
+    ParticleSystem::init();
 }
 
 Application::~Application()
@@ -34,6 +36,7 @@ Application::~Application()
     Dispatcher::unsubscribe(this, &Application::onWindowResize);
     Dispatcher::unsubscribe(this, &Application::onKeyPress);
     Window::cleanup();
+    ParticleSystem::cleanup();
     Renderer::cleanup();
     Resources::cleanup();
     DescriptorAllocator::cleanup();
@@ -61,10 +64,13 @@ void Application::update()
             Graphics::update();
             onUpdate();
             SceneManager::update();
+            ParticleSystem::update();
+
             Renderer::begin(SceneManager::getActive().get() ? SceneManager::getActive()->getMainCamera() : nullptr);
             Renderer::render();
-            //onRender();
+            ParticleSystem::render();
             Renderer::end();
+
             Timers::update();
             Input::update();
         }

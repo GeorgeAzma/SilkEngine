@@ -30,9 +30,14 @@ Image2D::Image2D(std::string_view file, const Image2DProps& props)
 	create(this->props);
 }
 
-Image2D::Image2D(VkImage image, const Image2DProps& props)
+Image2D::Image2D(VkImage image, ImageFormat format)
 {
-	this->props = props;
+	props = {};
+	props.create_sampler = false;
+	props.mipmap = false;
+	props.initial_layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	props.layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	props.format = format;
 	this->image = image;
 	create(this->props);
 }

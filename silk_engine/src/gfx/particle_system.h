@@ -3,6 +3,7 @@
 #include "utils/fixed_update.h"
 #include "buffers/vertex_array.h"
 #include "scene/instance_images.h"
+#include "gfx/pipeline/graphics_pipeline.h"
 
 struct ParticleProps
 {
@@ -28,7 +29,7 @@ struct ParticleSpoutProps
 
 struct Particles
 {
-	static inline const ParticleProps flame{ {0, 0, 0}, { 0, 3, 0 }, { 1, 1, 1 }, { 0, 0, 0 }, {1, 0.75f, 0, 1}, {1, 0, 0, 0.25f}, .25f, .01f, nullptr, 1.0f };
+	static inline const ParticleProps flame{ {0, 0, 0}, { 0, 3, 0 }, { 1, 1, 1 }, { 0, 0, 0 }, {1, 0.75f, 0, 1}, {1, 0, 0, 0.0f}, .25f, .01f, nullptr, 1.0f };
 };
 
 class ParticleSystem
@@ -73,6 +74,8 @@ public:
 	static void addSpout(const ParticleSpoutProps& props);
 	static void emit(const ParticleProps& props);
 	static void update();
+	static void render();
+	static void cleanup();
 
 private:
 	static inline std::vector<Particle> particles;
@@ -80,5 +83,6 @@ private:
 	static inline std::vector<ParticleData> particle_data;
 	static inline shared<VertexArray> vao;
 	static inline shared<VertexBuffer> instance_vbo;
-	static inline InstanceImages instance_images;
+	static inline shared<InstanceImages> instance_images;
+	static inline shared<GraphicsPipeline> pipeline;
 };

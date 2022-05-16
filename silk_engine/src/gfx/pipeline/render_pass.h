@@ -1,8 +1,10 @@
 #pragma once
 
+#include "gfx/images/image_format.h"
+
 struct AttachmentProps
 {
-	VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
+	ImageFormat format = ImageFormat::BGRA;
 	VkImageLayout layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 

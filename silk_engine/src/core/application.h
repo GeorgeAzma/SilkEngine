@@ -29,7 +29,6 @@ public:
 
 protected:
     virtual void onUpdate() = 0;
-    virtual void onRender() = 0;
 
 private:
     void run();

@@ -16,20 +16,17 @@ void ParticleSystem::init()
 	instance_vbo = makeShared<VertexBuffer>(nullptr, MAX_PARTICLES * sizeof(ParticleData));
 	
     using enum DeviceType;
-	Resources::addGraphicsPipeline("Particle", []
-                                   {
-                                       shared<Shader> shader = makeShared<Shader>("particle");
-                                       shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
-                                       graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-                                           .enable(EnableTag::DEPTH_TEST)
-                                           .enable(EnableTag::DEPTH_WRITE)
-                                           .setShader(shader)
-                                           .setVertexLayout({ { VEC2 }, { VEC2 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
-                                           .setSampleCount(Graphics::swap_chain->getSampleCount())
-                                           .setRenderPass(*Graphics::swap_chain->getRenderPass())
-                                           .build();
-                                       return graphics_pipeline;
-                                   });
+    shared<Shader> shader = makeShared<Shader>("particle");
+    pipeline = makeShared<GraphicsPipeline>();
+    pipeline->enable(EnableTag::COLOR_BLENDING)
+        .enable(EnableTag::DEPTH_TEST)
+        .enable(EnableTag::DEPTH_WRITE)
+        .setShader(shader)
+        .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, {MAT4, 1}, {UINT, 1}, {VEC4, 1} })
+        .setSamples(Graphics::swap_chain->getSamples())
+        .setRenderPass(*Graphics::swap_chain->getRenderPass())
+        .build();
+    instance_images = makeShared<InstanceImages>();
 }
 
 void ParticleSystem::addSpout(const ParticleSpoutProps& props)
@@ -61,7 +58,7 @@ void ParticleSystem::emit(const ParticleProps& props)
         props.size_end,
         props.life_time,
         props.life_time,
-        instance_images.add({ props.image.get() ? props.image : Resources::white_image })
+        instance_images->add({ props.image.get() ? props.image : Resources::white_image })
     );
 }
 
@@ -98,10 +95,11 @@ void ParticleSystem::update()
         p.position += p.velocity * dt;
     }
 
+    particle_data.resize(particles.size());
     Resources::pool.forEach(particles.size(), [](size_t i)
     {
         auto& p = particles[i];
-        float life = p.life_remaining / p.life_time;
+        float life = 1.0f - p.life_remaining / p.life_time;
         glm::mat4& m = particle_data[i].model;
         const glm::mat4& v = SceneManager::getActive()->getMainCamera()->view;
         m = glm::translate(glm::mat4(1), p.position);
@@ -119,12 +117,22 @@ void ParticleSystem::update()
         particle_data[i].texture_index = p.texture_index;
     });
     instance_vbo->setData(particle_data.data(), particle_data.size() * sizeof(ParticleData));
-    
-    auto pipeline = Resources::getGraphicsPipeline("Particle");
+}
+
+void ParticleSystem::render()
+{
     pipeline->bind();
     vao->bind();
     instance_vbo->bind(1);
     auto images = pipeline->getShader()->get("images");
-    instance_images.updateDescriptorSet(*pipeline->getShader()->getDescriptorSets().at(images.set), images.write_index);
+    instance_images->updateDescriptorSet(*pipeline->getShader()->getDescriptorSets().at(images.set), images.write_index);
     Graphics::getActiveCommandBuffer().drawIndexed(vao->getIndexBuffer()->getCount(), particle_data.size(), 0, 0, 0);
+}
+
+void ParticleSystem::cleanup()
+{
+    pipeline = nullptr;
+    vao = nullptr;
+    instance_vbo = nullptr;
+    instance_images = nullptr;
 }

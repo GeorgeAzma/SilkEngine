@@ -185,7 +185,7 @@ void Window::setFullscreen(bool fullscreen)
     Dispatcher::post(WindowFullscreenEvent(fullscreen));
 }
 
-void Window::setX(int x)
+void Window::setX(int32_t x)
 {
     if (x == data.x)
         return;
@@ -193,7 +193,7 @@ void Window::setX(int x)
     glfwSetWindowPos(window, data.x, data.y);
 }
 
-void Window::setY(int y)
+void Window::setY(int32_t y)
 {
     if (y == data.y)
         return;
@@ -210,7 +210,7 @@ void Window::setPosition(const glm::ivec2 &position)
     glfwSetWindowPos(window, data.x, data.y);
 }
 
-void Window::setWidth(int width)
+void Window::setWidth(uint32_t width)
 {
     if (width == data.width)
         return;
@@ -219,7 +219,7 @@ void Window::setWidth(int width)
     glfwSetWindowSize(window, data.width, data.height);
 }
 
-void Window::setHeight(int height)
+void Window::setHeight(uint32_t height)
 {
     if (height == data.height)
         return;

@@ -11,7 +11,6 @@ class SandboxApp : public Application
 public:
     SandboxApp(ApplicationCommandLineArgs args);
     void onUpdate() override;
-    void onRender() override;
     ~SandboxApp();
     
     virtual std::string getName() const override { return "Sandbox"; }

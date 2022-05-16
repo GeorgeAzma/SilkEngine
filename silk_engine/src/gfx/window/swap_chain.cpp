@@ -17,7 +17,6 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 			surface_formats.insert(std::make_pair(score, available_format));
 	}
 	SK_ASSERT(surface_formats.rbegin()->first >= 0, "Vulkan: Couldn't find supported formats to choose from");
-	this->surface_format = surface_formats.rbegin()->second;
 
 	//Choose present mode
 	VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
@@ -31,13 +30,15 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	}
 	this->present_mode = present_mode;
 
-	depth_format = Graphics::physical_device->getDepthFormat();
+	image_format = ImageFormatEnum::fromVulkanType(surface_formats.rbegin()->second.format);
+	depth_format = ImageFormatEnum::fromVulkanType(Graphics::physical_device->getDepthFormat());
 	sample_count = Graphics::physical_device->getMaxSampleCount();
+	color_space = surface_formats.rbegin()->second.colorSpace;
 
 	render_pass = makeShared<RenderPass>();
 	render_pass->addSubpass()
-		.addAttachment({ getFormat(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, getSampleCount() })
-		.addAttachment({ getDepthFormat(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, getSampleCount()})
+		.addAttachment({ getFormat(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, getSamples() })
+		.addAttachment({ getDepthFormat(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, getSamples() })
 		.addAttachment({ getFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR })
 		.build();
 
@@ -50,28 +51,6 @@ void SwapChain::recreate()
 	VkSwapchainKHR old_swapchain = swap_chain;
 	create(old_swapchain);
 	Graphics::logical_device->destroySwapChain(old_swapchain);
-}
-
-void SwapChain::createFramebuffers()
-{
-	Image2DProps props{};
-	props.width = extent.width;
-	props.height = extent.height;
-	props.format = ImageFormatEnum::fromVulkanType(Graphics::physical_device->getDepthFormat());
-	props.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-	props.create_sampler = false;
-	props.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-	props.mipmap = false;
-	props.samples = sample_count;
-	depth = makeShared<Image2D>(props);
-
-	props.format = ImageFormatEnum::fromVulkanType(surface_format.format);
-	props.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
-	msaa_image = makeShared<Image2D>(props);
-
-	for (size_t i = 0; i < images.size(); ++i)
-		framebuffers[i] = makeShared<Framebuffer>(*render_pass, std::vector<shared<Image2D>>{ msaa_image, depth, images[i] }, extent.width, extent.height);
 }
 
 void SwapChain::acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence)
@@ -116,8 +95,8 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	ci.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	ci.surface = *Graphics::surface;
 	ci.minImageCount = image_count;
-	ci.imageFormat = surface_format.format;
-	ci.imageColorSpace = surface_format.colorSpace;
+	ci.imageFormat = ImageFormatEnum::toVulkanType(getFormat());
+	ci.imageColorSpace = color_space;
 	ci.imageExtent = extent;
 	ci.imageArrayLayers = 1; //For stereoscopic 3D apps
 	ci.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -154,20 +133,28 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	this->images.resize(image_count);
 
 	for (size_t i = 0; i < images.size(); ++i)
-	{
-		Image2DProps props{};
-		props.width = extent.width;
-		props.height = extent.height;
-		props.create_sampler = false;
-		props.mipmap = false;
-		props.format = ImageFormatEnum::fromVulkanType(surface_format.format);
-		props.layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-		props.initial_layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-		this->images[i] = makeShared<Image2D>(images[i], props);
-	}
-	framebuffers.resize(images.size());
+		this->images[i] = makeShared<Image2D>(images[i], getFormat());
 
-	createFramebuffers();
+	framebuffers.resize(this->images.size());
+
+	for (size_t i = 0; i < this->images.size(); ++i)
+	{
+		framebuffers[i] = makeShared<Framebuffer>(*render_pass);
+
+		FramebufferAttachmentProps props{};
+		props.format = getFormat();
+		props.samples = getSamples();
+		props.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		framebuffers[i]->addAttachment(props);
+
+		props.format = getDepthFormat();
+		props.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		framebuffers[i]->addAttachment(props);
+
+		framebuffers[i]->addAttachment(this->images[i]);
+
+		framebuffers[i]->build();
+	}
 }
 
 void SwapChain::destroy()

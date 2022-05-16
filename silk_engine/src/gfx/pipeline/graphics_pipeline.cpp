@@ -115,7 +115,7 @@ GraphicsPipeline& GraphicsPipeline::setVertexLayout(const BufferLayout& buffer_l
 	return *this;
 }
 
-GraphicsPipeline& GraphicsPipeline::setSampleCount(VkSampleCountFlagBits sample_count)
+GraphicsPipeline& GraphicsPipeline::setSamples(VkSampleCountFlagBits sample_count)
 {
 	multisampling.rasterizationSamples = sample_count;
 	return *this;

@@ -16,7 +16,7 @@ struct CubemapProps
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
 	VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	bool mipmap = true;
+	bool mipmap = false;
 	VkFilter mipmap_filter = VK_FILTER_LINEAR;
 	SamplerProps sampler_props{};
 	bool create_view = true;
@@ -34,7 +34,7 @@ struct Image1DProps
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
 	VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	bool mipmap = true;
+	bool mipmap = false;
 	VkFilter mipmap_filter = VK_FILTER_LINEAR;
 	SamplerProps sampler_props{};
 	bool create_view = true;
@@ -53,7 +53,7 @@ struct Image2DProps
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
 	VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	bool mipmap = true;
+	bool mipmap = false;
 	VkFilter mipmap_filter = VK_FILTER_LINEAR;
 	SamplerProps sampler_props{};
 	bool create_view = true;
@@ -72,13 +72,13 @@ struct ImageArrayProps
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
 	VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	bool mipmap = true;
+	bool mipmap = false;
 	VkFilter mipmap_filter = VK_FILTER_LINEAR;
 	SamplerProps sampler_props{};
 	bool create_view = true;
 	bool create_sampler = true;
 	const void* data = nullptr;
-	uint32_t array_layers = 1;
+	uint32_t layers = 1;
 	VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
 	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 };
@@ -93,13 +93,13 @@ struct ImageProps
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
 	VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	bool mipmap = true;
+	bool mipmap = false;
 	VkFilter mipmap_filter = VK_FILTER_LINEAR;
 	SamplerProps sampler_props{};
 	bool create_view = true;
 	bool create_sampler = true;
 	const void* data = nullptr;
-	uint32_t array_layers = 1;
+	uint32_t layers = 1;
 	VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
 	bool is_cubemap = false;
 	bool is_1D = false;
@@ -121,7 +121,7 @@ struct ImageProps
 		data = props.data;
 		memory_usage = props.memory_usage;
 		height = 1;
-		array_layers = 1;
+		layers = 1;
 		depth = 1;
 		is_cubemap = false;
 		is_1D = false;
@@ -146,7 +146,7 @@ struct ImageProps
 		create_sampler = props.create_sampler;
 		data = props.data;
 		memory_usage = props.memory_usage;
-		array_layers = 1;
+		layers = 1;
 		depth = 1;
 		is_cubemap = false;
 		is_1D = false;
@@ -171,7 +171,7 @@ struct ImageProps
 		create_sampler = props.create_sampler;
 		data = props.data;
 		memory_usage = props.memory_usage;
-		array_layers = 1;
+		layers = 1;
 		depth = 1;
 		is_cubemap = true;
 		is_1D = false;
@@ -195,7 +195,7 @@ struct ImageProps
 		create_view = props.create_view;
 		create_sampler = props.create_sampler;
 		data = props.data;
-		array_layers = props.array_layers;
+		layers = props.layers;
 		memory_usage = props.memory_usage;
 		depth = 1;
 		is_cubemap = false;
@@ -214,25 +214,30 @@ public:
 	uint32_t getWidth() const { return props.width; }
 	uint32_t getHeight() const { return props.height; }
 	ImageFormat getFormat() const { return props.format; }
-	size_t getSize() const { return props.width * props.height * props.depth * props.array_layers * ImageFormatEnum::getSize(props.format); }
+	size_t getSize() const { return props.width * props.height * props.depth * props.layers * ImageFormatEnum::getSize(props.format); }
 	uint32_t getMipLevels() const { return mip_levels; }
 	const ImageProps& getProps() const { return props; }
 	const VkDescriptorImageInfo& getDescriptorInfo() const { return descriptor_image_info; }
 	const VkImageLayout& getLayout() const { return descriptor_image_info.imageLayout; }
 	const VkImageView& getView() const { return descriptor_image_info.imageView; }
 	const VkSampler& getSampler() const { return descriptor_image_info.sampler; }
+	VkSampleCountFlagBits getSamples() const { return props.samples; }
 	VkImageAspectFlags getAspectFlags() const { return ImageFormatEnum::getVulkanAspectFlags(props.format); }
 	VmaAllocation getAllocation() const { return allocation; }
 	bool isMapped() const { return mapped; }
 
-	void setData(void* data, uint32_t base_array_layer = 0, uint32_t array_layers = 1);
-	void getData(void* data, uint32_t base_array_layer = 0, uint32_t array_layers = 1);
-	bool copyImage(const shared<Image>& destination, uint32_t array_layer = 0);
+	void setData(void* data, uint32_t base_layer = 0, uint32_t layers = 1);
+	void getData(void* data, uint32_t base_layer = 0, uint32_t layers = 1);
+	bool copyImage(const shared<Image>& destination, uint32_t layer = 0);
 	void transitionLayout(VkImageLayout new_layout);
-	void insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VkPipelineStageFlags destination_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, uint32_t base_mip_level = 0, uint32_t base_array_layer = 0);
+	void insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VkPipelineStageFlags destination_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, uint32_t base_mip_level = 0, uint32_t base_layer = 0);
 	bool isFeatureSupported(VkFormatFeatureFlags feature) const;
 	void copyFromBuffer(VkBuffer buffer);
-	void copyToBuffer(VkBuffer buffer, uint32_t base_array_layer = 0, uint32_t array_layers = 1);
+	void copyToBuffer(VkBuffer buffer, uint32_t base_layer = 0, uint32_t layers = 1);
+	// Resize without preserving texture data
+	// any parameter of 0 means "same size as before"
+	// Note: function can't change type of the image, swap chain images can't be reallocated
+	void reallocate(uint32_t width = 0, uint32_t height = 0, uint32_t depth = 0, uint32_t layers = 0);
 	
 	void map(void** data) const;
 	void unmap() const;
@@ -245,7 +250,7 @@ protected:
 	void generateMipmaps();
 
 protected:
-	static void insertMemoryBarrier(const VkImage& image, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkImageAspectFlags aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t array_layers, uint32_t base_array_layer);
+	static void insertMemoryBarrier(const VkImage& image, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkImageAspectFlags aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t layers, uint32_t base_layer);
 
 protected:
 	VkImage image = VK_NULL_HANDLE;
@@ -257,4 +262,5 @@ protected:
 	uint32_t mip_levels = 1;
 	mutable bool mapped = false;
 	bool needs_staging = false;
+	bool swap_chain_property = false;
 };

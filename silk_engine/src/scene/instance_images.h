@@ -7,6 +7,7 @@ class InstanceImages
 {
 public:
 	InstanceImages(uint32_t max_images = 0);
+	~InstanceImages() { images.clear(); }
 	
 	///@return texture index, UINT32_MAX if out of space
 	uint32_t add(const std::vector<shared<Image2D>>& new_images);

@@ -8,5 +8,5 @@ public:
 	ImageArray(const std::vector<std::string>& files, const ImageArrayProps& props = {});
 	ImageArray(const ImageArrayProps& props);
 
-	uint32_t getArrayLayers() const { return props.array_layers; }
+	uint32_t getArrayLayers() const { return props.layers; }
 };

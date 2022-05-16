@@ -43,6 +43,7 @@ target_precompile_headers(SilkEngine PUBLIC
 <queue>
 <sstream>
 <future>
+<concepts>
 
 #Non std
 <glm/glm.hpp>

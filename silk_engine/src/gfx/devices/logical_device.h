@@ -55,7 +55,6 @@ public:
 	void destroyShaderModule(VkShaderModule shader_module) const;
 	VkSwapchainKHR createSwapChain(const VkSwapchainCreateInfoKHR& swap_chain_info) const;
 	void destroySwapChain(VkSwapchainKHR swap_chain) const;
-	uint32_t acquireNextImage(VkSwapchainKHR swap_chain, uint64_t timeout, VkSemaphore semaphore, VkFence fence) const;
 	VkResult acquireNextImage(VkSwapchainKHR swap_chain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* image_index) const;
 	std::vector<VkImage> getSwapChainImages(VkSwapchainKHR swap_chain) const;
 

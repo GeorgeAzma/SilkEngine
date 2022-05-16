@@ -36,7 +36,7 @@ PhysicalDevice::PhysicalDevice()
 VkDevice PhysicalDevice::createLogicalDevice(const VkDeviceCreateInfo& create_info) const
 {
 	VkDevice device = VK_NULL_HANDLE;
-	vkCreateDevice(physical_device, &create_info, nullptr, &device);
+	Graphics::vulkanAssert(vkCreateDevice(physical_device, &create_info, nullptr, &device));
 	return device;
 }
 QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice physical_device)

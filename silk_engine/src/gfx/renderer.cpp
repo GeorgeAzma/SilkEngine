@@ -164,16 +164,16 @@ void Renderer::begin(Camera* camera)
 	command_buffer->begin();
 	VkViewport viewport = {};
 	viewport.x = 0.0f;
-	viewport.y = Graphics::swap_chain->getExtent().height;
-	viewport.width = Graphics::swap_chain->getExtent().width;
-	viewport.height = -(float)Graphics::swap_chain->getExtent().height;
+	viewport.y = Window::getHeight();
+	viewport.width = Window::getWidth();
+	viewport.height = -(float)Graphics::swap_chain->getHeight();
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 	Graphics::getActiveCommandBuffer().setViewport({ viewport });
 
 	VkRect2D scissor = {};
-	scissor.offset = VkOffset2D{ 0, 0 };
-	scissor.extent = VkExtent2D{ (uint32_t)Graphics::swap_chain->getExtent().width, (uint32_t)Graphics::swap_chain->getExtent().height };
+	scissor.offset = { 0, 0 };
+	scissor.extent = { Window::getWidth(), Window::getHeight() };
 	Graphics::getActiveCommandBuffer().setScissor({ scissor });
 
 	Graphics::swap_chain->getRenderPass()->begin(*Graphics::swap_chain->getActiveFramebuffer(), VK_SUBPASS_CONTENTS_INLINE);

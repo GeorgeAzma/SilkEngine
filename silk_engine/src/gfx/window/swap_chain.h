@@ -14,12 +14,11 @@ public:
 
     operator const VkSwapchainKHR& () const { return swap_chain; }
 
-    VkFormat getFormat() const { return surface_format.format; }
-    VkFormat getDepthFormat() const { return depth_format; }
-    VkSampleCountFlagBits getSampleCount() const { return sample_count; }
-    const VkExtent2D& getExtent() const { return extent; }
-    const std::vector<shared<Framebuffer>>& getFramebuffers() const { return framebuffers; }
-    const std::vector<shared<Image2D>>& getImages() const { return images; }
+    ImageFormat getFormat() const { return image_format; }
+    ImageFormat getDepthFormat() const { return depth_format; }
+    VkSampleCountFlagBits getSamples() const { return sample_count; }
+    uint32_t getWidth() const { return extent.width; }
+    uint32_t getHeight() const { return extent.height; }
     size_t getImageCount() const { return images.size(); }
     shared<RenderPass> getRenderPass() const { return render_pass; }
     uint32_t getImageIndex() const { return image_index; }
@@ -28,7 +27,6 @@ public:
     
     void recreate();
 
-    void createFramebuffers();
     void acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence = VK_NULL_HANDLE);
     VkResult present(VkSemaphore wait_semaphore);
     
@@ -39,14 +37,13 @@ private:
 private:
     VkSwapchainKHR swap_chain = VK_NULL_HANDLE;
     std::vector<shared<Image2D>> images;
-    VkSurfaceFormatKHR surface_format;
     VkPresentModeKHR present_mode;
     VkExtent2D extent;
     std::vector<shared<Framebuffer>> framebuffers;
     uint32_t image_index = 0;
-    shared<Image2D> msaa_image = nullptr;
-    shared<Image2D> depth = nullptr;
-    VkFormat depth_format;
+    ImageFormat depth_format;
+    ImageFormat image_format;
+    VkColorSpaceKHR color_space;
     shared<RenderPass> render_pass = nullptr;
     VkSampleCountFlagBits sample_count;
 };
