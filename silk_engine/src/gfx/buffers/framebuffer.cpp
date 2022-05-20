@@ -20,9 +20,8 @@ Framebuffer& Framebuffer::addAttachment(const FramebufferAttachmentProps& props)
     Image2DProps image_props{};
     image_props.create_sampler = false;
     image_props.format = props.format;
-    image_props.width = (!props.width) ? width : props.width;
-    image_props.height = (!props.height) ? height : props.height;
-    image_props.initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+    image_props.width = !props.width ? width : props.width;
+    image_props.height = !props.height ? height : props.height;
     image_props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
     image_props.mipmap = false;
     image_props.samples = props.samples;

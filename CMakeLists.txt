@@ -9,7 +9,6 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message(FATAL_ERROR "In-source build detected!")
 endif()
 
-#Some good to have code
 set(CMAKE_CXX_STANDARD 20)
 set(CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -35,6 +34,7 @@ GLFW_INCLUDE_NONE
 find_package(Vulkan REQUIRED FATAL_ERROR)
 list(APPEND INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 list(APPEND EXTRA_LIBS ${Vulkan_LIBRARIES})
+
 string(FIND ${Vulkan_LIBRARIES} "/Lib" Vulkan_PATH_POS)
 string(SUBSTRING ${Vulkan_LIBRARIES} 0 ${Vulkan_PATH_POS} VULKAN_PATH)
 list(APPEND EXTRA_LIBS 
@@ -42,103 +42,56 @@ list(APPEND EXTRA_LIBS
     ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}spirv-cross-core$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
 )
 
-#spdlog
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
-list(APPEND FETCHED_CONTENTS SPDLOG)
-FetchContent_Declare(SPDLOG
-GIT_REPOSITORY  https://github.com/gabime/spdlog
-GIT_TAG         v1.9.2
-GIT_SHALLOW     ON
-SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/spdlog
-)
-FetchContent_MakeAvailable(SPDLOG)
-endif()
-list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
+macro(fetchContent project_name git_repo git_tag source_dir)
+    list(APPEND FETCHED_CONTENTS ${project_name})
+    FetchContent_Declare(${project_name}
+    GIT_REPOSITORY  ${git_repo}
+    GIT_TAG         ${git_tag}
+    GIT_SHALLOW     ON
+    SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/${project_name}
+    )
+    list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/${project_name}/${source_dir})
+endmacro()
+
+#FetchContents
+
+fetchContent(SPDLOG https://github.com/gabime/spdlog v1.9.2 include)
+fetchContent(GLM https://github.com/g-truc/glm origin/master "")
+fetchContent(ENTT https://github.com/skypjack/entt origin/master src)
+fetchContent(STB https://github.com/nothings/stb origin/master "")
+fetchContent(VMA https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator origin/master include)
+FetchContent_MakeAvailable(${FETCHED_CONTENTS})
+
+#ExternalProjects
 
 #glfw
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/glfw/include)
 list(APPEND DEPENDENCIES_TO_ADD GLFW)
 ExternalProject_Add(GLFW
 GIT_REPOSITORY  https://github.com/glfw/glfw
-GIT_TAG         3.3.5
+GIT_TAG         origin/master
 GIT_SHALLOW     ON
 CMAKE_ARGS   -DGLFW_BUILD_EXAMPLES=OFF
              -DGLFW_BUILD_DOCS=OFF
              -DGLFW_BUILD_TESTS=OFF
              -DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/vendor/glfw
-UPDATE_COMMAND ""
+UPDATE_COMMAND  ""
 )
-endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glfw/include)
 list(APPEND EXTRA_LIBS ${PROJECT_SOURCE_DIR}/vendor/glfw/lib/${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_STATIC_LIBRARY_SUFFIX})
 
-#glm
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/glm/glm)
-list(APPEND FETCHED_CONTENTS GLM)
-FetchContent_Declare(GLM
-GIT_REPOSITORY  https://github.com/g-truc/glm
-GIT_TAG origin/master
-GIT_SHALLOW     ON
-SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/glm
-)
-FetchContent_MakeAvailable(GLM)
-endif()
-list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/glm)
-
-#entt
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/entt/src)
-list(APPEND FETCHED_CONTENTS ENTT)
-FetchContent_Declare(ENTT
-GIT_REPOSITORY  https://github.com/skypjack/entt
-GIT_TAG origin/master
-GIT_SHALLOW     ON
-SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/entt
-)
-FetchContent_MakeAvailable(ENTT)
-endif()
-list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/entt/src)
-
-#stb
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/stb)
-list(APPEND FETCHED_CONTENTS STB)
-FetchContent_Declare(STB
-GIT_REPOSITORY   https://github.com/nothings/stb
-GIT_TAG origin/master
-GIT_SHALLOW     ON
-SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/stb
-)
-FetchContent_MakeAvailable(STB)
-endif()
-list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/stb)
-
-#FreeType
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/freetype/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freetype$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX})
+#freetype
 list(APPEND DEPENDENCIES_TO_ADD FREETYPE)
 ExternalProject_Add(FREETYPE
 GIT_REPOSITORY   https://github.com/freetype/freetype
 GIT_TAG origin/master
 GIT_SHALLOW     ON
 CMAKE_ARGS   -DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/vendor/freetype
-UPDATE_COMMAND ""
+UPDATE_COMMAND  ""
 )
-endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/freetype/include/freetype2)
 list(APPEND EXTRA_LIBS ${PROJECT_SOURCE_DIR}/vendor/freetype/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freetype$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX})
 
-#vma
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/vma/include)
-list(APPEND FETCHED_CONTENTS VMA)
-FetchContent_Declare(VMA
-GIT_REPOSITORY   https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
-GIT_TAG origin/master
-GIT_SHALLOW     ON
-SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/vma
-)
-endif()
-list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/vma/include)
-
 #assimp
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}assimp$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX})
 list(APPEND DEPENDENCIES_TO_ADD ASSIMP)
 ExternalProject_Add(ASSIMP
 GIT_REPOSITORY  https://github.com/assimp/assimp
@@ -160,9 +113,8 @@ CMAKE_ARGS      -DASSIMP_LIB_INSTALL_DIR=${PROJECT_SOURCE_DIR}/vendor/assimp/lib
                 -DASSIMP_INJECT_DEBUG_POSTFIX:BOOL=OFF
                 -DBUILD_SHARED_LIBS:BOOL=OFF
                 -DCMAKE_POLICY_DEFAULT_CMP0091:STRING=NEW
-UPDATE_COMMAND ""
+UPDATE_COMMAND  ""
 )
-endif()
 list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/assimp/include)
 list(APPEND EXTRA_LIBS 
 ${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}assimp$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
@@ -170,8 +122,6 @@ ${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zlibstatic
 ${PROJECT_SOURCE_DIR}/vendor/assimp/lib/${CMAKE_STATIC_LIBRARY_PREFIX}irrXML$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
 )
 
-FetchContent_MakeAvailable(${FETCHED_CONTENTS})
-
-#Sub dirs
+#|-----Sub Directories-----|
 add_subdirectory("silk_engine/src")
 add_subdirectory("sandbox/src")

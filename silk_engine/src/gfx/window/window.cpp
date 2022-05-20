@@ -164,20 +164,31 @@ void Window::setFullscreen(bool fullscreen)
     if (data.fullscreen == fullscreen)
         return;
     data.fullscreen = fullscreen;
+    static uint32_t old_x = data.x;
+    static uint32_t old_y = data.y;
+    static uint32_t old_width = data.width;
+    static uint32_t old_height = data.height;
     if (fullscreen)
     {
         const GLFWvidmode* video_mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-        int last_width = data.width;
-        int last_height = data.height;
+        old_width = data.width;
+        old_height = data.height;
         setSize({ video_mode->width, video_mode->height });
         glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, video_mode->width, video_mode->height, GLFW_DONT_CARE);
-        Dispatcher::post(WindowMoveEvent(0, 0));
-        Dispatcher::post(WindowResizeEvent(video_mode->width, video_mode->height));
-        data.width = last_width;
-        data.height = last_height;
+        data.x = 0;
+        data.y = 0;
+        data.width = video_mode->width;
+        data.height = video_mode->height;
+        Dispatcher::post(WindowMoveEvent(data.x, data.y));
+        Dispatcher::post(WindowResizeEvent(data.width, data.height));
+        
     }
     else
     {
+        data.x = old_x;
+        data.y = old_y;
+        data.width = old_width;
+        data.height = old_height;
         glfwSetWindowMonitor(window, nullptr, data.x, data.y, data.width, data.height, GLFW_DONT_CARE);
         Dispatcher::post(WindowMoveEvent(data.x, data.y));
         Dispatcher::post(WindowResizeEvent(data.width, data.height));

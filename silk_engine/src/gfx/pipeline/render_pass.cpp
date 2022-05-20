@@ -88,8 +88,8 @@ void RenderPass::build()
 
     //We need these alive for till this function finishes
     std::vector<std::vector<VkAttachmentReference>> color_attachment_references(subpasses.size());
-    std::vector<VkAttachmentReference> depth_stencil_attachment_references(subpasses.size());
-    std::vector<VkAttachmentReference> resolve_attachment_references(subpasses.size());
+    std::vector<std::optional<VkAttachmentReference>> depth_stencil_attachment_references(subpasses.size());
+    std::vector<std::optional<VkAttachmentReference>> resolve_attachment_references(subpasses.size());
 
     for (size_t i = 0; i < subpasses.size(); ++i)
     {
@@ -117,8 +117,8 @@ void RenderPass::build()
         subpass_description.pInputAttachments = subpasses[i].input_attachment_references.data();
         subpass_description.colorAttachmentCount = color_attachment_references[i].size();
         subpass_description.pColorAttachments = color_attachment_references[i].data();
-        subpass_description.pDepthStencilAttachment = &depth_stencil_attachment_references[i];
-        subpass_description.pResolveAttachments = &resolve_attachment_references[i];
+        subpass_description.pDepthStencilAttachment = depth_stencil_attachment_references[i] ? &depth_stencil_attachment_references[i].value() : nullptr;
+        subpass_description.pResolveAttachments = resolve_attachment_references[i] ? &resolve_attachment_references[i].value() : nullptr;
         subpass_descriptions[i] = std::move(subpass_description);
 
         //TODO:

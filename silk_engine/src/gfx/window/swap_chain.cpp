@@ -144,7 +144,7 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 		FramebufferAttachmentProps props{};
 		props.format = getFormat();
 		props.samples = getSamples();
-		props.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		props.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		framebuffers[i]->addAttachment(props);
 
 		props.format = getDepthFormat();

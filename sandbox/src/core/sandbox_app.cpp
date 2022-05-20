@@ -15,6 +15,7 @@
 #include "core/input/input.h"
 #include "core/input/keys.h"
 #include "gfx/particle_system.h"
+#include <spdlog/fmt/fmt.h>
    
 SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 {  
@@ -88,7 +89,7 @@ void SandboxApp::onUpdate()
             Renderer::rectangle(x * 5, y * 5, 4, 4);
 
     Renderer::color({ 1, 1, 0, 1 });
-    Renderer::triangle(0, 0, 100, 100, 200, 0);
+    Renderer::triangle(0 + 500, 0, 100 + 500, 100, 200 + 500, 0);
     
     //Resources::pool.forEach(entities.size(), 
     //    [&](size_t i) 

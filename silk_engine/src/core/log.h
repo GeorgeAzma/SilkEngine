@@ -3,20 +3,24 @@
 #ifdef SK_ENABLE_DEBUG_OUTPUT
     #include <spdlog/logger.h>
     #include <spdlog/fmt/ostr.h>
+#endif
 
     class Log
     {
     public:
         static void init();
-    
+
+    #ifdef SK_ENABLE_DEBUG_OUTPUT
         static shared<spdlog::logger> &getCoreLogger() { return core_logger; }
         static shared<spdlog::logger> &getClientLogger() { return client_logger; }
     
     private:
         static shared<spdlog::logger> core_logger;
         static shared<spdlog::logger> client_logger;
+    #endif
     };
 
+#ifdef SK_ENABLE_DEBUG_OUTPUT
     #ifdef SK_CORE
         #define SK_LOGGER Log::getCoreLogger()
     #else
