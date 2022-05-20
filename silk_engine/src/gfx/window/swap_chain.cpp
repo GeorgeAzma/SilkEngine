@@ -51,6 +51,7 @@ void SwapChain::recreate()
 	VkSwapchainKHR old_swapchain = swap_chain;
 	create(old_swapchain);
 	Graphics::logical_device->destroySwapChain(old_swapchain);
+	Dispatcher::post(SwapchainRecreate());
 }
 
 void SwapChain::acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence)
@@ -124,8 +125,7 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 		ci.queueFamilyIndexCount = queue_family_indices.size();
 		ci.pQueueFamilyIndices = queue_family_indices.data();
 	}
-	else
-		ci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	else ci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 	swap_chain = Graphics::logical_device->createSwapChain(ci);
 
@@ -139,21 +139,12 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 
 	for (size_t i = 0; i < this->images.size(); ++i)
 	{
-		framebuffers[i] = makeShared<Framebuffer>(*render_pass);
-
-		FramebufferAttachmentProps props{};
-		props.format = getFormat();
-		props.samples = getSamples();
-		props.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		framebuffers[i]->addAttachment(props);
-
-		props.format = getDepthFormat();
-		props.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-		framebuffers[i]->addAttachment(props);
-
-		framebuffers[i]->addAttachment(this->images[i]);
-
-		framebuffers[i]->build();
+		auto& fb = framebuffers[i];
+		fb = makeShared<Framebuffer>(*render_pass);
+		fb->addAttachment(getFormat(), getSamples(), VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+			.addAttachment(getDepthFormat(), getSamples(), VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+			.addAttachment(this->images[i])
+			.build();
 	}
 }
 

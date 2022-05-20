@@ -15,17 +15,17 @@ Framebuffer::~Framebuffer()
     Graphics::logical_device->destroyFramebuffer(framebuffer);
 }
 
-Framebuffer& Framebuffer::addAttachment(const FramebufferAttachmentProps& props)
+Framebuffer& Framebuffer::addAttachment(ImageFormat format, VkSampleCountFlagBits samples, VkImageUsageFlags usage)
 {
     Image2DProps image_props{};
     image_props.create_sampler = false;
-    image_props.format = props.format;
-    image_props.width = !props.width ? width : props.width;
-    image_props.height = !props.height ? height : props.height;
+    image_props.format = format;
+    image_props.width = width;
+    image_props.height = height;
     image_props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
     image_props.mipmap = false;
-    image_props.samples = props.samples;
-    image_props.usage = props.usage;
+    image_props.samples = samples;
+    image_props.usage = usage;
     attachments.emplace_back(makeShared<Image2D>(image_props));
     return *this;
 }

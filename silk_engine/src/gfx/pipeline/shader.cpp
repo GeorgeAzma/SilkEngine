@@ -1,6 +1,5 @@
 #include "shader.h"
 #include "io/file.h"
-#include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/devices/physical_device.h"
 #include "scene/resources.h"

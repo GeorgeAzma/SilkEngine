@@ -16,7 +16,7 @@ class Mesh3D : public Mesh
 	friend class Mesh2D;
 
 public:
-	Mesh3D() : Mesh({}, Type::_3D) {}
+	Mesh3D() : Mesh() {}
 	Mesh3D(const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices);
 	
 	void createVertexArray() override;

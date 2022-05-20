@@ -1,7 +1,7 @@
 #include "mesh3D.h"
 
 Mesh3D::Mesh3D(const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices)
-	: vertices(vertices), Mesh(indices, Type::_3D)
+	: vertices(vertices), Mesh(indices)
 {
 	SK_TRACE("Created 3D mesh with {} vertices and {} indices", vertices.size(), indices.size());
 }

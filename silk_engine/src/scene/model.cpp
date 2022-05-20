@@ -24,6 +24,8 @@ Model& Model::operator=(const RawModel& raw_model)
     auto white = Resources::white_image;
     auto black = Resources::getImage("Black");
     
+    std::unordered_map<size_t, shared<Image2D>> bitmap_images;
+
     images.clear();
     images.reserve(raw_model.material_data.size());
     for (size_t i = 0; i < raw_model.material_data.size(); ++i) //Material data for each mesh
@@ -31,41 +33,101 @@ Model& Model::operator=(const RawModel& raw_model)
         const auto& md = raw_model.material_data[i];
         images.emplace_back();
 
-        image_props.width = md.diffuse_map.width;
-        image_props.height = md.diffuse_map.height;
-        image_props.format = ImageFormatEnum::fromChannelCount(md.diffuse_map.channels);
-        image_props.data = md.diffuse_map.data.data();
-        images.back().emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : white);
-    
-        image_props.width = md.normal_map.width;
-        image_props.height = md.normal_map.height;
-        image_props.format = ImageFormatEnum::fromChannelCount(md.normal_map.channels);
-        image_props.data = md.normal_map.data.data();
-        images.back().emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : black);
-    
-        image_props.width = md.height_map.width;
-        image_props.height = md.height_map.height;
-        image_props.format = ImageFormatEnum::fromChannelCount(md.height_map.channels);
-        image_props.data = md.height_map.data.data();
-        images.back().emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : black);
-    
-        image_props.width = md.ao_map.width;
-        image_props.height = md.ao_map.height;
-        image_props.format = ImageFormatEnum::fromChannelCount(md.ao_map.channels);
-        image_props.data = md.ao_map.data.data();
-        images.back().emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : white);
-    
-        image_props.width = md.specular_map.width;
-        image_props.height = md.specular_map.height;
-        image_props.format = ImageFormatEnum::fromChannelCount(md.specular_map.channels);
-        image_props.data = md.specular_map.data.data();
-        images.back().emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : black);
-    
-        image_props.width = md.emissive_map.width;
-        image_props.height = md.emissive_map.height;
-        image_props.format = ImageFormatEnum::fromChannelCount(md.emissive_map.channels);
-        image_props.data = md.emissive_map.data.data();
-        images.back().emplace_back((image_props.width != 0 && image_props.height != 0) ? makeShared<Image2D>(image_props) : black);
+        if (md.diffuse_map)
+        {
+            if (auto bi = bitmap_images.find((size_t)md.diffuse_map); bi != bitmap_images.end())
+                images.back().emplace_back(bi->second);
+            else
+            {
+                image_props.width = md.diffuse_map->width;
+                image_props.height = md.diffuse_map->height;
+                image_props.format = ImageFormatEnum::fromChannelCount(md.diffuse_map->channels);
+                image_props.data = md.diffuse_map->data.data();
+                images.back().emplace_back(makeShared<Image2D>(image_props));
+                bitmap_images.insert_or_assign((size_t)md.diffuse_map, images.back().back());
+            }
+        }
+        else images.back().emplace_back(white);
+
+        if (md.normal_map)
+        {
+            if (auto bi = bitmap_images.find((size_t)md.normal_map); bi != bitmap_images.end())
+                images.back().emplace_back(bi->second);
+            else
+            {
+                image_props.width = md.normal_map->width;
+                image_props.height = md.normal_map->height;
+                image_props.format = ImageFormatEnum::fromChannelCount(md.normal_map->channels);
+                image_props.data = md.normal_map->data.data();
+                images.back().emplace_back(makeShared<Image2D>(image_props));
+                bitmap_images.emplace((size_t)md.normal_map, images.back().back());
+            }
+        }
+        else images.back().emplace_back(black);
+
+        if (md.height_map)
+        {
+            if (auto bi = bitmap_images.find((size_t)md.height_map); bi != bitmap_images.end())
+                images.back().emplace_back(bi->second);
+            else
+            {
+                image_props.width = md.height_map->width;
+                image_props.height = md.height_map->height;
+                image_props.format = ImageFormatEnum::fromChannelCount(md.height_map->channels);
+                image_props.data = md.height_map->data.data();
+                images.back().emplace_back(makeShared<Image2D>(image_props));
+                bitmap_images.emplace((size_t)md.height_map, images.back().back());
+            }
+        }
+        else images.back().emplace_back(black);
+
+        if (md.ao_map)
+        {
+            if (auto bi = bitmap_images.find((size_t)md.ao_map); bi != bitmap_images.end())
+                images.back().emplace_back(bi->second);
+            else
+            {
+                image_props.width = md.ao_map->width;
+                image_props.height = md.ao_map->height;
+                image_props.format = ImageFormatEnum::fromChannelCount(md.ao_map->channels);
+                image_props.data = md.ao_map->data.data();
+                images.back().emplace_back(makeShared<Image2D>(image_props));
+                bitmap_images.emplace((size_t)md.ao_map, images.back().back());
+            }
+        }
+        else images.back().emplace_back(white);
+
+        if (md.specular_map)
+        {
+            if (auto bi = bitmap_images.find((size_t)md.specular_map); bi != bitmap_images.end())
+                images.back().emplace_back(bi->second);
+            else
+            {
+                image_props.width = md.specular_map->width;
+                image_props.height = md.specular_map->height;
+                image_props.format = ImageFormatEnum::fromChannelCount(md.specular_map->channels);
+                image_props.data = md.specular_map->data.data();
+                images.back().emplace_back(makeShared<Image2D>(image_props));
+                bitmap_images.emplace((size_t)md.specular_map, images.back().back());
+            }
+        }
+        else images.back().emplace_back(black);
+
+        if (md.emissive_map)
+        {
+            if (auto bi = bitmap_images.find((size_t)md.emissive_map); bi != bitmap_images.end())
+                images.back().emplace_back(bi->second);
+            else
+            {
+                image_props.width = md.emissive_map->width;
+                image_props.height = md.emissive_map->height;
+                image_props.format = ImageFormatEnum::fromChannelCount(md.emissive_map->channels);
+                image_props.data = md.emissive_map->data.data();
+                images.back().emplace_back(makeShared<Image2D>(image_props));
+                bitmap_images.emplace((size_t)md.emissive_map, images.back().back());
+            }
+        }
+        else images.back().emplace_back(black);
     }
 
     return *this;
@@ -77,7 +139,7 @@ RawModel::RawModel(std::string_view file)
     this->path = path;
 
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_OptimizeGraph | aiProcess_OptimizeMeshes);
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate);
 	SK_ASSERT(scene && (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) != AI_SCENE_FLAGS_INCOMPLETE && scene->mRootNode,
 		"Assimp: Couldn't load model at path: {0}", path);
 
@@ -145,29 +207,29 @@ void RawModel::processMesh(aiMesh *mesh, const aiScene *scene)
     {
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-        std::vector<Bitmap> diffuse_maps = loadMaterialTextures(material, aiTextureType_DIFFUSE); 
-        std::vector<Bitmap> normal_maps = loadMaterialTextures(material, aiTextureType_NORMALS);        
-        std::vector<Bitmap> ao_maps = loadMaterialTextures(material, aiTextureType_AMBIENT);
-        std::vector<Bitmap> height_maps = loadMaterialTextures(material, aiTextureType_HEIGHT);        
-        std::vector<Bitmap> specular_maps = loadMaterialTextures(material, aiTextureType_SPECULAR);        
-        std::vector<Bitmap> emissive_maps = loadMaterialTextures(material, aiTextureType_EMISSIVE);
+        std::vector<Bitmap*> diffuse_maps = loadMaterialTextures(material, aiTextureType_DIFFUSE); 
+        std::vector<Bitmap*> normal_maps = loadMaterialTextures(material, aiTextureType_NORMALS);        
+        std::vector<Bitmap*> ao_maps = loadMaterialTextures(material, aiTextureType_AMBIENT);
+        std::vector<Bitmap*> height_maps = loadMaterialTextures(material, aiTextureType_HEIGHT);        
+        std::vector<Bitmap*> specular_maps = loadMaterialTextures(material, aiTextureType_SPECULAR);        
+        std::vector<Bitmap*> emissive_maps = loadMaterialTextures(material, aiTextureType_EMISSIVE);
 
         MeshMaterialData mat{};
-        mat.diffuse_map = diffuse_maps.size() ? diffuse_maps[0] : Bitmap{};
-        mat.normal_map = normal_maps.size() ? normal_maps[0] : Bitmap{};
-        mat.ao_map = ao_maps.size() ? ao_maps[0] : Bitmap{};
-        mat.height_map = height_maps.size() ? height_maps[0] : Bitmap{};
-        mat.specular_map = specular_maps.size() ? specular_maps[0] : Bitmap{};
-        mat.emissive_map = emissive_maps.size() ? emissive_maps[0] : Bitmap{};
+        mat.diffuse_map = diffuse_maps.size() ? diffuse_maps[0] : nullptr;
+        mat.normal_map = normal_maps.size() ? normal_maps[0] : nullptr;
+        mat.ao_map = ao_maps.size() ? ao_maps[0] : nullptr;
+        mat.height_map = height_maps.size() ? height_maps[0] : nullptr;
+        mat.specular_map = specular_maps.size() ? specular_maps[0] : nullptr;
+        mat.emissive_map = emissive_maps.size() ? emissive_maps[0] : nullptr;
         material_data.emplace_back(std::move(mat));
     }
       
     meshes.emplace_back(new_mesh);
 }  
 
-std::vector<Bitmap> RawModel::loadMaterialTextures(aiMaterial* mat, aiTextureType type)
+std::vector<Bitmap*> RawModel::loadMaterialTextures(aiMaterial* mat, aiTextureType type)
 {
-    std::vector<Bitmap> images;
+    std::vector<Bitmap*> images;
 
     for (size_t i = 0; i < mat->GetTextureCount(type); ++i)
     {
@@ -178,7 +240,7 @@ std::vector<Bitmap> RawModel::loadMaterialTextures(aiMaterial* mat, aiTextureTyp
         auto cached_image = image_cache.find(str.C_Str());
         if (cached_image != image_cache.end())
         {
-            images.emplace_back(cached_image->second);
+            images.emplace_back(&cached_image->second);
         }
         else
         {
@@ -186,8 +248,8 @@ std::vector<Bitmap> RawModel::loadMaterialTextures(aiMaterial* mat, aiTextureTyp
             image_data.load(directory + '/' + str.C_Str());
             if (image_data.channels == 3)
                 image_data.align4();
-            image_cache.emplace(str.C_Str(), image_data);
-            images.emplace_back(std::move(image_data));
+            image_cache.emplace(str.C_Str(), std::move(image_data));
+            images.emplace_back(&image_cache.at(str.C_Str()));
         }
     }
 

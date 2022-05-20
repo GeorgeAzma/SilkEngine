@@ -1,7 +1,13 @@
 #pragma once
 
-#include "enums.h"
 #include "utils/alarm.h"
+
+enum class APIVersion
+{
+	VULKAN_1_0,
+	VULKAN_1_1,
+	VULKAN_1_2,
+};
 
 class WindowResizeEvent;
 class Instance;
@@ -53,6 +59,8 @@ public:
 	static void setActivePrimaryCommandBuffer(CommandBuffer* command_buffer);
 	static void screenshot(std::string_view file);
 	static void vulkanAssert(VkResult result);
+	static std::string stringifyResult(VkResult result);
+	static uint32_t apiVersion(APIVersion api_version);
 
 public:
 	static inline Instance* instance = nullptr;

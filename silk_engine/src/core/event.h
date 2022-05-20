@@ -1,41 +1,41 @@
 #pragma once
 
 //EVENT
-class Event
+struct Event
 {
-public:
-    virtual ~Event() {}
+    virtual ~Event() = default;
 };
 
 //WINDOW EVENTS
-class WindowResizeEvent : public Event
+struct WindowResizeEvent : public Event
 {
-public:
     WindowResizeEvent(uint32_t width, uint32_t height)
         : width(width), height(height) {}
 
     const uint32_t width, height;
 };
 
-class WindowCloseEvent : public Event
+struct WindowCloseEvent : public Event
 {
-public:
     WindowCloseEvent() {}
 };
 
-class WindowMoveEvent : public Event
+struct WindowMoveEvent : public Event
 {
-public:
     WindowMoveEvent(int32_t x, int32_t y)
         : x(x), y(y) {}
 
     const int32_t x, y;
 };
 
-//KEY EVENTS
-class KeyPressEvent : public Event
+struct SwapchainRecreate : public Event
 {
-public:
+    SwapchainRecreate() {}
+};
+
+//KEY EVENTS
+struct KeyPressEvent : public Event
+{
     KeyPressEvent(uint16_t key, uint32_t repeat_count)
         : key(key), repeat_count(repeat_count) {}
 
@@ -43,9 +43,8 @@ public:
     const unsigned int repeat_count;
  };
 
-class KeyReleaseEvent : public Event
+struct KeyReleaseEvent : public Event
 {
-public:
     KeyReleaseEvent(uint16_t key)
         : key(key) {}
 
@@ -53,36 +52,32 @@ public:
  };
 
 //MOUSE EVENTS
-class MousePressEvent : public Event
+struct MousePressEvent : public Event
 {
-public:
     MousePressEvent(uint32_t button)
         : button(button) {}
 
     const uint32_t button;
  };
 
-class MouseReleaseEvent : public Event
+struct MouseReleaseEvent : public Event
 {
-public:
     MouseReleaseEvent(uint32_t button)
         : button(button) {}
 
     const uint32_t button;
  };
 
-class MouseMoveEvent : public Event
+struct MouseMoveEvent : public Event
 {
-public:
     MouseMoveEvent(double x, double y)
         : x(x), y(y) {}
 
     const double x, y;
  };
 
-class MouseDragEvent : public Event
+struct MouseDragEvent : public Event
 {
-public:
     MouseDragEvent(uint32_t button, double x, double y)
         : button(button), x(x), y(y) {}
 
@@ -90,46 +85,40 @@ public:
     const double x, y;
  };
 
-class MouseScrollEvent : public Event
+struct MouseScrollEvent : public Event
 {
-public:
     MouseScrollEvent(double x, double y)
         : x(x), y(y) {}
 
     const double x, y;
  };
 
-class DragAndDropEvent : public Event
+struct DragAndDropEvent : public Event
 {
-public:
     DragAndDropEvent(const std::vector<const char*>& paths)
         : paths(paths) {}
 
-private:
-    std::vector<const char*> paths;
+    const std::vector<const char*> paths;
 };
 
-class WindowFullscreenEvent : public Event
+struct WindowFullscreenEvent : public Event
 {
-public:
     WindowFullscreenEvent(bool fullscreen)
         : fullscreen(fullscreen) {}
 
     const bool fullscreen;
 };
 
-class CharacterWriteEvent : public Event
+struct CharacterWriteEvent : public Event
 {
-public:
     CharacterWriteEvent(char character)
         : character(character) {}
 
     const char character;
 };
 
-class JoystickEvent : public Event
+struct JoystickEvent : public Event
 {
-public:
     JoystickEvent(uint32_t id, bool connected)
         : id(id), connected(connected) {}
 

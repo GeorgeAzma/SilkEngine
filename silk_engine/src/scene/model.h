@@ -15,12 +15,12 @@ class RawModel
 	friend class Model;
 	struct MeshMaterialData
 	{
-		Bitmap diffuse_map;
-		Bitmap normal_map;
-		Bitmap ao_map;
-		Bitmap height_map;
-		Bitmap specular_map;
-		Bitmap emissive_map;
+		Bitmap* diffuse_map;
+		Bitmap* normal_map;
+		Bitmap* ao_map;
+		Bitmap* height_map;
+		Bitmap* specular_map;
+		Bitmap* emissive_map;
 		static constexpr size_t size() { return 6u; }
 	};
 
@@ -30,7 +30,7 @@ public:
 private:
 	void processNode(aiNode* node, const aiScene* scene);
 	void processMesh(aiMesh* mesh, const aiScene* scene);
-	std::vector<Bitmap> loadMaterialTextures(aiMaterial* mat, aiTextureType type);
+	std::vector<Bitmap*> loadMaterialTextures(aiMaterial* mat, aiTextureType type);
 
 private:
 	std::vector<shared<Mesh3D>> meshes;

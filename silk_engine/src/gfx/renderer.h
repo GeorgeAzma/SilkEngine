@@ -101,7 +101,7 @@ public:
 	static void sphere(float x, float y, float z, float radius);
 	static void ellipsoid(float x, float y, float z, float width, float height, float depth);
 
-	//Helper
+	//Slow function for quickly drawing stuff
 	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth = 1.0f);
 
 	static Light* addLight(const Light& light);

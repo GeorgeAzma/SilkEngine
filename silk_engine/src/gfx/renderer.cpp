@@ -131,24 +131,22 @@ void Renderer::ellipsoid(float x, float y, float z, float width, float height, f
 
 void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
 {
-		shared<RenderedInstance> instance = makeShared<RenderedInstance>();
-		instance->mesh = mesh;
-		instance->material = graphics_pipeline;
-		instance->images = { active.image };
-		instances.emplace_back(instance);
-
-		InstanceData data{};
-		data.transform = glm::mat4
-		(
-			width, 0, 0, 0,
-			0, height, 0, 0,
-			0, 0, depth, 0,
-			x, y, z, 1
-		);
-		if (active.transformed)
-			data.transform *= active.transform;
-		data.color = active.color;
-		createInstance(instance, std::move(data));
+	shared<RenderedInstance> instance = makeShared<RenderedInstance>(mesh, graphics_pipeline);
+	instance->images.emplace_back(active.image);
+	instances.emplace_back(instance);
+	
+	InstanceData data;
+	data.transform = glm::mat4
+	(
+		width, 0, 0, 0,
+		0, height, 0, 0,
+		0, 0, depth, 0,
+		x, y, z, 1
+	);
+	data.color = active.color;
+	if (active.transformed)
+		data.transform *= active.transform;
+	createInstance(instance, std::move(data));
 }
 
 void Renderer::begin(Camera* camera)
@@ -239,8 +237,8 @@ Light* Renderer::addLight(const Light& light)
 
 void Renderer::createInstance(const shared<RenderedInstance>& instance, const InstanceData& instance_data)
 {
-	if (!instance->mesh->vertex_array.get()) instance->mesh->createVertexArray();
-	//if (!instance->mesh->hasAABB()) instance->mesh->calculateAABB(); //TEMP for now
+	instance->mesh->createVertexArray();
+	//if (!instance->mesh->hasAABB()) instance->mesh->calculateAABB();
 	if (!instance->material.get()) instance->material = Resources::getGraphicsPipeline("Lit 3D");
 
 	bool need_new_instance_batch = true;

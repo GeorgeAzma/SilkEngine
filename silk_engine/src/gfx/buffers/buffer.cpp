@@ -7,7 +7,7 @@
 #include "gfx/graphics.h"
 
 Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_usage)
-	: size(size), needs_staging(EnumInfo::needsStaging(vma_usage))
+	: size(size), needs_staging(Allocator::needsStaging(vma_usage))
 {
 	ci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	ci.size = size;

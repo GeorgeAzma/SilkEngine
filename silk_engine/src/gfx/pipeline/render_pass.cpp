@@ -1,7 +1,6 @@
 #include "render_pass.h"
 #include "gfx/graphics.h"
 #include "gfx/devices/logical_device.h"
-#include "gfx/enums.h"
 #include "gfx/window/window.h"
 #include "gfx/buffers/command_buffer.h"
 

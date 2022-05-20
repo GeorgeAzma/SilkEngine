@@ -3,7 +3,7 @@
 CubeMesh::CubeMesh()
 {
 	//UNTESTED: Most likely false
-	vertices.resize(8);
+	vertices.resize(36);
 
 	vertices[0 ].position = { 0, 0, 0 };
 	vertices[1 ].position = { 0, 0, 1 };

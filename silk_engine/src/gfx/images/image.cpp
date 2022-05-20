@@ -1,7 +1,6 @@
 #include "image.h"
 #include "gfx/graphics.h"
 #include "gfx/buffers/buffer.h"
-#include "gfx/enums.h"
 #include "gfx/devices/physical_device.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/window/swap_chain.h"
@@ -19,7 +18,7 @@ Image::~Image()
 void Image::create(const ImageProps& props)
 {
 	this->props = props;
-	needs_staging = EnumInfo::needsStaging(props.memory_usage);
+	needs_staging = Allocator::needsStaging(props.memory_usage);
 	SK_ASSERT((props.is_1D ? (props.height == 1 && props.depth == 1) : true), "If image is 1D it's height and depth must be 1");
 	SK_ASSERT(((!props.is_1D && ! props.is_cubemap) ? (props.depth == 1) : true), "If image is 2D it's depth must be 1");
 	unique<StagingBuffer> staging_buffer = props.data ? makeUnique<StagingBuffer>(props.data, getSize()) : nullptr;

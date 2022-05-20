@@ -23,9 +23,9 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     SceneManager::add(scene);
     SceneManager::switchTo(scene);
 
-    Resources::addImage("Test1", [] { return makeShared<Image2D>("test1.png"); });
-    Resources::addImage("Test2", [] { return makeShared<Image2D>("test2.png"); });
-    Resources::addModel("Backpack", [] { return makeShared<Model>("backpack/backpack.obj"); });
+    Resources::addImage("Test1", makeShared<Image2D>("test1.png"));
+    Resources::addImage("Test2", makeShared<Image2D>("test2.png"));
+    Resources::addModel("Backpack", makeShared<Model>("backpack/backpack.obj"));
     
     Timers::every(100ms, 
         [this] 

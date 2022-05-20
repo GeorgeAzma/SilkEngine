@@ -12,23 +12,6 @@ class Shader;
 
 class Resources
 {
-	template<typename T>
-	struct Resource
-	{
-		Resource(const std::function<shared<T>()>& fetch_function = nullptr) 
-			: fetch_function(fetch_function) {}
-		std::function<shared<T>()> fetch_function = nullptr;
-		shared<T> resource = nullptr;
-		shared<T> fetch()
-		{
-			if(resource)
-				return resource;
-			SK_ASSERT(fetch_function != nullptr, "Couldn't fetch resource, because fetch function provided was nullptr");
-			resource = fetch_function();
-			return resource;
-		}
-	};
-
 public:
 	static void init();
 	static void cleanup();
@@ -42,13 +25,13 @@ public:
 	static shared<Font> getFont(std::string_view path);
 	static shared<DescriptorSetLayout> getDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
-	static void addMesh(std::string_view name, const std::function<shared<Mesh>()>& mesh);
-	static void addModel(std::string_view name, const std::function<shared<Model>()>& model);
-	static void addShader(std::string_view name, const std::function<shared<Shader>()>& shader);
-	static void addGraphicsPipeline(std::string_view name, const std::function<shared<GraphicsPipeline>()>& graphics_pipeline);
-	static void addComputePipeline(std::string_view name, const std::function<shared<ComputePipeline>()>& compute_pipeline);
-	static void addImage(std::string_view name, const std::function<shared<Image2D>()>& image);
-	static void addFont(std::string_view name, const std::function<shared<Font>()>& font);
+	static void addMesh(std::string_view name, const shared<Mesh>& mesh);
+	static void addModel(std::string_view name, const shared<Model>& model);
+	static void addShader(std::string_view name, const shared<Shader>& shader);
+	static void addGraphicsPipeline(std::string_view name, const shared<GraphicsPipeline>& graphics_pipeline);
+	static void addComputePipeline(std::string_view name, const shared<ComputePipeline>& compute_pipeline);
+	static void addImage(std::string_view name, const shared<Image2D>& image);
+	static void addFont(std::string_view name, const shared<Font>& font);
 	static void addDescriptorSetLayout(const shared<DescriptorSetLayout>& descriptor_layout);
 
 public:
@@ -56,26 +39,13 @@ public:
 	static inline shared<Image2D> white_image = nullptr;
 
 private:
-	template<typename T>
-	static shared<T> fetch(std::unordered_map<std::string_view, Resource<T>>& resources, std::string_view name)
-	{ 
-		return resources.at(name).fetch();
-	}
-
-	template<typename T>
-	static void add(std::unordered_map<std::string_view, Resource<T>>& resources, std::string_view name, const std::function<shared<T>()>& resource_fetch_func)
-	{
-		resources[name] = Resource<T>(resource_fetch_func);
-	}
-
-private:
-	static inline std::unordered_map<std::string_view, Resource<Mesh>> meshes;
-	static inline std::unordered_map<std::string_view, Resource<Model>> models;
-	static inline std::unordered_map<std::string_view, Resource<Shader>> shaders;
-	static inline std::unordered_map<std::string_view, Resource<GraphicsPipeline>> graphics_pipelines;
-	static inline std::unordered_map<std::string_view, Resource<ComputePipeline>> compute_pipelines;
-	static inline std::unordered_map<std::string_view, Resource<Image2D>> images;
-	static inline std::unordered_map<std::string_view, Resource<Font>> fonts;
+	static inline std::unordered_map<std::string_view, std::shared_ptr<Mesh>> meshes;
+	static inline std::unordered_map<std::string_view, std::shared_ptr<Model>> models;
+	static inline std::unordered_map<std::string_view, std::shared_ptr<Shader>> shaders;
+	static inline std::unordered_map<std::string_view, std::shared_ptr<GraphicsPipeline>> graphics_pipelines;
+	static inline std::unordered_map<std::string_view, std::shared_ptr<ComputePipeline>> compute_pipelines;
+	static inline std::unordered_map<std::string_view, std::shared_ptr<Image2D>> images;
+	static inline std::unordered_map<std::string_view, std::shared_ptr<Font>> fonts;
 	struct DescriptorSetLayoutInfo
 	{
 		std::vector<VkDescriptorSetLayoutBinding> bindings;

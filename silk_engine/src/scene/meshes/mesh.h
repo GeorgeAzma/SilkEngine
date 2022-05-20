@@ -2,22 +2,10 @@
 
 #include "gfx/buffers/vertex_array.h"
 
-class Mesh
+class Mesh : NonCopyable
 {
-	friend class Resources;
-	friend class RawModel;
-	friend class Scene;
-
 public:
-	enum class Type
-	{
-		NONE,
-		_2D,
-		_3D
-	};
-
-public:
-	Mesh(const std::vector<uint32_t>& indices, Type type) : indices(indices), type(type) {}
+	Mesh(const std::vector<uint32_t>& indices = {}) : indices(indices) {}
 	virtual ~Mesh() {}
 	
 	virtual void createVertexArray() = 0;
@@ -34,7 +22,6 @@ public:
 public:
 	std::vector<uint32_t> indices;
 	shared<VertexArray> vertex_array = nullptr;
-	Type type = Type::NONE;
 
 protected:
 	bool has_aabb = false;

@@ -3,22 +3,13 @@
 #include "gfx/images/image2D.h"
 #include "core/event.h"
 
-struct FramebufferAttachmentProps
-{
-	uint32_t width = 0; // value of 0 means auto resize
-	uint32_t height = 0; // value of 0 means auto resize
-	ImageFormat format = ImageFormat::BGRA;
-	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
-	VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-};
-
 class Framebuffer : NonCopyable
 {
 public:
 	Framebuffer(VkRenderPass render_pass, uint32_t width = 0, uint32_t height = 0);
 	~Framebuffer();
 
-	Framebuffer& addAttachment(const FramebufferAttachmentProps& props);
+	Framebuffer& addAttachment(ImageFormat format = ImageFormat::BGRA, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT, VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
 	//For adding swap chain image attachment ONLY
 	Framebuffer& addAttachment(const shared<Image2D>& image);
 	void build();

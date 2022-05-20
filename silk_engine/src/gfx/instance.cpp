@@ -63,7 +63,7 @@ Instance::Instance()
 {
     VkApplicationInfo app_info{};
     app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    app_info.apiVersion = EnumInfo::apiVersion(Graphics::API_VERSION);
+    app_info.apiVersion = Graphics::apiVersion(Graphics::API_VERSION);
     app_info.pApplicationName = app_name;
     app_info.pEngineName = ENGINE_NAME;
 

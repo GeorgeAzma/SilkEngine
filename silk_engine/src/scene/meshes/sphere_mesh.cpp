@@ -4,9 +4,9 @@ SphereMesh::SphereMesh(uint32_t resolution)
 {
 	size_t vertices_size = resolution * resolution;
 	size_t lines = resolution - 1;
-	size_t indices_size = lines * lines * 6;
-	vertices.resize(vertices_size);
-	indices.resize(indices_size);
+	size_t indices_size = lines * lines;
+	vertices.resize(vertices_size * 6);
+	indices.resize(indices_size * 6);
 	float d = 1.0f / lines;
 	constexpr glm::vec3 faces[6] =
 	{

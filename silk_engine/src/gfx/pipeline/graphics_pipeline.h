@@ -1,6 +1,5 @@
 #pragma once
 
-#include "gfx/enums.h"
 #include "pipeline.h"
 #include "gfx/buffers/buffer_layout.h"
 

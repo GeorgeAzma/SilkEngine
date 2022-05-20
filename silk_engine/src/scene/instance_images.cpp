@@ -16,11 +16,10 @@ uint32_t InstanceImages::add(const std::vector<shared<Image2D>>& new_images)
 	if (images.size() + new_images.size() > max_images)
 		return UINT32_MAX;
 
-	bool found = false;
 	size_t s = images.size() - (new_images.size() - 1);
 	for (size_t i = 0; i < s; ++i)
 	{
-		found = true;
+		bool found = true;
 		for (size_t j = 0; j < new_images.size(); ++j)
 		{
 			if (images[i + j].get() != new_images[j].get())

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gfx/enums.h"
+#include "gfx/graphics.h"
 #include "gfx/descriptors/descriptor_set.h"
 #include <shaderc/shaderc.hpp>
 
@@ -81,7 +81,7 @@ public:
 
 	const std::unordered_map<uint32_t, shared<DescriptorSet>>& getDescriptorSets() const { return descriptor_sets; }
 	const std::unordered_map<std::string_view, VkPushConstantRange>& getPushConstants() const { return push_constants; }
-	const std::unordered_map<std::string_view, Constant>& getConstants() const { return constants; }
+	const std::unordered_map<std::string, Constant>& getConstants() const { return constants; }
 	const std::vector<PerStageData>& getStages() const { return stages; }
 	const glm::uvec3& getLocalSize() const 
 	{ 
@@ -112,6 +112,6 @@ private:
 	std::vector<Resource> resources;
     std::unordered_map<std::string_view, VkPushConstantRange> push_constants;
 	std::unordered_map<std::string_view, ResourceLocation> resource_locations;
-	std::unordered_map<std::string_view, Constant> constants;
+	std::unordered_map<std::string, Constant> constants;
 	std::vector<PerStageData> stages;
 };

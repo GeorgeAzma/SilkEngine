@@ -6,6 +6,8 @@ public:
 	Allocator();
 	~Allocator();
 
+	static bool needsStaging(VmaMemoryUsage usage);
+
 	operator const VmaAllocator& () const { return allocator; }
 
 private:

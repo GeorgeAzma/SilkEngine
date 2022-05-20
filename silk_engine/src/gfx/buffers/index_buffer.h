@@ -1,7 +1,6 @@
 #pragma once
 
 #include "buffer.h"
-#include "gfx/enums.h"
 
 enum class IndexType
 {

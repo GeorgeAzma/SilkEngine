@@ -29,67 +29,43 @@ void Resources::init()
 
     //IMAGES
     {       
-        addImage("White", [] 
-            { 
-                Image2DProps image_props{};
-                image_props.width = 1;
-                image_props.height = 1;
-                image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
-                image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
-                image_props.sampler_props.linear_mipmap = false;
-                image_props.sampler_props.anisotropy = false;
-                image_props.mipmap = false;
-                constexpr glm::u8vec4 white(255);
-                image_props.data = &white;
-                return makeShared<Image2D>(image_props); 
-            });
-
-        white_image = getImage("White");
-
-        addImage("Black", [] 
-            { 
-                Image2DProps image_props{};
-                image_props.width = 1;
-                image_props.height = 1;
-                image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
-                image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
-                image_props.sampler_props.linear_mipmap = false;
-                image_props.sampler_props.anisotropy = false;
-                image_props.mipmap = false;
-                constexpr glm::u8vec4 black(0);
-                image_props.data = &black;
-                return makeShared<Image2D>(image_props); 
-            });
-
-        addImage("Null", [] 
-            { 
-                Image2DProps image_props{};
-                image_props.width = 2;
-                image_props.height = 2;
-                image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
-                image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
-                image_props.sampler_props.linear_mipmap = false;
-                image_props.sampler_props.anisotropy = false;
-                image_props.sampler_props.u_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-                image_props.sampler_props.v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-                image_props.mipmap = false;
-                constexpr glm::u8vec4 null_data[4] = { { 0, 0, 0, 255 }, { 255, 0, 255, 255 }, { 255, 0, 255, 255 }, { 0, 0, 0, 255 } };
-                image_props.data = null_data;
-                return makeShared<Image2D>(image_props); 
-            });
+        Image2DProps image_props{};
+        image_props.width = 1;
+        image_props.height = 1;
+        image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
+        image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
+        image_props.sampler_props.linear_mipmap = false;
+        image_props.sampler_props.anisotropy = false;
+        image_props.mipmap = false;
+        constexpr glm::u8vec4 white(255);
+        image_props.data = &white;
+        white_image = makeShared<Image2D>(image_props);
+        addImage("White", white_image);
+        
+        constexpr glm::u8vec4 black(0);
+        image_props.data = &black;
+        addImage("Black", makeShared<Image2D>(image_props));
+       
+        image_props.width = 2;
+        image_props.height = 2;
+        image_props.sampler_props.u_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        image_props.sampler_props.v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        constexpr glm::u8vec4 null_data[4] = { { 0, 0, 0, 255 }, { 255, 0, 255, 255 }, { 255, 0, 255, 255 }, { 0, 0, 0, 255 } };
+        image_props.data = null_data;
+        addImage("Null", makeShared<Image2D>(image_props));
     }
 
     //MESHES
     {
-        addMesh("Triangle", [] { return makeShared<TriangleMesh>(); });
-        addMesh("Circle", [] { return makeShared<CircleMesh>(); });
-        addMesh("Rectangle", [] { return makeShared<RectangleMesh>(); });
-        addMesh("Quad", [] { return makeShared<QuadMesh>(); });
-        addMesh("Circle3D", [] { return shared<Mesh3D>(*(Mesh2D*)(getMesh("Circle").get())); });
-        addMesh("Rectangle3D", [] { return shared<Mesh3D>(*(Mesh2D*)(getMesh("Rectangle").get())); });
-        addMesh("Cube", [] { return makeShared<CubeMesh>(); });
-        addMesh("Sphere", [] { return makeShared<SphereMesh>(); });
-        addMesh("Tetrahedron", [] { return makeShared<TetrahedronMesh>(); });
+        addMesh("Triangle", makeShared<TriangleMesh>());
+        addMesh("Circle", makeShared<CircleMesh>());
+        addMesh("Rectangle", makeShared<RectangleMesh>());
+        addMesh("Quad", makeShared<QuadMesh>());
+        addMesh("Circle3D", shared<Mesh3D>(*(Mesh2D*)(getMesh("Circle").get())));
+        addMesh("Rectangle3D", shared<Mesh3D>(*(Mesh2D*)(getMesh("Rectangle").get())));
+        addMesh("Cube", makeShared<CubeMesh>());
+        addMesh("Sphere", makeShared<SphereMesh>());
+        addMesh("Tetrahedron", makeShared<TetrahedronMesh>());
     }
 
     //MODELS
@@ -98,81 +74,68 @@ void Resources::init()
 
     //FONTS
     {
-        addFont("Arial", [] { return makeShared<Font>("arial.ttf"); });
+        addFont("Arial", makeShared<Font>("arial.ttf"));
     }
 
     //SHADERS
     {
-        addShader("3D", [] { return makeShared<Shader>("3D"); });
-        addShader("2D", [] { return makeShared<Shader>("2D"); });
-        addShader("Font", [] { return makeShared<Shader>("font"); });
-        addShader("BGRA To RGBA", [] { return makeShared<Shader>("bgra_to_rgba"); });
+        addShader("3D", makeShared<Shader>("3D"));
+        addShader("2D", makeShared<Shader>("2D"));
+        addShader("Font", makeShared<Shader>("font"));
+        addShader("BGRA To RGBA", makeShared<Shader>("bgra_to_rgba"));
     }
 
     //PIPELINES
     {       
         using enum DeviceType;
-        addGraphicsPipeline("Lit 3D", [] 
-            { 
-                shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
-                graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-                    .enable(EnableTag::DEPTH_TEST)
-                    .enable(EnableTag::DEPTH_WRITE)
-                    .setShader(getShader("3D"))
-                    .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
-                    .setSamples(Graphics::swap_chain->getSamples())
-                    .setRenderPass(*Graphics::swap_chain->getRenderPass())
-                    .build();
-                return graphics_pipeline; 
-            });
+        shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
+        graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
+            .enable(EnableTag::DEPTH_TEST)
+            .enable(EnableTag::DEPTH_WRITE)
+            .setShader(getShader("3D"))
+            .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
+            .setSamples(Graphics::swap_chain->getSamples())
+            .setRenderPass(*Graphics::swap_chain->getRenderPass())
+            .build();
+        addGraphicsPipeline("Lit 3D", graphics_pipeline);
 
-        addGraphicsPipeline("3D", [] 
-            {
-                VkBool32 lit = false;
-                shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
-                graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-                    .enable(EnableTag::DEPTH_TEST)
-                    .enable(EnableTag::DEPTH_WRITE)
-                    .setShader(getShader("3D"), { { "lit", &lit, sizeof(VkBool32) } })
-                    .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
-                    .setSamples(Graphics::swap_chain->getSamples())
-                    .setRenderPass(*Graphics::swap_chain->getRenderPass())
-                    .build();
-                return graphics_pipeline; 
-            });
-
-        addGraphicsPipeline("2D", []
-            { 
-                shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
-                graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-                    .enable(EnableTag::DEPTH_TEST)
-                    .enable(EnableTag::DEPTH_WRITE)
-                    .setDepthCompareOp(VK_COMPARE_OP_ALWAYS)
-                    .setShader(getShader("2D"))
-                    .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
-                    .setSamples(Graphics::swap_chain->getSamples())
-                    .setRenderPass(*Graphics::swap_chain->getRenderPass())
-                    .build();
-                return graphics_pipeline; 
-            });
-
+        VkBool32 lit = false;
+        graphics_pipeline = makeShared<GraphicsPipeline>();
+        graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
+            .enable(EnableTag::DEPTH_TEST)
+            .enable(EnableTag::DEPTH_WRITE)
+            .setShader(getShader("3D"), { { "lit", &lit, sizeof(VkBool32) } })
+            .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
+            .setSamples(Graphics::swap_chain->getSamples())
+            .setRenderPass(*Graphics::swap_chain->getRenderPass())
+            .build();
+        addGraphicsPipeline("3D", graphics_pipeline);
         
-        addGraphicsPipeline("Font", [] 
-            {
-                shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
-                graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-                    .enable(EnableTag::DEPTH_TEST)
-                    .enable(EnableTag::DEPTH_WRITE)
-                    .setDepthCompareOp(VK_COMPARE_OP_ALWAYS)
-                    .setShader(getShader("Font"))
-                    .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
-                    .setSamples(Graphics::swap_chain->getSamples())
-                    .setRenderPass(*Graphics::swap_chain->getRenderPass())
-                    .build();
-                return graphics_pipeline;
-            });
+        graphics_pipeline = makeShared<GraphicsPipeline>();
+        graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
+            .enable(EnableTag::DEPTH_TEST)
+            .enable(EnableTag::DEPTH_WRITE)
+            .setDepthCompareOp(VK_COMPARE_OP_ALWAYS)
+            .setShader(getShader("2D"))
+            .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
+            .setSamples(Graphics::swap_chain->getSamples())
+            .setRenderPass(*Graphics::swap_chain->getRenderPass())
+            .build();
+        addGraphicsPipeline("2D", graphics_pipeline);
 
-        addComputePipeline("BGRA To RGBA", [] { return makeShared<ComputePipeline>(getShader("BGRA To RGBA")); });
+        graphics_pipeline = makeShared<GraphicsPipeline>();
+        graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
+            .enable(EnableTag::DEPTH_TEST)
+            .enable(EnableTag::DEPTH_WRITE)
+            .setDepthCompareOp(VK_COMPARE_OP_ALWAYS)
+            .setShader(getShader("Font"))
+            .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
+            .setSamples(Graphics::swap_chain->getSamples())
+            .setRenderPass(*Graphics::swap_chain->getRenderPass())
+            .build();
+        addGraphicsPipeline("Font", graphics_pipeline);
+
+        addComputePipeline("BGRA To RGBA", makeShared<ComputePipeline>(getShader("BGRA To RGBA")));
     }
 }
  
@@ -191,37 +154,37 @@ void Resources::cleanup()
 
 shared<Mesh> Resources::getMesh(std::string_view name)
 {
-    return fetch(meshes, name);
+    return meshes.at(name);
 }
 
 shared<Model> Resources::getModel(std::string_view name)
 {
-    return fetch(models, name);
+    return models.at(name);
 }
 
 shared<Shader> Resources::getShader(std::string_view name)
 {
-    return fetch(shaders, name);
+    return shaders.at(name);
 }
 
 shared<GraphicsPipeline> Resources::getGraphicsPipeline(std::string_view name)
 {
-    return fetch(graphics_pipelines, name);
+    return graphics_pipelines.at(name);
 }
 
 shared<ComputePipeline> Resources::getComputePipeline(std::string_view name)
 {
-    return fetch(compute_pipelines, name);
+    return compute_pipelines.at(name);
 }
 
 shared<Image2D> Resources::getImage(std::string_view name)
 {
-    return fetch(images, name);
+    return images.at(name);
 }
 
 shared<Font> Resources::getFont(std::string_view name)
 {
-    return fetch(fonts, name);
+    return fonts.at(name);
 }
 
 shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
@@ -239,39 +202,39 @@ shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<
     return new_layout;
 }
 
-void Resources::addMesh(std::string_view name, const std::function<shared<Mesh>()>& mesh)
+void Resources::addMesh(std::string_view name, const shared<Mesh>& mesh)
 {
-    add(meshes, name, mesh);
+    meshes.insert_or_assign(name, mesh);
 }
 
-void Resources::addModel(std::string_view name, const std::function<shared<Model>()>& model)
+void Resources::addModel(std::string_view name, const shared<Model>& model)
 {
-    add(models, name, model);
+    models.insert_or_assign(name, model);
 }
 
-void Resources::addShader(std::string_view name, const std::function<shared<Shader>()>& shader)
+void Resources::addShader(std::string_view name, const shared<Shader>& shader)
 {
-    add(shaders, name, shader);
+    shaders.insert_or_assign(name, shader);
 }
 
-void Resources::addGraphicsPipeline(std::string_view name, const std::function<shared<GraphicsPipeline>()>& graphics_pipeline)
+void Resources::addGraphicsPipeline(std::string_view name, const shared<GraphicsPipeline>& graphics_pipeline)
 {
-    add(graphics_pipelines, name, graphics_pipeline);
+    graphics_pipelines.insert_or_assign(name, graphics_pipeline);
 }
 
-void Resources::addComputePipeline(std::string_view name, const std::function<shared<ComputePipeline>()>& compute_pipeline)
+void Resources::addComputePipeline(std::string_view name, const shared<ComputePipeline>& compute_pipeline)
 {
-    add(compute_pipelines, name, compute_pipeline);
+    compute_pipelines.insert_or_assign(name, compute_pipeline);
 }
 
-void Resources::addImage(std::string_view name, const std::function<shared<Image2D>()>& image)
+void Resources::addImage(std::string_view name, const shared<Image2D>& image)
 {
-    add(images, name, image);
+    images.insert_or_assign(name, image);
 }
 
-void Resources::addFont(std::string_view name, const std::function<shared<Font>()>& font)
+void Resources::addFont(std::string_view name, const shared<Font>& font)
 {
-    add(fonts, name, font);
+    fonts.insert_or_assign(name, font);
 }
 
 void Resources::addDescriptorSetLayout(const shared<DescriptorSetLayout>& descriptor_layout)

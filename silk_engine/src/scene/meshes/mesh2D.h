@@ -13,7 +13,7 @@ struct Vertex2D
 class Mesh2D : public Mesh
 {
 public:
-	Mesh2D() : Mesh({}, Type::_2D) {}
+	Mesh2D() : Mesh() {}
 	Mesh2D(const std::vector<Vertex2D>& vertices, const std::vector<uint32_t>& indices);
 	
 	void createVertexArray() override;
