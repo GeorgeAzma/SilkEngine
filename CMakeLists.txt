@@ -60,6 +60,7 @@ fetchContent(GLM https://github.com/g-truc/glm origin/master "")
 fetchContent(ENTT https://github.com/skypjack/entt origin/master src)
 fetchContent(STB https://github.com/nothings/stb origin/master "")
 fetchContent(VMA https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator origin/master include)
+fetchContent(EIGEN https://github.com/libigl/eigen origin/master "")
 FetchContent_MakeAvailable(${FETCHED_CONTENTS})
 
 #ExternalProjects
