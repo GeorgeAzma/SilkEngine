@@ -3,7 +3,8 @@
 class RNG 
 {
 public:
-	static inline uint64_t seed = 3773452183ULL;
+	using result_type = uint64_t;
+	static inline result_type seed = 3773452183ULL;
 
 public:
 	static double Float()
@@ -39,21 +40,25 @@ public:
 
 		return glm::vec2(cos(theta), sin(theta));
 	}
-	static constexpr uint64_t max()
+	static constexpr result_type max()
 	{
-		return std::numeric_limits<uint64_t>::max();
+		return std::numeric_limits<result_type>::max();
 	}
-	static constexpr uint64_t min()
+	static constexpr result_type min()
 	{
-		return std::numeric_limits<uint64_t>::min();
+		return std::numeric_limits<result_type>::min();
+	}
+	result_type operator()()
+	{
+		return next();
 	}
 
 private:
-	static uint64_t next()
+	static result_type next()
 	{
-		uint64_t z = (seed += 0x9E3779B97F4A7C15ULL);
-		z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ULL;
-		z = (z ^ (z >> 27)) * 0x94D049BB133111EBULL;
+		result_type z = (seed += result_type(0x9E3779B97F4A7C15));
+		z = (z ^ (z >> 30)) *    result_type(0xBF58476D1CE4E5B9);
+		z = (z ^ (z >> 27)) *    result_type(0x94D049BB133111EB);
 		return z ^ (z >> 31);
 	}
 };

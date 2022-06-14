@@ -60,10 +60,20 @@ fetchContent(GLM https://github.com/g-truc/glm origin/master "")
 fetchContent(ENTT https://github.com/skypjack/entt origin/master src)
 fetchContent(STB https://github.com/nothings/stb origin/master "")
 fetchContent(VMA https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator origin/master include)
-fetchContent(EIGEN https://github.com/libigl/eigen origin/master "")
 FetchContent_MakeAvailable(${FETCHED_CONTENTS})
 
 #ExternalProjects
+
+#eigen
+list(APPEND DEPENDENCIES_TO_ADD EIGEN)
+ExternalProject_Add(EIGEN
+GIT_REPOSITORY  https://gitlab.com/libeigen/eigen
+GIT_TAG         origin/master
+GIT_SHALLOW     ON
+CMAKE_ARGS   -DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/vendor/eigen
+UPDATE_COMMAND  ""
+)
+list(APPEND INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/vendor/eigen/include/eigen3)
 
 #glfw
 list(APPEND DEPENDENCIES_TO_ADD GLFW)
