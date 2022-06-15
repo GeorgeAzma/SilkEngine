@@ -1,8 +1,8 @@
 #pragma once
 
-#include "mesh3D.h"
+#include "mesh.h"
 
-class TetrahedronMesh : public Mesh3D
+class TetrahedronMesh : public RawMesh3D
 {
 public:
 	TetrahedronMesh();

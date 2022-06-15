@@ -2,11 +2,12 @@
 
 SphereMesh::SphereMesh(uint32_t resolution)
 {
+	SK_ASSERT(resolution >= 2, "Sphere resolution is too low");
 	size_t vertices_size = resolution * resolution;
-	size_t lines = resolution - 1;
-	size_t indices_size = lines * lines;
-	vertices.resize(vertices_size * 6);
-	indices.resize(indices_size * 6);
+	uint32_t lines = resolution - 1;
+	size_t indices_size = lines * lines * 6;
+	resizeVertices(vertices_size * 6);
+	resizeIndices(indices_size * 6);
 	float d = 1.0f / lines;
 	constexpr glm::vec3 faces[6] =
 	{
@@ -15,6 +16,7 @@ SphereMesh::SphereMesh(uint32_t resolution)
 		glm::vec3(0, 0, 1), glm::vec3(0, 0, -1)
 	};
 
+	size_t indx = 0;
 	for (size_t face = 0; face < 6; ++face)
 	{
 		const glm::vec3& facing = faces[face];
@@ -35,30 +37,66 @@ SphereMesh::SphereMesh(uint32_t resolution)
 					point.y * std::sqrt(1.0f - ((point.z * point.z) + (point.x * point.x)) * 0.5f + ((point.z * point.z) * (point.x * point.x)) * 0.3333333f),
 					point.z * std::sqrt(1.0f - ((point.x * point.x) + (point.y * point.y)) * 0.5f + ((point.x * point.x) * (point.y * point.y)) * 0.3333333f)
 				);
-				vertices[offset + i].position = point;
-				vertices[offset + i].normal = point;
+				getVertex(offset + i).position = point;
+				getVertex(offset + i).normal = point;
 				switch (face)
 				{
 					case 0:
-						vertices[offset + i].texture_coordinate = glm::vec2(1.0f - dx, 1.0f - dy);
+						getVertex(offset + i).texture_coordinate = glm::vec2(1.0f - dx, 1.0f - dy);
 						break;
 					case 1:
-						vertices[offset + i].texture_coordinate = glm::vec2(1.0f - dx, 1.0f - dy);
+						getVertex(offset + i).texture_coordinate = glm::vec2(1.0f - dx, 1.0f - dy);
 						break;
 					case 2:
-						vertices[offset + i].texture_coordinate = glm::vec2(1.0f - dx, 1.0f - dy);
+						getVertex(offset + i).texture_coordinate = glm::vec2(1.0f - dx, 1.0f - dy);
 						break;
 					case 3:
-						vertices[offset + i].texture_coordinate = glm::vec2(1.0f - dx, 1.0f - dy);
+						getVertex(offset + i).texture_coordinate = glm::vec2(1.0f - dx, 1.0f - dy);
 						break;
 					case 4:
-						vertices[offset + x * resolution + y].texture_coordinate = glm::vec2(1.0f - dx, dy);
+						getVertex(offset + x * resolution + y).texture_coordinate = glm::vec2(1.0f - dx, dy);
 						break;
 					case 5:
-						vertices[offset + x * resolution + y].texture_coordinate = glm::vec2(dx, 1.0f - dy);
+						getVertex(offset + x * resolution + y).texture_coordinate = glm::vec2(dx, 1.0f - dy);
 						break;
 				}
 			}
 		}
+
+		for (size_t y = 0; y < resolution; ++y)
+		{
+			for (size_t x = 0; x < resolution; ++x)
+			{
+				size_t ind = x + y * resolution;
+				float dx = (float)x / lines;
+				float dy = (float)y / lines;
+				size_t off = offset + ind;
+
+				glm::vec3 point = facing + ((dx - 0.5f) * 2 * axisA + (dy - 0.5f) * 2 * axisB);
+				point = pointOnCubeToPointOnSphere(point);
+				getVertex(off).position = point;
+				getVertex(off).normal = point;
+
+				if (x != resolution - 1 && y != resolution - 1)
+				{
+					getIndex(indx++) = off;
+					getIndex(indx++) = off + resolution + 1;
+					getIndex(indx++) = off + resolution;
+					getIndex(indx++) = off;
+					getIndex(indx++) = off + 1;
+					getIndex(indx++) = off + resolution + 1;
+				}
+			}
+		}
 	}
+}
+
+glm::vec3 SphereMesh::pointOnCubeToPointOnSphere(const glm::vec3& p)
+{
+	return glm::vec3
+	(
+		p.x * sqrt(1.0f - ((p.y * p.y) + (p.z * p.z)) * 0.5f + ((p.y * p.y) * (p.z * p.z)) * 0.333333333333333f),
+		p.y * sqrt(1.0f - ((p.z * p.z) + (p.x * p.x)) * 0.5f + ((p.z * p.z) * (p.x * p.x)) * 0.333333333333333f),
+		p.z * sqrt(1.0f - ((p.x * p.x) + (p.y * p.y)) * 0.5f + ((p.x * p.x) * (p.y * p.y)) * 0.333333333333333f)
+	);
 }

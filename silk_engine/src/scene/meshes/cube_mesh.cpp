@@ -3,137 +3,135 @@
 CubeMesh::CubeMesh()
 {
 	//UNTESTED: Most likely false
-	vertices.resize(36);
+	resizeVertices(36);
+	resizeIndices(36);
 
-	vertices[0 ].position = { 0, 0, 0 };
-	vertices[1 ].position = { 0, 0, 1 };
-	vertices[2 ].position = { 0, 1, 1 };
-	vertices[3 ].position = { 0, 0, 0 };
-	vertices[4 ].position = { 0, 1, 1 };
-	vertices[5 ].position = { 0, 1, 0 };
-	vertices[6 ].position = { 1, 1, 0 };
-	vertices[7 ].position = { 0, 0, 0 };
-	vertices[8 ].position = { 0, 1, 0 };
-	vertices[9 ].position = { 1, 0, 1 };
-	vertices[10].position = { 0, 0, 0 };
-	vertices[11].position = { 1, 0, 0 };
-	vertices[12].position = { 1, 1, 0 };
-	vertices[13].position = { 1, 0, 0 };
-	vertices[14].position = { 0, 0, 0 };
-	vertices[15].position = { 1, 0, 1 };
-	vertices[16].position = { 0, 0, 1 };
-	vertices[17].position = { 0, 0, 0 };
-	vertices[18].position = { 0, 1, 1 };
-	vertices[19].position = { 0, 0, 1 };
-	vertices[20].position = { 1, 0, 1 };
-	vertices[21].position = { 1, 1, 1 };
-	vertices[22].position = { 1, 0, 0 };
-	vertices[23].position = { 1, 1, 0 };
-	vertices[24].position = { 1, 0, 0 };
-	vertices[25].position = { 1, 1, 1 };
-	vertices[26].position = { 1, 0, 1 };
-	vertices[27].position = { 1, 1, 1 };
-	vertices[28].position = { 1, 1, 0 };
-	vertices[29].position = { 0, 1, 0 };
-	vertices[30].position = { 1, 1, 1 };
-	vertices[31].position = { 0, 1, 0 };
-	vertices[32].position = { 0, 1, 1 };
-	vertices[33].position = { 1, 1, 1 };
-	vertices[34].position = { 0, 1, 1 };
-	vertices[35].position = { 1, 0, 1 };
+	getVertex(0 ).position = { 0, 0, 0 };
+	getVertex(1 ).position = { 0, 0, 1 };
+	getVertex(2 ).position = { 0, 1, 1 };
+	getVertex(3 ).position = { 0, 0, 0 };
+	getVertex(4 ).position = { 0, 1, 1 };
+	getVertex(5 ).position = { 0, 1, 0 };
+	getVertex(6 ).position = { 1, 1, 0 };
+	getVertex(7 ).position = { 0, 0, 0 };
+	getVertex(8 ).position = { 0, 1, 0 };
+	getVertex(9 ).position = { 1, 0, 1 };
+	getVertex(10).position = { 0, 0, 0 };
+	getVertex(11).position = { 1, 0, 0 };
+	getVertex(12).position = { 1, 1, 0 };
+	getVertex(13).position = { 1, 0, 0 };
+	getVertex(14).position = { 0, 0, 0 };
+	getVertex(15).position = { 1, 0, 1 };
+	getVertex(16).position = { 0, 0, 1 };
+	getVertex(17).position = { 0, 0, 0 };
+	getVertex(18).position = { 0, 1, 1 };
+	getVertex(19).position = { 0, 0, 1 };
+	getVertex(20).position = { 1, 0, 1 };
+	getVertex(21).position = { 1, 1, 1 };
+	getVertex(22).position = { 1, 0, 0 };
+	getVertex(23).position = { 1, 1, 0 };
+	getVertex(24).position = { 1, 0, 0 };
+	getVertex(25).position = { 1, 1, 1 };
+	getVertex(26).position = { 1, 0, 1 };
+	getVertex(27).position = { 1, 1, 1 };
+	getVertex(28).position = { 1, 1, 0 };
+	getVertex(29).position = { 0, 1, 0 };
+	getVertex(30).position = { 1, 1, 1 };
+	getVertex(31).position = { 0, 1, 0 };
+	getVertex(32).position = { 0, 1, 1 };
+	getVertex(33).position = { 1, 1, 1 };
+	getVertex(34).position = { 0, 1, 1 };
+	getVertex(35).position = { 1, 0, 1 };
 
-	vertices[0 ].texture_coordinate = { 0, 1 };
-	vertices[1 ].texture_coordinate = { 0, 0 };
-	vertices[2 ].texture_coordinate = { 1, 0 };
-	vertices[3 ].texture_coordinate = { 1, 1 };
-	vertices[4 ].texture_coordinate = { 0, 1 };
-	vertices[5 ].texture_coordinate = { 0, 0 };
-	vertices[6 ].texture_coordinate = { 1, 0 };
-	vertices[7 ].texture_coordinate = { 1, 1 };
-	vertices[8 ].texture_coordinate = { 0, 1 };
-	vertices[9 ].texture_coordinate = { 0, 0 };
-	vertices[10].texture_coordinate = { 1, 0 };
-	vertices[11].texture_coordinate = { 1, 1 };
-	vertices[12].texture_coordinate = { 0, 1 };
-	vertices[13].texture_coordinate = { 0, 0 };
-	vertices[14].texture_coordinate = { 1, 0 };
-	vertices[15].texture_coordinate = { 1, 1 };
-	vertices[16].texture_coordinate = { 0, 1 };
-	vertices[17].texture_coordinate = { 0, 0 };
-	vertices[18].texture_coordinate = { 1, 0 };
-	vertices[19].texture_coordinate = { 1, 1 };
-	vertices[20].texture_coordinate = { 0, 1 };
-	vertices[21].texture_coordinate = { 0, 0 };
-	vertices[22].texture_coordinate = { 1, 0 };
-	vertices[23].texture_coordinate = { 1, 1 };
-	vertices[24].texture_coordinate = { 0, 1 };
-	vertices[25].texture_coordinate = { 0, 0 };
-	vertices[26].texture_coordinate = { 1, 0 };
-	vertices[27].texture_coordinate = { 1, 1 };
-	vertices[28].texture_coordinate = { 0, 1 };
-	vertices[29].texture_coordinate = { 0, 0 };
-	vertices[30].texture_coordinate = { 1, 0 };
-	vertices[31].texture_coordinate = { 1, 1 };
-	vertices[32].texture_coordinate = { 0, 1 };
-	vertices[33].texture_coordinate = { 0, 0 };
-	vertices[34].texture_coordinate = { 1, 0 };
-	vertices[35].texture_coordinate = { 1, 1 };
+	getVertex(0 ).texture_coordinate = { 0, 1 };
+	getVertex(1 ).texture_coordinate = { 0, 0 };
+	getVertex(2 ).texture_coordinate = { 1, 0 };
+	getVertex(3 ).texture_coordinate = { 1, 1 };
+	getVertex(4 ).texture_coordinate = { 0, 1 };
+	getVertex(5 ).texture_coordinate = { 0, 0 };
+	getVertex(6 ).texture_coordinate = { 1, 0 };
+	getVertex(7 ).texture_coordinate = { 1, 1 };
+	getVertex(8 ).texture_coordinate = { 0, 1 };
+	getVertex(9 ).texture_coordinate = { 0, 0 };
+	getVertex(10).texture_coordinate = { 1, 0 };
+	getVertex(11).texture_coordinate = { 1, 1 };
+	getVertex(12).texture_coordinate = { 0, 1 };
+	getVertex(13).texture_coordinate = { 0, 0 };
+	getVertex(14).texture_coordinate = { 1, 0 };
+	getVertex(15).texture_coordinate = { 1, 1 };
+	getVertex(16).texture_coordinate = { 0, 1 };
+	getVertex(17).texture_coordinate = { 0, 0 };
+	getVertex(18).texture_coordinate = { 1, 0 };
+	getVertex(19).texture_coordinate = { 1, 1 };
+	getVertex(20).texture_coordinate = { 0, 1 };
+	getVertex(21).texture_coordinate = { 0, 0 };
+	getVertex(22).texture_coordinate = { 1, 0 };
+	getVertex(23).texture_coordinate = { 1, 1 };
+	getVertex(24).texture_coordinate = { 0, 1 };
+	getVertex(25).texture_coordinate = { 0, 0 };
+	getVertex(26).texture_coordinate = { 1, 0 };
+	getVertex(27).texture_coordinate = { 1, 1 };
+	getVertex(28).texture_coordinate = { 0, 1 };
+	getVertex(29).texture_coordinate = { 0, 0 };
+	getVertex(30).texture_coordinate = { 1, 0 };
+	getVertex(31).texture_coordinate = { 1, 1 };
+	getVertex(32).texture_coordinate = { 0, 1 };
+	getVertex(33).texture_coordinate = { 0, 0 };
+	getVertex(34).texture_coordinate = { 1, 0 };
+	getVertex(35).texture_coordinate = { 1, 1 };
 
-	vertices[0 ].normal = { -1, 0, 0 };
-	vertices[1 ].normal = { -1, 0, 0 };
-	vertices[2 ].normal = { -1, 0, 0 };
-	vertices[3 ].normal = { -1, 0, 0 };
-	vertices[4 ].normal = { -1, 0, 0 };
-	vertices[5 ].normal = { -1, 0, 0 };
-	vertices[6 ].normal = { 0, 0, 1 };
-	vertices[7 ].normal = { 0, 0, 1 };
-	vertices[8 ].normal = { 0, 0, 1 };
-	vertices[9 ].normal = { 0, -1, 0 };
-	vertices[10].normal = { 0, -1, 0 };
-	vertices[11].normal = { 0, -1, 0 };
-	vertices[12].normal = { 0, 0, 1 };
-	vertices[13].normal = { 0, 0, 1 };
-	vertices[14].normal = { 0, 0, 1 };
-	vertices[15].normal = { 0, -1, 0 };
-	vertices[16].normal = { 0, -1, 0 };
-	vertices[17].normal = { 0, -1, 0 };
-	vertices[18].normal = { 0, 1, 0 };
-	vertices[19].normal = { 0, 1, 0 };
-	vertices[20].normal = { 0, 1, 0 };
-	vertices[21].normal = { 1, 0, 0 };
-	vertices[22].normal = { 1, 0, 0 };
-	vertices[23].normal = { 1, 0, 0 };
-	vertices[24].normal = { 1, 0, 0 };
-	vertices[25].normal = { 1, 0, 0 };
-	vertices[26].normal = { 1, 0, 0 };
-	vertices[27].normal = { 0, 1, 0 };
-	vertices[28].normal = { 0, 1, 0 };
-	vertices[29].normal = { 0, 1, 0 };
-	vertices[30].normal = { 0, 1, 0 };
-	vertices[31].normal = { 0, 1, 0 };
-	vertices[32].normal = { 0, 1, 0 };
-	vertices[33].normal = { 0, 0, -1 };
-	vertices[34].normal = { 0, 0, -1 };
-	vertices[35].normal = { 0, 0, -1 };
+	getVertex(0 ).normal = { -1, 0, 0 };
+	getVertex(1 ).normal = { -1, 0, 0 };
+	getVertex(2 ).normal = { -1, 0, 0 };
+	getVertex(3 ).normal = { -1, 0, 0 };
+	getVertex(4 ).normal = { -1, 0, 0 };
+	getVertex(5 ).normal = { -1, 0, 0 };
+	getVertex(6 ).normal = { 0, 0, 1 };
+	getVertex(7 ).normal = { 0, 0, 1 };
+	getVertex(8 ).normal = { 0, 0, 1 };
+	getVertex(9 ).normal = { 0, -1, 0 };
+	getVertex(10).normal = { 0, -1, 0 };
+	getVertex(11).normal = { 0, -1, 0 };
+	getVertex(12).normal = { 0, 0, 1 };
+	getVertex(13).normal = { 0, 0, 1 };
+	getVertex(14).normal = { 0, 0, 1 };
+	getVertex(15).normal = { 0, -1, 0 };
+	getVertex(16).normal = { 0, -1, 0 };
+	getVertex(17).normal = { 0, -1, 0 };
+	getVertex(18).normal = { 0, 1, 0 };
+	getVertex(19).normal = { 0, 1, 0 };
+	getVertex(20).normal = { 0, 1, 0 };
+	getVertex(21).normal = { 1, 0, 0 };
+	getVertex(22).normal = { 1, 0, 0 };
+	getVertex(23).normal = { 1, 0, 0 };
+	getVertex(24).normal = { 1, 0, 0 };
+	getVertex(25).normal = { 1, 0, 0 };
+	getVertex(26).normal = { 1, 0, 0 };
+	getVertex(27).normal = { 0, 1, 0 };
+	getVertex(28).normal = { 0, 1, 0 };
+	getVertex(29).normal = { 0, 1, 0 };
+	getVertex(30).normal = { 0, 1, 0 };
+	getVertex(31).normal = { 0, 1, 0 };
+	getVertex(32).normal = { 0, 1, 0 };
+	getVertex(33).normal = { 0, 0, -1 };
+	getVertex(34).normal = { 0, 0, -1 };
+	getVertex(35).normal = { 0, 0, -1 };
 
-	indices = 
-	{ 
-		0, 1, 3, 
-		3, 1, 2,
+	getIndex(0) = 0; getIndex(1) = 1; getIndex(2) = 3;
+	getIndex(3) = 3; getIndex(4) = 1; getIndex(5) = 2;
 
-		1, 5, 2, 
-		2, 5, 6,
+	getIndex(6) = 1; getIndex(7) = 5; getIndex(8) = 2;
+	getIndex(9) = 2; getIndex(10) = 5; getIndex(11) = 6;
 
-		5, 4, 6, 
-		6, 4, 7,
+	getIndex(12) = 5; getIndex(13) = 4; getIndex(14) = 6;
+	getIndex(15) = 6; getIndex(16) = 4; getIndex(17) = 7;
 
-		4, 0, 7, 
-		7, 0, 3,
+	getIndex(18) = 4; getIndex(19) = 0; getIndex(20) = 7;
+	getIndex(21) = 7; getIndex(22) = 0; getIndex(23) = 3;
 
-		3, 2, 7, 
-		7, 2, 6,
+	getIndex(24) = 3; getIndex(25) = 2; getIndex(26) = 7;
+	getIndex(27) = 7; getIndex(28) = 2; getIndex(29) = 6;
 
-		4, 5, 0, 
-		0, 5, 1
-	};
+	getIndex(30) = 4; getIndex(31) = 5; getIndex(32) = 0;
+	getIndex(33) = 0; getIndex(34) = 5; getIndex(35) = 1;
 }

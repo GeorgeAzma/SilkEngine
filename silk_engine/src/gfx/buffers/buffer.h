@@ -14,7 +14,6 @@ public:
 	void unmap() const;
 
 	void setData(const void* data, size_t size = 0, size_t offset = 0);
-	void setDataChecked(const void* data, size_t size = 0, size_t offset = 0);
 
 	void getData(void* data, size_t size = 0) const;
 	bool isMapped() const { return mapped; }
@@ -33,12 +32,9 @@ protected:
 protected:
 	VkBuffer buffer = VK_NULL_HANDLE;
 	VkDeviceSize size = 0;
-
-private:
 	VkBufferCreateInfo ci{};
 	VmaAllocationCreateInfo allocation_ci{};
 	VmaAllocation allocation = VK_NULL_HANDLE;
-	uint8_t* data = nullptr;
 	const bool needs_staging = false;
 	mutable bool mapped = false;
 };

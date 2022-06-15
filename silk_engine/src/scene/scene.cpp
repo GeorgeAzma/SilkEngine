@@ -239,7 +239,7 @@ void Scene::onTextComponentUpdate(entt::registry& registry, entt::entity entity)
 	MeshComponent& mesh = registry.get<MeshComponent>(entity);
 	InstanceData instance_data = Renderer::getInstanceBatch(mesh.instance->instance_batch_index).instance_data[mesh.instance->instance_data_index];
 	Renderer::destroyInstance(*mesh.instance);
-	mesh.mesh = makeShared<TextMesh>(text.text, text.size, text.font);
+	*mesh.mesh = TextMesh(text.text, text.size, text.font);
 	mesh.instance->mesh = mesh.mesh;
 	Renderer::createInstance(mesh.instance, instance_data);
 }
@@ -275,7 +275,7 @@ void Scene::onTextComponentCreate(entt::registry& registry, entt::entity entity)
 		text_component.font = Resources::getFont("Arial");
 	registry.emplace<MaterialComponent>(entity, MaterialComponent{ Resources::getGraphicsPipeline("Font") });
 	registry.emplace<ImageComponent>(entity, ImageComponent{ std::vector<shared<Image2D>>{ text_component.font->getAtlas() } });
-	registry.emplace<MeshComponent>(entity, MeshComponent{ makeShared<TextMesh>(text_component.text, text_component.size, text_component.font) });
+	registry.emplace<MeshComponent>(entity, MeshComponent{ makeShared<Mesh>(TextMesh(text_component.text, text_component.size, text_component.font)) });
 }
 
 void Scene::onModelComponentCreate(entt::registry& registry, entt::entity entity)

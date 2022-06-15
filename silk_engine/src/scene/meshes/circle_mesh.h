@@ -1,8 +1,8 @@
 #pragma once
 
-#include "mesh2D.h"
+#include "mesh.h"
 
-class CircleMesh : public Mesh2D
+class CircleMesh : public RawMesh2D
 {
 public:
 	CircleMesh(unsigned int resolution = 64);

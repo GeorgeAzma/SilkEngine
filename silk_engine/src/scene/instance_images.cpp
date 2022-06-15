@@ -5,49 +5,57 @@
 InstanceImages::InstanceImages(uint32_t max_images)
 {
 	this->max_images = max_images ? max_images : Graphics::MAX_IMAGE_SLOTS;
-	image_owners.resize(this->max_images);
-	images.reserve(this->max_images);
 }
 
 uint32_t InstanceImages::add(const std::vector<shared<Image2D>>& new_images)
 {
 	SK_ASSERT(new_images.size(), "You should specify more than 0 images to add");
 
-	if (images.size() + new_images.size() > max_images)
-		return UINT32_MAX;
+	enum Action : uint8_t { Add, Replace, Use };
 
-	size_t s = images.size() - (new_images.size() - 1);
-	for (size_t i = 0; i < s; ++i)
+	std::vector<Action> actions(new_images.size());
+
+	size_t j = 0;
+up:
+	for (size_t i = 0; i < new_images.size(); ++i)
 	{
-		bool found = true;
-		for (size_t j = 0; j < new_images.size(); ++j)
+		if (i + j >= images.size())
+			actions[i] = Add;
+		else if (images[i + j] == new_images[i])
+			actions[i] = Use;
+		else if (image_owners[i + j] == 0)
+			actions[i] = Replace;
+		else
 		{
-			if (images[i + j].get() != new_images[j].get())
-			{
-				if (!image_owners[i + j])
-				{
-					need_update = true;
-					images[i + j] = new_images[j];
-				}
-				else found = false;
-			}
-		}
-		if (found)
-		{
-			for (size_t j = 0; j < new_images.size(); ++j)
-				++image_owners[i + j];
-			return i;
+			++j;
+			if (j > (max_images - new_images.size()))
+				return UINT32_MAX;
+			goto up;
 		}
 	}
 
-	size_t image_index = images.size();
-	images.insert(images.end(), new_images.begin(), new_images.end());
-	need_update = true;
+	bool need_update = false;
+	for (size_t i = 0; i < actions.size(); ++i)
+	{
+		switch (actions[i])
+		{
+		case Add:
+			images.emplace_back(new_images[i]);
+			image_owners.emplace_back(1);
+			need_update = true;
+			break;
+		case Use:
+			++image_owners[i + j];
+			break;
+		case Replace:
+			images[i + j] = new_images[i];
+			++image_owners[i + j];
+			need_update = true;
+			break;
+		}
+	}
 
-	for (size_t j = 0; j < new_images.size(); ++j)
-		++image_owners[image_index + j];
-
-	return image_index;
+	return j;
 }
 
 void InstanceImages::remove(size_t index, size_t count)

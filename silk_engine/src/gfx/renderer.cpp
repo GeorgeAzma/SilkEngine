@@ -2,7 +2,6 @@
 #include "gfx/graphics.h"
 #include "gfx/window/window.h"
 #include "gfx/window/swap_chain.h"
-#include "scene/resources.h"
 #include "scene/meshes/line_mesh.h"
 #include "scene/meshes/bezier_mesh.h"
 #include "scene/meshes/triangle_mesh.h"
@@ -60,7 +59,7 @@ void Renderer::triangle(float x, float y, float size)
 
 void Renderer::triangle(float x1, float y1, float x2, float y2, float x3, float y3)
 {
-	draw(Resources::getGraphicsPipeline("2D"), makeShared<TriangleMesh>(x1, y1, x2, y2, x3, y3), 0, 0, 0, 1, 1, 1);
+	draw(Resources::getGraphicsPipeline("2D"), makeShared<Mesh>(TriangleMesh(x1, y1, x2, y2, x3, y3)), 0, 0, 0, 1, 1, 1);
 }
 
 void Renderer::rectangle(float x, float y, float width, float height)
@@ -85,23 +84,23 @@ void Renderer::circle(float x, float y, float radius)
 
 void Renderer::line(const std::vector<glm::vec2>& points, float width)
 {
-	draw(Resources::getGraphicsPipeline("2D"), makeShared<LineMesh>(points, width), 0, 0, 0, 1, 1, 1);
+	draw(Resources::getGraphicsPipeline("2D"), makeShared<Mesh>(LineMesh(points, width)), 0, 0, 0, 1, 1, 1);
 }
 
-void Renderer::line(float x1, float y1, float x2, float y2)
+void Renderer::line(float x1, float y1, float x2, float y2, float width)
 {
 	//TODO: It might be faster to not generate line every time and just rotate pregenerated line
-	line({ { x1, y1 }, { x2, y2 } });
+	line({ { x1, y1 }, { x2, y2 } }, width);
 }
 
 void Renderer::bezier(float x1, float y1, float px, float py, float x2, float y2, float width)
 {
-	draw(Resources::getGraphicsPipeline("2D"), makeShared<BezierMesh>(x1, y1, px, py, x2, y2, 64u, width), 0, 0, 0, 1, 1, 1);
+	draw(Resources::getGraphicsPipeline("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px, py, x2, y2, 64u, width)), 0, 0, 0, 1, 1, 1);
 }
 
 void Renderer::bezier(float x1, float y1, float px1, float py1, float px2, float py2, float x2, float y2, float width)
 {
-	draw(Resources::getGraphicsPipeline("2D"), makeShared<BezierMesh>(x1, y1, px1, py1, px2, py2, x2, y2, 64u, width), 0, 0, 0, 1, 1, 1);
+	draw(Resources::getGraphicsPipeline("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px1, py1, px2, py2, x2, y2, 64u, width)), 0, 0, 0, 1, 1, 1);
 }
 
 void Renderer::tetrahedron(float x, float y, float z, float size)
@@ -134,7 +133,7 @@ void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const sha
 	shared<RenderedInstance> instance = makeShared<RenderedInstance>(mesh, graphics_pipeline);
 	instance->images.emplace_back(active.image);
 	instances.emplace_back(instance);
-	
+
 	InstanceData data;
 	data.transform = glm::mat4
 	(
@@ -164,7 +163,7 @@ void Renderer::begin(Camera* camera)
 	viewport.x = 0.0f;
 	viewport.y = Window::getHeight();
 	viewport.width = Window::getWidth();
-	viewport.height = -(float)Graphics::swap_chain->getHeight();
+	viewport.height = -(float)Window::getHeight();
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 	Graphics::getActiveCommandBuffer().setViewport({ viewport });
@@ -217,8 +216,8 @@ void Renderer::end()
 	for (const auto& instance_batch : instance_batches)
 	{
 		Graphics::stats.instances += instance_batch.instances.size();
-		Graphics::stats.vertices += instance_batch.instance->mesh->vertexCount() * instance_batch.instances.size();
-		Graphics::stats.indices += instance_batch.instance->mesh->indices.size() * instance_batch.instances.size();
+		Graphics::stats.vertices += instance_batch.instance->mesh->getVertexCount() * instance_batch.instances.size();
+		Graphics::stats.indices += instance_batch.instance->mesh->getIndexCount() * instance_batch.instances.size();
 	}
 }
 
@@ -237,8 +236,6 @@ Light* Renderer::addLight(const Light& light)
 
 void Renderer::createInstance(const shared<RenderedInstance>& instance, const InstanceData& instance_data)
 {
-	instance->mesh->createVertexArray();
-	//if (!instance->mesh->hasAABB()) instance->mesh->calculateAABB();
 	if (!instance->material.get()) instance->material = Resources::getGraphicsPipeline("Lit 3D");
 
 	bool need_new_instance_batch = true;
@@ -248,7 +245,7 @@ void Renderer::createInstance(const shared<RenderedInstance>& instance, const In
 		if (instance_batch == *instance && instance_batch.instance_data.size() < Graphics::MAX_INSTANCES && instance_batch.instance_images.available() >= instance->images.size())
 		{
 			instance_batch.needs_update = true;
-			instance_batch.instance_data.emplace_back(std::move(instance_data));
+			instance_batch.instance_data.emplace_back(instance_data);
 			instance_batch.instances.emplace_back(instance);
 
 			instance->instance_batch_index = i;
@@ -281,15 +278,13 @@ void Renderer::addInstanceBatch(const shared<RenderedInstance>& instance, const 
 {
 	instance_batches.emplace_back(instance);
 	auto& new_batch = instance_batches.back();
-	new_batch.instance_data.reserve(Graphics::MAX_INSTANCES);
-	new_batch.instances.reserve(Graphics::MAX_INSTANCES);
 
 	new_batch.instance_images.add({ Resources::white_image });
 
-	new_batch.instance_data.emplace_back(std::move(instance_data));
+	new_batch.instance_data.emplace_back(instance_data);
 	new_batch.instances.emplace_back(instance);
-
-	new_batch.instance_buffer = makeShared<VertexBuffer>(new_batch.instance_data.data(), Graphics::MAX_INSTANCES * sizeof(InstanceData), VMA_MEMORY_USAGE_CPU_TO_GPU);
+	
+	new_batch.instance_buffer = makeShared<VertexBuffer>(nullptr, Graphics::MAX_INSTANCES * sizeof(InstanceData), VMA_MEMORY_USAGE_CPU_TO_GPU);
 
 	for (auto&& [set, descriptor_set] : new_batch.instance->material->getShader()->getDescriptorSets())
 		new_batch.descriptor_sets[set] = *descriptor_set;
@@ -358,7 +353,7 @@ void Renderer::updateUniformData(Camera* camera)
 }
 
 void Renderer::updateDrawCommands()
-{	
+{
 	bool any_needs_update = false;
 	static std::vector<VkDrawIndexedIndirectCommand> draw_commands;
 	draw_commands.resize(instance_batches.size());
@@ -370,7 +365,7 @@ void Renderer::updateDrawCommands()
 			instance_batches[i].needs_update = false;
 			VkDrawIndexedIndirectCommand draw_command{};
 			draw_command.instanceCount = instance_batches[i].instance_data.size();
-			draw_command.indexCount = instance_batches[i].instance->mesh->indices.size();
+			draw_command.indexCount = instance_batches[i].instance->mesh->getIndexCount();
 			draw_commands[i] = std::move(draw_command);
 			any_needs_update = true;
 		}

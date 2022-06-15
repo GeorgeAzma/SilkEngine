@@ -1,8 +1,8 @@
 #pragma once
 
-#include "mesh2D.h"
+#include "mesh.h"
 
-class QuadMesh : public Mesh2D
+class QuadMesh : public RawMesh2D
 {
 public:
 	QuadMesh();

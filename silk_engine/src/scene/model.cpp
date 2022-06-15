@@ -7,7 +7,7 @@
 
 Model::Model(std::string_view file)
 {
-    *this = load(file);
+    *this = RawModel(file);
 }
 
 RawModel Model::load(std::string_view file)
@@ -15,9 +15,12 @@ RawModel Model::load(std::string_view file)
     return RawModel(file);
 }
 
-Model& Model::operator=(const RawModel& raw_model)
+Model::Model(const RawModel& raw_model)
 {
-    meshes = raw_model.meshes;
+    meshes.resize(raw_model.meshes.size());
+
+    for(size_t i = 0; i < meshes.size(); ++i)
+        meshes[i] = makeShared<Mesh>(*raw_model.meshes[i]);
     path = raw_model.path;
 
     Image2DProps image_props{};
@@ -129,8 +132,6 @@ Model& Model::operator=(const RawModel& raw_model)
         }
         else images.back().emplace_back(black);
     }
-
-    return *this;
 }
 
 RawModel::RawModel(std::string_view file)
@@ -201,7 +202,7 @@ void RawModel::processMesh(aiMesh *mesh, const aiScene *scene)
             indices.emplace_back(mesh->mFaces[i].mIndices[j]);
     }
 
-    auto new_mesh = makeShared<Mesh3D>(vertices, indices);
+    shared<RawMesh3D> new_mesh = makeShared<RawMesh3D>(vertices, indices);
 
     if(mesh->mMaterialIndex >= 0)
     {

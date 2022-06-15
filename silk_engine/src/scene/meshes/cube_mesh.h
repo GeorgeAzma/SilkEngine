@@ -1,8 +1,8 @@
 #pragma once
 
-#include "mesh3D.h"
+#include "mesh.h"
 
-class CubeMesh : public Mesh3D
+class CubeMesh : public RawMesh3D
 {
 public:
 	CubeMesh();

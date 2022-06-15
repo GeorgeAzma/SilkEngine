@@ -139,7 +139,7 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 	{
 		auto& binary = stage.binary;
 		auto stage_flag = stage.stage;
-		spirv_cross::Compiler spirv_compiler(std::move(binary));
+		spirv_cross::Compiler spirv_compiler(binary);
 		spirv_cross::ShaderResources shader_resources = spirv_compiler.get_shader_resources();
 		
 		for (const spirv_cross::Resource& sampled_image : shader_resources.sampled_images)

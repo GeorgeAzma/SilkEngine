@@ -2,17 +2,19 @@
 
 RectangleMesh::RectangleMesh()
 {
-	vertices.resize(4);
+	resizeVertices(4);
+	resizeIndices(6);
 
-	vertices[0].position = { 0, 0 };
-	vertices[1].position = { 0, 1 };
-	vertices[2].position = { 1, 1 };
-	vertices[3].position = { 1, 0 };
+	getVertex(0).position = { 0, 0 };
+	getVertex(1).position = { 0, 1 };
+	getVertex(2).position = { 1, 1 };
+	getVertex(3).position = { 1, 0 };
 
-	vertices[0].texture_coordinate = { 0, 1 };
-	vertices[1].texture_coordinate = { 0, 0 };
-	vertices[2].texture_coordinate = { 1, 0 };
-	vertices[3].texture_coordinate = { 1, 1 };
+	getVertex(0).texture_coordinate = { 0, 1 };
+	getVertex(1).texture_coordinate = { 0, 0 };
+	getVertex(2).texture_coordinate = { 1, 0 };
+	getVertex(3).texture_coordinate = { 1, 1 };
 
-	indices = { 2, 1, 0, 0, 3, 2 };
+	getIndex(0) = 2; getIndex(1) = 1; getIndex(2) = 0;
+	getIndex(3) = 0; getIndex(4) = 3; getIndex(5) = 2;
 }

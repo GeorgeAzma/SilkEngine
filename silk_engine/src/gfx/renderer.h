@@ -9,6 +9,7 @@
 #include "utils/color.h"
 #include "subrender.h"
 #include "utils/type_info.h"
+#include "scene/resources.h"
 
 class Renderer
 {
@@ -77,9 +78,9 @@ public:
 	}
 
 	//States
-	static void transform(const glm::mat4& transform) { active.transformed = transform != glm::mat4(1); active.transform = transform; }
-	static void color(const Color& color) { active.color = color; }
-	static void image(const shared<Image2D>& image) { active.image = image; }
+	static void transform(const glm::mat4& transform = glm::mat4(1)) { active.transformed = transform != glm::mat4(1); active.transform = transform; }
+	static void color(const Color& color = Colors::WHITE) { active.color = color; }
+	static void image(const shared<Image2D>& image = Resources::white_image) { active.image = image; }
 
 	//2D
 	static void triangle(float x, float y, float width, float height);
@@ -90,7 +91,7 @@ public:
 	static void ellipse(float x, float y, float width, float height);
 	static void circle(float x, float y, float radius);
 	static void line(const std::vector<glm::vec2>& points, float width = 1.0f);
-	static void line(float x1, float y1, float x2, float y2);
+	static void line(float x1, float y1, float x2, float y2, float width = 1.0f);
 	static void bezier(float x1, float y1, float px, float py, float x2, float y2, float width);
 	static void bezier(float x1, float y1, float px1, float py1, float px2, float py2, float x2, float y2, float width);
 

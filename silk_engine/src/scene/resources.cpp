@@ -57,15 +57,13 @@ void Resources::init()
 
     //MESHES
     {
-        addMesh("Triangle", makeShared<TriangleMesh>());
-        addMesh("Circle", makeShared<CircleMesh>());
-        addMesh("Rectangle", makeShared<RectangleMesh>());
-        addMesh("Quad", makeShared<QuadMesh>());
-        addMesh("Circle3D", shared<Mesh3D>(*(Mesh2D*)(getMesh("Circle").get())));
-        addMesh("Rectangle3D", shared<Mesh3D>(*(Mesh2D*)(getMesh("Rectangle").get())));
-        addMesh("Cube", makeShared<CubeMesh>());
-        addMesh("Sphere", makeShared<SphereMesh>());
-        addMesh("Tetrahedron", makeShared<TetrahedronMesh>());
+        addMesh("Triangle", makeShared<Mesh>(TriangleMesh()));
+        addMesh("Circle", makeShared<Mesh>(CircleMesh()));
+        addMesh("Rectangle", makeShared<Mesh>(RectangleMesh()));
+        addMesh("Quad", makeShared<Mesh>(QuadMesh()));
+        addMesh("Cube", makeShared<Mesh>(CubeMesh()));
+        addMesh("Sphere", makeShared<Mesh>(SphereMesh()));
+        addMesh("Tetrahedron", makeShared<Mesh>(TetrahedronMesh()));
     }
 
     //MODELS

@@ -24,7 +24,7 @@ class DescriptorSet;
 class Graphics
 {
 public:
-	static constexpr size_t MAX_INSTANCE_BATCHES = 65536;
+	static constexpr size_t MAX_INSTANCE_BATCHES = 8192;
 	static constexpr size_t MAX_INSTANCES = 65536;
 	static constexpr size_t MAX_IMAGE_SLOTS = 64; //Can be more
 	static constexpr APIVersion API_VERSION = APIVersion::VULKAN_1_2;

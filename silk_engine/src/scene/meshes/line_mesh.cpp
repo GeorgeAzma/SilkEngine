@@ -3,18 +3,18 @@
 LineMesh::LineMesh(const std::vector<glm::vec2>& points, float width, uint32_t edge_resolution, bool tile_UVs)
 {
 	SK_ASSERT(points.size() >= 2, "Line must have at least 2 points");
-	vertices.resize(points.size() * 2);
-	indices.resize(points.size() * 6);
+	resizeVertices(points.size() * 2);
+	resizeIndices(points.size() * 6);
 
 	size_t index = 0;
 	for (size_t i = 0; i < points.size() - 1; ++i)
 	{
-		indices[index++] = i * 2 + 0;
-		indices[index++] = i * 2 + 2;
-		indices[index++] = i * 2 + 1;
-		indices[index++] = i * 2 + 1;
-		indices[index++] = i * 2 + 2;
-		indices[index++] = i * 2 + 3;
+		getIndex(index++) = i * 2 + 0;
+		getIndex(index++) = i * 2 + 2;
+		getIndex(index++) = i * 2 + 1;
+		getIndex(index++) = i * 2 + 1;
+		getIndex(index++) = i * 2 + 2;
+		getIndex(index++) = i * 2 + 3;
 	}
 	//TODO: Generate smooth edges
 	size_t vertex = 0;
@@ -27,10 +27,10 @@ LineMesh::LineMesh(const std::vector<glm::vec2>& points, float width, uint32_t e
 		glm::vec2 dir = math::directionTo(point, next_point);
 		glm::vec2 cross = math::cross2D(dir);
 		glm::vec2 offset = cross * width;
-		vertices[vertex++].position = point + offset;
-		vertices[vertex++].position = point - offset;
-		vertices[vertex++].position = next_point + offset;
-		vertices[vertex++].position = next_point - offset;
+		getVertex(vertex++).position = point + offset;
+		getVertex(vertex++).position = point - offset;
+		getVertex(vertex++).position = next_point + offset;
+		getVertex(vertex++).position = next_point - offset;
 	}
 	if (odd)
 	{
@@ -39,8 +39,8 @@ LineMesh::LineMesh(const std::vector<glm::vec2>& points, float width, uint32_t e
 		glm::vec2 dir = math::directionTo(prev_point, point);
 		glm::vec2 cross = math::cross2D(dir);
 		glm::vec2 offset = cross * width;
-		vertices[vertex++].position = point + offset;
-		vertices[vertex++].position = point - offset;
+		getVertex(vertex++).position = point + offset;
+		getVertex(vertex++).position = point - offset;
 	}
 
 
@@ -48,15 +48,15 @@ LineMesh::LineMesh(const std::vector<glm::vec2>& points, float width, uint32_t e
 	{
 		for (size_t i = 0; i < pairs * 2; i += 4)
 		{
-			vertices[i + 0].texture_coordinate = { 1.0f, 0.0f };
-			vertices[i + 1].texture_coordinate = { 0.0f, 0.0f };
-			vertices[i + 2].texture_coordinate = { 1.0f, 1.0f };
-			vertices[i + 3].texture_coordinate = { 0.0f, 1.0f };
+			getVertex(i + 0).texture_coordinate = { 1.0f, 0.0f };
+			getVertex(i + 1).texture_coordinate = { 0.0f, 0.0f };
+			getVertex(i + 2).texture_coordinate = { 1.0f, 1.0f };
+			getVertex(i + 3).texture_coordinate = { 0.0f, 1.0f };
 		}
 		if (odd)
 		{
-			vertices[points.size() - 1].texture_coordinate = { 1.0f, 1.0f };
-			vertices[points.size() - 1].texture_coordinate = { 0.0f, 1.0f };
+			getVertex(points.size() - 1).texture_coordinate = { 1.0f, 1.0f };
+			getVertex(points.size() - 1).texture_coordinate = { 0.0f, 1.0f };
 		}
 	}
 	else
@@ -73,8 +73,8 @@ LineMesh::LineMesh(const std::vector<glm::vec2>& points, float width, uint32_t e
 		for (size_t i = 0; i < lengths_sq.size(); ++i)
 		{
 			float t = lengths_sq[i] / length_sq;
-			vertices[i + 0].texture_coordinate = { 1.0f, t };
-			vertices[i + 1].texture_coordinate = { 0.0f, t };
+			getVertex(i + 0).texture_coordinate = { 1.0f, t };
+			getVertex(i + 1).texture_coordinate = { 0.0f, t };
 		}
 	}
 }

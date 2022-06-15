@@ -1,8 +1,8 @@
 #pragma once
 
-#include "mesh2D.h"
+#include "mesh.h"
 
-class TriangleMesh : public Mesh2D
+class TriangleMesh : public RawMesh2D
 {
 public:
 	TriangleMesh();

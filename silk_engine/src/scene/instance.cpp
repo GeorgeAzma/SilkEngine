@@ -25,7 +25,7 @@ void InstanceBatch::bind()
 	instance->material->bind();
 	for (auto& descriptor_set : descriptor_sets)
 		descriptor_set.second.bind(descriptor_set.first);
-	instance->mesh->vertex_array->bind();
+	instance->mesh->getVertexArray()->bind();
 	instance_buffer->bind(1);
 }
 

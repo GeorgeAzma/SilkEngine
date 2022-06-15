@@ -82,14 +82,15 @@ void SandboxApp::onUpdate()
         Graphics::screenshot(fmt::format("data/images/screenshots/screenshot.png"));
     }
 
-    Renderer::color({ 1, 1, 0, 1 });
+    Renderer::color({ 1, 1, 1, 1 });
     Renderer::image(Resources::getImage("Test1"));
     for (float x = 0; x < 100; ++x)
         for (float y = 0; y < 100; ++y)
             Renderer::rectangle(x * 5, y * 5, 4, 4);
 
-    Renderer::color({ 1, 1, 0, 1 });
+    Renderer::color({ 1, 1, 1, 1 });
     Renderer::triangle(0 + 500, 0, 100 + 500, 100, 200 + 500, 0);
+    Renderer::rectangle(500, 0, 200, 200);
     
     //Resources::pool.forEach(entities.size(), 
     //    [&](size_t i) 

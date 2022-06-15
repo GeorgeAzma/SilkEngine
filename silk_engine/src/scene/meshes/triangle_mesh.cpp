@@ -1,22 +1,22 @@
 #include "triangle_mesh.h"
 
-TriangleMesh::TriangleMesh()
+TriangleMesh::TriangleMesh() : TriangleMesh(-0.5f, -sqrt(3.0f) * 0.25f, 0.0f, sqrt(3.0f) * 0.25f, 0.5f, -sqrt(3.0f) * 0.25f)
 {
-	float h = sqrt(3.0f) * 0.25f;
-	TriangleMesh(-0.5f, -h, 0.0f, h, 0.5f, -h);
 }
 
 TriangleMesh::TriangleMesh(float x1, float y1, float x2, float y2, float x3, float y3)
 {
-	vertices.resize(3);
-	vertices[0].position = { x1, y1 };
-	vertices[0].texture_coordinate = { 0.0f, 0.0f };
+	resizeVertices(3);
+	resizeIndices(3);
 
-	vertices[1].position = { x2, y2 };
-	vertices[1].texture_coordinate = { 0.5f, 1.0f };
+	getVertex(0).position = { x1, y1 };
+	getVertex(0).texture_coordinate = { 0.0f, 1.0f };
 
-	vertices[2].position = { x3, y3 };
-	vertices[2].texture_coordinate = { 1.0f, 0.0f };
+	getVertex(1).position = { x2, y2 };
+	getVertex(1).texture_coordinate = { 0.5f, 0.0f };
 
-	indices = { 2, 1, 0 };
+	getVertex(2).position = { x3, y3 };
+	getVertex(2).texture_coordinate = { 1.0f, 1.0f };
+
+	getIndex(0) = 2; getIndex(1) = 1; getIndex(2) = 0;
 }

@@ -65,6 +65,61 @@ Color::Color(std::string hex, float a)
 	color.b = float((hex_value >> 0) & 0xff) * NORM;
 }
 
+Color::Color(Colors color)
+{
+	switch (color)
+	{
+	case Colors::WHITE:
+		this->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		break;
+	case Colors::BLACK:
+		this->color = { 0.0f, 0.0f, 0.0f, 1.0f };
+		break;
+	case Colors::DARK_GRAY:
+		this->color = { 0.25f, 0.25f, 0.25f, 1.0f };
+		break;
+	case Colors::GRAY:
+		this->color = { 0.5f, 0.5f, 0.5f, 1.0f };
+		break;
+	case Colors::LIGHT_GRAY:
+		this->color = { 0.75f, 0.75f, 0.75f, 1.0f };
+		break;
+	case Colors::RED:
+		this->color = { 1.0f, 0.0f, 0.0f, 1.0f };
+		break;
+	case Colors::GREEN:
+		this->color = { 0.0f, 1.0f, 0.0f, 1.0f };
+		break;
+	case Colors::BLUE:
+		this->color = { 0.0f, 0.0f, 1.0f, 1.0f };
+		break;
+	case Colors::PINK:
+		this->color = { 1.0f, 0.5f, 0.75f, 1.0f };
+		break;
+	case Colors::MAGENTA:
+		this->color = { 1.0f, 0.0f, 1.0f, 1.0f };
+		break;
+	case Colors::PURPLE:
+		this->color = { 0.5f, 0.0f, 0.5f, 1.0f };
+		break;
+	case Colors::YELLOW:
+		this->color = { 1.0f, 1.0f, 0.0f, 1.0f };
+		break;
+	case Colors::ORANGE:
+		this->color = { 1.0f, 0.5f, 0.0f, 1.0f };
+		break;
+	case Colors::BROWN:
+		this->color = { 0.5f, 0.25f, 0.0f, 1.0f };
+		break;
+	case Colors::CYAN:
+		this->color = { 1.0f, 1.0f, 0.0f, 1.0f };
+		break;
+	default:
+		this->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		break;
+	}
+}
+
 constexpr uint32_t Color::getHex(Type type) const
 {
 	switch (type) {

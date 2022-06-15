@@ -10,9 +10,8 @@
 
 void ParticleSystem::init()
 {
-	auto mesh = Resources::getMesh("Quad");
-    mesh->createVertexArray();
-    vao = mesh->vertex_array;
+	shared<Mesh> mesh = Resources::getMesh("Quad");
+    vao = mesh->getVertexArray();
 	instance_vbo = makeShared<VertexBuffer>(nullptr, MAX_PARTICLES * sizeof(ParticleData));
 	
     using enum DeviceType;
@@ -121,12 +120,15 @@ void ParticleSystem::update()
 
 void ParticleSystem::render()
 {
-    pipeline->bind();
-    vao->bind();
-    instance_vbo->bind(1);
-    auto images = pipeline->getShader()->get("images");
-    instance_images->updateDescriptorSet(*pipeline->getShader()->getDescriptorSets().at(images.set), images.write_index);
-    Graphics::getActiveCommandBuffer().drawIndexed(vao->getIndexBuffer()->getCount(), particle_data.size(), 0, 0, 0);
+    if (particle_data.size())
+    {
+        pipeline->bind();
+        vao->bind();
+        instance_vbo->bind(1);
+        auto images = pipeline->getShader()->get("images");
+        instance_images->updateDescriptorSet(*pipeline->getShader()->getDescriptorSets().at(images.set), images.write_index);
+        Graphics::getActiveCommandBuffer().drawIndexed(vao->getIndexBuffer()->getCount(), particle_data.size(), 0, 0, 0);
+    }
 }
 
 void ParticleSystem::cleanup()
