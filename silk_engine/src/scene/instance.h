@@ -26,19 +26,19 @@ struct InstanceData
 
 struct RenderedInstance
 {
-	shared<Mesh> mesh;
 	shared<GraphicsPipeline> material = nullptr;
 
 	std::vector<shared<Image2D>> images;
-	size_t instance_data_index = -1;
-	size_t instance_batch_index = -1;
+	size_t instance_data_index = std::numeric_limits<size_t>::max();
+	size_t instance_batch_index = std::numeric_limits<size_t>::max();
 
 	bool operator==(const RenderedInstance& other) const;
 };
 
 struct InstanceBatch
 {
-	shared<RenderedInstance> instance;
+	shared<Mesh> mesh = nullptr;
+	shared<RenderedInstance> instance = nullptr;
 
 	std::vector<InstanceData> instance_data;
 	std::vector<shared<RenderedInstance>> instances;

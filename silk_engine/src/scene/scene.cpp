@@ -175,7 +175,7 @@ void Scene::onMaterialComponentUpdate(entt::registry& registry, entt::entity ent
 			InstanceData instance_data = Renderer::getInstanceBatch(mesh_component->instance->instance_batch_index).instance_data[mesh_component->instance->instance_data_index];
 			Renderer::destroyInstance(*mesh_component->instance);
 			mesh_component->instance->material = material.material;
-			Renderer::createInstance(mesh_component->instance, instance_data);
+			Renderer::createInstance(mesh_component->instance, mesh_component->mesh, instance_data);
 		}
 	}
 	if (auto model_component = registry.try_get<ModelComponent>(entity))
@@ -188,7 +188,7 @@ void Scene::onMaterialComponentUpdate(entt::registry& registry, entt::entity ent
 				InstanceData instance_data = Renderer::getInstanceBatch(instance->instance_batch_index).instance_data[instance->instance_data_index];
 				Renderer::destroyInstance(*instance);
 				instance->material = material.material;
-				Renderer::createInstance(instance, instance_data);
+				Renderer::createInstance(instance, model_component->model->getMeshes()[i], instance_data);
 			}
 		}
 	}
@@ -226,7 +226,7 @@ void Scene::onImageComponentUpdate(entt::registry& registry, entt::entity entity
 		{
 			InstanceData instance_data = instance_batch.instance_data[instance->instance_data_index];
 			Renderer::destroyInstance(*instance);
-			Renderer::addInstanceBatch(instance, instance_data);
+			Renderer::addInstanceBatch(instance, mesh_component->mesh, instance_data);
 			image_index = Renderer::getInstanceBatch(instance->instance_batch_index).instance_images.add(instance->images);
 		}
 		Renderer::getInstanceBatch(instance->instance_batch_index).instance_data[instance->instance_data_index].image_index = image_index;
@@ -240,8 +240,7 @@ void Scene::onTextComponentUpdate(entt::registry& registry, entt::entity entity)
 	InstanceData instance_data = Renderer::getInstanceBatch(mesh.instance->instance_batch_index).instance_data[mesh.instance->instance_data_index];
 	Renderer::destroyInstance(*mesh.instance);
 	*mesh.mesh = TextMesh(text.text, text.size, text.font);
-	mesh.instance->mesh = mesh.mesh;
-	Renderer::createInstance(mesh.instance, instance_data);
+	Renderer::createInstance(mesh.instance, mesh.mesh, instance_data);
 }
 
 void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
@@ -254,13 +253,13 @@ void Scene::onMeshComponentCreate(entt::registry& registry, entt::entity entity)
 	if (auto color = registry.try_get<ColorComponent>(entity))
 		instance_data.color = *color;
 
-	mesh_component.instance = makeShared<RenderedInstance>(mesh_component.mesh);
+	mesh_component.instance = makeShared<RenderedInstance>();
 	if (auto material = registry.try_get<MaterialComponent>(entity))
 		mesh_component.instance->material = material->material;
 	if (auto image = registry.try_get<ImageComponent>(entity))
 		mesh_component.instance->images = image->images;
 
-	Renderer::createInstance(mesh_component.instance, instance_data);
+	Renderer::createInstance(mesh_component.instance, mesh_component.mesh, instance_data);
 }
 
 void Scene::onMeshComponentDestroy(entt::registry& registry, entt::entity entity)
@@ -294,9 +293,9 @@ void Scene::onModelComponentCreate(entt::registry& registry, entt::entity entity
 	model_component.instances.resize(model_component.model->getMeshes().size());
 	for (size_t i = 0; i < model_component.model->getMeshes().size(); ++i)
 	{
-		model_component.instances[i] = makeShared<RenderedInstance>(model_component.model->getMeshes()[i], material);
+		model_component.instances[i] = makeShared<RenderedInstance>(material);
 		model_component.instances[i]->images = model_component.model->getImages()[i];
-		Renderer::createInstance(model_component.instances[i], instance_data);
+		Renderer::createInstance(model_component.instances[i], model_component.model->getMeshes()[i], instance_data);
 	}
 }
 

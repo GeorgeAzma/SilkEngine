@@ -103,13 +103,14 @@ public:
 	static void ellipsoid(float x, float y, float z, float width, float height, float depth);
 
 	//Slow function for quickly drawing stuff
+	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const glm::mat4& transform);
 	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth = 1.0f);
 
 	static Light* addLight(const Light& light);
-	static void createInstance(const shared<RenderedInstance>& instance, const InstanceData& instance_data);
+	static void createInstance(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data);
 	static void updateInstance(RenderedInstance& instance, const InstanceData& instance_data);
 	static InstanceBatch& getInstanceBatch(size_t index) { return instance_batches[index]; }
-	static void addInstanceBatch(const shared<RenderedInstance>& instance, const InstanceData& instance_data);
+	static void addInstanceBatch(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data);
 	static void destroyInstance(const RenderedInstance& instance);
 
 private:

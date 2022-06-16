@@ -3,6 +3,7 @@
 LineMesh::LineMesh(const std::vector<glm::vec2>& points, float width, uint32_t edge_resolution, bool tile_UVs)
 {
 	SK_ASSERT(points.size() >= 2, "Line must have at least 2 points");
+	width *= 0.5f;
 	resizeVertices(points.size() * 2);
 	resizeIndices(points.size() * 6);
 

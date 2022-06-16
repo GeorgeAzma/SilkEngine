@@ -89,8 +89,15 @@ void Renderer::line(const std::vector<glm::vec2>& points, float width)
 
 void Renderer::line(float x1, float y1, float x2, float y2, float width)
 {
-	//TODO: It might be faster to not generate line every time and just rotate pregenerated line
-	line({ { x1, y1 }, { x2, y2 } }, width);
+	float l = sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+	float dx = (x2 - x1) / l;
+	float dy = (y2 - y1) / l;
+	draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), {
+			dx * l, dy * l, 0, 0,
+			-dy * width, dx * width, 0, 0,
+			0, 0, 1, 0,
+			x1 + dy * width * 0.5f, y1 - dx * width * 0.5f, 0, 1
+		});
 }
 
 void Renderer::bezier(float x1, float y1, float px, float py, float x2, float y2, float width)
@@ -128,24 +135,28 @@ void Renderer::ellipsoid(float x, float y, float z, float width, float height, f
 	draw(Resources::getGraphicsPipeline("3D"), Resources::getMesh("Sphere"), x, y, z, width, height, depth);
 }
 
-void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const glm::mat4& transform)
 {
-	shared<RenderedInstance> instance = makeShared<RenderedInstance>(mesh, graphics_pipeline);
+	shared<RenderedInstance> instance = makeShared<RenderedInstance>(graphics_pipeline);
 	instance->images.emplace_back(active.image);
 	instances.emplace_back(instance);
 
 	InstanceData data;
-	data.transform = glm::mat4
-	(
+	data.transform = transform;
+	data.color = active.color;
+	if (active.transformed)
+		data.transform *= active.transform;
+	createInstance(instance, mesh, std::move(data));
+}
+
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
+{
+	draw(graphics_pipeline, mesh, {
 		width, 0, 0, 0,
 		0, height, 0, 0,
 		0, 0, depth, 0,
 		x, y, z, 1
-	);
-	data.color = active.color;
-	if (active.transformed)
-		data.transform *= active.transform;
-	createInstance(instance, std::move(data));
+		});
 }
 
 void Renderer::begin(Camera* camera)
@@ -216,8 +227,8 @@ void Renderer::end()
 	for (const auto& instance_batch : instance_batches)
 	{
 		Graphics::stats.instances += instance_batch.instances.size();
-		Graphics::stats.vertices += instance_batch.instance->mesh->getVertexCount() * instance_batch.instances.size();
-		Graphics::stats.indices += instance_batch.instance->mesh->getIndexCount() * instance_batch.instances.size();
+		Graphics::stats.vertices += instance_batch.mesh->getVertexCount() * instance_batch.instances.size();
+		Graphics::stats.indices += instance_batch.mesh->getIndexCount() * instance_batch.instances.size();
 	}
 }
 
@@ -234,7 +245,7 @@ Light* Renderer::addLight(const Light& light)
 	return nullptr;
 }
 
-void Renderer::createInstance(const shared<RenderedInstance>& instance, const InstanceData& instance_data)
+void Renderer::createInstance(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data)
 {
 	if (!instance->material.get()) instance->material = Resources::getGraphicsPipeline("Lit 3D");
 
@@ -242,11 +253,11 @@ void Renderer::createInstance(const shared<RenderedInstance>& instance, const In
 	for (size_t i = 0; i < instance_batches.size(); ++i)
 	{
 		auto& instance_batch = instance_batches[i];
-		if (instance_batch == *instance && instance_batch.instance_data.size() < Graphics::MAX_INSTANCES && instance_batch.instance_images.available() >= instance->images.size())
+		if (instance_batch == *instance && instance_batch.mesh == mesh && instance_batch.instance_data.size() < Graphics::MAX_INSTANCES && instance_batch.instance_images.available() >= instance->images.size())
 		{
 			instance_batch.needs_update = true;
-			instance_batch.instance_data.emplace_back(instance_data);
-			instance_batch.instances.emplace_back(instance);
+			instance_batch.instance_data.push_back(instance_data);
+			instance_batch.instances.push_back(instance);
 
 			instance->instance_batch_index = i;
 			instance->instance_data_index = instance_batch.instance_data.size() - 1;
@@ -257,7 +268,7 @@ void Renderer::createInstance(const shared<RenderedInstance>& instance, const In
 	}
 
 	if (need_new_instance_batch)
-		addInstanceBatch(instance, instance_data);
+		addInstanceBatch(instance, mesh, instance_data);
 
 	if (instance->images.size())
 	{
@@ -269,21 +280,20 @@ void Renderer::createInstance(const shared<RenderedInstance>& instance, const In
 
 void Renderer::updateInstance(RenderedInstance& instance, const InstanceData& instance_data)
 {
-	auto& instance_batch = instance_batches[instance.instance_batch_index];
-	instance_batch.needs_update = true;
-	instance_batch.instance_data[instance.instance_data_index] = instance_data;
+	instance_batches[instance.instance_batch_index].needs_update = true;
+	instance_batches[instance.instance_batch_index].instance_data[instance.instance_data_index] = instance_data;
 }
 
-void Renderer::addInstanceBatch(const shared<RenderedInstance>& instance, const InstanceData& instance_data)
+void Renderer::addInstanceBatch(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data)
 {
-	instance_batches.emplace_back(instance);
+	instance_batches.emplace_back(mesh, instance);
 	auto& new_batch = instance_batches.back();
 
 	new_batch.instance_images.add({ Resources::white_image });
 
 	new_batch.instance_data.emplace_back(instance_data);
 	new_batch.instances.emplace_back(instance);
-	
+
 	new_batch.instance_buffer = makeShared<VertexBuffer>(nullptr, Graphics::MAX_INSTANCES * sizeof(InstanceData), VMA_MEMORY_USAGE_CPU_TO_GPU);
 
 	for (auto&& [set, descriptor_set] : new_batch.instance->material->getShader()->getDescriptorSets())
@@ -365,7 +375,7 @@ void Renderer::updateDrawCommands()
 			instance_batches[i].needs_update = false;
 			VkDrawIndexedIndirectCommand draw_command{};
 			draw_command.instanceCount = instance_batches[i].instance_data.size();
-			draw_command.indexCount = instance_batches[i].instance->mesh->getIndexCount();
+			draw_command.indexCount = instance_batches[i].mesh->getIndexCount();
 			draw_commands[i] = std::move(draw_command);
 			any_needs_update = true;
 		}

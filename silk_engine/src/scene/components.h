@@ -75,13 +75,13 @@ struct ScriptComponent
 
 struct MeshComponent
 {
-	shared<Mesh> mesh;
+	shared<Mesh> mesh = nullptr;
 	shared<RenderedInstance> instance = nullptr;
 };
 
 struct ModelComponent
 {
-	shared<Model> model;
+	shared<Model> model = nullptr;
 
 	std::vector<shared<RenderedInstance>> instances{};
 
@@ -90,7 +90,7 @@ struct ModelComponent
 
 struct MaterialComponent
 {
-	shared<GraphicsPipeline> material;
+	shared<GraphicsPipeline> material = nullptr;
 
 	operator const GraphicsPipeline& () const { return *material; }
 };

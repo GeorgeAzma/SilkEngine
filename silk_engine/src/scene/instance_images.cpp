@@ -13,7 +13,7 @@ uint32_t InstanceImages::add(const std::vector<shared<Image2D>>& new_images)
 
 	enum Action : uint8_t { Add, Replace, Use };
 
-	std::vector<Action> actions(new_images.size());
+	Action* actions = new Action[new_images.size()];
 
 	size_t j = 0;
 up:
@@ -35,7 +35,7 @@ up:
 	}
 
 	bool need_update = false;
-	for (size_t i = 0; i < actions.size(); ++i)
+	for (size_t i = 0; i < new_images.size(); ++i)
 	{
 		switch (actions[i])
 		{
@@ -55,6 +55,7 @@ up:
 		}
 	}
 
+	delete[] actions;
 	return j;
 }
 
