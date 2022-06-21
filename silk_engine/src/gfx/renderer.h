@@ -15,10 +15,11 @@ class Renderer
 {
 	static inline struct Active
 	{
-		glm::vec4 color;
-		shared<Image2D> image;
-		glm::mat4 transform;
-		bool transformed;
+		glm::vec4 color = glm::vec4(1);
+		shared<Image2D> image = nullptr;
+		shared<Font> font = nullptr;
+		glm::mat4 transform = glm::mat4(1);
+		bool transformed = false;
 	} active;
 
 public:
@@ -94,6 +95,8 @@ public:
 	static void line(float x1, float y1, float x2, float y2, float width = 1.0f);
 	static void bezier(float x1, float y1, float px, float py, float x2, float y2, float width);
 	static void bezier(float x1, float y1, float px1, float py1, float px2, float py2, float x2, float y2, float width);
+	static void text(const std::string& text, float x, float y, float width, float height);
+	static void text(const std::string& text, float x, float y, float size);
 
 	//3D
 	static void tetrahedron(float x, float y, float z, float size);
@@ -103,7 +106,9 @@ public:
 	static void ellipsoid(float x, float y, float z, float width, float height, float depth);
 
 	//Slow function for quickly drawing stuff
+	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const glm::mat4& transform, const std::vector<shared<Image2D>>& images);
 	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const glm::mat4& transform);
+	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, const std::vector<shared<Image2D>>& images);
 	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth = 1.0f);
 
 	static Light* addLight(const Light& light);

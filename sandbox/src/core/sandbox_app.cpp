@@ -89,8 +89,9 @@ void SandboxApp::onUpdate()
             Renderer::rectangle(x * 2, y * 2, 4, 4);
 
     Renderer::color({ 1, 1, 1, 1 });
-    Renderer::triangle(0 + 500, 0, 100 + 500, 100, 200 + 500, 0);
     Renderer::rectangle(500, 0, 200, 200);
+
+    Renderer::text("W Sample Text", 500, 0, 50);
     
     //Resources::pool.forEach(entities.size(), 
     //    [&](size_t i) 

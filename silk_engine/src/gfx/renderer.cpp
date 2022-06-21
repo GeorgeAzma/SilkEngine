@@ -5,6 +5,7 @@
 #include "scene/meshes/line_mesh.h"
 #include "scene/meshes/bezier_mesh.h"
 #include "scene/meshes/triangle_mesh.h"
+#include "scene/meshes/text_mesh.h"
 #include "gfx/buffers/command_buffer.h"
 #include "gfx/devices/logical_device.h"
 
@@ -13,14 +14,14 @@ void Renderer::init()
 	instance_batches.reserve(Graphics::MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
 	indirect_buffer = makeUnique<IndirectBuffer>(Graphics::MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand));
 	global_uniform_buffer = makeUnique<UniformBuffer>(sizeof(GlobalUniformData));
-	lights.fill(Light{});
-	active.image = Resources::white_image;
 
 	previous_frame_finished = Graphics::logical_device->createFence(true);
 	swap_chain_image_available = Graphics::logical_device->createSemaphore();
 	render_finished = Graphics::logical_device->createSemaphore();
 
 	command_buffer = new CommandBuffer();
+
+	reset();
 }
 
 void Renderer::cleanup()
@@ -29,7 +30,7 @@ void Renderer::cleanup()
 	Graphics::logical_device->destroySemaphore(swap_chain_image_available);
 	Graphics::logical_device->destroySemaphore(render_finished);
 	delete command_buffer;
-	active.image = nullptr;
+	active = {};
 	instances.clear();
 	instance_batches.clear();
 	indirect_buffer = nullptr;
@@ -40,11 +41,11 @@ void Renderer::reset()
 {
 	for (const auto& instance : instances)
 		destroyInstance(*instance);
-	instances.clear();
+	instances.clear();	
+	lights.fill(Light{});
+	active = {};
 	active.image = Resources::white_image;
-	active.transform = glm::mat4(1);
-	active.color = glm::vec4(1);
-	active.transformed = false;
+	active.font = Resources::getFont("Arial");
 }
 
 void Renderer::triangle(float x, float y, float width, float height)
@@ -110,6 +111,16 @@ void Renderer::bezier(float x1, float y1, float px1, float py1, float px2, float
 	draw(Resources::getGraphicsPipeline("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px1, py1, px2, py2, x2, y2, 64u, width)), 0, 0, 0, 1, 1, 1);
 }
 
+void Renderer::text(const std::string& text, float x, float y, float width, float height)
+{
+	draw(Resources::getGraphicsPipeline("Font"), makeShared<Mesh>(TextMesh(text, 64, active.font)), x, y, 0.0f, width, height, 0.0f, { active.font->getAtlas() });
+}
+
+void Renderer::text(const std::string& text, float x, float y, float size)
+{
+	draw(Resources::getGraphicsPipeline("Font"), makeShared<Mesh>(TextMesh(text, 64, active.font)), x, y, 0.0f, size, size, 0.0f, { active.font->getAtlas() });
+}
+
 void Renderer::tetrahedron(float x, float y, float z, float size)
 {
 	draw(Resources::getGraphicsPipeline("3D"), Resources::getMesh("Tetrahedron"), x, y, z, size, size, size);
@@ -135,18 +146,33 @@ void Renderer::ellipsoid(float x, float y, float z, float width, float height, f
 	draw(Resources::getGraphicsPipeline("3D"), Resources::getMesh("Sphere"), x, y, z, width, height, depth);
 }
 
-void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const glm::mat4& transform)
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const glm::mat4& transform, const std::vector<shared<Image2D>>& images)
 {
 	shared<RenderedInstance> instance = makeShared<RenderedInstance>(graphics_pipeline);
-	instance->images.emplace_back(active.image);
-	instances.emplace_back(instance);
+	instance->images = images;
+	instances.emplace_back(std::move(instance));
 
 	InstanceData data;
 	data.transform = transform;
 	data.color = active.color;
 	if (active.transformed)
 		data.transform *= active.transform;
-	createInstance(instance, mesh, std::move(data));
+	createInstance(instances.back(), mesh, std::move(data));
+}
+
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const glm::mat4& transform)
+{
+	draw(graphics_pipeline, mesh, transform, { active.image });
+}
+
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, const std::vector<shared<Image2D>>& images)
+{
+	draw(graphics_pipeline, mesh, {
+		width, 0, 0, 0,
+		0, height, 0, 0,
+		0, 0, depth, 0,
+		x, y, z, 1
+		}, images);
 }
 
 void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
@@ -247,7 +273,8 @@ Light* Renderer::addLight(const Light& light)
 
 void Renderer::createInstance(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data)
 {
-	if (!instance->material.get()) instance->material = Resources::getGraphicsPipeline("Lit 3D");
+	if (!instance->material.get()) 
+		instance->material = Resources::getGraphicsPipeline("Lit 3D");
 
 	bool need_new_instance_batch = true;
 	for (size_t i = 0; i < instance_batches.size(); ++i)

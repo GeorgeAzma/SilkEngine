@@ -92,6 +92,7 @@ void Application::onWindowResize(const WindowResizeEvent& e)
 {
     Graphics::physical_device->updateSurfaceCapabilities();
     Graphics::swap_chain->recreate();
+    update();
 }
 
 void Application::onKeyPress(const KeyPressEvent& e)

@@ -63,4 +63,10 @@ namespace math
 	{
 		return glm::normalize(p2 - p1);
 	}
+
+	template<typename T = float>
+	static T sigmoid(T x)
+	{
+		return 1.0f / (1.0f + exp(-x));
+	}
 };
