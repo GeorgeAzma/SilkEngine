@@ -185,14 +185,17 @@ void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const sha
 		});
 }
 
+void Renderer::waitForPreviousFrame()
+{
+	Graphics::logical_device->waitForFences({ previous_frame_finished }, VK_TRUE, UINT64_MAX);
+	Graphics::logical_device->resetFences({ previous_frame_finished });
+	Graphics::swap_chain->acquireNextImage(swap_chain_image_available);
+}
+
 void Renderer::begin(Camera* camera)
 {
 	updateUniformData(camera);
 	updateDrawCommands();
-
-	Graphics::logical_device->waitForFences({ previous_frame_finished }, VK_TRUE, UINT64_MAX);
-	Graphics::logical_device->resetFences({ previous_frame_finished });
-	Graphics::swap_chain->acquireNextImage(swap_chain_image_available);
 
 	//Set viewport
 	command_buffer->begin();
@@ -221,10 +224,10 @@ void Renderer::render()
 	{
 		const auto& shader = instance_batch.instance->material->getShader();
 		if (auto global_uniform = shader->getIfExists("GlobalUniform"))
-			instance_batch.descriptor_sets[global_uniform->set].setBufferInfo(global_uniform->write_index, { *global_uniform_buffer }); //TODO: Global data doesn't have to update for each batch
+			instance_batch.descriptor_sets[global_uniform->set].setBufferInfo(global_uniform->binding, { *global_uniform_buffer }); //TODO: Global data doesn't have to update for each batch
 
 		if (auto images = shader->getIfExists("images"))
-			instance_batch.instance_images.updateDescriptorSet(instance_batch.descriptor_sets[images->set], images->write_index);
+			instance_batch.descriptor_sets[images->set].setImageInfo(images->binding, instance_batch.instance_images.getDescriptorImageInfos());
 
 		instance_batch.bind();
 		Graphics::getActiveCommandBuffer().drawIndexedIndirect(*indirect_buffer, draw_index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));

@@ -125,8 +125,7 @@ void ParticleSystem::render()
         pipeline->bind();
         vao->bind();
         instance_vbo->bind(1);
-        auto images = pipeline->getShader()->get("images");
-        instance_images->updateDescriptorSet(*pipeline->getShader()->getDescriptorSets().at(images.set), images.write_index);
+        pipeline->getShader()->setIfExists("images", instance_images->getDescriptorImageInfos()); //TODO: Unsafe, change
         Graphics::getActiveCommandBuffer().drawIndexed(vao->getIndexBuffer()->getCount(), particle_data.size(), 0, 0, 0);
     }
 }

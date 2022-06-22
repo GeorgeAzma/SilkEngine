@@ -44,6 +44,7 @@ public:
 
 public:
 	static void init();
+	static void waitForPreviousFrame();
 	static void begin(Camera* camera = nullptr);
 	static void render();
 	static void end();

@@ -12,7 +12,8 @@ public:
 	uint32_t add(const std::vector<shared<Image2D>>& new_images);
 	void remove(size_t index, size_t count = 1);
 	uint32_t available() const { return max_images - images.size(); }
-	void updateDescriptorSet(DescriptorSet& descriptor_set, uint32_t write_index);
+	const std::vector<shared<Image2D>>& getImages() const { return images; }
+	std::vector<VkDescriptorImageInfo> getDescriptorImageInfos() const;
 
 private:
 	uint32_t max_images = 0;

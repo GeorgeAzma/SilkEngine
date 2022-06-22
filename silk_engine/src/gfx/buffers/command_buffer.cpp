@@ -114,40 +114,22 @@ void CommandBuffer::bindPipeline(VkPipelineBindPoint bind_point, VkPipeline pipe
 void CommandBuffer::bindDescriptorSets(uint32_t first, const std::vector<VkDescriptorSet>& sets, const std::vector<uint32_t>& dynamic_offsets)
 {
 	//UNTESTED:
-	bool needs_binding = false;
 	if (active.descriptor_sets.size() < (sets.size() + first))
+		goto down;
+	for (size_t i = 0; i < sets.size(); ++i)
+		if (sets[i] != active.descriptor_sets[i + first].set)
+			goto down;
+	for (size_t i = 0; i < sets.size(); ++i)
 	{
-		needs_binding = true;
+		if (dynamic_offsets.size() != active.descriptor_sets[i + first].dynamic_offsets.size())
+			goto down;
+		for (size_t j = 0; j < dynamic_offsets.size(); ++j)
+			if (dynamic_offsets[j] != active.descriptor_sets[i + first].dynamic_offsets[j])
+				goto down;
 	}
-	else
-	{
-		for (size_t i = 0; i < sets.size(); ++i)
-		{
-			if (sets[i] != active.descriptor_sets[i + first].set)
-			{
-				needs_binding = true;
-				break;
-			}
-		}
-		for (size_t i = 0; i < sets.size(); ++i)
-		{
-			if (dynamic_offsets.size() != active.descriptor_sets[i + first].dynamic_offsets.size())
-			{
-				needs_binding = true;
-				break;
-			}
-			for (size_t j = 0; j < dynamic_offsets.size(); ++j)
-			{
-				if (dynamic_offsets[j] != active.descriptor_sets[i + first].dynamic_offsets[j])
-				{
-					needs_binding = true;
-					break;
-				}
-			}
-		}
-	}
-	if (!needs_binding)
-		return;
+	return;
+
+	down:
 	vkCmdBindDescriptorSets(command_buffer, *active.pipeline_bind_point, *active.pipeline_layout, first, sets.size(), sets.data(), dynamic_offsets.size(), dynamic_offsets.data());
 	active.descriptor_sets.resize(std::max(first + sets.size(), active.descriptor_sets.size()));
 	for (size_t i = 0; i < sets.size(); ++i)
@@ -170,25 +152,15 @@ void CommandBuffer::bindIndexBuffer(VkBuffer buffer, VkDeviceSize offset, VkInde
 void CommandBuffer::bindVertexBuffers(uint32_t first, const std::vector<VkBuffer>& buffers, const std::vector<VkDeviceSize>& offsets)
 {
 	//UNTESTED:
-	bool needs_binding = false;
 	if (active.vertex_buffers.size() < (buffers.size() + first))
-	{
-		needs_binding = true;
-	}
-	else
-	{
-		for (size_t i = 0; i < buffers.size(); ++i)
-		{
-			if (buffers[i] != active.vertex_buffers[i + first].vertex_buffer ||
-				(offsets.empty() ? VkDeviceSize(0) : offsets[i]) != active.vertex_buffers[i + first].offset)
-			{
-				needs_binding = true;
-				break;
-			}
-		}
-	}
-	if (!needs_binding)
-		return;
+		goto down;
+	for (size_t i = 0; i < buffers.size(); ++i)
+		if (buffers[i] != active.vertex_buffers[i + first].vertex_buffer ||
+			(offsets.empty() ? VkDeviceSize(0) : offsets[i]) != active.vertex_buffers[i + first].offset)
+			goto down;
+	return;
+
+	down:
 	if (offsets.empty())
 	{
 		std::vector<VkDeviceSize> default_offsets(buffers.size());

@@ -27,7 +27,7 @@ class Shader : NonCopyable
 	struct ResourceLocation
 	{
 		uint32_t set;
-		uint32_t write_index;
+		uint32_t binding;
 	};
 
 	class Includer : public shaderc::CompileOptions::IncluderInterface
@@ -75,9 +75,11 @@ public:
 
 	void set(std::string_view resource_name, const std::vector<VkDescriptorBufferInfo>& buffer_infos);
 	void set(std::string_view resource_name, const std::vector<VkDescriptorImageInfo>& image_infos);
+	void setIfExists(std::string_view resource_name, const std::vector<VkDescriptorBufferInfo>& buffer_infos);
+	void setIfExists(std::string_view resource_name, const std::vector<VkDescriptorImageInfo>& image_infos);
 	const ResourceLocation& get(std::string_view resource_name) const { return resource_locations.at(resource_name); }
 	const ResourceLocation* getIfExists(std::string_view resource_name) const;
-	void bindDescriptors();
+	void bindDescriptorSets();
 
 	const std::unordered_map<uint32_t, shared<DescriptorSet>>& getDescriptorSets() const { return descriptor_sets; }
 	const std::unordered_map<std::string_view, VkPushConstantRange>& getPushConstants() const { return push_constants; }

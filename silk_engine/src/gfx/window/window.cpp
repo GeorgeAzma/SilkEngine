@@ -113,7 +113,7 @@ void Window::init()
         [](GLFWwindow *window, double mx, double my)
         {
             const Data& data = *(Data*)glfwGetWindowUserPointer(window);
-            Dispatcher::post(MouseMoveEvent(mx, data.width - my));
+            Dispatcher::post(MouseMoveEvent(mx, data.height - my));
         });
 
     glfwSetScrollCallback(window,

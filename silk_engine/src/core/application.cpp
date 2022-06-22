@@ -59,7 +59,9 @@ void Application::update()
             Time::dt = app_update.getDeltaTime();
             Time::frame = app_update.getFramesPassed();
             Time::runtime = app_update.getRuntime();
-           
+            
+            Renderer::waitForPreviousFrame();
+
             Renderer::reset();
             Graphics::update();
             onUpdate();

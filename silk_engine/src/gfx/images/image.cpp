@@ -22,7 +22,7 @@ void Image::create(const ImageProps& props)
 	SK_ASSERT((props.is_1D ? (props.height == 1 && props.depth == 1) : true), "If image is 1D it's height and depth must be 1");
 	SK_ASSERT(((!props.is_1D && ! props.is_cubemap) ? (props.depth == 1) : true), "If image is 2D it's depth must be 1");
 	unique<StagingBuffer> staging_buffer = props.data ? makeUnique<StagingBuffer>(props.data, getSize()) : nullptr;
-	descriptor_image_info.imageLayout = props.initial_layout;
+	layout = props.initial_layout;
 
 	if (image == VK_NULL_HANDLE)
 	{
@@ -62,7 +62,6 @@ void Image::create(const ImageProps& props)
 	if (props.create_view)
 	{
 		view = makeUnique<ImageView>(this->image, props.format, mip_levels, props.layers, (props.is_cubemap ? ImageViewType::CUBEMAP : (props.is_1D ? ImageViewType::IMAGE1D : (props.depth == 1 ? ImageViewType::IMAGE2D : ImageViewType::IMAGE3D))));
-		descriptor_image_info.imageView = *view;
 	}
 	if (props.create_sampler)
 	{
@@ -70,7 +69,6 @@ void Image::create(const ImageProps& props)
 		sampler_props.mip_levels = mip_levels;
 		sampler_props.linear_mipmap = props.mipmap_filter != VK_FILTER_NEAREST;
 		sampler = makeUnique<Sampler>(sampler_props);
-		descriptor_image_info.sampler = *sampler;
 	}
 
 	SK_TRACE("Image created: {}x{}x{} with {} layers", props.width, props.height, props.depth, props.layers);
@@ -78,7 +76,7 @@ void Image::create(const ImageProps& props)
 
 void Image::transitionLayout(VkImageLayout new_layout) 
 {
-	if (descriptor_image_info.imageLayout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
+	if (layout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
 		return;
 
 	CommandBuffer command_buffer;
@@ -86,7 +84,7 @@ void Image::transitionLayout(VkImageLayout new_layout)
 
 	VkImageMemoryBarrier barrier = {};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	barrier.oldLayout = descriptor_image_info.imageLayout;
+	barrier.oldLayout = layout;
 	barrier.newLayout = new_layout;
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -181,15 +179,15 @@ void Image::transitionLayout(VkImageLayout new_layout)
 
 	command_buffer.submitIdle();
 
-	descriptor_image_info.imageLayout = new_layout;
+	layout = new_layout;
 }
 
-void Image::insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, uint32_t base_mip_level, uint32_t base_layer)
+void Image::insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, uint32_t base_mip_level, uint32_t base_layer)
 {
-	if (descriptor_image_info.imageLayout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
+	if (layout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
 		return;
-	insertMemoryBarrier(image, source_access_mask, destination_access_mask, old_layout, new_layout, source_stage_mask, destination_stage_mask, ImageFormatEnum::getVulkanAspectFlags(props.format), mip_levels, base_mip_level, props.layers, base_layer);
-	descriptor_image_info.imageLayout = new_layout;
+	insertMemoryBarrier(image, source_access_mask, destination_access_mask, layout, new_layout, source_stage_mask, destination_stage_mask, ImageFormatEnum::getVulkanAspectFlags(props.format), mip_levels, base_mip_level, props.layers, base_layer);
+	layout = new_layout;
 }
 
 bool Image::isFeatureSupported(VkFormatFeatureFlags feature) const
@@ -225,7 +223,7 @@ void Image::copyFromBuffer(VkBuffer buffer)
 
 		regions[layer] = std::move(region);
 	}
-	Graphics::getActiveCommandBuffer().copyBufferToImage(buffer, image, descriptor_image_info.imageLayout, regions);
+	Graphics::getActiveCommandBuffer().copyBufferToImage(buffer, image, layout, regions);
 
 	command_buffer.submitIdle();
 }
@@ -247,7 +245,7 @@ void Image::copyToBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers)
 	region.imageSubresource.baseArrayLayer = base_layer;
 	region.imageSubresource.layerCount = layers;
 	region.imageSubresource.mipLevel = 0;
-	Graphics::getActiveCommandBuffer().copyImageToBuffer(image, descriptor_image_info.imageLayout, buffer, { region });
+	Graphics::getActiveCommandBuffer().copyImageToBuffer(image, layout, buffer, { region });
 
 	command_buffer.submitIdle();
 }
@@ -294,7 +292,6 @@ void Image::reallocate(uint32_t width, uint32_t height, uint32_t depth, uint32_t
 	if (props.create_view && (layers != props.layers || mip_levels_changed))
 	{
 		view = makeUnique<ImageView>(this->image, props.format, mip_levels, props.layers, (props.is_cubemap ? ImageViewType::CUBEMAP : (props.is_1D ? ImageViewType::IMAGE1D : (props.depth == 1 ? ImageViewType::IMAGE2D : ImageViewType::IMAGE3D))));
-		descriptor_image_info.imageView = *view;
 	}
 	if (props.create_sampler && mip_levels_changed)
 	{
@@ -302,7 +299,6 @@ void Image::reallocate(uint32_t width, uint32_t height, uint32_t depth, uint32_t
 		sampler_props.mip_levels = mip_levels;
 		sampler_props.linear_mipmap = props.mipmap_filter != VK_FILTER_NEAREST;
 		sampler = makeUnique<Sampler>(sampler_props);
-		descriptor_image_info.sampler = *sampler;
 	}
 }
 
@@ -382,7 +378,7 @@ void Image::generateMipmaps()
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 		barrier.newLayout = props.layout;
-		descriptor_image_info.imageLayout = barrier.newLayout;
+		layout = barrier.newLayout;
 		Graphics::getActiveCommandBuffer().pipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, {}, {}, { barrier });
 
 		if (mip_width > 1) 
@@ -473,10 +469,11 @@ bool Image::copyImage(const shared<Image>& destination, uint32_t layer)
 	//Do the actual blit from the swapchain image to our host visible destination image.
 	CommandBuffer command_buffer;
 	command_buffer.begin();
-	auto destination_old_layout = destination->getLayout();
-	destination->insertMemoryBarrier(VK_ACCESS_NONE, VK_ACCESS_TRANSFER_WRITE_BIT, destination_old_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0);
-	auto old_layout = descriptor_image_info.imageLayout;
-	insertMemoryBarrier(VK_ACCESS_MEMORY_READ_BIT, VK_ACCESS_TRANSFER_READ_BIT, old_layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, layer);
+	VkImageLayout last_destination_layout = destination->getLayout();
+	destination->insertMemoryBarrier(VK_ACCESS_NONE, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0);
+
+	VkImageLayout last_layout = getLayout(); 
+	insertMemoryBarrier(VK_ACCESS_MEMORY_READ_BIT, VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, layer);
 
 	//If source and destination support blit we'll blit as this also does automatic format conversion (e.g. from BGR to RGB).
 	if (supports_blit) 
@@ -512,8 +509,8 @@ bool Image::copyImage(const shared<Image>& destination, uint32_t layer)
 		Graphics::getActiveCommandBuffer().copyImage(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, *destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { region });
 	}
 
-	destination->insertMemoryBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, destination_old_layout, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0);
-	insertMemoryBarrier(VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_MEMORY_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, old_layout, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, layer);
+	destination->insertMemoryBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT, last_destination_layout, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0);
+	insertMemoryBarrier(VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_MEMORY_READ_BIT, last_layout, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, layer);
 
 	command_buffer.submitIdle();
 

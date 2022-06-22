@@ -71,20 +71,33 @@ void DescriptorSet::bind(size_t first_set)
 	Graphics::getActiveCommandBuffer().bindDescriptorSets(first_set, { descriptor_set });
 }
 
-void DescriptorSet::setImageInfo(size_t write_index, const std::vector<VkDescriptorImageInfo>& image_info)
+void DescriptorSet::setImageInfo(size_t binding, const std::vector<VkDescriptorImageInfo>& image_info)
 {
-	SK_ASSERT(image_info.size() == write_descriptor_sets[write_index].descriptorCount, "Invalid image_info size: {0}, should be {1}", image_info.size(), write_descriptor_sets[write_index].descriptorCount);
-	this->image_infos[write_index] = image_info;
-	write_descriptor_sets[write_index].pImageInfo = this->image_infos[write_index].data();
-	needs_update = true; //TODO: This might be unnecessary if pImageInfo == image_infos[write_index]
+	for (size_t i = 0; i < write_descriptor_sets.size(); ++i)
+	{
+		if (write_descriptor_sets[i].dstBinding == binding)
+		{
+			SK_ASSERT(image_info.size() == write_descriptor_sets[i].descriptorCount, "Invalid image_info size: {0}, should be {1}", image_info.size(), write_descriptor_sets[i].descriptorCount);
+			this->image_infos[i] = image_info;
+			write_descriptor_sets[i].pImageInfo = this->image_infos[i].data();
+			needs_update = true; //TODO: This might be unnecessary if pImageInfo == image_infos[i]
+			break;
+		}
+	}
 }
 
-void DescriptorSet::setBufferInfo(size_t write_index, const std::vector<VkDescriptorBufferInfo>& buffer_info)
+void DescriptorSet::setBufferInfo(size_t binding, const std::vector<VkDescriptorBufferInfo>& buffer_info)
 {
-	SK_ASSERT(buffer_info.size() == write_descriptor_sets[write_index].descriptorCount, "Invalid buffer_info size: {0}, should be {1}", buffer_info.size(), write_descriptor_sets[write_index].descriptorCount);
-	this->buffer_infos[write_index] = buffer_info;
-	write_descriptor_sets[write_index].pBufferInfo = this->buffer_infos[write_index].data();
-	needs_update = true; //TODO: This might be unnecessary if pBufferInfo == buffer_infos[write_index]
+	for (size_t i = 0; i < write_descriptor_sets.size(); ++i)
+	{
+		if (write_descriptor_sets[i].dstBinding == binding)
+		{
+			SK_ASSERT(buffer_info.size() == write_descriptor_sets[i].descriptorCount, "Invalid buffer_info size: {0}, should be {1}", buffer_info.size(), write_descriptor_sets[i].descriptorCount);
+			this->buffer_infos[i] = buffer_info;
+			write_descriptor_sets[i].pBufferInfo = this->buffer_infos[i].data();
+			needs_update = true; //TODO: This might be unnecessary if pBufferInfo == buffer_infos[i]
+		}
+	}
 }
 
 DescriptorSet::DescriptorSet(const DescriptorSet& other)

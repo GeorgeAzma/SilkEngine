@@ -13,7 +13,7 @@ uint32_t InstanceImages::add(const std::vector<shared<Image2D>>& new_images)
 
 	enum Action : uint8_t { Add, Replace, Use };
 
-	Action* actions = new Action[new_images.size()];
+	Action* actions = new Action[new_images.size()]{};
 
 	size_t j = 0;
 up:
@@ -68,15 +68,12 @@ void InstanceImages::remove(size_t index, size_t count)
 	}
 }
 
-void InstanceImages::updateDescriptorSet(DescriptorSet& descriptor_set, uint32_t write_index)
+std::vector<VkDescriptorImageInfo> InstanceImages::getDescriptorImageInfos() const
 {
-	if (need_update)
-	{
-		std::vector<VkDescriptorImageInfo> descriptor_images(max_images, Resources::white_image->getDescriptorInfo());
-		for (size_t i = 0; i < images.size(); ++i)
-			descriptor_images[i] = *images[i];
-
-		descriptor_set.setImageInfo(write_index, descriptor_images);
-		need_update = false;
-	}
+	std::vector<VkDescriptorImageInfo> image_descriptor_infos(max_images);
+	for (size_t i = 0; i < images.size(); ++i)
+		image_descriptor_infos[i] = images[i]->getDescriptorInfo();
+	for (size_t i = images.size(); i < image_descriptor_infos.size(); ++i)
+		image_descriptor_infos[i] = Resources::white_image->getDescriptorInfo();
+	return image_descriptor_infos;
 }

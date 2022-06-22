@@ -17,6 +17,9 @@
 #include "gfx/particle_system.h"
 #include <spdlog/fmt/fmt.h>
    
+float fx = 0.0f;
+float fy = 0.0f;
+
 SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 {  
     scene = makeShared<Scene>();   
@@ -82,14 +85,18 @@ void SandboxApp::onUpdate()
         Graphics::screenshot(fmt::format("data/images/screenshots/screenshot.png"));
     }
 
-    Renderer::color({ 1, 1, 1, 1 });
-    Renderer::image(Resources::getImage("Test1"));
-    for (float x = 0; x < 400; ++x)
-        for (float y = 0; y < 250; ++y)
-            Renderer::rectangle(x * 2, y * 2, 4, 4);
+    fx = sin(Time::runtime * 4.0f) * 100.0f;
+    fy = cos(Time::runtime * 4.0f) * 100.0f;
 
     Renderer::color({ 1, 1, 1, 1 });
-    Renderer::rectangle(500, 0, 200, 200);
+    Renderer::image(Resources::getImage("Test1"));
+    for (float x = 0; x < 200; ++x)
+        for (float y = 0; y < 100; ++y)
+            Renderer::rectangle(x * 4, y * 4, 4, 4);
+
+    Renderer::image();
+    Renderer::color({ 1, 1, 1, 1 });
+    Renderer::rectangle(300 + fx, 100 + fy, 200, 200);
 
     Renderer::text("W Sample Text", 500, 0, 50);
     

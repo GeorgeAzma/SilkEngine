@@ -1,4 +1,5 @@
 #include "image2D.h"
+#include "gfx/window/window.h"
 
 Image2D::Image2D(const Image2DProps& props)
 {
@@ -38,6 +39,8 @@ Image2D::Image2D(VkImage image, ImageFormat format)
 	props.initial_layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 	props.layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 	props.format = format;
+	props.width = Window::getWidth();
+	props.height = Window::getHeight();
 	this->image = image;
 	create(this->props);
 }

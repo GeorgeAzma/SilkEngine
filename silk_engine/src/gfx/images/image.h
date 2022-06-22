@@ -217,10 +217,17 @@ public:
 	size_t getSize() const { return props.width * props.height * props.depth * props.layers * ImageFormatEnum::getSize(props.format); }
 	uint32_t getMipLevels() const { return mip_levels; }
 	const ImageProps& getProps() const { return props; }
-	const VkDescriptorImageInfo& getDescriptorInfo() const { return descriptor_image_info; }
-	const VkImageLayout& getLayout() const { return descriptor_image_info.imageLayout; }
-	const VkImageView& getView() const { return descriptor_image_info.imageView; }
-	const VkSampler& getSampler() const { return descriptor_image_info.sampler; }
+	const VkDescriptorImageInfo& getDescriptorInfo() const 
+	{
+		VkDescriptorImageInfo descriptor_image_info{};
+		descriptor_image_info.imageLayout = layout;
+		descriptor_image_info.imageView = *view;
+		descriptor_image_info.sampler = *sampler;
+		return descriptor_image_info; 
+	}
+	const VkImageLayout& getLayout() const { return layout; }
+	const VkImageView& getView() const { return *view; }
+	const VkSampler& getSampler() const { return *sampler; }
 	VkSampleCountFlagBits getSamples() const { return props.samples; }
 	VkImageAspectFlags getAspectFlags() const { return ImageFormatEnum::getVulkanAspectFlags(props.format); }
 	VmaAllocation getAllocation() const { return allocation; }
@@ -230,7 +237,7 @@ public:
 	void getData(void* data, uint32_t base_layer = 0, uint32_t layers = 1);
 	bool copyImage(const shared<Image>& destination, uint32_t layer = 0);
 	void transitionLayout(VkImageLayout new_layout);
-	void insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VkPipelineStageFlags destination_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, uint32_t base_mip_level = 0, uint32_t base_layer = 0);
+	void insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VkPipelineStageFlags destination_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, uint32_t base_mip_level = 0, uint32_t base_layer = 0);
 	bool isFeatureSupported(VkFormatFeatureFlags feature) const;
 	void copyFromBuffer(VkBuffer buffer);
 	void copyToBuffer(VkBuffer buffer, uint32_t base_layer = 0, uint32_t layers = 1);
@@ -243,8 +250,7 @@ public:
 	void unmap() const;
 
 	operator const VkImage& () const { return image; }
-	operator const VkDescriptorImageInfo& () const { return descriptor_image_info; }
-
+	
 protected:
 	void create(const ImageProps& props);
 	void generateMipmaps();
@@ -254,9 +260,9 @@ protected:
 
 protected:
 	VkImage image = VK_NULL_HANDLE;
-	VkDescriptorImageInfo descriptor_image_info = VkDescriptorImageInfo(VkDescriptorImageInfo{ VK_NULL_HANDLE, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED });
 	unique<Sampler> sampler = nullptr;
 	unique<ImageView> view = nullptr;
+	VkImageLayout layout = VK_IMAGE_LAYOUT_MAX_ENUM;
 	VmaAllocation allocation = VK_NULL_HANDLE;
 	ImageProps props = {};
 	uint32_t mip_levels = 1;

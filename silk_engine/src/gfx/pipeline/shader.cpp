@@ -182,16 +182,11 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 			local_size = glm::max(local_size, glm::uvec3(1));
 	}
 	
-	std::unordered_map<uint32_t, uint32_t> write_indices;
-	for (const auto& resource : this->resources)
-		write_indices[resource.set] = 0;
 	for (const auto& resource : this->resources)
 	{
-		auto& write_index = write_indices[resource.set];
 		auto& set = descriptor_sets.at(resource.set);
 		set->add(resource.binding, resource.count, resource.type, resource.stage);
-		resource_locations.emplace(resource.name, ResourceLocation{ resource.set, write_index });
-		++write_index;
+		resource_locations.emplace(resource.name, ResourceLocation{ resource.set, resource.binding });
 	}
 	
 	for (auto& descriptor_set : descriptor_sets)
@@ -205,13 +200,27 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 void Shader::set(std::string_view resource_name, const std::vector<VkDescriptorBufferInfo>& buffer_infos)
 {
 	const auto& resource_location = resource_locations.at(resource_name);
-	descriptor_sets.at(resource_location.set)->setBufferInfo(resource_location.write_index, buffer_infos);
+	descriptor_sets.at(resource_location.set)->setBufferInfo(resource_location.binding, buffer_infos);
 }
 
 void Shader::set(std::string_view resource_name, const std::vector<VkDescriptorImageInfo>& image_infos)
 {
 	const auto& resource_location = resource_locations.at(resource_name);
-	descriptor_sets.at(resource_location.set)->setImageInfo(resource_location.write_index, image_infos);
+	descriptor_sets.at(resource_location.set)->setImageInfo(resource_location.binding, image_infos);
+}
+
+void Shader::setIfExists(std::string_view resource_name, const std::vector<VkDescriptorBufferInfo>& buffer_infos)
+{
+	auto resource_location = resource_locations.find(resource_name);
+	if(resource_location != resource_locations.end())
+		descriptor_sets.at(resource_location->second.set)->setBufferInfo(resource_location->second.binding, buffer_infos);
+}
+
+void Shader::setIfExists(std::string_view resource_name, const std::vector<VkDescriptorImageInfo>& image_infos)
+{
+	auto resource_location = resource_locations.find(resource_name);
+	if (resource_location != resource_locations.end())
+		descriptor_sets.at(resource_location->second.set)->setImageInfo(resource_location->second.binding, image_infos);
 }
 
 const Shader::ResourceLocation* Shader::getIfExists(std::string_view resource_name) const
@@ -220,7 +229,7 @@ const Shader::ResourceLocation* Shader::getIfExists(std::string_view resource_na
 	return (resource_location != resource_locations.end()) ? &resource_location->second : nullptr;
 }
 
-void Shader::bindDescriptors()
+void Shader::bindDescriptorSets()
 {
 	for (auto&& [set, descriptor_set] : descriptor_sets)
 		descriptor_set->bind(set);

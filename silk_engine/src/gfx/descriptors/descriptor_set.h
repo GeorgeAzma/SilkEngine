@@ -21,8 +21,8 @@ public:
 	std::vector<VkWriteDescriptorSet>& getWrites() { return write_descriptor_sets; }
 	operator const VkDescriptorSet& () const { return descriptor_set; }
 
-	void setImageInfo(size_t write_index, const std::vector<VkDescriptorImageInfo>& image_info);
-	void setBufferInfo(size_t write_index, const std::vector<VkDescriptorBufferInfo>& buffer_info);
+	void setImageInfo(size_t binding, const std::vector<VkDescriptorImageInfo>& image_info);
+	void setBufferInfo(size_t binding, const std::vector<VkDescriptorBufferInfo>& buffer_info);
 
 private:
 	void update();
