@@ -65,7 +65,17 @@ void Renderer::triangle(float x1, float y1, float x2, float y2, float x3, float 
 
 void Renderer::rectangle(float x, float y, float width, float height)
 {
-	draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), x, y, 0, width, height, 1);
+	if (active.stroke_weight == 1.0f)
+		draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), x, y, 0, width, height, 1);
+	else
+	{
+		float ws = width * active.stroke_weight * 0.5f;
+		float hs = height * active.stroke_weight * 0.5f;
+		draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), x, y, 0, ws, height, 1, true);
+		draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), x, y, 0, width, hs, 1, true);
+		draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), x + width - ws, y, 0, ws, height, 1, true);
+		draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), x, y + height - hs, 0, width, hs, 1, true);
+	}
 }
 
 void Renderer::square(float x, float y, float size)
@@ -146,7 +156,7 @@ void Renderer::ellipsoid(float x, float y, float z, float width, float height, f
 	draw(Resources::getGraphicsPipeline("3D"), Resources::getMesh("Sphere"), x, y, z, width, height, depth);
 }
 
-void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const glm::mat4& transform, const std::vector<shared<Image2D>>& images)
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const glm::mat4& transform, const std::vector<shared<Image2D>>& images, bool stroke)
 {
 	shared<RenderedInstance> instance = makeShared<RenderedInstance>(graphics_pipeline);
 	instance->images = images;
@@ -154,35 +164,35 @@ void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const sha
 
 	InstanceData data;
 	data.transform = transform;
-	data.color = active.color;
+	data.color = stroke ? active.stroke : active.color;
 	if (active.transformed)
 		data.transform *= active.transform;
 	createInstance(instances.back(), mesh, std::move(data));
 }
 
-void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const glm::mat4& transform)
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const glm::mat4& transform, bool stroke)
 {
-	draw(graphics_pipeline, mesh, transform, { active.image });
+	draw(graphics_pipeline, mesh, transform, { active.image }, stroke);
 }
 
-void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, const std::vector<shared<Image2D>>& images)
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, const std::vector<shared<Image2D>>& images, bool stroke)
 {
 	draw(graphics_pipeline, mesh, {
 		width, 0, 0, 0,
 		0, height, 0, 0,
 		0, 0, depth, 0,
 		x, y, z, 1
-		}, images);
+		}, images, stroke);
 }
 
-void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, bool stroke)
 {
 	draw(graphics_pipeline, mesh, {
 		width, 0, 0, 0,
 		0, height, 0, 0,
 		0, 0, depth, 0,
 		x, y, z, 1
-		});
+		}, stroke);
 }
 
 void Renderer::waitForPreviousFrame()

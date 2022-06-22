@@ -113,6 +113,9 @@ Color::Color(Colors color)
 	case Colors::CYAN:
 		*this = { 0.0f, 1.0f, 1.0f, 1.0f };
 		break;
+	case Colors::TRANSPARENT:
+		*this = { 0.0f, 0.0f, 0.0f, 0.0f };
+		break;
 	default:
 		*this = { 1.0f, 1.0f, 1.0f, 1.0f };
 		break;
