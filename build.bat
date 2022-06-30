@@ -1,2 +1,3 @@
-START cmake -B build -S .
-START cmake --build build --config Release
+cmake -B build -S .
+cmake --build build --config Release
+PAUSE

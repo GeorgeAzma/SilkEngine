@@ -57,8 +57,8 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 	for (const auto& define : defines)
 		defines_str += define.name + define.value;
 
-	shaderc::Compiler compiler;
-	shaderc::CompileOptions options;
+	shaderc::Compiler compiler{};
+	shaderc::CompileOptions options{};
 	options.SetTargetEnvironment(shaderc_target_env_vulkan, shadercApiVersion(Graphics::API_VERSION));
 	options.SetForcedVersionProfile(450, shaderc_profile_core);
 	options.AddMacroDefinition("MAX_IMAGE_SLOTS", std::to_string(Graphics::MAX_IMAGE_SLOTS));
@@ -132,47 +132,56 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 		ci.pCode = stage.binary.data();
 		stage.module = Graphics::logical_device->createShaderModule(ci);
 	} 
-	
+
 #define SK_WEIRD_ERROR_FIX 1 //If you have error in this file, set this to 0, compile (you will get an error), set it back to 1, recompile (IDK why this works, help), if it still doesn't work retry couple times
 #if SK_WEIRD_ERROR_FIX
+	reflect();
+#endif
+#undef SK_WEIRD_ERROR_FIX
+
+	SK_TRACE("Shader loaded: {0}", path);
+}
+
+void Shader::reflect()
+{
 	for (const auto& stage : stages)
 	{
-		auto& binary = stage.binary;
-		auto stage_flag = stage.stage;
+		const auto& binary = stage.binary;
+		VkShaderStageFlags stage_flag = stage.stage;
 		spirv_cross::Compiler spirv_compiler(binary);
 		spirv_cross::ShaderResources shader_resources = spirv_compiler.get_shader_resources();
-		
+
 		for (const spirv_cross::Resource& sampled_image : shader_resources.sampled_images)
 			loadResource(sampled_image, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-	
+
 		for (const spirv_cross::Resource& seperate_image : shader_resources.separate_images)
 			loadResource(seperate_image, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
-	
+
 		for (const spirv_cross::Resource& seperate_sampler : shader_resources.separate_samplers)
 			loadResource(seperate_sampler, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_SAMPLER);
-	
+
 		for (const spirv_cross::Resource& storage_buffer : shader_resources.storage_buffers)
 			loadResource(storage_buffer, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-	
+
 		for (const spirv_cross::Resource& storage_image : shader_resources.storage_images)
 			loadResource(storage_image, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-	
+
 		for (const spirv_cross::Resource& subpass_input : shader_resources.subpass_inputs)
 			loadResource(subpass_input, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT);
-	
+
 		for (const spirv_cross::Resource& uniform_buffer : shader_resources.uniform_buffers)
 			loadResource(uniform_buffer, spirv_compiler, shader_resources, stage_flag, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-	
+
 		for (const spirv_cross::Resource& push_constant : shader_resources.push_constant_buffers)
 			loadPushConstant(push_constant, spirv_compiler, shader_resources, stage_flag);
-	
+
 		auto constants = spirv_compiler.get_specialization_constants();
 		for (auto& constant : constants)
 		{
 			auto& shader_constant = this->constants[spirv_compiler.get_name(constant.id)];
 			shader_constant = { constant.constant_id, shader_constant.stage | stage_flag };
 		}
-	
+
 		//Local size reflection
 		local_size = glm::uvec3(0);
 		local_size[0] = spirv_compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 0);
@@ -181,20 +190,16 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 		if (local_size != glm::uvec3(0))
 			local_size = glm::max(local_size, glm::uvec3(1));
 	}
-	
+
 	for (const auto& resource : this->resources)
 	{
 		auto& set = descriptor_sets.at(resource.set);
 		set->add(resource.binding, resource.count, resource.type, resource.stage);
 		resource_locations.emplace(resource.name, ResourceLocation{ resource.set, resource.binding });
 	}
-	
+
 	for (auto& descriptor_set : descriptor_sets)
 		descriptor_set.second->build();
-#endif
-#undef SK_WEIRD_ERROR_FIX
-
-	SK_TRACE("Shader loaded: {0}", path);
 }
 
 void Shader::set(std::string_view resource_name, const std::vector<VkDescriptorBufferInfo>& buffer_infos)

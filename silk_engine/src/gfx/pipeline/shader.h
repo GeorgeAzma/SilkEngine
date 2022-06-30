@@ -72,6 +72,7 @@ public:
 	~Shader();
 
 	void compile(const std::vector<Define>& defines = {}, bool force = true);
+	void reflect();
 
 	void set(std::string_view resource_name, const std::vector<VkDescriptorBufferInfo>& buffer_infos);
 	void set(std::string_view resource_name, const std::vector<VkDescriptorImageInfo>& image_infos);
