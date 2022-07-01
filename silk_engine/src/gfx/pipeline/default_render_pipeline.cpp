@@ -2,6 +2,7 @@
 #include "gfx/graphics.h"
 #include "gfx/window/swap_chain.h"
 #include "gfx/subrender/mesh_subrender.h"
+#include "gfx/subrender/particle_subrender.h"
 
 DefaultRenderPipeline::DefaultRenderPipeline()
 {
@@ -21,6 +22,7 @@ DefaultRenderPipeline::DefaultRenderPipeline()
 
 void DefaultRenderPipeline::init()
 {
+	addSubrender<ParticleSubrender>({ 0, 0 });
 	addSubrender<MeshSubrender>({ 0, 0 });
 }
 

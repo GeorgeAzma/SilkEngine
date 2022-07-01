@@ -54,7 +54,7 @@ public:
 
 	template<typename T>
 	static void setRenderPipeline() { render_pipeline = makeUnique<T>(); }
-	static unique<RenderPipeline>& getRenderPipeline() { return render_pipeline; }
+	static RenderPipeline& getRenderPipeline() { return *render_pipeline; }
 	static shared<RenderPass>& getRenderPass(const PipelineStage& pipeline_stage) { return render_pipeline->getRenderStages()[pipeline_stage.first].getRenderPass(); }
 
 	//States

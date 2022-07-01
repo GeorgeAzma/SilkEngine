@@ -70,7 +70,6 @@ void Application::update()
 
             Renderer::begin(SceneManager::getActive().get() ? SceneManager::getActive()->getMainCamera() : nullptr);
             Renderer::render();
-            ParticleSystem::render();
             Renderer::end();
 
             Timers::update();

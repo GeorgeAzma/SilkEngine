@@ -27,7 +27,7 @@ public:
 	};
 
 public:
-	~Pipeline();
+	virtual ~Pipeline();
 
 	void recreate()
 	{

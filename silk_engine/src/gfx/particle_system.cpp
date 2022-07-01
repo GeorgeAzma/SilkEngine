@@ -7,24 +7,12 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/buffers/command_buffer.h"
 #include "utils/thread_pool.h"
+#include "renderer.h"
 
 void ParticleSystem::init()
 {
-	shared<Mesh> mesh = Resources::getMesh("Quad");
-    vao = mesh->getVertexArray();
+    vao = Resources::getMesh("Quad")->getVertexArray();
 	instance_vbo = makeShared<VertexBuffer>(nullptr, MAX_PARTICLES * sizeof(ParticleData));
-	
-    using enum DeviceType;
-    shared<Shader> shader = makeShared<Shader>("particle");
-    //pipeline = makeShared<GraphicsPipeline>();
-    //pipeline->enable(EnableTag::COLOR_BLENDING)
-    //    .enable(EnableTag::DEPTH_TEST)
-    //    .enable(EnableTag::DEPTH_WRITE)
-    //    .setShader(shader)
-    //    .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, {MAT4, 1}, {UINT, 1}, {VEC4, 1} })
-    //    .setSamples(Graphics::swap_chain->getSamples())
-    //    .setRenderPass(*Graphics::swap_chain->getRenderPass())
-    //    .build();
     instance_images = makeShared<InstanceImages>();
 }
 
@@ -100,39 +88,43 @@ void ParticleSystem::update()
         auto& p = particles[i];
         float life = 1.0f - p.life_remaining / p.life_time;
         glm::mat4& m = particle_data[i].model;
-        const glm::mat4& v = SceneManager::getActive()->getMainCamera()->view;
-        m = glm::translate(glm::mat4(1), p.position);
-        m[0][0] = v[0][0];
-        m[0][1] = v[1][0];
-        m[0][2] = v[2][0];
-        m[1][0] = v[0][1];
-        m[1][1] = v[1][1];
-        m[1][2] = v[2][1];
-        m[2][0] = v[0][2];
-        m[2][1] = v[1][2];
-        m[2][2] = v[2][2];
-        m = glm::rotate(glm::scale(m, glm::vec3(std::lerp(p.size_begin, p.size_end, life))), std::lerp(p.rotation_begin, p.rotation_end, life), { 0, 0, 1 });
-        particle_data[i].color = math::lerp(p.color_begin, p.color_end, life);
-        particle_data[i].texture_index = p.texture_index;
+        if (auto camera = SceneManager::getActive()->getMainCamera())
+        {
+            const glm::mat4& v = camera->view;
+            m = glm::translate(glm::mat4(1), p.position);
+            m[0][0] = v[0][0];
+            m[0][1] = v[1][0];
+            m[0][2] = v[2][0];
+            m[1][0] = v[0][1];
+            m[1][1] = v[1][1];
+            m[1][2] = v[2][1];
+            m[2][0] = v[0][2];
+            m[2][1] = v[1][2];
+            m[2][2] = v[2][2];
+            m = glm::rotate(glm::scale(m, glm::vec3(std::lerp(p.size_begin, p.size_end, life))), std::lerp(p.rotation_begin, p.rotation_end, life), { 0, 0, 1 });
+            particle_data[i].color = math::lerp(p.color_begin, p.color_end, life);
+            particle_data[i].texture_index = p.texture_index;
+        }
     });
     instance_vbo->setData(particle_data.data(), particle_data.size() * sizeof(ParticleData));
 }
 
-void ParticleSystem::render()
+void ParticleSystem::render(GraphicsPipeline& graphics_pipeline)
 {
     if (particle_data.size())
     {
-        pipeline->bind();
+        graphics_pipeline.bind();
         vao->bind();
         instance_vbo->bind(1);
-        pipeline->getShader()->setIfExists("images", instance_images->getDescriptorImageInfos()); //TODO: Unsafe, change
+        graphics_pipeline.getShader()->setIfExists("GlobalUniform", { *Renderer::getGlobalUniformBuffer() }); //TODO: Unsafe, change
+        graphics_pipeline.getShader()->setIfExists("images", instance_images->getDescriptorImageInfos());
+        graphics_pipeline.getShader()->bindDescriptorSets();
         Graphics::getActiveCommandBuffer().drawIndexed(vao->getIndexBuffer()->getCount(), particle_data.size(), 0, 0, 0);
     }
 }
 
 void ParticleSystem::destroy()
 {
-    pipeline = nullptr;
     vao = nullptr;
     instance_vbo = nullptr;
     instance_images = nullptr;

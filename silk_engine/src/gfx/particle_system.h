@@ -76,7 +76,7 @@ public:
 	static void emit(const ParticleProps& props);
 	
 	static void update();
-	static void render();
+	static void render(GraphicsPipeline& graphics_pipeline);
 
 	static void destroy();
 
@@ -87,5 +87,4 @@ private:
 	static inline shared<VertexArray> vao;
 	static inline shared<VertexBuffer> instance_vbo;
 	static inline shared<InstanceImages> instance_images;
-	static inline shared<GraphicsPipeline> pipeline;
 };

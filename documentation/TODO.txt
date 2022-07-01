@@ -1,6 +1,8 @@
 - Multiple render passes
 - Model animations
 - Sprite animations
+- Fix particle system
+- Make engine easier to use
 - Support strokes for all 2D geometry
 - Trails
 - Deffer command buffer submission
