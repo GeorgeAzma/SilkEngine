@@ -1,7 +1,7 @@
 #pragma once
 
 #include "subrender.h"
-#include "pipeline_stage.h"
+#include "gfx/pipeline/pipeline_stage.h"
 
 class MeshSubrender : public Subrender
 {

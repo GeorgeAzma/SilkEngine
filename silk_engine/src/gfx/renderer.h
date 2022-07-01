@@ -87,9 +87,9 @@ public:
 	static void ellipsoid(float x, float y, float z, float width, float height, float depth);
 
 	//Slow function for quickly drawing stuff
-	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const glm::mat4& transform, const std::vector<shared<Image2D>>& image, bool stroke = false);
-	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const glm::mat4& transform, bool stroke = false);
-	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, const std::vector<shared<Image2D>>& images, bool stroke = false);
+	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, glm::mat4&& transform, std::vector<shared<Image2D>>&& images, bool stroke = false);
+	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, glm::mat4&& transform, bool stroke = false);
+	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, std::vector<shared<Image2D>>&& images, bool stroke = false);
 	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth = 1.0f, bool stroke = false);
 	
 	static Light* addLight(const Light& light);

@@ -2,7 +2,7 @@
 
 #include "gfx/graphics.h"
 #include "gfx/window/swap_chain.h"
-#include "graphics_pipeline.h"
+#include "gfx/pipeline/graphics_pipeline.h"
 #include "scene/resources.h"
 #include "gfx/renderer.h"
 

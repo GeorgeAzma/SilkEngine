@@ -28,12 +28,6 @@ public:
     void acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence = VK_NULL_HANDLE);
     VkResult present(VkSemaphore wait_semaphore);
 
-    static SwapChain& get()
-    {
-        static SwapChain swap_chain{};
-        return swap_chain;
-    }
-    
 private:
     void create(const std::optional<VkSwapchainKHR>& old_swap_chain = {});
     void destroy();
