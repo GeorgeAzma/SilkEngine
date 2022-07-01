@@ -16,15 +16,15 @@ void ParticleSystem::init()
 	
     using enum DeviceType;
     shared<Shader> shader = makeShared<Shader>("particle");
-    pipeline = makeShared<GraphicsPipeline>();
-    pipeline->enable(EnableTag::COLOR_BLENDING)
-        .enable(EnableTag::DEPTH_TEST)
-        .enable(EnableTag::DEPTH_WRITE)
-        .setShader(shader)
-        .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, {MAT4, 1}, {UINT, 1}, {VEC4, 1} })
-        .setSamples(Graphics::swap_chain->getSamples())
-        .setRenderPass(*Graphics::swap_chain->getRenderPass())
-        .build();
+    //pipeline = makeShared<GraphicsPipeline>();
+    //pipeline->enable(EnableTag::COLOR_BLENDING)
+    //    .enable(EnableTag::DEPTH_TEST)
+    //    .enable(EnableTag::DEPTH_WRITE)
+    //    .setShader(shader)
+    //    .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, {MAT4, 1}, {UINT, 1}, {VEC4, 1} })
+    //    .setSamples(Graphics::swap_chain->getSamples())
+    //    .setRenderPass(*Graphics::swap_chain->getRenderPass())
+    //    .build();
     instance_images = makeShared<InstanceImages>();
 }
 
@@ -130,7 +130,7 @@ void ParticleSystem::render()
     }
 }
 
-void ParticleSystem::cleanup()
+void ParticleSystem::destroy()
 {
     pipeline = nullptr;
     vao = nullptr;

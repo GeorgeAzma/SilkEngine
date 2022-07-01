@@ -7,203 +7,27 @@
 #include "sampler.h"
 #include "gfx/device_type.h"
 
-struct CubemapProps
-{
-	uint32_t width = 0;
-	uint32_t height = 0;
-	ImageFormat format = ImageFormat::BGRA;
-	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
-	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-	VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	bool mipmap = false;
-	VkFilter mipmap_filter = VK_FILTER_LINEAR;
-	SamplerProps sampler_props{};
-	bool create_view = true;
-	bool create_sampler = true;
-	const void* data = nullptr;
-	VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
-	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
-};
-
-struct Image1DProps
-{
-	uint32_t width = 0;
-	ImageFormat format = ImageFormat::BGRA;
-	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
-	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-	VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	bool mipmap = false;
-	VkFilter mipmap_filter = VK_FILTER_LINEAR;
-	SamplerProps sampler_props{};
-	bool create_view = true;
-	bool create_sampler = true;
-	const void* data = nullptr;
-	VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
-	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
-};
-
-struct Image2DProps
-{
-	uint32_t width = 0;
-	uint32_t height = 0;
-	ImageFormat format = ImageFormat::BGRA;
-	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
-	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-	VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	bool mipmap = false;
-	VkFilter mipmap_filter = VK_FILTER_LINEAR;
-	SamplerProps sampler_props{};
-	bool create_view = true;
-	bool create_sampler = true;
-	const void* data = nullptr;
-	VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
-	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
-};
-
-struct ImageArrayProps
-{
-	uint32_t width = 0;
-	uint32_t height = 0;
-	ImageFormat format = ImageFormat::BGRA;
-	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
-	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-	VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	bool mipmap = false;
-	VkFilter mipmap_filter = VK_FILTER_LINEAR;
-	SamplerProps sampler_props{};
-	bool create_view = true;
-	bool create_sampler = true;
-	const void* data = nullptr;
-	uint32_t layers = 1;
-	VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
-	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
-};
-
 struct ImageProps
 {
-	uint32_t width = 0;
-	uint32_t height = 0;
+	uint32_t width = 1;
+	uint32_t height = 1;
 	uint32_t depth = 1;
+	uint32_t layers = 1;
 	ImageFormat format = ImageFormat::BGRA;
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
-	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 	VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	bool mipmap = false;
 	VkFilter mipmap_filter = VK_FILTER_LINEAR;
 	SamplerProps sampler_props{};
+	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
 	bool create_view = true;
 	bool create_sampler = true;
 	const void* data = nullptr;
-	uint32_t layers = 1;
-	VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
 	bool is_cubemap = false;
 	bool is_1D = false;
-	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
-
-	ImageProps& operator=(const Image1DProps& props)
-	{
-		width = props.width;
-		format = props.format;
-		usage = props.usage;
-		samples = props.samples;
-		tiling = props.tiling;
-		layout = props.layout;
-		mipmap = props.mipmap;
-		mipmap_filter = props.mipmap_filter;
-		sampler_props = props.sampler_props;
-		create_view = props.create_view;
-		create_sampler = props.create_sampler;
-		data = props.data;
-		memory_usage = props.memory_usage;
-		height = 1;
-		layers = 1;
-		depth = 1;
-		is_cubemap = false;
-		is_1D = false;
-		initial_layout = props.initial_layout;
-
-		return *this;
-	}
-
-	ImageProps& operator=(const Image2DProps& props)
-	{
-		width = props.width;
-		height = props.height;
-		format = props.format;
-		usage = props.usage;
-		samples = props.samples;
-		tiling = props.tiling;
-		layout = props.layout;
-		mipmap = props.mipmap;
-		mipmap_filter = props.mipmap_filter;
-		sampler_props = props.sampler_props;
-		create_view = props.create_view;
-		create_sampler = props.create_sampler;
-		data = props.data;
-		memory_usage = props.memory_usage;
-		layers = 1;
-		depth = 1;
-		is_cubemap = false;
-		is_1D = false;
-		initial_layout = props.initial_layout;
-
-		return *this;
-	}
-
-	ImageProps& operator=(const CubemapProps& props)
-	{
-		width = props.width;
-		height = props.height;
-		format = props.format;
-		usage = props.usage;
-		samples = props.samples;
-		tiling = props.tiling;
-		layout = props.layout;
-		mipmap = props.mipmap;
-		mipmap_filter = props.mipmap_filter;
-		sampler_props = props.sampler_props;
-		create_view = props.create_view;
-		create_sampler = props.create_sampler;
-		data = props.data;
-		memory_usage = props.memory_usage;
-		layers = 1;
-		depth = 1;
-		is_cubemap = true;
-		is_1D = false;
-		initial_layout = props.initial_layout;
-
-		return *this;
-	}
-
-	ImageProps& operator=(const ImageArrayProps& props)
-	{
-		width = props.width;
-		height = props.height;
-		format = props.format;
-		usage = props.usage;
-		samples = props.samples;
-		tiling = props.tiling;
-		layout = props.layout;
-		mipmap = props.mipmap;
-		mipmap_filter = props.mipmap_filter;
-		sampler_props = props.sampler_props;
-		create_view = props.create_view;
-		create_sampler = props.create_sampler;
-		data = props.data;
-		layers = props.layers;
-		memory_usage = props.memory_usage;
-		depth = 1;
-		is_cubemap = false;
-		is_1D = false;
-		initial_layout = props.initial_layout;
-
-		return *this;
-	}
 };
 
 class Image : NonCopyable

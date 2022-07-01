@@ -14,7 +14,7 @@ class Resources
 {
 public:
 	static void init();
-	static void cleanup();
+	static void destroy();
 
 	static shared<Mesh> getMesh(std::string_view name);
 	static shared<Model> getModel(std::string_view name);

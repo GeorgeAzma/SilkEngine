@@ -1,9 +1,12 @@
 - Multiple render passes
+- Model animations
+- Sprite animations
+- Support strokes for all 2D geometry
+- Trails
 - Deffer command buffer submission
 - Font SDF and effects
 - Debug codes that might contain bugs (Framebuffer, Swapchain, Renderpass, Renderer)
-- faster immidiate drawing
-- Whenever you bind something with command buffer, it saves the state and when you submit it, it resets the state
+- Faster immidiate drawing
 - Fast Culling
 - Replace user used vulkan enums with engine enums
 - Handle normal/other maps and materials in shader

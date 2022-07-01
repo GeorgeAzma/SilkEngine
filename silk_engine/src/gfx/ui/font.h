@@ -22,7 +22,7 @@ class Font
 
 public:
 	static void init();
-	static void cleanup();
+	static void destroy();
 
 public:
 	Font(std::string_view file, uint32_t size = 64);

@@ -2,7 +2,6 @@
 
 #include "utils/fixed_update.h"
 #include "event.h"
-#include "gfx/subrender.h"
 
 int main(int argc, char **argv);
 

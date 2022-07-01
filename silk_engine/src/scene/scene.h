@@ -1,11 +1,14 @@
 #pragma once
 
 #include "instance.h"
+#include "system.h"
 #include "camera/camera.h"
+#include "utils/type_info.h"
 #include <entt/entt.hpp>
 
 class Entity;
 class WindowResizeEvent;
+struct CameraComponent;
 
 class Scene
 {
@@ -15,9 +18,36 @@ public:
 	Scene();
 	~Scene();
 
-	void onPlay();
-	void onUpdate();
-	void onStop();
+	void init();
+	void update();
+	void destroy();
+
+	template<typename T>
+	T* getSystem() const
+	{
+		auto it = systems.find(TypeInfo::getTypeID<T>());
+		if (it == systems.end() || !it->second)
+			return nullptr;
+		return (T*)it->second.get();
+	}
+
+	template<typename T>
+	void addSystem()
+	{
+		remove<T>();
+		systems.emplace(TypeInfo<System>::getTypeID<T>(), makeUnique<T>());
+	}
+
+	template<typename T>
+	void removeSystem()
+	{
+		systems.erase(TypeInfo<System>::getTypeID<T>());
+	}
+
+	void clearSystems()
+	{
+		systems.clear();
+	}
 
 	shared<Entity> createEntity();
 	void removeEntity(const entt::entity& entity);
@@ -44,6 +74,8 @@ private:
 	void onLightComponentDestroy(entt::registry& registry, entt::entity entity);
 
 private:
+	Camera* main_camera = nullptr;
+	std::unordered_map<TypeID, unique<System>> systems;
 	entt::registry registry;
 	bool stopped = false;
 };

@@ -16,20 +16,20 @@ struct AttachmentProps
 	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 };
 
-struct Attachment
-{
-	enum class Type
-	{
-		COLOR, DEPTH_STENCIL, RESOLVE
-	};
-	VkAttachmentDescription description{};
-	VkAttachmentReference reference{};
-	VkClearValue clear_value{};
-	Type type = Type::COLOR;
-};
-
 struct Subpass
 {
+	struct Attachment
+	{
+		enum class Type
+		{
+			COLOR, DEPTH_STENCIL, RESOLVE
+		};
+		VkAttachmentDescription description{};
+		VkAttachmentReference reference{};
+		VkClearValue clear_value{};
+		Type type = Type::COLOR;
+	};
+
 	std::vector<VkAttachmentReference> input_attachment_references;
 	std::vector<Attachment> attachments;
 	bool multisampled = false;
@@ -46,9 +46,10 @@ public:
 	void build();
 
 	void begin(VkFramebuffer framebuffer, VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
-	void nextSubpass(VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
+	static void nextSubpass(VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
 	void end();
 
+	size_t getSubpassCount() const { return subpasses.size(); }
 	operator const VkRenderPass& () const { return render_pass; }
 
 private:

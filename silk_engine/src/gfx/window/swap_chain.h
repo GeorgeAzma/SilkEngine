@@ -20,15 +20,19 @@ public:
     uint32_t getWidth() const { return extent.width; }
     uint32_t getHeight() const { return extent.height; }
     size_t getImageCount() const { return images.size(); }
-    shared<RenderPass> getRenderPass() const { return render_pass; }
     uint32_t getImageIndex() const { return image_index; }
-    shared<Image2D> getActiveImage() const { return images[image_index]; }
-    shared<Framebuffer> getActiveFramebuffer() const { return framebuffers[image_index]; }
+    const std::vector<shared<Image2D>>& getImages() const { return images; }
     
     void recreate();
 
     void acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence = VK_NULL_HANDLE);
     VkResult present(VkSemaphore wait_semaphore);
+
+    static SwapChain& get()
+    {
+        static SwapChain swap_chain{};
+        return swap_chain;
+    }
     
 private:
     void create(const std::optional<VkSwapchainKHR>& old_swap_chain = {});
@@ -39,11 +43,9 @@ private:
     std::vector<shared<Image2D>> images;
     VkPresentModeKHR present_mode;
     VkExtent2D extent;
-    std::vector<shared<Framebuffer>> framebuffers;
     uint32_t image_index = 0;
     ImageFormat depth_format;
     ImageFormat image_format;
     VkColorSpaceKHR color_space;
-    shared<RenderPass> render_pass = nullptr;
     VkSampleCountFlagBits sample_count;
 };

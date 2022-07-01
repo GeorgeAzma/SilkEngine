@@ -71,11 +71,14 @@ public:
 
 public:
 	static void init();
+
 	static void addSpout(const ParticleSpoutProps& props);
 	static void emit(const ParticleProps& props);
+	
 	static void update();
 	static void render();
-	static void cleanup();
+
+	static void destroy();
 
 private:
 	static inline std::vector<Particle> particles;

@@ -7,7 +7,7 @@ void Font::init()
 	SK_ASSERT(!result, "FreeType: Couldn't initialize free type");
 }
 
-void Font::cleanup()
+void Font::destroy()
 {
 	FT_Done_FreeType(free_type_library);
 }
@@ -89,7 +89,7 @@ Font::Font(std::string_view file, uint32_t size)
 		characters[i].texture_coordinate.w = (origin_y + face->glyph->bitmap.rows) / (float)height;
 
 		for (size_t j = 0; j < face->glyph->bitmap.rows; ++j)
-			memcpy(texture_atlas_bitmap.data.data() + (origin_x + (j + origin_y) * width), face->glyph->bitmap.buffer + j * face->glyph->bitmap.width, face->glyph->bitmap.width);
+			memcpy(texture_atlas_bitmap.data() + (origin_x + (j + origin_y) * width), face->glyph->bitmap.buffer + j * face->glyph->bitmap.width, face->glyph->bitmap.width);
 
 		row_height = std::max(row_height, face->glyph->bitmap.rows + padding);
 		origin_x += face->glyph->bitmap.width + 1 + padding;
@@ -98,7 +98,7 @@ Font::Font(std::string_view file, uint32_t size)
 	Image2DProps texture_atlas_props{};
 	texture_atlas_props.width = width;
 	texture_atlas_props.height = height;
-	texture_atlas_props.data = texture_atlas_bitmap.data.data();
+	texture_atlas_props.data = texture_atlas_bitmap.data();
 	texture_atlas_props.format = ImageFormat::RED;
 	texture_atlas = makeShared<Image2D>(texture_atlas_props);
 }

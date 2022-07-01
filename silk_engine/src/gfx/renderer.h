@@ -7,9 +7,8 @@
 #include "buffers/indirect_buffer.h"
 #include "scene/light.h"
 #include "utils/color.h"
-#include "subrender.h"
-#include "utils/type_info.h"
 #include "scene/resources.h"
+#include "gfx/pipeline/render_pipeline.h"
 
 class Renderer
 {
@@ -50,36 +49,13 @@ public:
 	static void begin(Camera* camera = nullptr);
 	static void render();
 	static void end();
-	static void cleanup();
+	static void destroy();
 	static void reset();
 
 	template<typename T>
-	static const T* getSubrender()
-	{
-		TypeID type_id = TypeInfo<Subrender>::getTypeID<T>();
-		if (auto it = subrenders.find(type_id);  it != subrenders.end() && it->second)
-			return (T*)(it->second.get());
-		return nullptr;
-	}
-
-	template<typename T>
-	static void addSubrender()
-	{
-		TypeID type_id = TypeInfo<Subrender>::getTypeID<T>();
-		subrenders.emplace(type_id, makeShared<T>());
-	}
-
-	template<typename T>
-	static void removeSubrender()
-	{
-		TypeID type_id = TypeInfo<Subrender>::getTypeID<T>();
-		subrenders.erase(type_id);
-	}
-
-	static void clearSubrenders()
-	{
-		subrenders.clear();
-	}
+	static void setRenderPipeline() { render_pipeline = makeUnique<T>(); }
+	static unique<RenderPipeline>& getRenderPipeline() { return render_pipeline; }
+	static shared<RenderPass>& getRenderPass(const PipelineStage& pipeline_stage) { return render_pipeline->getRenderStages()[pipeline_stage.first].getRenderPass(); }
 
 	//States
 	static void transform(const glm::mat4& transform = glm::mat4(1)) { active.transformed = transform != glm::mat4(1); active.transform = transform; }
@@ -120,6 +96,9 @@ public:
 	static void createInstance(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data);
 	static void updateInstance(RenderedInstance& instance, const InstanceData& instance_data);
 	static InstanceBatch& getInstanceBatch(size_t index) { return instance_batches[index]; }
+	static std::vector<InstanceBatch>& getInstanceBatches() { return instance_batches; }
+	static const unique<IndirectBuffer>& getIndirectBuffer() { return indirect_buffer;  }
+	static const unique<UniformBuffer>& getGlobalUniformBuffer() { return global_uniform_buffer; }
 	static void addInstanceBatch(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data);
 	static void destroyInstance(const RenderedInstance& instance);
 
@@ -128,6 +107,7 @@ private:
 	static void updateDrawCommands();
 
 private:
+	static inline unique<RenderPipeline> render_pipeline = nullptr;
 	static inline std::vector<InstanceBatch> instance_batches;
 	static inline std::vector<shared<RenderedInstance>> instances;
 	static inline unique<IndirectBuffer> indirect_buffer;
@@ -138,5 +118,4 @@ private:
 	static inline VkFence previous_frame_finished = VK_NULL_HANDLE;
 	static inline VkSemaphore swap_chain_image_available = VK_NULL_HANDLE;
 	static inline VkSemaphore render_finished = VK_NULL_HANDLE;
-	static inline std::unordered_map<TypeID, shared<Subrender>> subrenders;
 };

@@ -18,13 +18,13 @@ void SceneManager::update()
 {
 	if (!active_scene.get())
 		return;
-	active_scene->onUpdate();
+	active_scene->update();
 }
 
 void SceneManager::switchTo(const shared<Scene>& scene)
 {
 	if(active_scene.get())
-		active_scene->onStop();
+		active_scene->destroy();
 	active_scene = scenes.at((size_t)scene.get());
-	active_scene->onPlay();
+	active_scene->init();
 }

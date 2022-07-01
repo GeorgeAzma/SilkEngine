@@ -58,17 +58,22 @@ Scene::~Scene()
 	
 	Dispatcher::unsubscribe(this, &Scene::onWindowResize);
 
-	onStop();
+	destroy();
 
 	stopped = true;
 }
 
-void Scene::onPlay()
+void Scene::init()
 {
 }
 
-void Scene::onUpdate()
+void Scene::update()
 {
+	//Update systems
+	for (auto& [type_id, system] : systems)
+		if (system->enabled)
+			system->update();
+
 	//Update components
 	registry.view<ScriptComponent>().each(
 		[&](auto entity, auto& script_component)
@@ -83,7 +88,7 @@ void Scene::onUpdate()
 		});
 }
 
-void Scene::onStop()
+void Scene::destroy()
 {
 	registry.view<ScriptComponent>().each([](auto entity, auto& script_component)
 		{
@@ -113,14 +118,16 @@ void Scene::onWindowResize(const WindowResizeEvent& e)
 
 Camera* Scene::getMainCamera()
 {
-	CameraComponent* main_camera = nullptr;
+	if (main_camera)
+		return main_camera;
+
 	registry.view<CameraComponent>().each(
-		[&](auto entity, auto& camera_component)
+		[this](auto entity, auto& camera_component)
 		{
-			main_camera = &camera_component;
+			main_camera = &camera_component.camera;
 		});
 
-	return main_camera ? &main_camera->camera : nullptr;
+	return main_camera ? main_camera : nullptr;
 }
 
 void Scene::onTransformComponentUpdate(entt::registry& registry, entt::entity entity)

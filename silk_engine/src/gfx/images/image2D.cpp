@@ -26,7 +26,7 @@ Image2D::Image2D(std::string_view file, const Image2DProps& props)
 	this->props.height = data.height;
 	if (data.channels == 3)
 		data.align4();
-	this->props.data = data.data.data();
+	this->props.data = data.data();
 	this->props.format = ImageFormatEnum::fromChannelCount(data.channels);
 	create(this->props);
 }

@@ -138,9 +138,13 @@ void Input::setCursor(std::string_view file, CursorHotSpot hot_spot)
 	GLFWimage cursor_image[1];
 	cursor_image[0].height = data.height;
 	cursor_image[0].width = data.width;
-	cursor_image[0].pixels = data.data.data();
+	cursor_image[0].pixels = data.data();
 
-	glfwDestroyCursor(cursor);
+	if (cursor)
+	{
+		glfwDestroyCursor(cursor);
+		cursor = nullptr;
+	}
 
 	int x, y;
 	switch (hot_spot)
@@ -187,7 +191,7 @@ void Input::setCursor(std::string_view file, CursorHotSpot hot_spot)
 		break;
 	}
 
-	glfwCreateCursor(cursor_image, x, y);
+	cursor = glfwCreateCursor(cursor_image, x, y);
 	glfwSetCursor(Window::getGLFWWindow(), cursor);
 }
 

@@ -35,13 +35,6 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	sample_count = Graphics::physical_device->getMaxSampleCount();
 	color_space = surface_formats.rbegin()->second.colorSpace;
 
-	render_pass = makeShared<RenderPass>();
-	render_pass->addSubpass()
-		.addAttachment({ getFormat(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, getSamples() })
-		.addAttachment({ getDepthFormat(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, getSamples() })
-		.addAttachment({ getFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR })
-		.build();
-
 	create(old_swap_chain);
 }
 
@@ -134,18 +127,6 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 
 	for (size_t i = 0; i < images.size(); ++i)
 		this->images[i] = makeShared<Image2D>(images[i], getFormat());
-
-	framebuffers.resize(this->images.size());
-
-	for (size_t i = 0; i < this->images.size(); ++i)
-	{
-		auto& fb = framebuffers[i];
-		fb = makeShared<Framebuffer>(*render_pass);
-		fb->addAttachment(getFormat(), getSamples(), VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
-			.addAttachment(getDepthFormat(), getSamples(), VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-			.addAttachment(this->images[i])
-			.build();
-	}
 }
 
 void SwapChain::destroy()

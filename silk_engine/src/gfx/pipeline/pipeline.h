@@ -2,7 +2,6 @@
 
 #include "shader.h"
 
-
 enum class EnableTag
 {
 	DEPTH_TEST,

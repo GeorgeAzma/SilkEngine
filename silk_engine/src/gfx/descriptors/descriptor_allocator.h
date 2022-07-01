@@ -24,7 +24,7 @@ class DescriptorAllocator
 public:
 	static void reset();
 	static shared<DescriptorPool> allocate(VkDescriptorSet& descriptor_set, const VkDescriptorSetLayout& descriptor_set_layout);
-	static void cleanup();
+	static void destroy();
 
 private:
 	static shared<DescriptorPool> createPool();

@@ -8,6 +8,8 @@
 #include "scene/meshes/text_mesh.h"
 #include "gfx/buffers/command_buffer.h"
 #include "gfx/devices/logical_device.h"
+#include "gfx/pipeline/default_render_pipeline.h"
+#include "pipeline/pipeline_stage.h"
 
 void Renderer::init()
 {
@@ -21,10 +23,13 @@ void Renderer::init()
 
 	command_buffer = new CommandBuffer();
 
+	setRenderPipeline<DefaultRenderPipeline>();
+	render_pipeline->init();
+
 	reset();
 }
 
-void Renderer::cleanup()
+void Renderer::destroy()
 {
 	Graphics::logical_device->destroyFence(previous_frame_finished);
 	Graphics::logical_device->destroySemaphore(swap_chain_image_available);
@@ -35,6 +40,7 @@ void Renderer::cleanup()
 	instance_batches.clear();
 	indirect_buffer = nullptr;
 	global_uniform_buffer = nullptr;
+	render_pipeline = nullptr;
 }
 
 void Renderer::reset()
@@ -209,50 +215,47 @@ void Renderer::begin(Camera* camera)
 
 	//Set viewport
 	command_buffer->begin();
-	VkViewport viewport = {};
-	viewport.x = 0.0f;
-	viewport.y = Window::getHeight();
-	viewport.width = Window::getWidth();
-	viewport.height = -(float)Window::getHeight();
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	Graphics::getActiveCommandBuffer().setViewport({ viewport });
-
-	VkRect2D scissor = {};
-	scissor.offset = { 0, 0 };
-	scissor.extent = { Window::getWidth(), Window::getHeight() };
-	Graphics::getActiveCommandBuffer().setScissor({ scissor });
-
-	Graphics::swap_chain->getRenderPass()->begin(*Graphics::swap_chain->getActiveFramebuffer(), VK_SUBPASS_CONTENTS_INLINE);
 }
 
 void Renderer::render()
 {
-	//Draw instances
-	size_t draw_index = 0;
-	for (auto& instance_batch : instance_batches)
+	render_pipeline->update();
+
+	PipelineStage stage{};
+	for (auto& render_stage : render_pipeline->getRenderStages())
 	{
-		const auto& shader = instance_batch.instance->material->getShader();
-		if (auto global_uniform = shader->getIfExists("GlobalUniform"))
-			instance_batch.descriptor_sets[global_uniform->set].setBufferInfo(global_uniform->binding, { *global_uniform_buffer }); //TODO: Global data doesn't have to update for each batch
+		render_stage.update();
 
-		if (auto images = shader->getIfExists("images"))
-			instance_batch.descriptor_sets[images->set].setImageInfo(images->binding, instance_batch.instance_images.getDescriptorImageInfos());
+		VkViewport viewport = {};
+		viewport.x = 0.0f;
+		viewport.y = Window::getHeight();
+		viewport.width = Window::getWidth();
+		viewport.height = -(float)Window::getHeight();
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		Graphics::getActiveCommandBuffer().setViewport({ viewport });
 
-		instance_batch.bind();
-		Graphics::getActiveCommandBuffer().drawIndexedIndirect(*indirect_buffer, draw_index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
-		++draw_index;
+		VkRect2D scissor = {};
+		scissor.offset = { 0, 0 };
+		scissor.extent = { Window::getWidth(), Window::getHeight() };
+		Graphics::getActiveCommandBuffer().setScissor({ scissor });
+		
+		auto& render_pass = render_stage.getRenderPass();
+		render_pass->begin(*render_stage.getFramebuffer());
+		for (size_t i = 0; i < render_pass->getSubpassCount(); ++i)
+		{
+			stage.second = i;
+			render_pipeline->renderStage(stage);
+			if (i != (render_pass->getSubpassCount() - 1))
+				render_pass->nextSubpass();
+		}
+		render_pass->end();
+		++stage.first;
 	}
-
-	//Draw subrenders
-	for (const auto& subrender : subrenders)
-		if (subrender.second && subrender.second->enabled)
-			subrender.second->render();
 }
 
 void Renderer::end()
 {
-	Graphics::swap_chain->getRenderPass()->end();
 	CommandBufferSubmitInfo submit_info{};
 	VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	submit_info.wait_stages = &wait_stage;

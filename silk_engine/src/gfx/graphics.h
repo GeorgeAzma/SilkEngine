@@ -48,7 +48,7 @@ public:
 
 public:
 	static void init();
-	static void cleanup();
+	static void destroy();
 	static void update();
 
 	static shared<CommandPool> getActiveCommandPool();

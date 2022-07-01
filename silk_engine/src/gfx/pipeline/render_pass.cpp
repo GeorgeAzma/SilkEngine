@@ -28,8 +28,8 @@ RenderPass& RenderPass::addAttachment(const AttachmentProps& props)
         subpasses.back().multisampled = true;
     }
 
-    Attachment attachment{};
-    Attachment::Type type;
+    Subpass::Attachment attachment{};
+    Subpass::Attachment::Type type;
     attachment.description = attachment_description;
     
     VkAttachmentReference attachment_reference{};
@@ -38,22 +38,22 @@ RenderPass& RenderPass::addAttachment(const AttachmentProps& props)
         ImageFormatEnum::hasStencil(ImageFormatEnum::fromVulkanType(attachment_description.format)))
     {
         attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        type = Attachment::Type::DEPTH_STENCIL;
+        type = Subpass::Attachment::Type::DEPTH_STENCIL;
     }
-    else if (subpasses.back().multisampled && props.layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+    else if (subpasses.back().multisampled && props.layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR && props.samples == VK_SAMPLE_COUNT_1_BIT)
     {
         attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        type = Attachment::Type::RESOLVE;
+        type = Subpass::Attachment::Type::RESOLVE;
     }
     else
     {
         attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        type = Attachment::Type::COLOR;
+        type = Subpass::Attachment::Type::COLOR;
     }
     attachment.reference = attachment_reference;
     attachment.type = type;
 
-    if (type == Attachment::Type::DEPTH_STENCIL)
+    if (type == Subpass::Attachment::Type::DEPTH_STENCIL)
         attachment.clear_value.depthStencil = props.clear_value ? props.clear_value->depthStencil : VkClearDepthStencilValue(1.0f, 0);
     else
         attachment.clear_value.color = props.clear_value ? props.clear_value->color : VkClearColorValue{ { 0.0f, 0.0f, 0.0f, 1.0f } };
@@ -97,13 +97,13 @@ void RenderPass::build()
         {
             switch (attachment.type)
             {
-            case Attachment::Type::COLOR:
+            case Subpass::Attachment::Type::COLOR:
                 color_attachment_references[i].emplace_back(attachment.reference);
                 break;
-            case Attachment::Type::DEPTH_STENCIL:
+            case Subpass::Attachment::Type::DEPTH_STENCIL:
                 depth_stencil_attachment_references[i] = attachment.reference;
                 break;
-            case Attachment::Type::RESOLVE:
+            case Subpass::Attachment::Type::RESOLVE:
                 resolve_attachment_references[i] = attachment.reference;
                 break;
             }

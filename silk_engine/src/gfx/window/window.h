@@ -18,7 +18,8 @@ class Window
 {
 public:
     static void init();
-    static void cleanup();
+    static void destroy();
+
     static uint32_t getWidth() { return data.width; }
     static uint32_t getHeight() { return data.height; }
     static int32_t getX() { return data.x; }
@@ -29,6 +30,7 @@ public:
     static bool isVsync() { return vsync; }
     static bool isTransparent() { return transparent; }
     static bool isMinimized() { return data.width == 0 || data.height == 0; }
+   
     static void setVsync(bool vsync);
     static void setFullscreen(bool fullscreen);
     static void setX(int32_t x);
@@ -38,8 +40,9 @@ public:
     static void setHeight(uint32_t height);
     static void setSize(const glm::uvec2 &size);
     static void setTitle(std::string_view title);
-    static void align(WindowAlignment a = WindowAlignment::CENTER);
     static void setIcon(std::string_view file);
+
+    static void align(WindowAlignment a = WindowAlignment::CENTER);
     static void focus();
 
 private:

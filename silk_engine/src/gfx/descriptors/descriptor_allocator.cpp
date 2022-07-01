@@ -45,7 +45,7 @@ shared<DescriptorPool> DescriptorAllocator::allocate(VkDescriptorSet& descriptor
 	return nullptr;
 }
 
-void DescriptorAllocator::cleanup()
+void DescriptorAllocator::destroy()
 {
 	current_pool = nullptr;
 	free_pools.clear();

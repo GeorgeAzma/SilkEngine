@@ -146,7 +146,7 @@ void Window::init()
     SK_TRACE("Window created: \"{0}\" {1}x{2}", data.title.c_str(), data.width, data.height);
 }
 
-void Window::cleanup()
+void Window::destroy()
 {
     glfwDestroyWindow(window);
 }
@@ -257,13 +257,25 @@ void Window::setTitle(std::string_view title)
     glfwSetWindowTitle(window, title.data());
 }
 
+void Window::setIcon(std::string_view file)
+{
+    std::string path = std::string("icons/") + file.data();
+    Bitmap data{};
+    data.load(path);
+    std::vector<GLFWimage> icons(1);
+    icons[0].height = data.height;
+    icons[0].width = data.width;
+    icons[0].pixels = data.data();
+    glfwSetWindowIcon(window, icons.size(), icons.data());
+}
+
 void Window::align(WindowAlignment a)
 {
-    if (a == WindowAlignment::NONE) 
+    if (a == WindowAlignment::NONE)
         return;
 
-    auto &x = data.x;
-    auto &y = data.y;
+    auto& x = data.x;
+    auto& y = data.y;
     switch (a)
     {
     case WindowAlignment::CENTER:
@@ -304,18 +316,6 @@ void Window::align(WindowAlignment a)
         break;
     };
     glfwSetWindowPos(window, x, y);
-}
-
-void Window::setIcon(std::string_view file)
-{
-    std::string path = std::string("icons/") + file.data();
-    Bitmap data{};
-    data.load(path);
-    std::vector<GLFWimage> icons(1);
-    icons[0].height = data.height;
-    icons[0].width = data.width;
-    icons[0].pixels = data.data.data();
-    glfwSetWindowIcon(window, icons.size(), icons.data());
 }
 
 void Window::focus()

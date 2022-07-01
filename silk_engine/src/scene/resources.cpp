@@ -84,60 +84,12 @@ void Resources::init()
     }
 
     //PIPELINES
-    {       
-        using enum DeviceType;
-        shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
-        graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-            .enable(EnableTag::DEPTH_TEST)
-            .enable(EnableTag::DEPTH_WRITE)
-            .setShader(getShader("3D"))
-            .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
-            .setSamples(Graphics::swap_chain->getSamples())
-            .setRenderPass(*Graphics::swap_chain->getRenderPass())
-            .build();
-        addGraphicsPipeline("Lit 3D", graphics_pipeline);
-
-        VkBool32 lit = false;
-        graphics_pipeline = makeShared<GraphicsPipeline>();
-        graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-            .enable(EnableTag::DEPTH_TEST)
-            .enable(EnableTag::DEPTH_WRITE)
-            .setShader(getShader("3D"), { { "lit", &lit, sizeof(VkBool32) } })
-            .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
-            .setSamples(Graphics::swap_chain->getSamples())
-            .setRenderPass(*Graphics::swap_chain->getRenderPass())
-            .build();
-        addGraphicsPipeline("3D", graphics_pipeline);
-        
-        graphics_pipeline = makeShared<GraphicsPipeline>();
-        graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-            .enable(EnableTag::DEPTH_TEST)
-            .enable(EnableTag::DEPTH_WRITE)
-            .setDepthCompareOp(VK_COMPARE_OP_ALWAYS)
-            .setShader(getShader("2D"))
-            .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
-            .setSamples(Graphics::swap_chain->getSamples())
-            .setRenderPass(*Graphics::swap_chain->getRenderPass())
-            .build();
-        addGraphicsPipeline("2D", graphics_pipeline);
-
-        graphics_pipeline = makeShared<GraphicsPipeline>();
-        graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-            .enable(EnableTag::DEPTH_TEST)
-            .enable(EnableTag::DEPTH_WRITE)
-            .setDepthCompareOp(VK_COMPARE_OP_ALWAYS)
-            .setShader(getShader("Font"))
-            .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
-            .setSamples(Graphics::swap_chain->getSamples())
-            .setRenderPass(*Graphics::swap_chain->getRenderPass())
-            .build();
-        addGraphicsPipeline("Font", graphics_pipeline);
-
+    {
         addComputePipeline("BGRA To RGBA", makeShared<ComputePipeline>(getShader("BGRA To RGBA")));
     }
 }
  
-void Resources::cleanup()
+void Resources::destroy()
 {
 	meshes.clear();
 	models.clear();

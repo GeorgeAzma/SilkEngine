@@ -2,6 +2,16 @@
 
 #include "image.h"
 
+struct Image2DProps : public ImageProps
+{
+public:
+	Image2DProps() = default;
+
+private:
+	using ImageProps::depth;
+	using ImageProps::layers;
+};
+
 class Image2D : public Image
 {
 public:

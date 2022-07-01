@@ -45,7 +45,7 @@ Model::Model(const RawModel& raw_model)
                 image_props.width = md.diffuse_map->width;
                 image_props.height = md.diffuse_map->height;
                 image_props.format = ImageFormatEnum::fromChannelCount(md.diffuse_map->channels);
-                image_props.data = md.diffuse_map->data.data();
+                image_props.data = md.diffuse_map->data();
                 images.back().emplace_back(makeShared<Image2D>(image_props));
                 bitmap_images.insert_or_assign((size_t)md.diffuse_map, images.back().back());
             }
@@ -61,7 +61,7 @@ Model::Model(const RawModel& raw_model)
                 image_props.width = md.normal_map->width;
                 image_props.height = md.normal_map->height;
                 image_props.format = ImageFormatEnum::fromChannelCount(md.normal_map->channels);
-                image_props.data = md.normal_map->data.data();
+                image_props.data = md.normal_map->data();
                 images.back().emplace_back(makeShared<Image2D>(image_props));
                 bitmap_images.emplace((size_t)md.normal_map, images.back().back());
             }
@@ -77,7 +77,7 @@ Model::Model(const RawModel& raw_model)
                 image_props.width = md.height_map->width;
                 image_props.height = md.height_map->height;
                 image_props.format = ImageFormatEnum::fromChannelCount(md.height_map->channels);
-                image_props.data = md.height_map->data.data();
+                image_props.data = md.height_map->data();
                 images.back().emplace_back(makeShared<Image2D>(image_props));
                 bitmap_images.emplace((size_t)md.height_map, images.back().back());
             }
@@ -93,7 +93,7 @@ Model::Model(const RawModel& raw_model)
                 image_props.width = md.ao_map->width;
                 image_props.height = md.ao_map->height;
                 image_props.format = ImageFormatEnum::fromChannelCount(md.ao_map->channels);
-                image_props.data = md.ao_map->data.data();
+                image_props.data = md.ao_map->data();
                 images.back().emplace_back(makeShared<Image2D>(image_props));
                 bitmap_images.emplace((size_t)md.ao_map, images.back().back());
             }
@@ -109,7 +109,7 @@ Model::Model(const RawModel& raw_model)
                 image_props.width = md.specular_map->width;
                 image_props.height = md.specular_map->height;
                 image_props.format = ImageFormatEnum::fromChannelCount(md.specular_map->channels);
-                image_props.data = md.specular_map->data.data();
+                image_props.data = md.specular_map->data();
                 images.back().emplace_back(makeShared<Image2D>(image_props));
                 bitmap_images.emplace((size_t)md.specular_map, images.back().back());
             }
@@ -125,7 +125,7 @@ Model::Model(const RawModel& raw_model)
                 image_props.width = md.emissive_map->width;
                 image_props.height = md.emissive_map->height;
                 image_props.format = ImageFormatEnum::fromChannelCount(md.emissive_map->channels);
-                image_props.data = md.emissive_map->data.data();
+                image_props.data = md.emissive_map->data();
                 images.back().emplace_back(makeShared<Image2D>(image_props));
                 bitmap_images.emplace((size_t)md.emissive_map, images.back().back());
             }

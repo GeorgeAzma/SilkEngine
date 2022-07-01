@@ -2,6 +2,12 @@
 
 #include "image.h"
 
+struct ImageArrayProps : public ImageProps
+{
+private:
+	using ImageProps::depth;
+};
+
 class ImageArray : public Image
 {
 public:

@@ -35,12 +35,12 @@ Application::~Application()
     Dispatcher::unsubscribe(this, &Application::onWindowClose);
     Dispatcher::unsubscribe(this, &Application::onWindowResize);
     Dispatcher::unsubscribe(this, &Application::onKeyPress);
-    Window::cleanup();
-    ParticleSystem::cleanup();
-    Renderer::cleanup();
-    Resources::cleanup();
-    DescriptorAllocator::cleanup();
-    Graphics::cleanup();
+    Window::destroy();
+    ParticleSystem::destroy();
+    Renderer::destroy();
+    Resources::destroy();
+    DescriptorAllocator::destroy();
+    Graphics::destroy();
     SK_INFO("Terminated");
 }
 

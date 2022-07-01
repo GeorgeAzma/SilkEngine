@@ -38,9 +38,9 @@ void Graphics::init()
 	SK_TRACE("Graphics objects initialized");
 }
 
-void Graphics::cleanup()
+void Graphics::destroy()
 {
-	Font::cleanup();
+	Font::destroy();
 	delete swap_chain;
 	command_pools.clear();
 	delete allocator;
@@ -131,7 +131,7 @@ void Graphics::screenshot(std::string_view file)
 	props.mipmap = false;
 	props.sampler_props.anisotropy = false;
 	shared<Image2D> destination = makeShared<Image2D>(props);
-	auto image = swap_chain->getActiveImage();
+	auto image = swap_chain->getImages()[swap_chain->getImageIndex()];
 	bool blit_supported = image->copyImage(destination);
 
 	if (!blit_supported)
