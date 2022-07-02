@@ -10,6 +10,10 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/pipeline/default_render_pipeline.h"
 #include "pipeline/pipeline_stage.h"
+#include "scene/camera/camera.h"
+#include "buffers/command_buffer.h"
+#include "buffers/indirect_buffer.h"
+#include "buffers/uniform_buffer.h"
 
 void Renderer::init()
 {
@@ -244,8 +248,7 @@ void Renderer::render()
 		{
 			stage.second = i;
 			render_pipeline->renderStage(stage);
-			if (i != (render_pass->getSubpassCount() - 1))
-				render_pass->nextSubpass();
+			render_pass->nextSubpass();
 		}
 		render_pass->end();
 		++stage.first;

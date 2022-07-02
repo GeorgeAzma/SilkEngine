@@ -1,21 +1,4 @@
 #include "sandbox_app.h"
-#include "utils/timers.h"
-#include "gfx/graphics.h"
-#include "gfx/window/window.h"
-#include "gfx/images/image2D.h"
-#include "gfx/renderer.h"
-#include "scene/scene_manager.h"
-#include "scene/model.h"
-#include "scene/components.h"
-#include "scene/resources.h"
-#include "scene/camera/camera_controller.h"
-#include "scene/camera/camera.h"
-#include "scene/meshes/circle_mesh.h"
-#include "scene/meshes/rectangle_mesh.h"
-#include "core/input/input.h"
-#include "core/input/keys.h"
-#include "gfx/particle_system.h"
-#include <spdlog/fmt/fmt.h>
    
 float fx = 0.0f;
 float fy = 0.0f;
@@ -98,7 +81,7 @@ void SandboxApp::onUpdate()
     //Renderer::color({ 1, 1, 1, 1 });
     //Renderer::rectangle(300 + fx, 100 + fy, 200, 200);
     //
-    //Renderer::text("W Sample Text", 500, 0, 50);
+    Renderer::text("W Sample Text", 500, 0, 50);
 
     ParticleSystem::emit(Particles::flame);
     

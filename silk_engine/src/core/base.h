@@ -43,18 +43,6 @@ public:
     NonCopyable& operator=(const NonCopyable&) = delete;
 };
 
-struct Descriptor
-{
-    void* ptr;
-    size_t size;
-    operator void* () { return ptr; }
-    operator size_t () { return size; }
-    bool operator==(const Descriptor& other) const { return std::memcmp(ptr, other.ptr, size) == 0; }
-    void copy(void* dst) const { std::memcpy(dst, ptr, size); }
-    void move(void* dst) const { std::memmove(dst, ptr, size); }
-    void set(int val) const { std::memset(ptr, val, size); }
-};
-
 template<typename T>
 using shared = std::shared_ptr<T>;
 template<typename T>

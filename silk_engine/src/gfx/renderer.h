@@ -1,14 +1,16 @@
 #pragma once
 
-#include "scene/instance.h"
-#include "scene/camera/camera.h"
-#include "buffers/uniform_buffer.h"
-#include "buffers/command_buffer.h"
-#include "buffers/indirect_buffer.h"
-#include "scene/light.h"
 #include "utils/color.h"
 #include "scene/resources.h"
 #include "gfx/pipeline/render_pipeline.h"
+#include "scene/light.h"
+#include "scene/instance.h"
+#include "buffers/uniform_buffer.h"
+
+class CommandBuffer;
+class IndirectBuffer;
+class Camera;
+class RenderPass;
 
 class Renderer
 {
@@ -55,7 +57,7 @@ public:
 	template<typename T>
 	static void setRenderPipeline() { render_pipeline = makeUnique<T>(); }
 	static RenderPipeline& getRenderPipeline() { return *render_pipeline; }
-	static shared<RenderPass>& getRenderPass(const PipelineStage& pipeline_stage) { return render_pipeline->getRenderStages()[pipeline_stage.first].getRenderPass(); }
+	static shared<RenderPass>& getRenderPass(uint32_t index) { return render_pipeline->getRenderStages()[index].getRenderPass(); }
 
 	//States
 	static void transform(const glm::mat4& transform = glm::mat4(1)) { active.transformed = transform != glm::mat4(1); active.transform = transform; }

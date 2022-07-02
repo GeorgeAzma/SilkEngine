@@ -8,6 +8,7 @@
 #include "gfx/buffers/command_buffer.h"
 #include "utils/thread_pool.h"
 #include "renderer.h"
+#include "gfx/buffers/uniform_buffer.h"
 
 void ParticleSystem::init()
 {
@@ -83,29 +84,30 @@ void ParticleSystem::update()
     }
 
     particle_data.resize(particles.size());
-    Resources::pool.forEach(particles.size(), [](size_t i)
+    auto camera = SceneManager::getActive()->getMainCamera();
+    if (camera)
     {
-        auto& p = particles[i];
-        float life = 1.0f - p.life_remaining / p.life_time;
-        glm::mat4& m = particle_data[i].model;
-        if (auto camera = SceneManager::getActive()->getMainCamera())
-        {
-            const glm::mat4& v = camera->view;
-            m = glm::translate(glm::mat4(1), p.position);
-            m[0][0] = v[0][0];
-            m[0][1] = v[1][0];
-            m[0][2] = v[2][0];
-            m[1][0] = v[0][1];
-            m[1][1] = v[1][1];
-            m[1][2] = v[2][1];
-            m[2][0] = v[0][2];
-            m[2][1] = v[1][2];
-            m[2][2] = v[2][2];
-            m = glm::rotate(glm::scale(m, glm::vec3(std::lerp(p.size_begin, p.size_end, life))), std::lerp(p.rotation_begin, p.rotation_end, life), { 0, 0, 1 });
-            particle_data[i].color = math::lerp(p.color_begin, p.color_end, life);
-            particle_data[i].texture_index = p.texture_index;
-        }
-    });
+        Resources::pool.forEach(particles.size(), [&](size_t i)
+            {
+                auto& p = particles[i];
+                float life = 1.0f - p.life_remaining / p.life_time;
+                glm::mat4& m = particle_data[i].model;
+                const glm::mat4& v = camera->view;
+                m = glm::translate(glm::mat4(1), p.position);
+                m[0][0] = v[0][0];
+                m[0][1] = v[1][0];
+                m[0][2] = v[2][0];
+                m[1][0] = v[0][1];
+                m[1][1] = v[1][1];
+                m[1][2] = v[2][1];
+                m[2][0] = v[0][2];
+                m[2][1] = v[1][2];
+                m[2][2] = v[2][2];
+                m = glm::rotate(glm::scale(m, glm::vec3(std::lerp(p.size_begin, p.size_end, life))), std::lerp(p.rotation_begin, p.rotation_end, life), { 0, 0, 1 });
+                particle_data[i].color = math::lerp(p.color_begin, p.color_end, life);
+                particle_data[i].texture_index = p.texture_index;
+            });
+    }
     instance_vbo->setData(particle_data.data(), particle_data.size() * sizeof(ParticleData));
 }
 

@@ -39,10 +39,7 @@ public:
 
 		void reset() 
 		{ 
-			instance_batches = 0; 
-			instances = 0; 
-			vertices = 0;
-			indices = 0;
+			*this = {};
 		}
 	} stats{};
 

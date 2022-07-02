@@ -1,7 +1,7 @@
 - Multiple render passes
 - Model animations
 - Sprite animations
-- Fix particle system
+- Figure out descriptor updating
 - Make engine easier to use
 - Support strokes for all 2D geometry
 - Trails

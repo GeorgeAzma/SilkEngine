@@ -1,74 +1,20 @@
 #pragma once
 
 #include "core/application.h"
-#include "core/event.h"
-#include "core/layer.h"
-#include "core/layer_stack.h"
 #include "core/entry_point.h"
-
-#include "core/input/mouse_buttons.h"
-#include "core/input/joystick_buttons.h"
-#include "core/input/keys.h"
 #include "core/input/input.h"
-
-#include "utils/debug_timer.h"
-#include "utils/fixed_update.h"
-#include "utils/delta.h"
-#include "utils/math.h"
-#include "utils/RNG.h"
-#include "utils/time.h"
-#include "utils/timers.h"
-#include "utils/detected.h"
-#include "utils/thread_pool.h"
-
-#include "io/file.h"
-
-#include "gfx/graphics.h"
-#include "gfx/enums.h"
-
-#include "gfx/allocators/command_pool.h"
-#include "gfx/allocators/query_pool.h"
-
-#include "gfx/pipeline/shader.h"
-#include "gfx/pipeline/graphics_pipeline.h"
-#include "gfx/pipeline/render_pass.h"
-
-#include "gfx/descriptors/descriptor_pool.h"
-#include "gfx/descriptors/descriptor_set.h"
-#include "gfx/descriptors/descriptor_set_layout.h"
+#include "core/input/keys.h"
 
 #include "gfx/window/window.h"
+#include "gfx/renderer.h"
+#include "gfx/particle_system.h"
 
-#include "gfx/images/image2D.h"
-#include "gfx/images/image_view.h"
-#include "gfx/images/image_array.h"
-#include "gfx/images/sampler.h"
-
-#include "gfx/buffers/buffer.h"
-#include "gfx/buffers/vertex_buffer.h"
-#include "gfx/buffers/index_buffer.h"
-#include "gfx/buffers/command_buffer.h"
-#include "gfx/buffers/framebuffer.h"
-#include "gfx/buffers/staging_buffer.h"
-#include "gfx/buffers/buffer_layout.h"
-#include "gfx/buffers/uniform_buffer.h"
-#include "gfx/buffers/storage_buffer.h"
-#include "gfx/buffers/indirect_buffer.h"
-#include "gfx/buffers/vertex_array.h"
-
-#include "gfx/ui/font.h"
-
-#include "scene/entity.h"
-#include "scene/scene.h"
 #include "scene/scene_manager.h"
-#include "scene/components.h"
 #include "scene/resources.h"
-
-#include "scene/camera/camera_controller.h"
-#include "scene/camera/camera_controller_2D.h"
+#include "scene/components.h"
 #include "scene/camera/camera.h"
+#include "scene/camera/camera_controller.h"
 
-#include "scene/meshes/mesh2D.h"
-#include "scene/meshes/circle_mesh.h"
-#include "scene/meshes/rectangle_mesh.h"
-
+#include "utils/math.h"
+#include "utils/RNG.h"
+#include "utils/timers.h"

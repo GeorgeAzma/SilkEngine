@@ -5,6 +5,8 @@
 #include "gfx/pipeline/graphics_pipeline.h"
 #include "scene/resources.h"
 #include "gfx/renderer.h"
+#include "gfx/buffers/command_buffer.h"
+#include "gfx/buffers/uniform_buffer.h"
 
 MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
 {
@@ -16,7 +18,7 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
         .setShader(Resources::getShader("3D"))
         .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
         .setSamples(Graphics::swap_chain->getSamples())
-        .setRenderPass(*Renderer::getRenderPass(pipeline_stage))
+        .setStage(pipeline_stage)
         .build();
     Resources::addGraphicsPipeline("Lit 3D", graphics_pipeline);
 
@@ -28,7 +30,7 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
         .setShader(Resources::getShader("3D"), { { "lit", &lit, sizeof(VkBool32) } })
         .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
         .setSamples(Graphics::swap_chain->getSamples())
-        .setRenderPass(*Renderer::getRenderPass(pipeline_stage))
+        .setStage(pipeline_stage)
         .build();
     Resources::addGraphicsPipeline("3D", graphics_pipeline);
 
@@ -40,7 +42,7 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
         .setShader(Resources::getShader("2D"))
         .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
         .setSamples(Graphics::swap_chain->getSamples())
-        .setRenderPass(*Renderer::getRenderPass(pipeline_stage))
+        .setStage(pipeline_stage)
         .build();
     Resources::addGraphicsPipeline("2D", graphics_pipeline);
 
@@ -52,7 +54,7 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
         .setShader(Resources::getShader("Font"))
         .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
         .setSamples(Graphics::swap_chain->getSamples())
-        .setRenderPass(*Renderer::getRenderPass(pipeline_stage))
+        .setStage(pipeline_stage)
         .build();
     Resources::addGraphicsPipeline("Font", graphics_pipeline);
 }

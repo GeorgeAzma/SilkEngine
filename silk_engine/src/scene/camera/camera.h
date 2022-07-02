@@ -2,16 +2,17 @@
 
 #include "frustum.h"
 
-enum class CameraType
-{
-	PERSPECTIVE,
-	ORTHOGRAPHIC
-};
-
 struct Camera
 {
 #undef near
 #undef far
+public:
+	enum class Type
+	{
+		PERSPECTIVE,
+		ORTHOGRAPHIC
+	};
+
 public:
 	Camera();
 
@@ -21,6 +22,7 @@ public:
 	void setFar(float far);
 	void updateProjectionView();
 
+	Camera::Type getType() const { return type; }
 	operator const glm::mat4& () { return projection_view; }
 
 public:
@@ -38,5 +40,5 @@ private:
 	float near = 0.01f;
 	float far = 10000.0f;
 
-	CameraType type = CameraType::PERSPECTIVE;
+	Camera::Type type = Camera::Type::PERSPECTIVE;
 };

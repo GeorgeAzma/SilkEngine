@@ -3,6 +3,7 @@
 #include "gfx/window/swap_chain.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/buffers/command_buffer.h"
+#include "gfx/renderer.h"
 
 GraphicsPipeline::GraphicsPipeline()
 {
@@ -129,6 +130,13 @@ GraphicsPipeline& GraphicsPipeline::setRenderPass(VkRenderPass render_pass)
 GraphicsPipeline& GraphicsPipeline::setSubpass(uint32_t subpass)
 {
 	this->subpass = subpass;
+	return *this;
+}
+
+GraphicsPipeline& GraphicsPipeline::setStage(const PipelineStage& stage)
+{
+	render_pass = *Renderer::getRenderPass(stage.first);
+	subpass = stage.second;
 	return *this;
 }
 

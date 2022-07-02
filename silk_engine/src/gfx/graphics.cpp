@@ -66,7 +66,6 @@ void Graphics::update()
 				it = command_pools.erase(it);
 				continue;
 			}
-	
 			++it;
 		}
 	}
