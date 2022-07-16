@@ -52,9 +52,6 @@ public:
 	static float getMouseX();
 	static float getMouseY();
 
-	static std::string getClipboard();
-	static void setClipboard(std::string_view str);
-
 	static void lockMouse();
 	static void unlockMouse();
 

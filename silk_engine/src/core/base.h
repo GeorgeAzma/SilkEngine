@@ -59,3 +59,9 @@ static constexpr auto makeUnique(Args&&... args)
 {
     return std::make_unique<T>(std::forward<Args>(args)...);
 }
+
+template <typename... T>
+constexpr auto makeArray(T&&... values) -> std::array<typename std::decay<typename std::common_type<T...>::type>::type, sizeof...(T)> 
+{
+    return std::array<typename std::decay<typename std::common_type<T...>::type>::type, sizeof...(T)>{std::forward<T>(values)...};
+}

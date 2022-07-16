@@ -12,10 +12,7 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
 {
     using enum DeviceType;
     shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
-    graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-        .enable(EnableTag::DEPTH_TEST)
-        .enable(EnableTag::DEPTH_WRITE)
-        .setShader(Resources::getShader("3D"))
+    graphics_pipeline->setShader(Resources::getShader("3D"))
         .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
         .setSamples(Graphics::swap_chain->getSamples())
         .setStage(pipeline_stage)
@@ -24,10 +21,7 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
 
     VkBool32 lit = false;
     graphics_pipeline = makeShared<GraphicsPipeline>();
-    graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-        .enable(EnableTag::DEPTH_TEST)
-        .enable(EnableTag::DEPTH_WRITE)
-        .setShader(Resources::getShader("3D"), { { "lit", &lit, sizeof(VkBool32) } })
+    graphics_pipeline->setShader(Resources::getShader("3D"), { { "lit", &lit, sizeof(VkBool32) } })
         .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
         .setSamples(Graphics::swap_chain->getSamples())
         .setStage(pipeline_stage)
@@ -35,11 +29,7 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
     Resources::addGraphicsPipeline("3D", graphics_pipeline);
 
     graphics_pipeline = makeShared<GraphicsPipeline>();
-    graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-        .enable(EnableTag::DEPTH_TEST)
-        .enable(EnableTag::DEPTH_WRITE)
-        .setDepthCompareOp(VK_COMPARE_OP_ALWAYS)
-        .setShader(Resources::getShader("2D"))
+    graphics_pipeline->setShader(Resources::getShader("2D"))
         .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
         .setSamples(Graphics::swap_chain->getSamples())
         .setStage(pipeline_stage)
@@ -47,11 +37,7 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
     Resources::addGraphicsPipeline("2D", graphics_pipeline);
 
     graphics_pipeline = makeShared<GraphicsPipeline>();
-    graphics_pipeline->enable(EnableTag::COLOR_BLENDING)
-        .enable(EnableTag::DEPTH_TEST)
-        .enable(EnableTag::DEPTH_WRITE)
-        .setDepthCompareOp(VK_COMPARE_OP_ALWAYS)
-        .setShader(Resources::getShader("Font"))
+    graphics_pipeline->setShader(Resources::getShader("Font"))
         .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
         .setSamples(Graphics::swap_chain->getSamples())
         .setStage(pipeline_stage)

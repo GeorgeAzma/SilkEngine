@@ -25,6 +25,7 @@ LogicalDevice::LogicalDevice()
 	device_features.occlusionQueryPrecise = VK_TRUE;
 	device_features.multiDrawIndirect = VK_TRUE;
 	device_features.fragmentStoresAndAtomics = VK_TRUE;
+	device_features.fillModeNonSolid = VK_TRUE;
 
 	VkPhysicalDeviceVulkan12Features vulkan_12_device_features{};
 	vulkan_12_device_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;

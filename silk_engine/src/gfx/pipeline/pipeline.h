@@ -2,20 +2,6 @@
 
 #include "shader.h"
 
-enum class EnableTag
-{
-	DEPTH_TEST,
-	DEPTH_WRITE,
-	STENCIL_TEST,
-	COLOR_BLENDING,
-	SAMPLE_SHADING,
-	PRIMITIVE_RESTART,
-	RASTERIZER_DISCARD,
-	DEPTH_CLAMP,
-	DEPTH_BIAS,
-	COLOR_BLEND_LOGIC_OP
-};
-
 class Pipeline : NonCopyable
 {
 public:

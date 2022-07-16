@@ -95,16 +95,6 @@ float Input::getMouseY()
 	return mouse.y;
 }
 
-std::string Input::getClipboard()
-{
-	return glfwGetClipboardString(Window::getGLFWWindow());
-}
-
-void Input::setClipboard(std::string_view str)
-{
-	return glfwSetClipboardString(Window::getGLFWWindow(), str.data());
-}
-
 void Input::lockMouse()
 {
 	glfwSetInputMode(Window::getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);

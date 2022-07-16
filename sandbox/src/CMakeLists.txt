@@ -12,7 +12,7 @@ ${CMAKE_SOURCE_DIR}/data
 $<TARGET_FILE_DIR:Sandbox>/data)
 
 # Copy bin folder where exe file is
-add_custom_command(TARGET Sandbox POST_BUILD
+add_custom_command(TARGET Sandbox PRE_BUILD
 COMMAND ${CMAKE_COMMAND} -E copy_directory 
 ${CMAKE_INSTALL_PREFIX}/bin 
 $<TARGET_FILE_DIR:Sandbox>/)

@@ -103,7 +103,6 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 				in.seekg(0);
 				stage.binary.resize(size / sizeof(uint32_t));
 				in.read((char*)stage.binary.data(), size);
-
 				SK_TRACE("Shader cache loaded: {0}", file_cache_path);
 			}
 		}
@@ -135,13 +134,8 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 		stage.module = Graphics::logical_device->createShaderModule(ci);
 	} 
 
-	reflect();
-
-	SK_TRACE("Shader loaded: {0}", path);
-}
-
-void Shader::reflect()
-{
+#define SK_ERROR_FIX 1
+#if SK_ERROR_FIX
 	for (const auto& stage : stages)
 	{
 		spirv_cross::Compiler compiler(stage.binary);
@@ -196,6 +190,14 @@ void Shader::reflect()
 
 	for (auto& descriptor_set : descriptor_sets)
 		descriptor_set.second->build();
+#endif
+
+	SK_TRACE("Shader loaded: {0}", path);
+}
+
+void Shader::reflect()
+{
+	
 }
 
 void Shader::set(std::string_view resource_name, const std::vector<VkDescriptorBufferInfo>& buffer_infos)
@@ -246,26 +248,157 @@ std::unordered_map<uint32_t, std::string> Shader::parse(const std::filesystem::p
 {
 	std::unordered_map<uint32_t, std::string> shader_sources;
 
-	std::string source = File::read(file);
+	const std::string source = File::read(file);
 
-	constexpr const char* type_token = "#type";
-	size_t type_token_length = strlen(type_token);
-	size_t pos = source.find(type_token, 0);
+	//Devide shader codes
+	std::string token = "#type";
+	size_t pos = source.find(token, 0);
+	SK_ASSERT(pos != std::string::npos, "Couldn't find #type preprocessor");
+	std::string code_source = source.substr(pos);
+	std::string param_source = source.substr(0, pos);
+	pos = 0;
 	while (pos != std::string::npos)
+	{
+		size_t eol = code_source.find_first_of("\r\n", pos);
+		SK_ASSERT(eol != std::string::npos, "Syntax error");
+		size_t begin = pos + token.size() + 1;
+		std::string value = code_source.substr(begin, eol - begin);
+
+		size_t next_line_pos = code_source.find_first_not_of("\r\n", eol);
+		SK_ASSERT(next_line_pos != std::string::npos, "Syntax error");
+		pos = code_source.find(token, next_line_pos);
+
+		Type type = getStringType(value);
+		shader_sources[(uint32_t)type] = (pos == std::string::npos) ? code_source.substr(next_line_pos) : code_source.substr(next_line_pos, pos - next_line_pos);
+	}
+
+	if (!param_source.size()) 
+		return shader_sources;
+
+	//Update parameters
+	constexpr auto tokens = makeArray("depth_test", "depth_write", "stencil_test", "blend", "sample_shading", "primitive_restart", "rasterizer_discard", "depth_clamp", "depth_bias", "color_blend_logic_op");
+	parameters = {};
+
+	for (size_t i = 0; i < tokens.size(); ++i)
+	{
+		updateParameter(param_source, parameters.enabled[i], tokens[i],
+			{
+				{ "true", true },
+				{ "on", true },
+				{ "1", true },
+				{ "false", false },
+				{ "off", false },
+				{ "0", false }
+			});
+	}
+	std::optional<uint32_t> subpass{};
+	std::optional<float> line_width{};
+	std::optional<float> depth_bias{};
+	std::optional<float> depth_slope{};
+	std::optional<float> blend{};
+	std::optional<float> alpha_blend{};
+	std::optional<uint32_t> color_write_mask{};
+
+	updateParameter(param_source, parameters.cull_mode, "cull",
+		{
+			{ "none", VK_CULL_MODE_NONE },
+			{ "front", VK_CULL_MODE_FRONT_BIT },
+			{ "back", VK_CULL_MODE_BACK_BIT },
+			{ "front and back", VK_CULL_MODE_FRONT_AND_BACK }
+		});
+
+	updateParameter(param_source, parameters.polygon_mode, "polygon",
+		{
+			{ "fill", VK_POLYGON_MODE_FILL },
+			{ "line", VK_POLYGON_MODE_LINE },
+			{ "point", VK_POLYGON_MODE_POINT }
+		});
+
+	updateParameter(param_source, parameters.front_face, "front_face",
+		{
+			{ "clockwise", VK_FRONT_FACE_CLOCKWISE },
+			{ "counter clockwise", VK_FRONT_FACE_COUNTER_CLOCKWISE }
+		});
+
+	std::vector<std::pair<const char*, std::optional<VkBlendOp>>> blend_ops = 
+	{
+		{ "+", VK_BLEND_OP_ADD },
+		{ "-", VK_BLEND_OP_SUBTRACT },
+		{ "reverse -", VK_BLEND_OP_REVERSE_SUBTRACT },
+		{ "min", VK_BLEND_OP_MIN },
+		{ "max", VK_BLEND_OP_MAX }
+	};
+
+	updateParameter(param_source, parameters.blend_op, "blend_op", blend_ops);
+	if (parameters.blend_op.has_value()) 
+		parameters.enabled[(size_t)EnableTag::BLEND] = true;
+
+	updateParameter(param_source, parameters.alpha_blend_op, "alpha_blend_op", blend_ops);
+	if (parameters.alpha_blend_op.has_value()) 
+		parameters.enabled[(size_t)EnableTag::BLEND] = true;
+
+	updateParameter(param_source, parameters.depth_compare_op, "depth_compare_op", 
+		{ 
+			{ "always", VK_COMPARE_OP_ALWAYS },
+			{ "never", VK_COMPARE_OP_NEVER },
+			{ "==", VK_COMPARE_OP_EQUAL },
+			{ "!=", VK_COMPARE_OP_NOT_EQUAL },
+			{ ">", VK_COMPARE_OP_GREATER },
+			{ "<", VK_COMPARE_OP_LESS },
+			{ ">=", VK_COMPARE_OP_GREATER_OR_EQUAL },
+			{ "<=", VK_COMPARE_OP_LESS_OR_EQUAL }
+		});
+
+	//TODO: Maybe parse vertex layout
+
+	return shader_sources;
+}
+
+shaderc::CompileOptions Shader::getCompileOptions()
+{
+	shaderc::CompileOptions options{};
+	options.SetTargetEnvironment(shaderc_target_env_vulkan, shadercApiVersion(Graphics::API_VERSION));
+	options.SetForcedVersionProfile(450, shaderc_profile_core);
+	options.SetOptimizationLevel(shaderc_optimization_level_performance);
+	options.AddMacroDefinition("MAX_IMAGE_SLOTS", std::to_string(Graphics::MAX_IMAGE_SLOTS));
+	options.AddMacroDefinition("MAX_LIGHTS", std::to_string(Renderer::MAX_LIGHTS));
+	options.AddMacroDefinition("DIFFUSE_TEXTURE", "0");
+	options.AddMacroDefinition("NORMAL_TEXTURE", "1");
+	options.AddMacroDefinition("AO_TEXTURE", "2");
+	options.AddMacroDefinition("HEIGHT_TEXTURE", "3");
+	options.AddMacroDefinition("SPECULAR_TEXTURE", "4");
+	options.AddMacroDefinition("EMMISIVE_TEXTURE", "5");
+	options.SetIncluder(std::make_unique<Includer>());
+	options.SetGenerateDebugInfo();
+	return options;
+}
+
+template<typename T>
+void Shader::updateParameter(const std::string& source, T& parameter_value, const std::function<T(std::string_view)>& update_function, const char* parameter_name)
+{
+	std::string token = std::string("#") + parameter_name;
+	size_t pos = source.find(token, 0);
+	if (pos != std::string::npos)
 	{
 		size_t eol = source.find_first_of("\r\n", pos);
 		SK_ASSERT(eol != std::string::npos, "Syntax error");
-		size_t begin = pos + type_token_length + 1;
-		std::string type_string = source.substr(begin, eol - begin);
-
-		size_t next_line_pos = source.find_first_not_of("\r\n", eol);
-		SK_ASSERT(next_line_pos != std::string::npos, "Syntax error");
-		pos = source.find(type_token, next_line_pos);
-
-		shader_sources[(uint32_t)getStringType(type_string)] = (pos == std::string::npos) ? source.substr(next_line_pos) : source.substr(next_line_pos, pos - next_line_pos);
+		size_t begin = pos + token.size() + 1;
+		std::string value = source.substr(begin, eol - begin);
+		parameter_value = update_function(value);
 	}
+}
 
-	return shader_sources;
+template<typename T>
+void Shader::updateParameter(const std::string& source, T& parameter_value, const char* parameter_name, const std::vector<std::pair<const char*, T>>& value_pairs)
+{
+	updateParameter<T>(source, parameter_value, [&](std::string_view value)
+		{
+			for (const auto& [str, val] : value_pairs)
+				if (value == str)
+					return val;
+			SK_ERROR("Invalid value({}) for parameter: {}", value.data(), parameter_name);
+			return T{};
+		}, parameter_name);
 }
 
 void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, VkShaderStageFlags stage, VkDescriptorType type)
@@ -341,13 +474,13 @@ shaderc_shader_kind Shader::shadercType(Type shader_type)
 {
 	switch (shader_type)
 	{
-	case Shader::Type::NONE:
-	case Shader::Type::VERTEX: return shaderc_vertex_shader;
-	case Shader::Type::FRAGMENT: return shaderc_fragment_shader;
-	case Shader::Type::GEOMETRY: return shaderc_geometry_shader;
-	case Shader::Type::COMPUTE: return shaderc_compute_shader;
-	case Shader::Type::TESSELATION_CONTROL: return shaderc_tess_control_shader;
-	case Shader::Type::TESSELATION_EVALUATION: return shaderc_tess_evaluation_shader;
+	case Type::NONE:
+	case Type::VERTEX: return shaderc_vertex_shader;
+	case Type::FRAGMENT: return shaderc_fragment_shader;
+	case Type::GEOMETRY: return shaderc_geometry_shader;
+	case Type::COMPUTE: return shaderc_compute_shader;
+	case Type::TESSELATION_CONTROL: return shaderc_tess_control_shader;
+	case Type::TESSELATION_EVALUATION: return shaderc_tess_evaluation_shader;
 	}
 	
 	SK_ERROR("Unsupported shader type specified");

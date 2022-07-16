@@ -166,7 +166,7 @@ void Renderer::ellipsoid(float x, float y, float z, float width, float height, f
 	draw(Resources::getGraphicsPipeline("3D"), Resources::getMesh("Sphere"), x, y, z, width, height, depth);
 }
 
-void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, glm::mat4&& transform, std::vector<shared<Image2D>>&& images, bool stroke)
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, glm::mat4&& transform, std::initializer_list<shared<Image2D>>&& images, bool stroke)
 {
 	instances.emplace_back(makeShared<RenderedInstance>(graphics_pipeline, std::move(images)));
 
@@ -183,14 +183,14 @@ void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const sha
 	draw(graphics_pipeline, mesh, std::forward<glm::mat4>(transform), { active.image }, stroke);
 }
 
-void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, std::vector<shared<Image2D>>&& images, bool stroke)
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, std::initializer_list<shared<Image2D>>&& images, bool stroke)
 {
 	draw(graphics_pipeline, mesh, {
 		width, 0, 0, 0,
 		0, height, 0, 0,
 		0, 0, depth, 0,
 		x, y, z, 1
-		}, std::forward<std::vector<shared<Image2D>>>(images), stroke);
+		}, std::forward<std::initializer_list<shared<Image2D>>>(images), stroke);
 }
 
 void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, bool stroke)
@@ -288,7 +288,7 @@ Light* Renderer::addLight(const Light& light)
 	return nullptr;
 }
 
-void Renderer::createInstance(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data)
+void Renderer::createInstance(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, InstanceData&& instance_data)
 {
 	if (!instance->material.get()) 
 		instance->material = Resources::getGraphicsPipeline("Lit 3D");
@@ -300,7 +300,7 @@ void Renderer::createInstance(const shared<RenderedInstance>& instance, const sh
 		if (instance_batch == *instance && instance_batch.mesh == mesh && instance_batch.instance_data.size() < Graphics::MAX_INSTANCES && instance_batch.instance_images.available() >= instance->images.size())
 		{
 			instance_batch.needs_update = true;
-			instance_batch.instance_data.push_back(instance_data);
+			instance_batch.instance_data.emplace_back(std::move(instance_data));
 			instance_batch.instances.push_back(instance);
 
 			instance->instance_batch_index = i;
@@ -312,7 +312,7 @@ void Renderer::createInstance(const shared<RenderedInstance>& instance, const sh
 	}
 
 	if (need_new_instance_batch)
-		addInstanceBatch(instance, mesh, instance_data);
+		addInstanceBatch(instance, mesh, std::move(instance_data));
 
 	if (instance->images.size())
 	{
@@ -328,14 +328,14 @@ void Renderer::updateInstance(RenderedInstance& instance, const InstanceData& in
 	instance_batches[instance.instance_batch_index].instance_data[instance.instance_data_index] = instance_data;
 }
 
-void Renderer::addInstanceBatch(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data)
+void Renderer::addInstanceBatch(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, InstanceData&& instance_data)
 {
 	instance_batches.emplace_back(mesh, instance);
 	auto& new_batch = instance_batches.back();
 
 	new_batch.instance_images.add({ Resources::white_image });
 
-	new_batch.instance_data.emplace_back(instance_data);
+	new_batch.instance_data.emplace_back(std::move(instance_data));
 	new_batch.instances.emplace_back(instance);
 
 	new_batch.instance_buffer = makeShared<VertexBuffer>(nullptr, Graphics::MAX_INSTANCES * sizeof(InstanceData), VMA_MEMORY_USAGE_CPU_TO_GPU);

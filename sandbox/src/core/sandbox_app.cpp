@@ -71,12 +71,12 @@ void SandboxApp::onUpdate()
     //fx = sin(Time::runtime * 4.0f) * 100.0f;
     //fy = cos(Time::runtime * 4.0f) * 100.0f;
     //
-    //Renderer::color({ 1, 1, 1, 1 });
+    Renderer::color({ 1, 1, 1, 1 });
     //Renderer::image(Resources::getImage("Test1"));
-    //for (float x = 0; x < 200; ++x)
-    //    for (float y = 0; y < 100; ++y)
-    //        Renderer::rectangle(x * 4, y * 4, 4, 4);
-    //
+    for (float x = 0; x < 100; ++x)
+        for (float y = 0; y < 100; ++y)
+            Renderer::circle(x * 3, y * 2, 10);
+    
     //Renderer::image();
     //Renderer::color({ 1, 1, 1, 1 });
     //Renderer::rectangle(300 + fx, 100 + fy, 200, 200);
@@ -84,14 +84,6 @@ void SandboxApp::onUpdate()
     Renderer::text("W Sample Text", 500, 0, 50);
 
     ParticleSystem::emit(Particles::flame);
-    
-    //Resources::pool.forEach(entities.size(), 
-    //    [&](size_t i) 
-    //    {
-    //        entities[i]->update<TransformComponent>([](TransformComponent& transform) {});
-    //        entities[i]->update<ColorComponent>([](ColorComponent& color) { color.color = glm::vec4(RNG::Float(), RNG::Float(), RNG::Float(), 1.0f); });
-    //    });
-    //Resources::pool.wait();
 }
 
 SandboxApp::~SandboxApp()

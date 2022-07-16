@@ -15,9 +15,7 @@ public:
 	GraphicsPipeline& setRenderPass(VkRenderPass render_pass);
 	GraphicsPipeline& setSubpass(uint32_t subpass);
 	GraphicsPipeline& setStage(const PipelineStage& stage);
-	GraphicsPipeline& setDepthCompareOp(VkCompareOp depth_compare_op);
 	GraphicsPipeline& addDynamicState(VkDynamicState dynamic_state);
-	GraphicsPipeline& enable(EnableTag tag);
 
 	void build();
 	void bind();
