@@ -25,6 +25,8 @@ void Resources::init()
     {
         if (!std::filesystem::exists("data/cache/shaders"))
             std::filesystem::create_directories("data/cache/shaders");
+        if (!std::filesystem::exists("data/images/screenshots"))
+            std::filesystem::create_directories("data/images/screenshots");
     }
 
     //IMAGES

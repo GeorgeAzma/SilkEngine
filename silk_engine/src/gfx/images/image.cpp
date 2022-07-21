@@ -18,7 +18,6 @@ Image::~Image()
 void Image::create(const ImageProps& props)
 {
 	this->props = props;
-	needs_staging = Allocator::needsStaging(props.memory_usage);
 	SK_ASSERT((props.is_1D ? (props.height == 1 && props.depth == 1) : true), "If image is 1D it's height and depth must be 1");
 	SK_ASSERT(((!props.is_1D && ! props.is_cubemap) ? (props.depth == 1) : true), "If image is 2D it's depth must be 1");
 	unique<StagingBuffer> staging_buffer = props.data ? makeUnique<StagingBuffer>(props.data, getSize()) : nullptr;
@@ -29,7 +28,7 @@ void Image::create(const ImageProps& props)
 		VkImageCreateInfo ci{};
 		ci.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		ci.imageType = props.is_1D ? VK_IMAGE_TYPE_1D : (props.depth == 1 ? VK_IMAGE_TYPE_2D : VK_IMAGE_TYPE_3D);
-		ci.format = ImageFormatEnum::toVulkanType(props.format);
+		ci.format = VkFormat(props.format);
 		ci.tiling = props.tiling;
 		ci.usage = props.usage;
 		ci.flags = props.is_cubemap * VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
@@ -192,7 +191,7 @@ void Image::insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags 
 
 bool Image::isFeatureSupported(VkFormatFeatureFlags feature) const
 {
-	VkFormatProperties format_properties = Graphics::physical_device->getFormatProperties(ImageFormatEnum::toVulkanType(props.format));
+	VkFormatProperties format_properties = Graphics::physical_device->getFormatProperties(VkFormat(props.format));
 	const VkFormatFeatureFlags& features = (props.tiling == VK_IMAGE_TILING_OPTIMAL) ? format_properties.optimalTilingFeatures : format_properties.linearTilingFeatures;
 	return bool(features & feature);
 }
@@ -271,7 +270,7 @@ void Image::reallocate(uint32_t width, uint32_t height, uint32_t depth, uint32_t
 	VkImageCreateInfo ci{};
 	ci.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 	ci.imageType = props.is_1D ? VK_IMAGE_TYPE_1D : (props.depth == 1 ? VK_IMAGE_TYPE_2D : VK_IMAGE_TYPE_3D);
-	ci.format = ImageFormatEnum::toVulkanType(props.format);
+	ci.format = VkFormat(props.format);
 	ci.tiling = props.tiling;
 	ci.usage = props.usage;
 	ci.flags = props.is_cubemap * VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
@@ -326,7 +325,7 @@ void Image::generateMipmaps()
 	if (mip_levels <= 1)
 		return;
 
-	VkFormatProperties format_properties = Graphics::physical_device->getFormatProperties(ImageFormatEnum::toVulkanType(props.format));
+	VkFormatProperties format_properties = Graphics::physical_device->getFormatProperties(VkFormat(props.format));
 
 	SK_ASSERT(format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT,
 		"Image format does not support src blitting");
@@ -406,7 +405,7 @@ void Image::setData(void* data, uint32_t base_layer, uint32_t layers)
 	image_subresource.arrayLayer = base_layer;
 	VkSubresourceLayout subresource_layout = Graphics::logical_device->getImageSubresourceLayout(image, image_subresource);
 
-	if (needs_staging)
+	if (Allocator::needsStaging(props.memory_usage))
 	{
 		StagingBuffer sb(data, subresource_layout.size * layers);
 		void* buffer_data;
@@ -432,7 +431,7 @@ void Image::getData(void* data, uint32_t base_layer, uint32_t layers)
 	image_subresource.arrayLayer = base_layer;
 	VkSubresourceLayout subresource_layout = Graphics::logical_device->getImageSubresourceLayout(image, image_subresource);
 	
-	if (needs_staging)
+	if (Allocator::needsStaging(props.memory_usage))
 	{
 		StagingBuffer sb(nullptr, subresource_layout.size * layers);
 		copyToBuffer(sb, base_layer, layers);

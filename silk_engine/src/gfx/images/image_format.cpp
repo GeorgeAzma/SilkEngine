@@ -1,24 +1,5 @@
 #include "image_format.h"
 
-ImageFormat ImageFormatEnum::fromVulkanType(VkFormat vulkan_format)
-{
-	using enum ImageFormat;
-	switch (vulkan_format)
-	{
-		case VK_FORMAT_R8_UNORM: return RED;
-		case VK_FORMAT_R8G8_UNORM: return RG;
-		case VK_FORMAT_R8G8B8_UNORM: return RGB;
-		case VK_FORMAT_R8G8B8A8_UNORM: return RGBA;
-		case VK_FORMAT_B8G8R8A8_UNORM: return BGRA;
-		case VK_FORMAT_D24_UNORM_S8_UINT: return DEPTH_STENCIL;
-		case VK_FORMAT_D32_SFLOAT: return DEPTH;
-		case VK_FORMAT_S8_UINT: return STENCIL;
-	}
-
-	SK_ERROR("Unsupported vulkan format specified: {0}.", vulkan_format);
-	return ImageFormat(0);
-}
-
 ImageFormat ImageFormatEnum::fromChannelCount(uint8_t channels)
 {
 	using enum ImageFormat;
@@ -31,25 +12,6 @@ ImageFormat ImageFormatEnum::fromChannelCount(uint8_t channels)
 	}
 
 	SK_ERROR("Unsupported image format channel count specified: {0}.", channels);
-}
-
-VkFormat ImageFormatEnum::toVulkanType(ImageFormat format)
-{
-	using enum ImageFormat;
-	switch (format)	
-	{
-		case RED: return VK_FORMAT_R8_UNORM;
-		case RG: return VK_FORMAT_R8G8_UNORM;
-		case RGB: return VK_FORMAT_R8G8B8_UNORM;
-		case RGBA: return VK_FORMAT_R8G8B8A8_UNORM;
-		case BGRA: return VK_FORMAT_B8G8R8A8_UNORM;
-		case DEPTH_STENCIL: return VK_FORMAT_D24_UNORM_S8_UINT;
-		case DEPTH: return VK_FORMAT_D32_SFLOAT;
-		case STENCIL: return VK_FORMAT_S8_UINT;
-	}
-
-	SK_ERROR("Unsupported image format specified: {0}.", format);
-	return VkFormat(0);
 }
 
 size_t ImageFormatEnum::getSize(ImageFormat format)

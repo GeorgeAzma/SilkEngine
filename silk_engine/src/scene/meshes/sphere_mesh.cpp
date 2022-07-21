@@ -80,10 +80,10 @@ SphereMesh::SphereMesh(uint32_t resolution)
 				if (x != resolution - 1 && y != resolution - 1)
 				{
 					getIndex(indx++) = off;
-					getIndex(indx++) = off + resolution + 1;
 					getIndex(indx++) = off + resolution;
-					getIndex(indx++) = off;
 					getIndex(indx++) = off + 1;
+					getIndex(indx++) = off + 1;
+					getIndex(indx++) = off + resolution;
 					getIndex(indx++) = off + resolution + 1;
 				}
 			}

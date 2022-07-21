@@ -67,7 +67,7 @@ class ParticleSystem
 	};
 
 public:
-	static constexpr size_t MAX_PARTICLES = 262144;
+	static constexpr size_t MAX_PARTICLES = 65536;
 
 public:
 	static void init();

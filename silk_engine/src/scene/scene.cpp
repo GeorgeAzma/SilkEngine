@@ -58,13 +58,14 @@ Scene::~Scene()
 	
 	Dispatcher::unsubscribe(this, &Scene::onWindowResize);
 
-	destroy();
-
 	stopped = true;
 }
 
 void Scene::init()
 {
+	for (auto& [type_id, system] : systems)
+		if (system->enabled)
+			system->init();
 }
 
 void Scene::update()
@@ -94,6 +95,9 @@ void Scene::destroy()
 		{
 			script_component.instance->onDestroy();
 		});
+	for (auto& [type_id, system] : systems)
+		if (system->enabled)
+			system->destroy();
 }
 
 shared<Entity> Scene::createEntity()
@@ -318,7 +322,7 @@ void Scene::onLightComponentCreate(entt::registry& registry, entt::entity entity
 {
 	LightComponent& light_component = registry.get<LightComponent>(entity);
 
-	auto light = Renderer::addLight(light_component.light);
+	Light* light = Renderer::addLight(light_component.light);
 	light_component.light_ptr = light;
 	if (auto transform = registry.try_get<TransformComponent>(entity))
 		light->position = transform->transform * glm::vec4(light_component.light.position, 1);
@@ -326,6 +330,5 @@ void Scene::onLightComponentCreate(entt::registry& registry, entt::entity entity
 
 void Scene::onLightComponentDestroy(entt::registry& registry, entt::entity entity)
 {
-	LightComponent& light_component = registry.get<LightComponent>(entity);
-	(*light_component.light_ptr) = Light{}; //if color is black, light is inactive and shader skips it
+	(*registry.get<LightComponent>(entity).light_ptr) = Light{};
 }

@@ -42,6 +42,7 @@ protected:
 private:
     ApplicationCommandLineArgs command_line_args;
     bool running = true;
+    bool fully_initialized = false;
     double runtime = 0.0;
 
 private:

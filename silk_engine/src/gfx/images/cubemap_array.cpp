@@ -1,5 +1,5 @@
 #include "cubemap_array.h"
-#include "bitmap.h"
+#include "raw_image.h"
 
 CubemapArray::CubemapArray(const std::vector<std::string>& files, const CubemapArrayProps& props)
 {
@@ -7,14 +7,14 @@ CubemapArray::CubemapArray(const std::vector<std::string>& files, const CubemapA
 	this->props = props;
 	this->props.layers = files.size() / 6;
 
-	Bitmap data{};
+	RawImage data{};
 	data.load(files);
 	if (data.channels == 3)
 		data.align4();
 	this->props.width = data.width;
 	this->props.height = data.height;
 	this->props.format = ImageFormatEnum::fromChannelCount(data.channels);
-	this->props.data = data.data();
+	this->props.data = data.pixels.data();
 	create(this->props);
 }
 

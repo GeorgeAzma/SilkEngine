@@ -6,13 +6,13 @@ ImageArray::ImageArray(const std::vector<std::string>& files, const ImageArrayPr
 	this->props = props;
 	this->props.layers = files.size();
 
-	Bitmap data{};
+	RawImage data{};
 	data.load(files);
 	this->props.width = data.width;
 	this->props.height = data.height;
 	if (data.channels == 3)
 		data.align4();
-	this->props.data = data.data();
+	this->props.data = data.pixels.data();
 	this->props.format = ImageFormatEnum::fromChannelCount(data.channels);
 	create(this->props);
 }

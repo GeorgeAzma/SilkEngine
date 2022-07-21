@@ -1,9 +1,8 @@
 #include "model.h"
-#include "io/file.h"
 #include "resources.h"
-#include "gfx/graphics.h"
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+#include "raw_model.h"
+#include "meshes/mesh.h"
+#include "gfx/images/image2D.h"
 
 Model::Model(std::string_view file)
 {
@@ -45,7 +44,7 @@ Model::Model(const RawModel& raw_model)
                 image_props.width = md.diffuse_map->width;
                 image_props.height = md.diffuse_map->height;
                 image_props.format = ImageFormatEnum::fromChannelCount(md.diffuse_map->channels);
-                image_props.data = md.diffuse_map->data();
+                image_props.data = md.diffuse_map->pixels.data();
                 images.back().emplace_back(makeShared<Image2D>(image_props));
                 bitmap_images.insert_or_assign((size_t)md.diffuse_map, images.back().back());
             }
@@ -61,7 +60,7 @@ Model::Model(const RawModel& raw_model)
                 image_props.width = md.normal_map->width;
                 image_props.height = md.normal_map->height;
                 image_props.format = ImageFormatEnum::fromChannelCount(md.normal_map->channels);
-                image_props.data = md.normal_map->data();
+                image_props.data = md.normal_map->pixels.data();
                 images.back().emplace_back(makeShared<Image2D>(image_props));
                 bitmap_images.emplace((size_t)md.normal_map, images.back().back());
             }
@@ -77,7 +76,7 @@ Model::Model(const RawModel& raw_model)
                 image_props.width = md.height_map->width;
                 image_props.height = md.height_map->height;
                 image_props.format = ImageFormatEnum::fromChannelCount(md.height_map->channels);
-                image_props.data = md.height_map->data();
+                image_props.data = md.height_map->pixels.data();
                 images.back().emplace_back(makeShared<Image2D>(image_props));
                 bitmap_images.emplace((size_t)md.height_map, images.back().back());
             }
@@ -93,7 +92,7 @@ Model::Model(const RawModel& raw_model)
                 image_props.width = md.ao_map->width;
                 image_props.height = md.ao_map->height;
                 image_props.format = ImageFormatEnum::fromChannelCount(md.ao_map->channels);
-                image_props.data = md.ao_map->data();
+                image_props.data = md.ao_map->pixels.data();
                 images.back().emplace_back(makeShared<Image2D>(image_props));
                 bitmap_images.emplace((size_t)md.ao_map, images.back().back());
             }
@@ -109,7 +108,7 @@ Model::Model(const RawModel& raw_model)
                 image_props.width = md.specular_map->width;
                 image_props.height = md.specular_map->height;
                 image_props.format = ImageFormatEnum::fromChannelCount(md.specular_map->channels);
-                image_props.data = md.specular_map->data();
+                image_props.data = md.specular_map->pixels.data();
                 images.back().emplace_back(makeShared<Image2D>(image_props));
                 bitmap_images.emplace((size_t)md.specular_map, images.back().back());
             }
@@ -125,7 +124,7 @@ Model::Model(const RawModel& raw_model)
                 image_props.width = md.emissive_map->width;
                 image_props.height = md.emissive_map->height;
                 image_props.format = ImageFormatEnum::fromChannelCount(md.emissive_map->channels);
-                image_props.data = md.emissive_map->data();
+                image_props.data = md.emissive_map->pixels.data();
                 images.back().emplace_back(makeShared<Image2D>(image_props));
                 bitmap_images.emplace((size_t)md.emissive_map, images.back().back());
             }
@@ -134,125 +133,12 @@ Model::Model(const RawModel& raw_model)
     }
 }
 
-RawModel::RawModel(std::string_view file)
+const std::vector<shared<Mesh>>& Model::getMeshes() const
 {
-    std::string path = std::string("data/models/") + file.data();
-    this->path = path;
-
-	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate);
-	SK_ASSERT(scene && (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) != AI_SCENE_FLAGS_INCOMPLETE && scene->mRootNode,
-		"Assimp: Couldn't load model at path: {0}", path);
-
-	directory = file.substr(0, file.find_last_of('/'));
-
-    processNode(scene->mRootNode, scene);
-
-    SK_TRACE("Model loaded: {0}", file);
+    return meshes;
 }
 
-void RawModel::processNode(aiNode* node, const aiScene* scene)
+const std::vector<std::vector<shared<Image2D>>>& Model::getImages() const
 {
-    for (size_t i = 0; i < node->mNumMeshes; ++i)
-        processMesh(scene->mMeshes[node->mMeshes[i]], scene);
-
-    for (size_t i = 0; i < node->mNumChildren; ++i)
-        processNode(node->mChildren[i], scene);
-}
-
-void RawModel::processMesh(aiMesh *mesh, const aiScene *scene)
-{
-    std::vector<Vertex3D> vertices(mesh->mNumVertices, Vertex3D{});
-    std::vector<uint32_t> indices;
-
-    for(size_t i = 0; i < mesh->mNumVertices; ++i)
-    {
-        if (mesh->HasPositions())
-        {
-            vertices[i].position.x = mesh->mVertices[i].x;
-            vertices[i].position.y = mesh->mVertices[i].y;
-            vertices[i].position.z = -mesh->mVertices[i].z;
-        }
-
-        if (mesh->HasNormals())
-        {
-            vertices[i].normal.x = mesh->mNormals[i].x;
-            vertices[i].normal.y = mesh->mNormals[i].y;
-            vertices[i].normal.z = -mesh->mNormals[i].z;
-        }
-
-        if (mesh->HasVertexColors(0))
-        {
-            vertices[i].color.r = mesh->mColors[0][i].r;
-            vertices[i].color.g = mesh->mColors[0][i].g;
-            vertices[i].color.b = mesh->mColors[0][i].b;
-            vertices[i].color.a = mesh->mColors[0][i].a;
-        }
-        
-        if (mesh->HasTextureCoords(0))
-        {
-            vertices[i].texture_coordinate.x = mesh->mTextureCoords[0][i].x;
-            vertices[i].texture_coordinate.y = mesh->mTextureCoords[0][i].y;
-        }
-    }
-
-    for (size_t i = 0; i < mesh->mNumFaces; ++i)
-    {
-        for (size_t j = 0; j < mesh->mFaces[i].mNumIndices; ++j)
-            indices.emplace_back(mesh->mFaces[i].mIndices[j]);
-    }
-
-    shared<RawMesh3D> new_mesh = makeShared<RawMesh3D>(vertices, indices);
-
-    if(mesh->mMaterialIndex >= 0)
-    {
-        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-
-        std::vector<Bitmap*> diffuse_maps = loadMaterialTextures(material, aiTextureType_DIFFUSE); 
-        std::vector<Bitmap*> normal_maps = loadMaterialTextures(material, aiTextureType_NORMALS);        
-        std::vector<Bitmap*> ao_maps = loadMaterialTextures(material, aiTextureType_AMBIENT);
-        std::vector<Bitmap*> height_maps = loadMaterialTextures(material, aiTextureType_HEIGHT);        
-        std::vector<Bitmap*> specular_maps = loadMaterialTextures(material, aiTextureType_SPECULAR);        
-        std::vector<Bitmap*> emissive_maps = loadMaterialTextures(material, aiTextureType_EMISSIVE);
-
-        MeshMaterialData mat{};
-        mat.diffuse_map = diffuse_maps.size() ? diffuse_maps[0] : nullptr;
-        mat.normal_map = normal_maps.size() ? normal_maps[0] : nullptr;
-        mat.ao_map = ao_maps.size() ? ao_maps[0] : nullptr;
-        mat.height_map = height_maps.size() ? height_maps[0] : nullptr;
-        mat.specular_map = specular_maps.size() ? specular_maps[0] : nullptr;
-        mat.emissive_map = emissive_maps.size() ? emissive_maps[0] : nullptr;
-        material_data.emplace_back(std::move(mat));
-    }
-      
-    meshes.emplace_back(new_mesh);
-}  
-
-std::vector<Bitmap*> RawModel::loadMaterialTextures(aiMaterial* mat, aiTextureType type)
-{
-    std::vector<Bitmap*> images;
-
-    for (size_t i = 0; i < mat->GetTextureCount(type); ++i)
-    {
-        if (i > 0) break; //TODO: We don't support multiple textures for each mesh (and we might not)
-        aiString str;
-        mat->GetTexture(type, i, &str); 
-
-        auto cached_image = image_cache.find(str.C_Str());
-        if (cached_image != image_cache.end())
-        {
-            images.emplace_back(&cached_image->second);
-        }
-        else
-        {
-            Bitmap image_data{};
-            image_data.load(directory + '/' + str.C_Str());
-            if (image_data.channels == 3)
-                image_data.align4();
-            image_cache.emplace(str.C_Str(), std::move(image_data));
-            images.emplace_back(&image_cache.at(str.C_Str()));
-        }
-    }
-
     return images;
 }

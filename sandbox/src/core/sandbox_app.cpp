@@ -1,7 +1,4 @@
 #include "sandbox_app.h"
-   
-float fx = 0.0f;
-float fy = 0.0f;
 
 SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
 {  
@@ -24,26 +21,13 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     camera->add<CameraComponent>();
     camera->add<ScriptComponent>().bind<CameraController>();
 
-    auto rectangle = Resources::getMesh("Rectangle");
-    auto circle = Resources::getMesh("Circle");
-    entities.resize(1000);
-    for (size_t i = 0; i < entities.size(); ++i)
-    {
-        entities[i] = scene->createEntity();
-        entities[i]->add<MaterialComponent>(Resources::getGraphicsPipeline("2D"));
-        auto t = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(Window::getWidth() * RNG::Float(), Window::getHeight() * RNG::Float(), 0.0f)), glm::vec3(2.0f, 2.0f, 0.0f));
-        entities[i]->add<TransformComponent>(t);
-        entities[i]->add<ImageComponent>(Resources::getImage(RNG::Bool() ? "Test2" : "Test1"));
-        entities[i]->add<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        entities[i]->add<MeshComponent>(rectangle);
-        //entities[i]->add<ModelComponent>(Resources::getModel("Backpack"));
-    }
+    audio_device = makeShared<AudioDevice>();
 
-    entities.emplace_back(scene->createEntity());
-    entities.back()->add<TransformComponent>(glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0)), glm::vec3(50, 50, 0)));
-    entities.back()->add<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-    entities.back()->add<TextComponent>("Quick brown fox jumped over a lazy dog");
-    entities.back()->update<TextComponent>([](TextComponent& text) { text.text = "Press F2"; });
+    AudioManager::setDistanceModel(DistanceModel::NONE);
+    audio = makeShared<Audio>("bounce.wav");
+    audio_source = makeShared<AudioSource>();
+    microphone = makeShared<Microphone>();
+    microphone->start();
 }
 
 void SandboxApp::onUpdate()
@@ -68,26 +52,46 @@ void SandboxApp::onUpdate()
         Graphics::screenshot(fmt::format("data/images/screenshots/screenshot.png"));
     }
 
-    //fx = sin(Time::runtime * 4.0f) * 100.0f;
-    //fy = cos(Time::runtime * 4.0f) * 100.0f;
-    //
-    Renderer::color({ 1, 1, 1, 1 });
-    //Renderer::image(Resources::getImage("Test1"));
-    for (float x = 0; x < 100; ++x)
-        for (float y = 0; y < 100; ++y)
-            Renderer::circle(x * 3, y * 2, 10);
-    
-    //Renderer::image();
-    //Renderer::color({ 1, 1, 1, 1 });
-    //Renderer::rectangle(300 + fx, 100 + fy, 200, 200);
-    //
-    Renderer::text("W Sample Text", 500, 0, 50);
+    uint32_t samples = microphone->getAvailableSampleCount();
+    if (samples > 0)
+    {
+        DebugTimer t;
+        if (audio_source->getQueuedBufferCount() < 3)
+        {
+            std::vector<uint8_t> buffer(samples * 2);
+            microphone->getSamples(buffer.data(), samples);
 
-    ParticleSystem::emit(Particles::flame);
+            RawAudio a{};
+            a.format = AudioFormat::MONO16;
+            a.sample_rate = 44100;
+            a.data = buffer;
+            audio = makeShared<Audio>(a);
+            audio_source->queue(*audio);
+        }
+        if (!audio_source->isPlaying())
+            audio_source->play();
+        uint32_t id = audio_source->unqueue();
+    }
+
+    SK_TRACE("Q: {} | P: {}", audio_source->getQueuedBufferCount(), audio_source->getProcessedBufferCount());
+
+    //const auto& cam = camera->get<CameraComponent>().camera;
+    //AudioManager::getListener().setPosition(cam.position);
+    //
+    ////0,0,0 = front | 90, 0, 0 = left
+    //AudioManager::getListener().setRotation({ cam.rotation.x + glm::pi<float>(), cam.rotation.y, 0.0f });
+    //
+    //Renderer::text(fmt::format("Pos {}, {}", cam.position.x, cam.position.y), 30.0f, 60.0f, 20.0f);
+    //Renderer::text(fmt::format("Rot {}, {}", cam.rotation.x + glm::pi<float>(), cam.rotation.y), 30.0f, 30.0f, 20.0f);
+    //
+    //float x = 0.0f;
+    //Renderer::sphere(x, 0.0f, 0.0f, 0.2f);
+    //audio_source->setPosition({ x, 0, 0});
 }
 
 SandboxApp::~SandboxApp()
 {
+    microphone->stop();
     SceneManager::remove(scene);
 }
 

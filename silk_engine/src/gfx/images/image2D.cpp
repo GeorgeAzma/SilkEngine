@@ -20,13 +20,13 @@ Image2D::Image2D(uint32_t width, uint32_t height, ImageFormat format)
 Image2D::Image2D(std::string_view file, const Image2DProps& props)
 {
 	this->props = props;
-	Bitmap data{};
+	RawImage data{};
 	data.load(file);
 	this->props.width = data.width;
 	this->props.height = data.height;
 	if (data.channels == 3)
 		data.align4();
-	this->props.data = data.data();
+	this->props.data = data.pixels.data();
 	this->props.format = ImageFormatEnum::fromChannelCount(data.channels);
 	create(this->props);
 }

@@ -32,7 +32,7 @@ void Shader::Includer::ReleaseInclude(shaderc_include_result* data)
 	delete data;
 }
 
-Shader::Shader(const std::filesystem::path& file, const std::vector<Define>& defines)
+Shader::Shader(std::string_view file, const std::vector<Define>& defines)
 	: file(file)
 {
 	compile(defines, false);
@@ -73,8 +73,8 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 	for (auto& define : defines)
 		options.AddMacroDefinition(define.name, define.value);
 
-	std::filesystem::path path = (std::filesystem::path("data/shaders") / file).string() + ".glsl";
-	std::filesystem::path cache_path = (std::filesystem::path("data/cache/shaders") / file).string() + defines_str + ".glsl";
+	std::filesystem::path path = std::filesystem::path("data/shaders") / (file.string() + ".glsl");
+	std::filesystem::path cache_path = std::filesystem::path("data/cache/shaders") / (file.string() + defines_str + ".glsl");
 	std::unordered_map<uint32_t, std::string> shader_sources = parse(path);
 
 	for (auto&& [type, source] : shader_sources)
@@ -120,11 +120,11 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 			stage.binary = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend());
 
 			std::ofstream out(file_cache_path, std::ios::binary | std::ios::trunc);
-			SK_ASSERT(out.is_open(), "Couldn't create shader cache file: {0}", file_cache_path);
+			SK_ASSERT(out.is_open(), "Couldn't create shader cache file: {}", file_cache_path);
 			out.write((const char*)stage.binary.data(), stage.binary.size() * sizeof(uint32_t));
 			out.close();
 
-			SK_TRACE("Shader cache created: {0}", file_cache_path);
+			SK_TRACE("Shader cache created: {}", file_cache_path);
 		}
 
 		VkShaderModuleCreateInfo ci{};

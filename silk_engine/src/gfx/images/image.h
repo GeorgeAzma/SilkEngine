@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bitmap.h"
+#include "raw_image.h"
 #include "image_format.h"
 #include "gfx/buffers/staging_buffer.h"
 #include "image_view.h"
@@ -91,6 +91,5 @@ protected:
 	ImageProps props = {};
 	uint32_t mip_levels = 1;
 	mutable bool mapped = false;
-	bool needs_staging = false;
 	bool swap_chain_property = false;
 };

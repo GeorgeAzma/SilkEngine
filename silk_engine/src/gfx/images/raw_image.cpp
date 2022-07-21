@@ -1,10 +1,15 @@
-#include "bitmap.h"
+#include "raw_image.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
-void Bitmap::load(std::string_view file)
+RawImage::RawImage(std::string_view file)
+{
+	load(file);
+}
+
+void RawImage::load(std::string_view file)
 {
 	std::string path = std::string("data/images/") + file.data();
 
@@ -19,7 +24,7 @@ void Bitmap::load(std::string_view file)
 	SK_TRACE("Image Loaded: {0}", path);
 }
 
-void Bitmap::load(const std::vector<std::string>& files)
+void RawImage::load(const std::vector<std::string>& files)
 {
 	SK_ASSERT(files.size(), "You have to specify at least one filepath for loading images");
 
@@ -33,7 +38,7 @@ void Bitmap::load(const std::vector<std::string>& files)
 	for (auto& path : paths)
 		path = "data/images/" + path;
 
-	Bitmap image_data{};
+	RawImage image_data{};
 	image_data.load(paths[0]);
 	if (image_data.channels == 3)
 		image_data.align4();
@@ -43,7 +48,7 @@ void Bitmap::load(const std::vector<std::string>& files)
 	height = image_data.height;
 	channels = image_data.channels;
 	pixels.resize(size * paths.size());
-	std::memcpy(pixels.data(), image_data.data(), size);
+	std::memcpy(pixels.data(), image_data.pixels.data(), size);
 
 	for (size_t i = 1; i < paths.size(); ++i)
 	{
@@ -56,23 +61,23 @@ void Bitmap::load(const std::vector<std::string>& files)
 				  && image_data.channels == channels,
 				  "Error while loading images, couldn't load image at {0}. width, height and channel count should match in all the images", files[i]);
 
-		std::memcpy(pixels.data() + i * size / sizeof(uint8_t), image_data.data(), size);
+		std::memcpy(pixels.data() + i * size / sizeof(uint8_t), image_data.pixels.data(), size);
 	}
 }
 
-void Bitmap::save(std::string_view file)
+void RawImage::save(std::string_view file)
 {
 	stbi_write_bmp(file.data(), (int)width, (int)height, (int)channels, pixels.data());
 	SK_TRACE("Image Saved: {0}", file.data());
 }
 
-void Bitmap::savePNG(std::string_view file)
+void RawImage::savePNG(std::string_view file)
 {
 	stbi_write_png(file.data(), (int)width, (int)height, (int)channels, pixels.data(), 0);
 	SK_TRACE("Image Saved: {0}", file.data());
 }
 
-void Bitmap::align4() //NOTE: This can be done in compute shader
+void RawImage::align4() //NOTE: This can be done in compute shader
 {
 	int old_channels = channels;
 	channels = 4;

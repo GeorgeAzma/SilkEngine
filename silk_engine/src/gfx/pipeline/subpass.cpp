@@ -3,7 +3,7 @@
 void Subpass::addAttachment(const AttachmentProps& props)
 {
     VkAttachmentDescription attachment_description{};
-    attachment_description.format = ImageFormatEnum::toVulkanType(props.format);
+    attachment_description.format = VkFormat(props.format);
     attachment_description.samples = props.samples;
     attachment_description.loadOp = props.load_operation;
     attachment_description.storeOp = props.store_operation;
@@ -25,8 +25,8 @@ void Subpass::addAttachment(const AttachmentProps& props)
 
     VkAttachmentReference attachment_reference{};
     attachment_reference.attachment = attachments.size();
-    if (ImageFormatEnum::hasDepth(ImageFormatEnum::fromVulkanType(attachment_description.format)) ||
-        ImageFormatEnum::hasStencil(ImageFormatEnum::fromVulkanType(attachment_description.format)))
+    if (ImageFormatEnum::hasDepth(ImageFormat(attachment_description.format)) ||
+        ImageFormatEnum::hasStencil(ImageFormat(attachment_description.format)))
     {
         attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         depth_stencil_attachment_reference = attachment_reference;

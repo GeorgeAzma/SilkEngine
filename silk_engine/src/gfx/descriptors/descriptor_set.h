@@ -16,7 +16,7 @@ public:
 
 	void bind(size_t first_set = 0);
 
-	bool wasUpdated() const { return updated; }
+	bool wasUpdated() const { return !needs_update; }
 	const VkDescriptorSetLayout& getLayout() const { return *layout; }
 	std::vector<VkWriteDescriptorSet>& getWrites() { return write_descriptor_sets; }
 	operator const VkDescriptorSet& () const { return descriptor_set; }
@@ -36,6 +36,5 @@ private:
 	std::vector<std::vector<VkDescriptorImageInfo>> image_infos;
 	std::vector<std::vector<VkDescriptorBufferInfo>> buffer_infos;
 	std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
-	bool updated = false;
 	bool needs_update = true;
 };

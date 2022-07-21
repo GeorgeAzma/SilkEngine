@@ -52,7 +52,6 @@ void Renderer::reset()
 	for (const auto& instance : instances)
 		destroyInstance(*instance);
 	instances.clear();	
-	lights.fill(Light{});
 	active = {};
 	active.image = Resources::white_image;
 	active.font = Resources::getFont("Arial");
@@ -75,17 +74,7 @@ void Renderer::triangle(float x1, float y1, float x2, float y2, float x3, float 
 
 void Renderer::rectangle(float x, float y, float width, float height)
 {
-	if (active.stroke_weight == 1.0f)
-		draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), x, y, 0, width, height, 1);
-	else
-	{
-		float ws = width * active.stroke_weight * 0.5f;
-		float hs = height * active.stroke_weight * 0.5f;
-		draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), x, y, 0, ws, height, 1, true);
-		draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), x, y, 0, width, hs, 1, true);
-		draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), x + width - ws, y, 0, ws, height, 1, true);
-		draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), x, y + height - hs, 0, width, hs, 1, true);
-	}
+	draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), x, y, 0, width, height, 1);
 }
 
 void Renderer::square(float x, float y, float size)
@@ -143,64 +132,59 @@ void Renderer::text(const std::string& text, float x, float y, float size)
 
 void Renderer::tetrahedron(float x, float y, float z, float size)
 {
-	draw(Resources::getGraphicsPipeline("3D"), Resources::getMesh("Tetrahedron"), x, y, z, size, size, size);
+	draw(Resources::getGraphicsPipeline("Lit 3D"), Resources::getMesh("Tetrahedron"), x, y, z, size, size, size);
 }
 
 void Renderer::cube(float x, float y, float z, float size)
 {
-	draw(Resources::getGraphicsPipeline("3D"), Resources::getMesh("Cube"), x, y, z, size, size, size);
+	draw(Resources::getGraphicsPipeline("Lit 3D"), Resources::getMesh("Cube"), x, y, z, size, size, size);
 }
 
 void Renderer::cuboid(float x, float y, float z, float width, float height, float depth)
 {
-	draw(Resources::getGraphicsPipeline("3D"), Resources::getMesh("Cube"), x, y, z, width, height, depth);
+	draw(Resources::getGraphicsPipeline("Lit 3D"), Resources::getMesh("Cube"), x, y, z, width, height, depth);
 }
 
 void Renderer::sphere(float x, float y, float z, float radius)
 {
-	draw(Resources::getGraphicsPipeline("3D"), Resources::getMesh("Sphere"), x, y, z, radius, radius, radius);
+	draw(Resources::getGraphicsPipeline("Lit 3D"), Resources::getMesh("Sphere"), x, y, z, radius, radius, radius);
 }
 
 void Renderer::ellipsoid(float x, float y, float z, float width, float height, float depth)
 {
-	draw(Resources::getGraphicsPipeline("3D"), Resources::getMesh("Sphere"), x, y, z, width, height, depth);
+	draw(Resources::getGraphicsPipeline("Lit 3D"), Resources::getMesh("Sphere"), x, y, z, width, height, depth);
 }
 
-void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, glm::mat4&& transform, std::initializer_list<shared<Image2D>>&& images, bool stroke)
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, glm::mat4&& transform, std::initializer_list<shared<Image2D>>&& images)
 {
 	instances.emplace_back(makeShared<RenderedInstance>(graphics_pipeline, std::move(images)));
 
 	InstanceData data;
 	data.transform = std::move(transform);
-	data.color = stroke ? active.stroke : active.color;
+	data.color = active.color;
 	if (active.transformed)
 		data.transform *= active.transform;
 	createInstance(instances.back(), mesh, std::move(data));
 }
 
-void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, glm::mat4&& transform, bool stroke)
-{
-	draw(graphics_pipeline, mesh, std::forward<glm::mat4>(transform), { active.image }, stroke);
-}
-
-void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, std::initializer_list<shared<Image2D>>&& images, bool stroke)
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, std::initializer_list<shared<Image2D>>&& images)
 {
 	draw(graphics_pipeline, mesh, {
 		width, 0, 0, 0,
 		0, height, 0, 0,
 		0, 0, depth, 0,
 		x, y, z, 1
-		}, std::forward<std::initializer_list<shared<Image2D>>>(images), stroke);
+		}, std::forward<std::initializer_list<shared<Image2D>>>(images));
 }
 
-void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, bool stroke)
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
 {
 	draw(graphics_pipeline, mesh, {
 		width, 0, 0, 0,
 		0, height, 0, 0,
 		0, 0, depth, 0,
 		x, y, z, 1
-		}, stroke);
+		}, { active.image });
 }
 
 void Renderer::waitForPreviousFrame()
@@ -285,7 +269,9 @@ Light* Renderer::addLight(const Light& light)
 			return &l;
 		}
 	}
-	return nullptr;
+
+	lights.back() = light;
+	return &lights.back();
 }
 
 void Renderer::createInstance(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, InstanceData&& instance_data)

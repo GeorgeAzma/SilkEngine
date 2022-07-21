@@ -7,7 +7,10 @@ class SceneManager
 public:
 	static void add(const shared<Scene>& scene);
 	static void remove(const shared<Scene>& scene);
+
 	static void update();
+	static void destroy();
+
 	static void switchTo(const shared<Scene>& scene);
 	static shared<Scene>& getActive() { return active_scene; }
 

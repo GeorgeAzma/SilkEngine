@@ -21,6 +21,12 @@ void SceneManager::update()
 	active_scene->update();
 }
 
+void SceneManager::destroy()
+{
+	if (active_scene.get())
+		active_scene->destroy();
+}
+
 void SceneManager::switchTo(const shared<Scene>& scene)
 {
 	if(active_scene.get())

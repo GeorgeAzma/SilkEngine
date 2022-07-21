@@ -41,7 +41,6 @@ void DescriptorSet::build()
 
 	layout = Resources::getDescriptorSetLayout(descriptor_set_layout_bindings);
 	pool = DescriptorAllocator::allocate(descriptor_set, *layout);
-	updated = false;
 	needs_update = true;
 
 	for (auto& write : write_descriptor_sets)
@@ -56,17 +55,13 @@ void DescriptorSet::update()
 
 void DescriptorSet::forceUpdate()
 {
-	updated = true;
 	Graphics::logical_device->updateDescriptorSets(write_descriptor_sets);
 	needs_update = false;
 }
 
 void DescriptorSet::bind(size_t first_set)
 {
-	if (!updated)
-		forceUpdate();
-	else
-		update();
+	update();
 
 	Graphics::getActiveCommandBuffer().bindDescriptorSets(first_set, { descriptor_set });
 }
@@ -80,7 +75,7 @@ void DescriptorSet::setImageInfo(size_t binding, const std::vector<VkDescriptorI
 			SK_ASSERT(image_info.size() == write_descriptor_sets[i].descriptorCount, "Invalid image_info size: {0}, should be {1}", image_info.size(), write_descriptor_sets[i].descriptorCount);
 			this->image_infos[i] = image_info;
 			write_descriptor_sets[i].pImageInfo = this->image_infos[i].data();
-			needs_update = true; //TODO: This might be unnecessary if pImageInfo == image_infos[i]
+			needs_update = true;
 			break;
 		}
 	}
@@ -95,7 +90,8 @@ void DescriptorSet::setBufferInfo(size_t binding, const std::vector<VkDescriptor
 			SK_ASSERT(buffer_info.size() == write_descriptor_sets[i].descriptorCount, "Invalid buffer_info size: {0}, should be {1}", buffer_info.size(), write_descriptor_sets[i].descriptorCount);
 			this->buffer_infos[i] = buffer_info;
 			write_descriptor_sets[i].pBufferInfo = this->buffer_infos[i].data();
-			needs_update = true; //TODO: This might be unnecessary if pBufferInfo == buffer_infos[i]
+			needs_update = true;
+			break;
 		}
 	}
 }
@@ -109,7 +105,6 @@ DescriptorSet& DescriptorSet::operator=(const DescriptorSet& other)
 {
 	layout = other.layout;
 	pool = DescriptorAllocator::allocate(descriptor_set, layout->layout);
-	updated = false;
 
 	image_infos = other.image_infos;
 	buffer_infos = other.buffer_infos;

@@ -29,7 +29,7 @@ ImageView::ImageView(VkImage image, ImageFormat format, uint32_t mip_levels, siz
 		break;
 	}
 	ci.viewType = image_view_type;
-	ci.format = ImageFormatEnum::toVulkanType(format);
+	ci.format = VkFormat(format);
 	ci.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 	ci.subresourceRange.aspectMask = ImageFormatEnum::getVulkanAspectFlags(format);
 	ci.subresourceRange.baseMipLevel = 0;

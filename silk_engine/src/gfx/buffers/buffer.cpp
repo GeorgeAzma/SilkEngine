@@ -15,13 +15,13 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage vma_u
 	ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	allocation_ci.usage = vma_usage;
 	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &ci, &allocation_ci, &buffer, &allocation, nullptr));
-	SK_TRACE("Buffer created with size: {}", size);
+	SK_TRACE("Buffer created with size: {}", fmt::Bytes(size));
 } 
 
 Buffer::~Buffer()
 {
 	vmaDestroyBuffer(*Graphics::allocator, buffer, allocation);
-	SK_TRACE("Buffer destroyed: {}", size);
+	SK_TRACE("Buffer destroyed with size: {}", fmt::Bytes(size));
 }
 
 void Buffer::resize(VkDeviceSize size)
@@ -32,7 +32,7 @@ void Buffer::resize(VkDeviceSize size)
 	ci.size = size;
 	vmaDestroyBuffer(*Graphics::allocator, buffer, allocation);
 	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &ci, &allocation_ci, &buffer, &allocation, nullptr));
-	SK_TRACE("Buffer resized: {}", size);
+	SK_TRACE("Buffer resized to: {}", fmt::Bytes(size));
 }
 
 void Buffer::map(void** data) const

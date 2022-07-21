@@ -260,12 +260,12 @@ void Window::setTitle(std::string_view title)
 void Window::setIcon(std::string_view file)
 {
     std::string path = std::string("icons/") + file.data();
-    Bitmap data{};
+    RawImage data{};
     data.load(path);
     std::vector<GLFWimage> icons(1);
     icons[0].height = data.height;
     icons[0].width = data.width;
-    icons[0].pixels = data.data();
+    icons[0].pixels = data.pixels.data();
     glfwSetWindowIcon(window, icons.size(), icons.data());
 }
 

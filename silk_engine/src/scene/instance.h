@@ -27,7 +27,6 @@ struct InstanceData
 struct RenderedInstance
 {
 	shared<GraphicsPipeline> material = nullptr;
-
 	std::vector<shared<Image2D>> images;
 	size_t instance_data_index = std::numeric_limits<size_t>::max();
 	size_t instance_batch_index = std::numeric_limits<size_t>::max();

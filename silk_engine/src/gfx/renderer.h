@@ -17,8 +17,6 @@ class Renderer
 	static inline struct Active
 	{
 		glm::vec4 color = glm::vec4(1);
-		glm::vec4 stroke = glm::vec4(1);
-		float stroke_weight = 1.0f;
 		shared<Image2D> image = nullptr;
 		shared<Font> font = nullptr;
 		glm::mat4 transform = glm::mat4(1);
@@ -62,8 +60,6 @@ public:
 	//States
 	static void transform(const glm::mat4& transform = glm::mat4(1)) { active.transformed = transform != glm::mat4(1); active.transform = transform; }
 	static void color(const Color& color = Colors::WHITE) { active.color = color; }
-	static void stroke(const Color& stroke = Colors::WHITE) { active.stroke = stroke; }
-	static void strokeWeight(float stroke_weight = 1.0f) { active.stroke_weight = stroke_weight; }
 	static void image(const shared<Image2D>& image = Resources::white_image) { active.image = image; }
 
 	//2D
@@ -89,10 +85,9 @@ public:
 	static void ellipsoid(float x, float y, float z, float width, float height, float depth);
 
 	//Slow function for quickly drawing stuff
-	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, glm::mat4&& transform, std::initializer_list<shared<Image2D>>&& images, bool stroke = false);
-	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, glm::mat4&& transform, bool stroke = false);
-	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, std::initializer_list<shared<Image2D>>&& images, bool stroke = false);
-	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth = 1.0f, bool stroke = false);
+	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, glm::mat4&& transform, std::initializer_list<shared<Image2D>>&& images = {});
+	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, std::initializer_list<shared<Image2D>>&& images);
+	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth = 1.0f);
 	
 	static Light* addLight(const Light& light);
 	static void createInstance(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, InstanceData&& instance_data);

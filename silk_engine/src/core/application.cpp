@@ -13,6 +13,7 @@
 #include "gfx/renderer.h"
 #include "gfx/descriptors/descriptor_allocator.h"
 #include "gfx/particle_system.h"
+#include "sfx/audio_device.h"
 
 Application::Application(ApplicationCommandLineArgs args)
     : command_line_args(args), app_update(0.0)
@@ -35,6 +36,7 @@ Application::~Application()
     Dispatcher::unsubscribe(this, &Application::onWindowClose);
     Dispatcher::unsubscribe(this, &Application::onWindowResize);
     Dispatcher::unsubscribe(this, &Application::onKeyPress);
+    SceneManager::destroy();
     Window::destroy();
     ParticleSystem::destroy();
     Renderer::destroy();
@@ -46,6 +48,7 @@ Application::~Application()
 
 void Application::run()
 {
+    fully_initialized = true;
     while (running)
         update();
 }
@@ -93,7 +96,8 @@ void Application::onWindowResize(const WindowResizeEvent& e)
 {
     Graphics::physical_device->updateSurfaceCapabilities();
     Graphics::swap_chain->recreate();
-    update();
+    if(fully_initialized)
+        update();
 }
 
 void Application::onKeyPress(const KeyPressEvent& e)

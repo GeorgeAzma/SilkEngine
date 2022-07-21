@@ -123,12 +123,12 @@ InputDevice Input::getActiveInputDevice()
 void Input::setCursor(std::string_view file, CursorHotSpot hot_spot)
 {
 	std::string path = std::string("cursors/") + file.data();
-	Bitmap data{};
+	RawImage data{};
 	data.load(path);
 	GLFWimage cursor_image[1];
 	cursor_image[0].height = data.height;
 	cursor_image[0].width = data.width;
-	cursor_image[0].pixels = data.data();
+	cursor_image[0].pixels = data.pixels.data();
 
 	if (cursor)
 	{

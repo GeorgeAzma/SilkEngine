@@ -4,7 +4,7 @@ std::string File::read(const std::filesystem::path& file, std::ios::openmode ope
 {
 	std::ifstream is(file, std::ios::ate | open_mode);
 
-	SK_ASSERT(is.is_open(), "Couldn't open file: {0}", file);
+	SK_ASSERT(is.is_open(), "Couldn't open file: {}", file);
 
 	size_t size = is.tellg();
 	std::string buffer;

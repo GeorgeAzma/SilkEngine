@@ -30,8 +30,8 @@ SwapChain::SwapChain(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	}
 	this->present_mode = present_mode;
 
-	image_format = ImageFormatEnum::fromVulkanType(surface_formats.rbegin()->second.format);
-	depth_format = ImageFormatEnum::fromVulkanType(Graphics::physical_device->getDepthFormat());
+	image_format = ImageFormat(surface_formats.rbegin()->second.format);
+	depth_format = ImageFormat(Graphics::physical_device->getDepthFormat());
 	sample_count = Graphics::physical_device->getMaxSampleCount();
 	color_space = surface_formats.rbegin()->second.colorSpace;
 
@@ -89,7 +89,7 @@ void SwapChain::create(const std::optional<VkSwapchainKHR>& old_swap_chain)
 	ci.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	ci.surface = *Graphics::surface;
 	ci.minImageCount = image_count;
-	ci.imageFormat = ImageFormatEnum::toVulkanType(getFormat());
+	ci.imageFormat = VkFormat(getFormat());
 	ci.imageColorSpace = color_space;
 	ci.imageExtent = extent;
 	ci.imageArrayLayers = 1; //For stereoscopic 3D apps

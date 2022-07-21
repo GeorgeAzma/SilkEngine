@@ -105,7 +105,7 @@ public:
 	};
 
 public:
-    Shader(const std::filesystem::path& file, const std::vector<Define>& defines = {});
+    Shader(std::string_view file, const std::vector<Define>& defines = {});
 	~Shader();
 
 	void compile(const std::vector<Define>& defines = {}, bool force = true);

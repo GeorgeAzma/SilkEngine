@@ -16,4 +16,9 @@ private:
     shared<Scene> scene;
 	shared<Entity> camera;
     std::vector<shared<Entity>> entities;
+
+    shared<Audio> audio;
+    shared<AudioDevice> audio_device;
+    shared<AudioSource> audio_source;
+    shared<Microphone> microphone;
 };

@@ -3,6 +3,38 @@
 #ifdef SK_ENABLE_DEBUG_OUTPUT
     #include <spdlog/logger.h>
     #include <spdlog/fmt/ostr.h>
+    
+    namespace fmt 
+    {
+        struct Bytes 
+        {
+            size_t value;
+            operator const size_t&() const { return value; }
+        };
+
+        template <>
+        struct formatter<Bytes> : formatter<double> {
+            template <typename FormatContext>
+            auto format(Bytes b, FormatContext& ctx) 
+            {
+                constexpr char UNITS[] = {' ', 'K', 'M', 'G', 'T', 'P', 'E', 'Z' };
+                constexpr size_t S = sizeof(UNITS) / sizeof(UNITS[0]);
+                constexpr size_t BASE = 1024;
+                
+                size_t unit = 0;
+                size_t base = BASE;
+                for (; b >= base; ++unit, base *= BASE);
+                base /= BASE;
+
+                auto out = formatter<double>::format(b / base, ctx);
+                if(unit)
+                    *out++ = UNITS[unit];
+                *out++ = 'B';
+                return out;
+            }
+        };
+    }
+
 #endif
 
     class Log
