@@ -1,6 +1,5 @@
 #include "audio_source.h"
 #include "audio.h"
-#include <AL/al.h>
 
 AudioSource::AudioSource()
 {

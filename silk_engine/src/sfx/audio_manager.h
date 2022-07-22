@@ -1,6 +1,5 @@
 #pragma once
 
-#include <AL/al.h>
 #include "listener.h"
 
 enum class DistanceModel
@@ -20,7 +19,6 @@ public:
 	static void setDistanceModel(DistanceModel distance_model);
 	static void setSpeedOfSound(float speed);
 	static void setDopplerFactor(float value);
-	static void setDopplerVelocity(float value);
 	static Listener& getListener() { return listener; }
 
 private:

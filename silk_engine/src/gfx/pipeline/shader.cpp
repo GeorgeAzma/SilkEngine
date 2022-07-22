@@ -69,6 +69,7 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 	options.AddMacroDefinition("EMMISIVE_TEXTURE", "5");
 	options.SetIncluder(std::make_unique<Includer>());
 	options.SetGenerateDebugInfo();
+	//options.SetAutoMapLocations(true);
 
 	for (auto& define : defines)
 		options.AddMacroDefinition(define.name, define.value);
@@ -81,11 +82,11 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 	{
 		stages.emplace_back();
 		auto& stage = stages.back();
-		stage.stage = getVulkanType((Type)type);
+		stage.stage = Type(type);
 
 		std::string file_cache_path = cache_path.string() + getTypeFileExtension((Type)type) + ".spv";
 
-		std::ifstream in(file_cache_path, std::ios::ate | std::ios::binary);
+		std::ifstream in(file_cache_path, std::ios::binary);
 		bool cache_exists = in.is_open();
 
 		// Read cache
@@ -93,15 +94,15 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 		{
 			if (force)
 			{
-				in.seekg(0);
 				in.close();
 				std::filesystem::remove(file_cache_path);
 			}
 			else
 			{
+				in.seekg(0, std::ios::end);
 				size_t size = in.tellg();
-				in.seekg(0);
 				stage.binary.resize(size / sizeof(uint32_t));
+				in.seekg(0);
 				in.read((char*)stage.binary.data(), size);
 				SK_TRACE("Shader cache loaded: {0}", file_cache_path);
 			}
@@ -115,11 +116,11 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 			SK_ASSERT(preprocess_result.GetCompilationStatus() == shaderc_compilation_status_success, preprocess_result.GetErrorMessage());
 			std::string preprocessed_source(preprocess_result.begin());
 
-			shaderc::SpvCompilationResult compilation_result = compiler.CompileGlslToSpv(preprocessed_source, shadercType((Type)type), path.string().c_str(), options);
+			shaderc::SpvCompilationResult compilation_result = compiler.CompileGlslToSpv(preprocessed_source, shadercType((Type)type), path.string().c_str(), options); // IF YOU HAVE ERROR HERE SCROLL BELOW, TILL YOU SEE #SK_ERROR_FIX DEFINE
 			SK_ASSERT(compilation_result.GetCompilationStatus() == shaderc_compilation_status_success, "{}. SOURCE:\n{}", compilation_result.GetErrorMessage(), preprocessed_source);
 			stage.binary = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend());
 
-			std::ofstream out(file_cache_path, std::ios::binary | std::ios::trunc);
+			std::ofstream out(file_cache_path, std::ios::binary);
 			SK_ASSERT(out.is_open(), "Couldn't create shader cache file: {}", file_cache_path);
 			out.write((const char*)stage.binary.data(), stage.binary.size() * sizeof(uint32_t));
 			out.close();
@@ -134,42 +135,140 @@ void Shader::compile(const std::vector<Define>& defines, bool force)
 		stage.module = Graphics::logical_device->createShaderModule(ci);
 	} 
 
+//TO FIX THE ERROR SET THIS TO 0, LAUNCH, SET IT BACK TO 1, LAUNCH AGAIN AND IT SHOULD BE FIXED.
 #define SK_ERROR_FIX 1
 #if SK_ERROR_FIX
 	for (const auto& stage : stages)
 	{
 		spirv_cross::Compiler compiler(stage.binary);
 		spirv_cross::ShaderResources shader_resources = compiler.get_shader_resources();
+		auto vulkan_stage = toVulkanType(stage.stage);
 
 		for (const spirv_cross::Resource& sampled_image : shader_resources.sampled_images)
-			loadResource(sampled_image, compiler, shader_resources, stage.stage, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+			loadResource(sampled_image, compiler, shader_resources, vulkan_stage, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 
 		for (const spirv_cross::Resource& seperate_image : shader_resources.separate_images)
-			loadResource(seperate_image, compiler, shader_resources, stage.stage, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+			loadResource(seperate_image, compiler, shader_resources, vulkan_stage, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
 
 		for (const spirv_cross::Resource& seperate_sampler : shader_resources.separate_samplers)
-			loadResource(seperate_sampler, compiler, shader_resources, stage.stage, VK_DESCRIPTOR_TYPE_SAMPLER);
+			loadResource(seperate_sampler, compiler, shader_resources, vulkan_stage, VK_DESCRIPTOR_TYPE_SAMPLER);
 
 		for (const spirv_cross::Resource& storage_buffer : shader_resources.storage_buffers)
-			loadResource(storage_buffer, compiler, shader_resources, stage.stage, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+			loadResource(storage_buffer, compiler, shader_resources, vulkan_stage, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 
 		for (const spirv_cross::Resource& storage_image : shader_resources.storage_images)
-			loadResource(storage_image, compiler, shader_resources, stage.stage, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+			loadResource(storage_image, compiler, shader_resources, vulkan_stage, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
 
 		for (const spirv_cross::Resource& subpass_input : shader_resources.subpass_inputs)
-			loadResource(subpass_input, compiler, shader_resources, stage.stage, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT);
+			loadResource(subpass_input, compiler, shader_resources, vulkan_stage, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT);
 
 		for (const spirv_cross::Resource& uniform_buffer : shader_resources.uniform_buffers)
-			loadResource(uniform_buffer, compiler, shader_resources, stage.stage, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+			loadResource(uniform_buffer, compiler, shader_resources, vulkan_stage, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
 		for (const spirv_cross::Resource& push_constant : shader_resources.push_constant_buffers)
-			loadPushConstant(push_constant, compiler, shader_resources, stage.stage);
+			loadPushConstant(push_constant, compiler, shader_resources, vulkan_stage);
+		
+		if(stage.stage == Type::VERTEX)
+		{
+			constexpr GpuType lut[8][4]
+			{
+				{ GpuType::FLOAT, GpuType::VEC2, GpuType::VEC3, GpuType::VEC4 },
+				{ GpuType::INT, GpuType::IVEC2, GpuType::IVEC3, GpuType::IVEC4 },
+				{ GpuType::UINT, GpuType::UVEC2, GpuType::UVEC3, GpuType::UVEC4 },
+				{ GpuType::DOUBLE, GpuType::DVEC2, GpuType::DVEC3, GpuType::DVEC4 },
+				{ GpuType::UBYTE, GpuType::UVEC2, GpuType::UVEC3, GpuType::UVEC4 },
+				{ GpuType::BYTE, GpuType::UVEC2, GpuType::UVEC3, GpuType::UVEC4 },
+				{ GpuType::USHORT, GpuType::UVEC2, GpuType::UVEC3, GpuType::UVEC4 },
+				{ GpuType::SHORT, GpuType::UVEC2, GpuType::UVEC3, GpuType::UVEC4 }
+			};
+			constexpr GpuType mat_lut[8][4]
+			{
+				{ GpuType::FLOAT, GpuType::MAT2, GpuType::MAT3, GpuType::MAT4 },
+				{ GpuType::INT, GpuType::MAT2, GpuType::MAT3, GpuType::MAT4 },
+				{ GpuType::UINT, GpuType::MAT2, GpuType::MAT3, GpuType::MAT4 },
+				{ GpuType::DOUBLE, GpuType::DMAT2, GpuType::DMAT3, GpuType::DMAT4 },
+				{ GpuType::UBYTE, GpuType::MAT2, GpuType::MAT3, GpuType::MAT4 },
+				{ GpuType::BYTE, GpuType::MAT2, GpuType::MAT3, GpuType::MAT4 },
+				{ GpuType::USHORT, GpuType::MAT2, GpuType::MAT3, GpuType::MAT4 },
+				{ GpuType::SHORT, GpuType::MAT2, GpuType::MAT3, GpuType::MAT4 },
+			};
+
+			uint32_t max_location = 0;
+			for (auto& input : shader_resources.stage_inputs)
+			{
+				uint32_t location = compiler.get_decoration(input.id, spv::Decoration::DecorationLocation);
+				max_location = std::max(max_location, location + 1);
+			}
+
+			std::vector<std::optional<BufferElement>> buffer_elements;
+			buffer_elements.resize(max_location, std::nullopt);
+
+			for (auto& input : shader_resources.stage_inputs)
+			{
+				uint32_t location = compiler.get_decoration(input.id, spv::Decoration::DecorationLocation);
+				using Type = spirv_cross::SPIRType::BaseType;
+				auto type = compiler.get_type(input.base_type_id);
+				size_t type_index = 0;
+				switch (type.basetype)
+				{
+				case Type::Float:
+					type_index = 0;
+					break;
+				case Type::Int:
+					type_index = 1;
+					break;
+				case Type::UInt:
+					type_index = 2;
+					break;
+				case Type::Double:
+					type_index = 3;
+					break;
+				case Type::UByte:
+					type_index = 4;
+					break;
+				case Type::SByte:
+					type_index = 5;
+					break;
+				case Type::UShort:
+					type_index = 6;
+					break;
+				case Type::Short:
+					type_index = 7;
+					break;
+				}
+
+				BufferElement element{};
+				element.type = lut[type_index][type.vecsize - 1];
+
+				if (type.vecsize > 1 && type.vecsize == type.columns)
+					element.type = mat_lut[type_index][type.columns - 1];
+
+				std::string_view token = "I_";
+				if (input.name.size() >= token.size())
+				{
+					std::string_view str(input.name.begin(), input.name.begin() + token.size());
+					element.instanced = (str == token);
+				}
+				else element.instanced = false;
+
+				buffer_elements[location] = element;
+			}
+
+			std::vector<BufferElement> aligned_buffer_elements;
+			for (const auto& e : buffer_elements)
+			{
+				if (e.has_value())
+					aligned_buffer_elements.emplace_back(*e);
+			}
+
+			buffer_layout = BufferLayout(aligned_buffer_elements);
+		}
 
 		auto constants = compiler.get_specialization_constants();
 		for (auto& constant : constants)
 		{
 			auto& shader_constant = this->constants[compiler.get_name(constant.id)];
-			shader_constant = { constant.constant_id, shader_constant.stage | stage.stage };
+			shader_constant = { constant.constant_id, shader_constant.stage | vulkan_stage };
 		}
 
 		//Local size reflection
@@ -500,7 +599,7 @@ shaderc_env_version Shader::shadercApiVersion(APIVersion api_version)
 	return shaderc_env_version(0);
 }
 
-VkShaderStageFlagBits Shader::getVulkanType(Type shader_type)
+VkShaderStageFlagBits Shader::toVulkanType(Type shader_type)
 {
 	switch (shader_type)
 	{
@@ -514,6 +613,22 @@ VkShaderStageFlagBits Shader::getVulkanType(Type shader_type)
 
 	SK_ERROR("Unsupported shader type specified: {0}.", shader_type);
 	return VkShaderStageFlagBits(0);
+}
+
+Shader::Type Shader::fromVulkanType(VkShaderStageFlagBits vulkan_type)
+{
+	switch (vulkan_type)
+	{
+	case VK_SHADER_STAGE_VERTEX_BIT: return Type::VERTEX;
+	case VK_SHADER_STAGE_FRAGMENT_BIT: return Type::FRAGMENT;
+	case VK_SHADER_STAGE_GEOMETRY_BIT: return Type::GEOMETRY;
+	case VK_SHADER_STAGE_COMPUTE_BIT: return Type::COMPUTE;
+	case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT: return Type::TESSELATION_CONTROL;
+	case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT: return Type::TESSELATION_EVALUATION;
+	}
+
+	SK_ERROR("Unsupported vulkan shader type specified: {0}.", vulkan_type);
+	return Type(0);
 }
 
 std::string Shader::getTypeFileExtension(Shader::Type shader_type)

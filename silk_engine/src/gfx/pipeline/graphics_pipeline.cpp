@@ -72,7 +72,7 @@ GraphicsPipeline& GraphicsPipeline::setShader(const shared<Shader>& shader, cons
 		for (const auto& constant : constants)
 		{
 			const auto& shader_constant = shader->getConstants().at(constant.name);
-			if (!(shader_constant.stage & stage.stage))
+			if (!(shader_constant.stage & Shader::toVulkanType(stage.stage)))
 				continue;
 		
 			size_t old_size = stage_specialization_info.constant_data.size();
@@ -94,7 +94,7 @@ GraphicsPipeline& GraphicsPipeline::setShader(const shared<Shader>& shader, cons
 
 		VkPipelineShaderStageCreateInfo shader_stage_info{};
 		shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		shader_stage_info.stage = stage.stage;
+		shader_stage_info.stage = Shader::toVulkanType(stage.stage);
 		shader_stage_info.module = stage.module;
 		shader_stage_info.pName = "main";
 		shader_stage_info.pSpecializationInfo = &stage_specialization_info.specialization_info;
@@ -103,6 +103,11 @@ GraphicsPipeline& GraphicsPipeline::setShader(const shared<Shader>& shader, cons
 
 	ci.stageCount = shader_stage_infos.size();
 	ci.pStages = shader_stage_infos.data();
+
+	vertex_input_info.vertexBindingDescriptionCount = this->shader->getBufferLayout().getBindingDescriptions().size();
+	vertex_input_info.pVertexBindingDescriptions = this->shader->getBufferLayout().getBindingDescriptions().data();
+	vertex_input_info.vertexAttributeDescriptionCount = this->shader->getBufferLayout().getAttributeDescriptions().size();
+	vertex_input_info.pVertexAttributeDescriptions = this->shader->getBufferLayout().getAttributeDescriptions().data();
 
 	push_constant_ranges.clear();
 	for (auto&& [name, push_constant] : shader->getPushConstants())
@@ -174,16 +179,6 @@ GraphicsPipeline& GraphicsPipeline::setShader(const shared<Shader>& shader, cons
 	if (params.alpha_blend_op) color_blend_attachment.alphaBlendOp = *params.alpha_blend_op;
 	if (params.color_write_mask) color_blend_attachment.colorWriteMask = *params.color_write_mask;
 
-	return *this;
-}
-
-GraphicsPipeline& GraphicsPipeline::setVertexLayout(const BufferLayout& buffer_layout)
-{
-	this->buffer_layout = buffer_layout;
-	vertex_input_info.vertexBindingDescriptionCount = this->buffer_layout.getBindingDescriptions().size();
-	vertex_input_info.pVertexBindingDescriptions = this->buffer_layout.getBindingDescriptions().data();
-	vertex_input_info.vertexAttributeDescriptionCount = this->buffer_layout.getAttributeDescriptions().size();
-	vertex_input_info.pVertexAttributeDescriptions = this->buffer_layout.getAttributeDescriptions().data();
 	return *this;
 }
 

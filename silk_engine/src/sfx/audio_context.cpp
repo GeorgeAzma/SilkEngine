@@ -1,5 +1,4 @@
 #include "audio_context.h"
-#include <AL/alc.h>
 
 AudioContext::AudioContext(ALCdevice* device)
 {

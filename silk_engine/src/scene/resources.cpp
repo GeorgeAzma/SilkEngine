@@ -42,11 +42,11 @@ void Resources::init()
         constexpr glm::u8vec4 white(255);
         image_props.data = &white;
         white_image = makeShared<Image2D>(image_props);
-        addImage("White", white_image);
+        add<Image2D>("White", white_image);
         
         constexpr glm::u8vec4 black(0);
         image_props.data = &black;
-        addImage("Black", makeShared<Image2D>(image_props));
+        add<Image2D>("Black", makeShared<Image2D>(image_props));
        
         image_props.width = 2;
         image_props.height = 2;
@@ -54,18 +54,18 @@ void Resources::init()
         image_props.sampler_props.v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         constexpr glm::u8vec4 null_data[4] = { { 0, 0, 0, 255 }, { 255, 0, 255, 255 }, { 255, 0, 255, 255 }, { 0, 0, 0, 255 } };
         image_props.data = null_data;
-        addImage("Null", makeShared<Image2D>(image_props));
+        add<Image2D>("Null", makeShared<Image2D>(image_props));
     }
 
     //MESHES
     {
-        addMesh("Triangle", makeShared<Mesh>(TriangleMesh()));
-        addMesh("Circle", makeShared<Mesh>(CircleMesh()));
-        addMesh("Rectangle", makeShared<Mesh>(RectangleMesh()));
-        addMesh("Quad", makeShared<Mesh>(QuadMesh()));
-        addMesh("Cube", makeShared<Mesh>(CubeMesh()));
-        addMesh("Sphere", makeShared<Mesh>(SphereMesh()));
-        addMesh("Tetrahedron", makeShared<Mesh>(TetrahedronMesh()));
+        add<Mesh>("Triangle", makeShared<Mesh>(TriangleMesh()));
+        add<Mesh>("Circle", makeShared<Mesh>(CircleMesh()));
+        add<Mesh>("Rectangle", makeShared<Mesh>(RectangleMesh()));
+        add<Mesh>("Quad", makeShared<Mesh>(QuadMesh()));
+        add<Mesh>("Cube", makeShared<Mesh>(CubeMesh()));
+        add<Mesh>("Sphere", makeShared<Mesh>(SphereMesh()));
+        add<Mesh>("Tetrahedron", makeShared<Mesh>(TetrahedronMesh()));
     }
 
     //MODELS
@@ -74,70 +74,48 @@ void Resources::init()
 
     //FONTS
     {
-        addFont("Arial", makeShared<Font>("arial.ttf"));
+        add<Font>("Arial", makeShared<Font>("arial.ttf"));
     }
 
     //SHADERS
     {
-        addShader("3D", makeShared<Shader>("3D"));
-        addShader("2D", makeShared<Shader>("2D"));
-        addShader("Font", makeShared<Shader>("font"));
-        addShader("BGRA To RGBA", makeShared<Shader>("bgra_to_rgba"));
+        add<Shader>("3D", makeShared<Shader>("3D"));
+        add<Shader>("2D", makeShared<Shader>("2D"));
+        add<Shader>("Font", makeShared<Shader>("font"));
+        add<Shader>("BGRA To RGBA", makeShared<Shader>("bgra_to_rgba"));
     }
 
     //PIPELINES
     {
-        addComputePipeline("BGRA To RGBA", makeShared<ComputePipeline>(getShader("BGRA To RGBA")));
+        add<ComputePipeline>("BGRA To RGBA", makeShared<ComputePipeline>(get<Shader>("BGRA To RGBA")));
     }
 }
  
 void Resources::destroy()
 {
-	meshes.clear();
-	models.clear();
-    fonts.clear();
-    shaders.clear();
-    graphics_pipelines.clear();
-    compute_pipelines.clear();
+    resources<Mesh>.clear();
+    resources<Model>.clear();
+    resources<Shader>.clear();
+    resources<GraphicsPipeline>.clear();
+    resources<ComputePipeline>.clear();
+    resources<Image2D>.clear();
+    resources<Font>.clear();
     white_image = nullptr;
-    images.clear();
     descriptor_set_layouts.clear();
 }
 
-shared<Mesh> Resources::getMesh(std::string_view name)
+template<typename T>
+shared<T> Resources::get(std::string_view name)
 {
-    return meshes.at(name);
+    return resources<T>.at(name);
 }
-
-shared<Model> Resources::getModel(std::string_view name)
-{
-    return models.at(name);
-}
-
-shared<Shader> Resources::getShader(std::string_view name)
-{
-    return shaders.at(name);
-}
-
-shared<GraphicsPipeline> Resources::getGraphicsPipeline(std::string_view name)
-{
-    return graphics_pipelines.at(name);
-}
-
-shared<ComputePipeline> Resources::getComputePipeline(std::string_view name)
-{
-    return compute_pipelines.at(name);
-}
-
-shared<Image2D> Resources::getImage(std::string_view name)
-{
-    return images.at(name);
-}
-
-shared<Font> Resources::getFont(std::string_view name)
-{
-    return fonts.at(name);
-}
+template shared<Mesh> Resources::get<Mesh>(std::string_view);
+template shared<Model> Resources::get<Model>(std::string_view);
+template shared<Shader> Resources::get<Shader>(std::string_view);
+template shared<GraphicsPipeline> Resources::get<GraphicsPipeline>(std::string_view);
+template shared<ComputePipeline> Resources::get<ComputePipeline>(std::string_view);
+template shared<Image2D> Resources::get<Image2D>(std::string_view);
+template shared<Font> Resources::get<Font>(std::string_view);
 
 shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
@@ -154,40 +132,18 @@ shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<
     return new_layout;
 }
 
-void Resources::addMesh(std::string_view name, const shared<Mesh>& mesh)
+template<typename T>
+void Resources::add(std::string_view name, const shared<T>& t)
 {
-    meshes.insert_or_assign(name, mesh);
+    resources<T>.insert_or_assign(name, t);
 }
-
-void Resources::addModel(std::string_view name, const shared<Model>& model)
-{
-    models.insert_or_assign(name, model);
-}
-
-void Resources::addShader(std::string_view name, const shared<Shader>& shader)
-{
-    shaders.insert_or_assign(name, shader);
-}
-
-void Resources::addGraphicsPipeline(std::string_view name, const shared<GraphicsPipeline>& graphics_pipeline)
-{
-    graphics_pipelines.insert_or_assign(name, graphics_pipeline);
-}
-
-void Resources::addComputePipeline(std::string_view name, const shared<ComputePipeline>& compute_pipeline)
-{
-    compute_pipelines.insert_or_assign(name, compute_pipeline);
-}
-
-void Resources::addImage(std::string_view name, const shared<Image2D>& image)
-{
-    images.insert_or_assign(name, image);
-}
-
-void Resources::addFont(std::string_view name, const shared<Font>& font)
-{
-    fonts.insert_or_assign(name, font);
-}
+template void Resources::add<Mesh>(std::string_view, const shared<Mesh>&);
+template void Resources::add<Model>(std::string_view, const shared<Model>&);
+template void Resources::add<Shader>(std::string_view, const shared<Shader>&);
+template void Resources::add<GraphicsPipeline>(std::string_view, const shared<GraphicsPipeline>&);
+template void Resources::add<ComputePipeline>(std::string_view, const shared<ComputePipeline>&);
+template void Resources::add<Image2D>(std::string_view, const shared<Image2D>&);
+template void Resources::add<Font>(std::string_view, const shared<Font>&);
 
 void Resources::addDescriptorSetLayout(const shared<DescriptorSetLayout>& descriptor_layout)
 {

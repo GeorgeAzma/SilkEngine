@@ -44,6 +44,7 @@ target_precompile_headers(SilkEngine PUBLIC
 <sstream>
 <future>
 <concepts>
+<span>
 
 #Non std
 <glm/glm.hpp>
@@ -53,6 +54,8 @@ target_precompile_headers(SilkEngine PUBLIC
 <vulkan/vulkan.h>
 <vk_mem_alloc.h>
 <GLFW/glfw3.h>
+<AL/al.h>
+<AL/alc.h>
 
 #project sources
 [["core/base.h"]] #Very rarely changed

@@ -140,7 +140,7 @@ void Graphics::screenshot(std::string_view file)
 
 		CommandBuffer command_buffer;
 		command_buffer.begin();
-		auto compute = Resources::getComputePipeline("BGRA To RGBA");
+		auto compute = Resources::get<ComputePipeline>("BGRA To RGBA");
 		compute->bind();
 		compute->getShader()->set("Image", { image_storage });
 		compute->getShader()->getDescriptorSets().at(0)->bind();

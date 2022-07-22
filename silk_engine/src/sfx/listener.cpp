@@ -1,5 +1,4 @@
 #include "listener.h"
-#include <AL/al.h>
 
 void Listener::setPosition(const glm::vec3& position)
 {

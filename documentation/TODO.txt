@@ -1,24 +1,21 @@
 - Multiple render passes
 - Model animations
 - Sprite animations
-- Figure out descriptor updating
+- Materials
 - Make engine easier to use
 - Support strokes for all 2D geometry
 - Trails
 - Deffer command buffer submission
-- Font SDF and effects
+- Font MSDF and effects
 - Debug codes that might contain bugs (Framebuffer, Swapchain, Renderpass, Renderer)
 - Faster immidiate drawing
 - Fast Culling
 - Replace user used vulkan enums with engine enums
 - Handle normal/other maps and materials in shader
-- Better material system
 - Implement multithreaded secondary command buffer submit system
 - Create system which handles vulkan object creation and update for multiple frames
 - Better Descriptor pool system
 - Fix dirty code (Descriptor set, Instance images, render pass)
 - Caching (Graphics Pipeline etc.)
-- OpenAL and audio streaming
 - Video (mp4 etc.)
 - Seperate dispatchers for related events and create getters for them
-- Configurable graphics settings (preferably in file format like yaml) 

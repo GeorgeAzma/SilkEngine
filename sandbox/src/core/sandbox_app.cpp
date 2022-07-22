@@ -6,9 +6,9 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     SceneManager::add(scene);
     SceneManager::switchTo(scene);
 
-    Resources::addImage("Test1", makeShared<Image2D>("test1.png"));
-    Resources::addImage("Test2", makeShared<Image2D>("test2.png"));
-    Resources::addModel("Backpack", makeShared<Model>("backpack/backpack.obj"));
+    Resources::add<Image2D>("Test1", makeShared<Image2D>("test1.png"));
+    Resources::add<Image2D>("Test2", makeShared<Image2D>("test2.png"));
+    Resources::add<Model>("Backpack", makeShared<Model>("backpack/backpack.obj"));
     
     Timers::every(100ms, 
         [this] 
@@ -28,6 +28,7 @@ SandboxApp::SandboxApp(ApplicationCommandLineArgs args)
     audio_source = makeShared<AudioSource>();
     microphone = makeShared<Microphone>();
     microphone->start();
+    //audio_source->play(*audio);
 }
 
 void SandboxApp::onUpdate()
@@ -39,10 +40,10 @@ void SandboxApp::onUpdate()
     if (Input::isKeyPressed(Keys::Z)) 
     {
         entities.emplace_back(scene->createEntity());
-        entities.back()->add<MaterialComponent>(Resources::getGraphicsPipeline("Lit 3D"));
+        entities.back()->add<MaterialComponent>(Resources::get<GraphicsPipeline>("Lit 3D"));
         entities.back()->add<ColorComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         entities.back()->add<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(RNG::Float(), RNG::Float(), RNG::Float()) * 20.0f));
-        entities.back()->add<ModelComponent>(Resources::getModel("Backpack"));
+        entities.back()->add<ModelComponent>(Resources::get<Model>("Backpack"));
         Light light{};
         light.color = glm::vec3(1);
         entities.back()->add<LightComponent>(light);
@@ -55,29 +56,34 @@ void SandboxApp::onUpdate()
     uint32_t samples = microphone->getAvailableSampleCount();
     if (samples > 0)
     {
-        DebugTimer t;
-        if (audio_source->getQueuedBufferCount() < 3)
+        uint32_t queued = audio_source->getQueuedBufferCount();
+        if (queued < 3)
         {
-            std::vector<uint8_t> buffer(samples * 2);
+            DebugTimer t;
+            std::vector<uint8_t> buffer(samples * AudioFormatEnum::getSize(microphone->getFormat()));
             microphone->getSamples(buffer.data(), samples);
-
+            
             RawAudio a{};
-            a.format = AudioFormat::MONO16;
-            a.sample_rate = 44100;
+            a.format = microphone->getFormat();
+            a.sample_rate = microphone->getSampleRate();
             a.data = buffer;
             audio = makeShared<Audio>(a);
             audio_source->queue(*audio);
+            ++queued;
         }
-        if (!audio_source->isPlaying())
+        if (queued >= 3 && !audio_source->isPlaying())
             audio_source->play();
-        uint32_t id = audio_source->unqueue();
+
+        uint32_t processed = audio_source->getProcessedBufferCount();
+        if(processed > 0)
+            uint32_t id = audio_source->unqueue();
     }
 
     SK_TRACE("Q: {} | P: {}", audio_source->getQueuedBufferCount(), audio_source->getProcessedBufferCount());
 
-    //const auto& cam = camera->get<CameraComponent>().camera;
-    //AudioManager::getListener().setPosition(cam.position);
-    //
+    const auto& cam = camera->get<CameraComponent>().camera;
+    AudioManager::getListener().setPosition(cam.position);
+ 
     ////0,0,0 = front | 90, 0, 0 = left
     //AudioManager::getListener().setRotation({ cam.rotation.x + glm::pi<float>(), cam.rotation.y, 0.0f });
     //

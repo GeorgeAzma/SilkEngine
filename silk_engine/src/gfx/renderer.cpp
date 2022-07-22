@@ -54,12 +54,12 @@ void Renderer::reset()
 	instances.clear();	
 	active = {};
 	active.image = Resources::white_image;
-	active.font = Resources::getFont("Arial");
+	active.font = Resources::get<Font>("Arial");
 }
 
 void Renderer::triangle(float x, float y, float width, float height)
 {
-	draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Triangle"), x, y, 0.0f, width, height, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Triangle"), x, y, 0.0f, width, height, 1);
 }
 
 void Renderer::triangle(float x, float y, float size)
@@ -69,12 +69,12 @@ void Renderer::triangle(float x, float y, float size)
 
 void Renderer::triangle(float x1, float y1, float x2, float y2, float x3, float y3)
 {
-	draw(Resources::getGraphicsPipeline("2D"), makeShared<Mesh>(TriangleMesh(x1, y1, x2, y2, x3, y3)), 0, 0, 0, 1, 1, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(TriangleMesh(x1, y1, x2, y2, x3, y3)), 0, 0, 0, 1, 1, 1);
 }
 
 void Renderer::rectangle(float x, float y, float width, float height)
 {
-	draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), x, y, 0, width, height, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rectangle"), x, y, 0, width, height, 1);
 }
 
 void Renderer::square(float x, float y, float size)
@@ -84,7 +84,7 @@ void Renderer::square(float x, float y, float size)
 
 void Renderer::ellipse(float x, float y, float width, float height)
 {
-	draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Circle"), x, y, 0, width, height, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Circle"), x, y, 0, width, height, 1);
 }
 
 void Renderer::circle(float x, float y, float radius)
@@ -94,7 +94,7 @@ void Renderer::circle(float x, float y, float radius)
 
 void Renderer::line(const std::vector<glm::vec2>& points, float width)
 {
-	draw(Resources::getGraphicsPipeline("2D"), makeShared<Mesh>(LineMesh(points, width)), 0, 0, 0, 1, 1, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(LineMesh(points, width)), 0, 0, 0, 1, 1, 1);
 }
 
 void Renderer::line(float x1, float y1, float x2, float y2, float width)
@@ -102,7 +102,7 @@ void Renderer::line(float x1, float y1, float x2, float y2, float width)
 	float l = sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 	float dx = (x2 - x1) / l;
 	float dy = (y2 - y1) / l;
-	draw(Resources::getGraphicsPipeline("2D"), Resources::getMesh("Rectangle"), {
+	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rectangle"), {
 			dx * l, dy * l, 0, 0,
 			-dy * width, dx * width, 0, 0,
 			0, 0, 1, 0,
@@ -112,47 +112,47 @@ void Renderer::line(float x1, float y1, float x2, float y2, float width)
 
 void Renderer::bezier(float x1, float y1, float px, float py, float x2, float y2, float width)
 {
-	draw(Resources::getGraphicsPipeline("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px, py, x2, y2, 64u, width)), 0, 0, 0, 1, 1, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px, py, x2, y2, 64u, width)), 0, 0, 0, 1, 1, 1);
 }
 
 void Renderer::bezier(float x1, float y1, float px1, float py1, float px2, float py2, float x2, float y2, float width)
 {
-	draw(Resources::getGraphicsPipeline("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px1, py1, px2, py2, x2, y2, 64u, width)), 0, 0, 0, 1, 1, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px1, py1, px2, py2, x2, y2, 64u, width)), 0, 0, 0, 1, 1, 1);
 }
 
 void Renderer::text(const std::string& text, float x, float y, float width, float height)
 {
-	draw(Resources::getGraphicsPipeline("Font"), makeShared<Mesh>(TextMesh(text, 64, active.font)), x, y, 0.0f, width, height, 0.0f, { active.font->getAtlas() });
+	draw(Resources::get<GraphicsPipeline>("Font"), makeShared<Mesh>(TextMesh(text, 64, active.font)), x, y, 0.0f, width, height, 0.0f, { active.font->getAtlas() });
 }
 
 void Renderer::text(const std::string& text, float x, float y, float size)
 {
-	draw(Resources::getGraphicsPipeline("Font"), makeShared<Mesh>(TextMesh(text, 64, active.font)), x, y, 0.0f, size, size, 0.0f, { active.font->getAtlas() });
+	draw(Resources::get<GraphicsPipeline>("Font"), makeShared<Mesh>(TextMesh(text, 64, active.font)), x, y, 0.0f, size, size, 0.0f, { active.font->getAtlas() });
 }
 
 void Renderer::tetrahedron(float x, float y, float z, float size)
 {
-	draw(Resources::getGraphicsPipeline("Lit 3D"), Resources::getMesh("Tetrahedron"), x, y, z, size, size, size);
+	draw(Resources::get<GraphicsPipeline>("Lit 3D"), Resources::get<Mesh>("Tetrahedron"), x, y, z, size, size, size);
 }
 
 void Renderer::cube(float x, float y, float z, float size)
 {
-	draw(Resources::getGraphicsPipeline("Lit 3D"), Resources::getMesh("Cube"), x, y, z, size, size, size);
+	draw(Resources::get<GraphicsPipeline>("Lit 3D"), Resources::get<Mesh>("Cube"), x, y, z, size, size, size);
 }
 
 void Renderer::cuboid(float x, float y, float z, float width, float height, float depth)
 {
-	draw(Resources::getGraphicsPipeline("Lit 3D"), Resources::getMesh("Cube"), x, y, z, width, height, depth);
+	draw(Resources::get<GraphicsPipeline>("Lit 3D"), Resources::get<Mesh>("Cube"), x, y, z, width, height, depth);
 }
 
 void Renderer::sphere(float x, float y, float z, float radius)
 {
-	draw(Resources::getGraphicsPipeline("Lit 3D"), Resources::getMesh("Sphere"), x, y, z, radius, radius, radius);
+	draw(Resources::get<GraphicsPipeline>("Lit 3D"), Resources::get<Mesh>("Sphere"), x, y, z, radius, radius, radius);
 }
 
 void Renderer::ellipsoid(float x, float y, float z, float width, float height, float depth)
 {
-	draw(Resources::getGraphicsPipeline("Lit 3D"), Resources::getMesh("Sphere"), x, y, z, width, height, depth);
+	draw(Resources::get<GraphicsPipeline>("Lit 3D"), Resources::get<Mesh>("Sphere"), x, y, z, width, height, depth);
 }
 
 void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, glm::mat4&& transform, std::initializer_list<shared<Image2D>>&& images)
@@ -277,7 +277,7 @@ Light* Renderer::addLight(const Light& light)
 void Renderer::createInstance(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, InstanceData&& instance_data)
 {
 	if (!instance->material.get()) 
-		instance->material = Resources::getGraphicsPipeline("Lit 3D");
+		instance->material = Resources::get<GraphicsPipeline>("Lit 3D");
 
 	bool need_new_instance_batch = true;
 	for (size_t i = 0; i < instance_batches.size(); ++i)

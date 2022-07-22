@@ -4,7 +4,7 @@
 
 TextMesh::TextMesh(std::string_view text, uint32_t size, shared<Font> font)
 {
-	font = font.get() ? font : Resources::getFont("Arial");
+	font = font.get() ? font : Resources::get<Font>("Arial");
 	auto layout = font->getCharacterLayout(text);
 
 	size_t vertex_index = 0;

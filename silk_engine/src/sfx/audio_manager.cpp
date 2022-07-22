@@ -14,8 +14,3 @@ void AudioManager::setDopplerFactor(float value)
 {
 	alDopplerFactor(value);
 }
-
-void AudioManager::setDopplerVelocity(float value)
-{
-	alDopplerVelocity(value);
-}

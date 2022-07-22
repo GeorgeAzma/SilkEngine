@@ -2,6 +2,7 @@
 
 #include "gfx/graphics.h"
 #include "gfx/descriptors/descriptor_set.h"
+#include "gfx/buffers/buffer_layout.h"
 #include <shaderc/shaderc.hpp>
 
 namespace spirv_cross
@@ -29,6 +30,25 @@ enum class EnableTag // Do not adjust order
 
 class Shader : NonCopyable
 {
+public:
+	enum class Type : uint32_t
+	{
+		NONE = 0,
+		VERTEX = 1,
+		FRAGMENT = 2,
+		GEOMETRY = 4,
+		COMPUTE = 8,
+		TESSELATION_CONTROL = 16,
+		TESSELATION_EVALUATION = 32
+	};
+
+	struct Define
+	{
+		std::string name = "";
+		std::string value = "";
+	};
+
+private:
 	struct Resource
 	{
 		size_t id;
@@ -54,7 +74,7 @@ class Shader : NonCopyable
 
 	struct PerStageData
 	{
-		VkShaderStageFlagBits stage;
+		Type stage;
 		std::vector<uint32_t> binary;
 		VkShaderModule module;
 	};
@@ -87,24 +107,6 @@ class Shader : NonCopyable
 	};
 
 public:
-	enum class Type : uint32_t
-	{
-		NONE = 0,
-		VERTEX = 1,
-		FRAGMENT = 2,
-		GEOMETRY = 4,
-		COMPUTE = 8,
-		TESSELATION_CONTROL = 16,
-		TESSELATION_EVALUATION = 32
-	};
-
-	struct Define
-	{
-		std::string name = "";
-		std::string value = "";
-	};
-
-public:
     Shader(std::string_view file, const std::vector<Define>& defines = {});
 	~Shader();
 
@@ -124,6 +126,7 @@ public:
 	const std::unordered_map<std::string, Constant>& getConstants() const { return constants; }
 	const Parameters& getParameters() const { return parameters; }
 	const std::vector<PerStageData>& getStages() const { return stages; }
+	const BufferLayout& getBufferLayout() const { return buffer_layout; }
 	const glm::uvec3& getLocalSize() const 
 	{ 
 		SK_ASSERT(local_size != glm::uvec3(0), "Shader had invalid local size, make sure you are using a compute shader with right local_size."); 
@@ -133,7 +136,8 @@ public:
 public:
 	static shaderc_shader_kind shadercType(Type shader_type);
 	static shaderc_env_version shadercApiVersion(APIVersion api_version);
-    static VkShaderStageFlagBits getVulkanType(Type shader_type);
+    static VkShaderStageFlagBits toVulkanType(Type shader_type);
+	static Type fromVulkanType(VkShaderStageFlagBits vulkan_type);
     static Type getStringType(std::string_view shader_string);
     static std::string getTypeFileExtension(Type shader_type);
 
@@ -160,6 +164,7 @@ private:
     std::unordered_map<std::string_view, VkPushConstantRange> push_constants;
 	std::unordered_map<std::string_view, ResourceLocation> resource_locations;
 	std::unordered_map<std::string, Constant> constants;
+	BufferLayout buffer_layout{};
 	std::vector<PerStageData> stages;
 	Parameters parameters{};
 };

@@ -1,14 +1,14 @@
 #include "microphone.h"
-#include <AL/alc.h>
-#include <AL/al.h>
 
-Microphone::Microphone(const char* device_name)
+Microphone::Microphone(const char* device_name, uint32_t sample_rate, AudioFormat format, size_t buffer_size)
+	: sample_rate(sample_rate), format(format), buffer_size(buffer_size)
 {
-	device = alcCaptureOpenDevice(device_name, 44100, AL_FORMAT_MONO16, 1024); //nullptr is default device
-	if (!device)
-		return;
+	device = alcCaptureOpenDevice(device_name, sample_rate, ALenum(format), buffer_size); //nullptr is default device
 
 #ifdef SK_ENABLE_DEBUG_OUTPUT // Print audio devices
+	if (!exists())
+		return;
+
 	const char* devices = alcGetString(nullptr, ALC_CAPTURE_DEVICE_SPECIFIER);
 
 	if (!devices)
@@ -29,7 +29,7 @@ Microphone::Microphone(const char* device_name)
 
 Microphone::~Microphone()
 {
-	if (!device)
+	if (!exists())
 		return;
 	
 	stop();

@@ -12,7 +12,7 @@
 
 void ParticleSystem::init()
 {
-    vao = Resources::getMesh("Quad")->getVertexArray();
+    vao = Resources::get<Mesh>("Quad")->getVertexArray();
 	instance_vbo = makeShared<VertexBuffer>(nullptr, MAX_PARTICLES * sizeof(ParticleData));
     instance_images = makeShared<InstanceImages>();
 }

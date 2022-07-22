@@ -16,22 +16,12 @@ public:
 	static void init();
 	static void destroy();
 
-	static shared<Mesh> getMesh(std::string_view name);
-	static shared<Model> getModel(std::string_view name);
-	static shared<Shader> getShader(std::string_view name);
-	static shared<GraphicsPipeline> getGraphicsPipeline(std::string_view name);
-	static shared<ComputePipeline> getComputePipeline(std::string_view name);
-	static shared<Image2D> getImage(std::string_view name);
-	static shared<Font> getFont(std::string_view path);
+	template<typename T>
+	static shared<T> get(std::string_view name);
 	static shared<DescriptorSetLayout> getDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
-	static void addMesh(std::string_view name, const shared<Mesh>& mesh);
-	static void addModel(std::string_view name, const shared<Model>& model);
-	static void addShader(std::string_view name, const shared<Shader>& shader);
-	static void addGraphicsPipeline(std::string_view name, const shared<GraphicsPipeline>& graphics_pipeline);
-	static void addComputePipeline(std::string_view name, const shared<ComputePipeline>& compute_pipeline);
-	static void addImage(std::string_view name, const shared<Image2D>& image);
-	static void addFont(std::string_view name, const shared<Font>& font);
+	template<typename T>
+	static void add(std::string_view name, const shared<T>& t);
 	static void addDescriptorSetLayout(const shared<DescriptorSetLayout>& descriptor_layout);
 
 public:
@@ -39,13 +29,8 @@ public:
 	static inline shared<Image2D> white_image = nullptr;
 
 private:
-	static inline std::unordered_map<std::string_view, std::shared_ptr<Mesh>> meshes;
-	static inline std::unordered_map<std::string_view, std::shared_ptr<Model>> models;
-	static inline std::unordered_map<std::string_view, std::shared_ptr<Shader>> shaders;
-	static inline std::unordered_map<std::string_view, std::shared_ptr<GraphicsPipeline>> graphics_pipelines;
-	static inline std::unordered_map<std::string_view, std::shared_ptr<ComputePipeline>> compute_pipelines;
-	static inline std::unordered_map<std::string_view, std::shared_ptr<Image2D>> images;
-	static inline std::unordered_map<std::string_view, std::shared_ptr<Font>> fonts;
+	template<typename T>
+	static inline std::unordered_map<std::string_view, shared<T>> resources;
 	struct DescriptorSetLayoutInfo
 	{
 		std::vector<VkDescriptorSetLayoutBinding> bindings;

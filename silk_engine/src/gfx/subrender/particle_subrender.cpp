@@ -7,9 +7,8 @@
 ParticleSubrender::ParticleSubrender(const PipelineStage& pipeline_stage)
     : pipeline()
 {    
-    using enum DeviceType;
+    using enum GpuType;
     pipeline.setShader(makeShared<Shader>("particle"))
-        .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, {MAT4, 1}, {UINT, 1}, {VEC4, 1} })
         .setSamples(Graphics::swap_chain->getSamples())
         .setStage(pipeline_stage)
         .build();

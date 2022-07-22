@@ -24,7 +24,7 @@ Model::Model(const RawModel& raw_model)
 
     Image2DProps image_props{};
     auto white = Resources::white_image;
-    auto black = Resources::getImage("Black");
+    auto black = Resources::get<Image2D>("Black");
     
     std::unordered_map<size_t, shared<Image2D>> bitmap_images;
 

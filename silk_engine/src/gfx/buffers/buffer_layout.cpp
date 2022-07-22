@@ -1,7 +1,10 @@
 #include "buffer_layout.h"
 
-BufferLayout::BufferLayout(const std::initializer_list<BufferElement>& elements)
+BufferLayout::BufferLayout(const std::vector<BufferElement>& elements)
 {
+	if (!elements.size())
+		return;
+
 	uint32_t offset = 0;
 	uint32_t instance_offset = 0;
 	uint32_t location = 0;
@@ -10,13 +13,13 @@ BufferLayout::BufferLayout(const std::initializer_list<BufferElement>& elements)
 
 	for (const BufferElement& element : elements)
 	{
-		size_t size = DeviceTypeEnum::getSize(element.type);
+		size_t size = GpuTypeEnum::getSize(element.type);
 		size_t actual_rows = (float)size / sizeof(glm::vec4);
 		size_t rows = actual_rows + ((size % sizeof(glm::vec4)) > 0);
 		for (size_t i = 0; i < rows; ++i)
 		{
 			VkVertexInputAttributeDescription attribute_description{};
-			attribute_description.format = DeviceTypeEnum::toVulkanType(element.type);
+			attribute_description.format = GpuTypeEnum::toVulkanType(element.type);
 			attribute_description.location = location;
 
 			if (element.instanced)

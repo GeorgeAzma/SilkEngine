@@ -10,39 +10,35 @@
 
 MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
 {
-    using enum DeviceType;
+    using enum GpuType;
     shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
-    graphics_pipeline->setShader(Resources::getShader("3D"))
-        .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
+    graphics_pipeline->setShader(Resources::get<Shader>("3D"))
         .setSamples(Graphics::swap_chain->getSamples())
         .setStage(pipeline_stage)
         .build();
-    Resources::addGraphicsPipeline("Lit 3D", graphics_pipeline);
+    Resources::add<GraphicsPipeline>("Lit 3D", graphics_pipeline);
 
     VkBool32 lit = false;
     graphics_pipeline = makeShared<GraphicsPipeline>();
-    graphics_pipeline->setShader(Resources::getShader("3D"), { { "lit", &lit, sizeof(VkBool32) } })
-        .setVertexLayout({ { VEC3 }, { VEC2 }, { VEC3 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
+    graphics_pipeline->setShader(Resources::get<Shader>("3D"), { { "lit", &lit, sizeof(VkBool32) } })
         .setSamples(Graphics::swap_chain->getSamples())
         .setStage(pipeline_stage)
         .build();
-    Resources::addGraphicsPipeline("3D", graphics_pipeline);
+    Resources::add<GraphicsPipeline>("3D", graphics_pipeline);
 
     graphics_pipeline = makeShared<GraphicsPipeline>();
-    graphics_pipeline->setShader(Resources::getShader("2D"))
-        .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
+    graphics_pipeline->setShader(Resources::get<Shader>("2D"))
         .setSamples(Graphics::swap_chain->getSamples())
         .setStage(pipeline_stage)
         .build();
-    Resources::addGraphicsPipeline("2D", graphics_pipeline);
+    Resources::add<GraphicsPipeline>("2D", graphics_pipeline);
 
     graphics_pipeline = makeShared<GraphicsPipeline>();
-    graphics_pipeline->setShader(Resources::getShader("Font"))
-        .setVertexLayout({ { VEC2 }, { VEC2 }, { VEC4 }, { MAT4, 1 }, { UINT, 1 }, { VEC4, 1 } })
+    graphics_pipeline->setShader(Resources::get<Shader>("Font"))
         .setSamples(Graphics::swap_chain->getSamples())
         .setStage(pipeline_stage)
         .build();
-    Resources::addGraphicsPipeline("Font", graphics_pipeline);
+    Resources::add<GraphicsPipeline>("Font", graphics_pipeline);
 }
 
 void MeshSubrender::render()

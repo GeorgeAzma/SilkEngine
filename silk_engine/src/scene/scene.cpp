@@ -282,8 +282,8 @@ void Scene::onTextComponentCreate(entt::registry& registry, entt::entity entity)
 {
 	TextComponent& text_component = registry.get<TextComponent>(entity);
 	if (!text_component.font.get())
-		text_component.font = Resources::getFont("Arial");
-	registry.emplace<MaterialComponent>(entity, MaterialComponent{ Resources::getGraphicsPipeline("Font") });
+		text_component.font = Resources::get<Font>("Arial");
+	registry.emplace<MaterialComponent>(entity, MaterialComponent{ Resources::get<GraphicsPipeline>("Font") });
 	registry.emplace<ImageComponent>(entity, ImageComponent{ std::vector<shared<Image2D>>{ text_component.font->getAtlas() } });
 	registry.emplace<MeshComponent>(entity, MeshComponent{ makeShared<Mesh>(TextMesh(text_component.text, text_component.size, text_component.font)) });
 }

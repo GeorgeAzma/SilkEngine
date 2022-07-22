@@ -1,6 +1,6 @@
 #pragma once
 
-enum class DeviceType
+enum class GpuType
 {
 	BOOL,
 	BYTE,
@@ -15,27 +15,27 @@ enum class DeviceType
 	VEC3,
 	VEC4,
 	IVEC2,
-	VEC3I,
-	VEC4I,
-	VEC2U,
-	VEC3U,
-	VEC4U,
-	VEC2D,
-	VEC3D,
-	VEC4D,
+	IVEC3,
+	IVEC4,
+	UVEC2,
+	UVEC3,
+	UVEC4,
+	DVEC2,
+	DVEC3,
+	DVEC4,
 	MAT2,
 	MAT3,
 	MAT4,
-	MAT2D,
-	MAT3D,
-	MAT4D
+	DMAT2,
+	DMAT3,
+	DMAT4
 };
 
-class DeviceTypeEnum
+class GpuTypeEnum
 {
 public:
-	static VkFormat toVulkanType(DeviceType type);
-	static size_t getSize(DeviceType type);
-	static size_t getCount(DeviceType type);
-	static size_t getRows(DeviceType type);
+	static VkFormat toVulkanType(GpuType type);
+	static size_t getSize(GpuType type);
+	static size_t getCount(GpuType type);
+	static size_t getRows(GpuType type);
 };

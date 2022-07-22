@@ -1,6 +1,5 @@
 #include "audio_device.h"
 #include "audio_context.h"
-#include <AL/alc.h>
 
 AudioDevice::AudioDevice(const char* device_name)
 {

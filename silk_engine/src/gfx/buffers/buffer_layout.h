@@ -4,14 +4,14 @@
 
 struct BufferElement
 {
-	DeviceType type;
+	GpuType type;
 	bool instanced = false;
 };
 
 class BufferLayout 
 {
 public:
-	BufferLayout(const std::initializer_list<BufferElement>& elements = {});
+	BufferLayout(const std::vector<BufferElement>& elements = {});
 
 	const std::vector<VkVertexInputBindingDescription>& getBindingDescriptions() const { return binding_descriptions; };
 	const std::vector<VkVertexInputAttributeDescription>& getAttributeDescriptions() const { return attribute_descriptions; };

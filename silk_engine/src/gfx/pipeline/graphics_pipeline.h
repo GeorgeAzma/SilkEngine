@@ -2,7 +2,6 @@
 
 #include "pipeline.h"
 #include "pipeline_stage.h"
-#include "gfx/buffers/buffer_layout.h"
 
 class GraphicsPipeline : public Pipeline
 {
@@ -10,7 +9,6 @@ public:
 	GraphicsPipeline();
 
 	GraphicsPipeline& setShader(const shared<Shader>& shader, const std::vector<Constant>& constants = {});
-	GraphicsPipeline& setVertexLayout(const BufferLayout& layout);
 	GraphicsPipeline& setSamples(VkSampleCountFlagBits sample_count);
 	GraphicsPipeline& setRenderPass(VkRenderPass render_pass);
 	GraphicsPipeline& setSubpass(uint32_t subpass);
@@ -36,6 +34,5 @@ private:
 	VkPipelineDynamicStateCreateInfo dynamic_state{};
 	VkRenderPass render_pass = VK_NULL_HANDLE;
 	uint32_t subpass = 0;
-	BufferLayout buffer_layout = {};
 	VkGraphicsPipelineCreateInfo ci{};
 };

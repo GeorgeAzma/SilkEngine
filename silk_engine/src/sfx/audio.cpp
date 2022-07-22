@@ -1,11 +1,11 @@
 #include "audio.h"
 #include "raw_audio.h"
-#include <AL/al.h>
 
 Audio::Audio(const RawAudio& audio)
+	: format(audio.format), sample_rate(audio.sample_rate)
 {
 	alGenBuffers(1, &id);
-	alBufferData(id, ALenum(audio.format), audio.data.data(), audio.data.size(), audio.sample_rate);
+	setData(audio.data.data(), audio.data.size());
 }
 
 Audio::Audio(std::string_view file)
@@ -20,39 +20,26 @@ Audio::~Audio()
 
 uint32_t Audio::getChannelCount() const
 {
-	ALint channels = 0;
-	alGetBufferi(id, AL_CHANNELS, &channels);
-	return channels;
-}
-
-uint32_t Audio::getSize() const
-{
-	ALint size = 0;
-	alGetBufferi(id, AL_SIZE, &size);
-	return size;
+	return AudioFormatEnum::getChannelCount(format);
 }
 
 uint32_t Audio::getBitsPerSample() const
 {
-	ALint bits = 0;
-	alGetBufferi(id, AL_BITS, &bits);
-	return bits;
-}
-
-uint32_t Audio::getSampleRate() const
-{
-	ALint sample_rate = 0;
-	alGetBufferi(id, AL_FREQUENCY, &sample_rate);
-	return sample_rate;
+	return AudioFormatEnum::getBitsPerSample(format);
 }
 
 uint32_t Audio::getSamples() const
 {
-	return getSize() * 8 / (getChannelCount() * getBitsPerSample());
+	return getSize() / AudioFormatEnum::getSize(format);
 }
 
 float Audio::getDuration() const
 {
-	float duration = float(getSamples()) / float(getSampleRate());
-	return duration;
+	return float(getSamples()) / getSampleRate();
+}
+
+void Audio::setData(const void* data, size_t size)
+{
+	this->size = size;
+	alBufferData(id, ALenum(format), data, size, sample_rate);
 }
