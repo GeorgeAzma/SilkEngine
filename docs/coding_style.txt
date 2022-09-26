@@ -1,0 +1,67 @@
+Checkout the engine files as an example to see our coding style, read this for quick review
+
+---------------- Casing -----------------
+
+    Pascal - ThisIsPascalCase
+    Camel - thisIsCamelCase
+    Snake - this_is_snake_case
+    Kebab - this-is-kebab-case
+    UpperCaseSnake - THIS_IS_UPPER_CASE_SNAKE_CASE
+
+    -------Pascal-------
+
+        Classes
+        Structs
+        TypeDefs/Using
+        Enums
+
+    -------Camel-------
+
+        Functions
+
+    -------Snake-------
+
+        Files
+        Folders
+        Variables
+        Lambdas
+        Namespaces
+
+    -------Kebab-------
+
+        CSS
+        HTML
+
+    -------UpperCaseSnake-------
+
+        Constants
+        Enum variables
+
+---------------- Prefixes/Postfixes ----------------
+    
+    don't use m_ postfix for member variables unless super necessary
+
+
+---------------- Notes ----------------
+
+Disclaimer: Following these notes isn't neccessary but would be preferable
+
+- If you write some code that might be dangerous in feature 
+  (mostly for performance reasons), put comment like: 
+  "//WARN: I did something this way for performance, it can be changed to this"
+- Prefer verbose variable names
+- Worry about multiplatform support
+- You can follow coding style of the thing you are programming in 
+  and use their objects (like VkDeviceSize instead of uint32_t) 
+  (if you are making an std function you use snake case, if vulkan use camel case etc.)
+- Comment complex code snippets which are intended to be used a lot
+- Prefer using smart pointers unless object lifetime is relative to 
+  the program (or even base class), or if memory requires special handling,
+  or performance is super important
+- Create seperate access specifier for member functions, variables 
+  and nested class/struct declarations
+- Declarations like "friend class SomeClass;" should go on top 
+  of the class, even on top of access specifiers and it should 
+  be in implicit private access specifier
+- Don't use std:: on primitive functions like std::sqrt
+

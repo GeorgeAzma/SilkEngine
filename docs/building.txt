@@ -1,0 +1,18 @@
+Windows Only:
+
+	Run "build.bat"
+
+	Or 
+
+	Open SilkEngine Folder via visual studio
+	Press: "Project -> Configure SilkEngine"
+	Press: "Project -> Build" (Takes a while)
+	Press: "Project -> Configure SilkEngine" Again
+
+SilkEngine is now built.
+
+Now you need to create new project in "projects" folder,
+set that as a target and run it.
+For example to how to do that go to: 
+"templates/sanbox_project" folder
+

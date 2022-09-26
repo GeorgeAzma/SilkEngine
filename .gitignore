@@ -1,0 +1,7 @@
+#folders
+build/
+
+#files
+*.user
+.vscode
+.vs
