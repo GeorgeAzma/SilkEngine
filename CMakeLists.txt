@@ -78,6 +78,7 @@ macro(externalProject)
         DEPENDS ${SUBPROJECT_DEPENDS_ON}
         BUILD_COMMAND ${DEFAULT_BUILD_COMMAND}
         BUILD_ALWAYS OFF
+        UPDATE_COMMAND ""
     )
     if(SUBPROJECT_DEPENDS_ON)
         ExternalProject_Add_StepDependencies(${SUBPROJECT_NAME} 
@@ -146,29 +147,28 @@ externalProject(NAME spirv_cross
         -DSPIRV_CROSS_HLSL=OFF
         -DSPIRV_CROSS_MSL=OFF
 )
-externalProject(NAME spirv_headers 
-    GIT_REPO https://github.com/KhronosGroup/SPIRV-Headers 
-    GIT_TAG master 
-    BUILD_ARGS 
-        -DSPIRV_HEADERS_SKIP_EXAMPLES=ON
-)
-externalProject(NAME spirv_tools 
-    GIT_REPO https://github.com/KhronosGroup/SPIRV-Tools 
-    GIT_TAG master
-    BUILD_ARGS
-        -DSPIRV_SKIP_EXECUTABLES=ON
-)
-externalProject(NAME shaderc 
-    GIT_REPO https://github.com/google/shaderc 
-    GIT_TAG main 
-    BUILD_ARGS
-        -DSHADERC_SKIP_TESTS=ON
-        -DSHADERC_SKIP_INSTALL=ON 
-        -DSHADERC_SKIP_EXAMPLES=ON 
-    DEPENDS_ON 
-        spirv_headers 
-        spirv_tools
-)
+#externalProject(NAME spirv_headers 
+#    GIT_REPO https://github.com/KhronosGroup/SPIRV-Headers 
+#    GIT_TAG master 
+#    BUILD_ARGS 
+#        -DSPIRV_HEADERS_SKIP_EXAMPLES=ON
+#)
+#externalProject(NAME spirv_tools 
+#    GIT_REPO https://github.com/KhronosGroup/SPIRV-Tools 
+#    GIT_TAG master
+#    BUILD_ARGS
+#        -DSPIRV_SKIP_EXECUTABLES=ON
+#    DEPENDS_ON spirv_headers
+#)
+#externalProject(NAME shaderc 
+#    GIT_REPO https://github.com/google/shaderc 
+#    GIT_TAG main 
+#    BUILD_ARGS
+#        -DSHADERC_SKIP_TESTS=ON
+#        -DSHADERC_SKIP_INSTALL=ON 
+#        -DSHADERC_SKIP_EXAMPLES=ON 
+#    DEPENDS_ON spirv_tools
+#)
 
 file(GLOB_RECURSE EXTERNAL_PROJECT_LIBS "${CMAKE_INSTALL_PREFIX}/*${CMAKE_STATIC_LIBRARY_SUFFIX}")
 list(APPEND EXTRA_LIBS ${EXTERNAL_PROJECT_LIBS})
