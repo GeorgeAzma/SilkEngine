@@ -1,5 +1,5 @@
 #include "simulation.h"
-#include "core/input/input.h"
+#include "gfx/window/window.h"
 #include "scene/meshes/circle_outline_mesh.h"
 #include "core/input/mouse_buttons.h"
 #include "gfx/images/image.h"
@@ -59,18 +59,18 @@ void Simulation::update()
 
 	if (moving_gate)
 	{
-		moving_gate->x = Input::getMouseX() + offset.x;
-		moving_gate->y = Input::getMouseY() + offset.y;
+		moving_gate->x = Window::getMouse().x + offset.x;
+		moving_gate->y = Window::getMouse().y + offset.y;
+		moving_gate->size = zoomed_size;
 	}
-	else if (Input::isMouseDown(MouseButtons::MIDDLE))
+	else if (Window::isMouseDown(MouseButtons::MIDDLE))
 	{
-		offset = Input::getMouse();
 		for (auto& gate : gates)
 		{
-			gate->x += offset.x - start_pos.x;
-			gate->y += offset.y - start_pos.y;
+			gate->x += Window::getMouse().x - start_pos.x;
+			gate->y += Window::getMouse().y - start_pos.y;
 		}
-		start_pos = offset;
+		start_pos = Window::getMouse();
 	}
 
 	selection_gui.render();
@@ -92,12 +92,12 @@ void Simulation::onMousePress(const MousePressEvent& e)
 		}
 		for (auto& g : gates)
 		{
-			if (math::isPointInRectangle(Input::getMouse(), { g->x, g->y, g->getWidth(), g->getHeight() }))
+			if (math::isPointInRectangle(Window::getMouse(), { g->x, g->y, g->getWidth(), g->getHeight() }))
 			{
 				moving_gate = g;
 				moving_gate->onMousePress(e);
 				start_pos = vec2(g->x, g->y);
-				offset = vec2(g->x, g->y) - Input::getMouse();
+				offset = vec2(g->x, g->y) - Window::getMouse();
 				if (gates.back().get() != moving_gate.get())
 					std::swap(g, gates.back());
 				return;
@@ -106,7 +106,7 @@ void Simulation::onMousePress(const MousePressEvent& e)
 		Pin destination_pin{};
 		for (const auto& g : gates)
 		{
-			auto pin = g->getPinIndexAtLocation(Input::getMouse());	
+			auto pin = g->getPinIndexAtLocation(Window::getMouse());	
 			if (pin.first != -1)
 			{
 				if (!have_selection_pin)
@@ -131,7 +131,7 @@ void Simulation::onMousePress(const MousePressEvent& e)
 	}
 	else if (e.button == MouseButtons::MIDDLE)
 	{
-		start_pos = Input::getMouse();
+		start_pos = Window::getMouse();
 	}
 	if (have_selection_pin)
 		selected_pin = {};
@@ -154,7 +154,7 @@ void Simulation::onMouseRelease(const MouseReleaseEvent& e)
 	{
 		for (auto i = gates.rbegin(); i != gates.rend(); ++i)
 		{
-			if (math::isPointInRectangle(Input::getMouse(), { (*i)->x, (*i)->y, (*i)->getWidth(), (*i)->getHeight() }))
+			if (math::isPointInRectangle(Window::getMouse(), { (*i)->x, (*i)->y, (*i)->getWidth(), (*i)->getHeight() }))
 			{
 				gates.erase((i + 1).base());
 				break;
@@ -162,7 +162,7 @@ void Simulation::onMouseRelease(const MouseReleaseEvent& e)
 		}
 		for (auto& g : gates)
 		{
-			auto pin = g->getPinIndexAtLocation(Input::getMouse());
+			auto pin = g->getPinIndexAtLocation(Window::getMouse());
 			if (pin.first != -1 && pin.second == 1)
 			{
 				g->clearConnections(pin.first);
@@ -175,11 +175,12 @@ void Simulation::onMouseRelease(const MouseReleaseEvent& e)
 void Simulation::onMouseScroll(const MouseScrollEvent& e)
 {
 	float zoom_amount = 0.05f;
+	zoomed_size += e.y * zoomed_size * zoom_amount;
 	for (auto& g : gates)
 	{
-		g->size += e.y * g->size * zoom_amount;
-		g->x += e.y * (g->x - Input::getMouseX()) * zoom_amount;
-		g->y += e.y * (g->y - Input::getMouseY()) * zoom_amount;
+		g->size = zoomed_size;
+		g->x += e.y * (g->x - Window::getMouse().x) * zoom_amount;
+		g->y += e.y * (g->y - Window::getMouse().y) * zoom_amount;
 	}
 }
 
@@ -196,6 +197,7 @@ void Simulation::save()
 	std::ofstream os("res/saves/save.dat", std::ios::binary);
 	if (os)
 	{
+		os.write((const char*)&zoomed_size, sizeof(zoomed_size));
 		for (size_t i = 0; i < gates.size(); ++i)
 			gates[i]->index = i;
 		size_t s = gates.size();
@@ -210,6 +212,7 @@ void Simulation::load()
 	std::ifstream is("res/saves/save.dat", std::ios::binary);
 	if (is)
 	{
+		is.read((char*)&zoomed_size, sizeof(zoomed_size));
 		size_t s = 0;
 		is.read((char*)&s, sizeof(s));
 		gates.resize(s);

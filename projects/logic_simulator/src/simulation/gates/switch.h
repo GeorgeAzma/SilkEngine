@@ -2,7 +2,7 @@
 
 #include "gate.h"
 #include "gfx/renderer.h"
-#include "core/input/input.h"
+#include "gfx/window/window.h"
 #include "core/input/mouse_buttons.h"
 
 class Switch : public Gate
@@ -15,7 +15,7 @@ public:
 
     void simulateLogic() override
     {
-        if (math::isPointInRectangle(Input::getMouse(), { x, y, getWidth(), getHeight() }))
+        if (math::isPointInRectangle(Window::getMouse(), { x, y, getWidth(), getHeight() }))
             outputs[0] = !outputs[0];
     }
 

@@ -82,7 +82,7 @@ macro(externalProject)
     )
     if(SUBPROJECT_DEPENDS_ON)
         ExternalProject_Add_StepDependencies(${SUBPROJECT_NAME} 
-            configure ${SUBPROJECT_DEPENDS_ON}
+            build ${SUBPROJECT_DEPENDS_ON}
         )
     endif()
     list(APPEND INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX}/include/${SUBPROJECT_INCLUDE_DIR})

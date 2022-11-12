@@ -31,4 +31,5 @@ private:
 	static inline vec2 start_pos = vec2(0);
 	static inline vec2 offset = vec2(0);
 	static inline Pin selected_pin{};
+	static inline float zoomed_size = 40.0f;
 };

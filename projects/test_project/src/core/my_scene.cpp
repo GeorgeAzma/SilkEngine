@@ -1,6 +1,6 @@
 #include "my_scene.h"
 #include "scene/resources.h"
-#include "core/input/input.h"
+#include "gfx/window/window.h"
 #include "core/input/keys.h"
 #include "core/input/mouse_buttons.h"
 #include "gfx/window/window.h"
@@ -37,9 +37,9 @@ void MyScene::onStart()
 
 void MyScene::onUpdate()
 {
-    if (Input::isKeyPressed(Keys::F2))
+    if (Window::isKeyPressed(Keys::F2))
         Graphics::screenshot(std::format("data/images/screenshots/screenshot.png"));
-    if (Input::isKeyPressed(Keys::R))
+    if (Window::isKeyPressed(Keys::R))
         Resources::reloadShaders();
 
     if (c())

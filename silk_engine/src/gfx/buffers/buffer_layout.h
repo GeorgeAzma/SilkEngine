@@ -13,8 +13,9 @@ class BufferLayout
 public:
 	BufferLayout(const std::vector<BufferElement>& elements = {});
 
-	const std::vector<VkVertexInputBindingDescription>& getBindingDescriptions() const { return binding_descriptions; };
-	const std::vector<VkVertexInputAttributeDescription>& getAttributeDescriptions() const { return attribute_descriptions; };
+	const std::vector<VkVertexInputBindingDescription>& getBindingDescriptions() const { return binding_descriptions; }
+	const std::vector<VkVertexInputAttributeDescription>& getAttributeDescriptions() const { return attribute_descriptions; }
+
 private:
 	std::vector<VkVertexInputBindingDescription> binding_descriptions;
 	std::vector<VkVertexInputAttributeDescription> attribute_descriptions;

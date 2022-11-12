@@ -2,7 +2,7 @@
 
 #include "gate.h"
 #include "gfx/renderer.h"
-#include "core/input/input.h"
+#include "gfx/window/window.h"
 #include "core/input/mouse_buttons.h"
 
 class Bulb : public Gate

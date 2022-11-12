@@ -9,7 +9,7 @@ struct Event
 };
 
 //WINDOW EVENTS
-struct WindowResizeEvent : public Event
+struct WindowResizeEvent : Event
 {
     WindowResizeEvent(uint32_t width, uint32_t height)
         : width(width), height(height) {}
@@ -17,12 +17,12 @@ struct WindowResizeEvent : public Event
     const uint32_t width, height;
 };
 
-struct WindowCloseEvent : public Event
+struct WindowCloseEvent : Event
 {
     WindowCloseEvent() {}
 };
 
-struct WindowMaximizeEvent : public Event
+struct WindowMaximizeEvent : Event
 {
     WindowMaximizeEvent(bool maximized) 
         : maximized(maximized) {}
@@ -30,7 +30,7 @@ struct WindowMaximizeEvent : public Event
     const bool maximized;
 };
 
-struct WindowFocusEvent : public Event
+struct WindowFocusEvent : Event
 {
     WindowFocusEvent(bool focused) 
         : focused(focused) {}
@@ -38,7 +38,7 @@ struct WindowFocusEvent : public Event
     const bool focused;
 };
 
-struct WindowIconifyEvent : public Event
+struct WindowIconifyEvent : Event
 {
     WindowIconifyEvent(bool iconified)
         : iconified(iconified) {}
@@ -46,12 +46,12 @@ struct WindowIconifyEvent : public Event
     const bool iconified;
 };
 
-struct WindowRefreshEvent : public Event
+struct WindowRefreshEvent : Event
 {
     WindowRefreshEvent() {}
 };
 
-struct WindowMoveEvent : public Event
+struct WindowMoveEvent : Event
 {
     WindowMoveEvent(int32_t x, int32_t y)
         : x(x), y(y) {}
@@ -59,7 +59,7 @@ struct WindowMoveEvent : public Event
     const int32_t x, y;
 };
 
-struct WindowContentScaleEvent : public Event
+struct WindowContentScaleEvent : Event
 {
     WindowContentScaleEvent(float x, float y)
         : x(x), y(y) {}
@@ -67,13 +67,13 @@ struct WindowContentScaleEvent : public Event
     const float x, y;
 };
 
-struct SwapchainRecreate : public Event
+struct SwapchainRecreate : Event
 {
     SwapchainRecreate() {}
 };
 
 //KEY EVENTS
-struct KeyPressEvent : public Event
+struct KeyPressEvent : Event
 {
     KeyPressEvent(uint16_t key, uint32_t repeat_count)
         : key(key), repeat_count(repeat_count) {}
@@ -82,7 +82,7 @@ struct KeyPressEvent : public Event
     const uint repeat_count;
  };
 
-struct KeyReleaseEvent : public Event
+struct KeyReleaseEvent : Event
 {
     KeyReleaseEvent(uint16_t key)
         : key(key) {}
@@ -91,7 +91,7 @@ struct KeyReleaseEvent : public Event
  };
 
 //MOUSE EVENTS
-struct MousePressEvent : public Event
+struct MousePressEvent : Event
 {
     MousePressEvent(uint32_t button)
         : button(button) {}
@@ -99,7 +99,7 @@ struct MousePressEvent : public Event
     const uint32_t button;
  };
 
-struct MouseReleaseEvent : public Event
+struct MouseReleaseEvent : Event
 {
     MouseReleaseEvent(uint32_t button)
         : button(button) {}
@@ -107,7 +107,7 @@ struct MouseReleaseEvent : public Event
     const uint32_t button;
  };
 
-struct MouseMoveEvent : public Event
+struct MouseMoveEvent : Event
 {
     MouseMoveEvent(double x, double y)
         : x(x), y(y) {}
@@ -115,7 +115,7 @@ struct MouseMoveEvent : public Event
     const double x, y;
  };
 
-struct MouseDragEvent : public Event
+struct MouseDragEvent : Event
 {
     MouseDragEvent(uint32_t button, double x, double y)
         : button(button), x(x), y(y) {}
@@ -132,7 +132,17 @@ struct MouseScrollEvent : public Event
     const double x, y;
  };
 
-struct DragAndDropEvent : public Event
+struct MouseEnterEvent : Event
+{
+    MouseEnterEvent() {}
+};
+
+struct MouseLeaveEvent : Event
+{
+    MouseLeaveEvent() {}
+};
+
+struct DragAndDropEvent : Event
 {
     DragAndDropEvent(const std::vector<const char*>& paths)
         : paths(paths) {}
@@ -140,7 +150,7 @@ struct DragAndDropEvent : public Event
     const std::vector<const char*> paths;
 };
 
-struct WindowFullscreenEvent : public Event
+struct WindowFullscreenEvent : Event
 {
     WindowFullscreenEvent(bool fullscreen)
         : fullscreen(fullscreen) {}
@@ -148,7 +158,7 @@ struct WindowFullscreenEvent : public Event
     const bool fullscreen;
 };
 
-struct CharacterWriteEvent : public Event
+struct CharacterWriteEvent : Event
 {
     CharacterWriteEvent(char character)
         : character(character) {}
@@ -156,7 +166,7 @@ struct CharacterWriteEvent : public Event
     const char character;
 };
 
-struct JoystickEvent : public Event
+struct JoystickEvent : Event
 {
     JoystickEvent(uint32_t id, bool connected)
         : id(id), connected(connected) {}
