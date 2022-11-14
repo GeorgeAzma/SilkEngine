@@ -153,10 +153,10 @@ Image::Image(std::string_view file, const Props& p)
 	create();
 }
 
-Image::Image(VkImage img, Format format)
+Image::Image(uint32_t width, uint32_t height, Format format, VkImage img)
 {
-	props.width = Window::getWidth();
-	props.height = Window::getHeight();
+	props.width = width;
+	props.height = height;
 	props.format = format;
 	props.create_sampler = false;
 	props.mipmap = false;

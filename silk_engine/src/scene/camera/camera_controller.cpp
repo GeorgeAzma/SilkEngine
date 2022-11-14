@@ -15,7 +15,7 @@ void CameraController::onUpdate()
 	auto& camera = get<CameraComponent>().camera;
 
 	float sensitivity = 0.003f;
-	vec2 dm = delta_mouse(Window::getMouse()) * sensitivity;
+	vec2 dm = delta_mouse(Window::getActive().getMouse()) * sensitivity;
 	dm.x *= -1;
 	bool rotated = math::length2(dm) > 0.0f;
 	if (rotated)
@@ -30,11 +30,11 @@ void CameraController::onUpdate()
 	vec3 front2D(math::normalize(vec3(camera.direction.x, 0, camera.direction.z)));
 
 	auto old_position = camera.position;
-	float speed = 2.0f * Time::dt * (1 + Window::isKeyDown(Keys::LEFT_SHIFT) * 20);
+	float speed = 2.0f * Time::dt * (1 + Window::getActive().isKeyDown(Keys::LEFT_SHIFT) * 20);
 	
-	camera.position += float(Window::isKeyDown(Keys::W) - Window::isKeyDown(Keys::S)) * front2D * speed;
-	camera.position += float(Window::isKeyDown(Keys::A) - Window::isKeyDown(Keys::D)) * math::cross(front2D, math::UP) * speed;
-	camera.position.y += (Window::isKeyDown(Keys::SPACE) - Window::isKeyDown(Keys::LEFT_CONTROL)) * speed;
+	camera.position += float(Window::getActive().isKeyDown(Keys::W) - Window::getActive().isKeyDown(Keys::S)) * front2D * speed;
+	camera.position += float(Window::getActive().isKeyDown(Keys::A) - Window::getActive().isKeyDown(Keys::D)) * math::cross(front2D, math::UP) * speed;
+	camera.position.y += (Window::getActive().isKeyDown(Keys::SPACE) - Window::getActive().isKeyDown(Keys::LEFT_CONTROL)) * speed;
 
 	if (old_position != camera.position || rotated)
 	{

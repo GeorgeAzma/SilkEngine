@@ -3,6 +3,9 @@
 #include "gfx/renderer.h"
 #include "scene/meshes/rounded_rectangle_mesh.h"
 
+struct MousePressEvent;
+struct MouseReleaseEvent;
+
 template <typename T>
 struct ID
 {

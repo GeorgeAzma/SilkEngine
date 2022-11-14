@@ -1,7 +1,5 @@
 #pragma once
 
-struct JoystickEvent;
-
 enum class InputDevice : uint32_t
 {
 	KEYBOARD_AND_MOUSE,
@@ -10,12 +8,6 @@ enum class InputDevice : uint32_t
 
 class Input
 {
-	struct Joystick
-	{
-		int id;
-		std::string name;
-	};
-
 public:
 	static void init();
 
@@ -28,14 +20,8 @@ public:
 	static int getMouseButtonBind(std::string_view name) { return bindings.mouse_buttons.at(name); }
 	static int getJoystickButtonBind(std::string_view name) { return bindings.joystick_buttons.at(name); }
 	static std::string getClipboardString();
-	static InputDevice getActiveInputDevice();
-	static const Joystick* getActiveJoystick();
-
-	static void onJoystickConnect(const JoystickEvent& e);
 
 private:
-	static inline Joystick* active_joystick = nullptr;
-	static inline std::vector<Joystick> joysticks;
 	static inline struct Bindings
 	{
 		std::unordered_map<std::string_view, int> keys;

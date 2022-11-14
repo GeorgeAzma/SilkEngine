@@ -72,7 +72,7 @@ public:
 	Image(const std::array<std::string, 6>& files, const Props& props = {}); // Cubemap
 	Image(const std::vector<std::string>& files, const Props& props = {}); // 2D Array
 	Image(const std::vector<std::array<std::string, 6>>& files, const Props& props = {}); // Cubemap Array
-	Image(VkImage image, Format format); // Constructor used for swap chain image creation ONLY
+	Image(uint32_t width, uint32_t height, Format format, VkImage img); // Constructor used for swap chain image creation ONLY
 	~Image();
 
 	uint32_t getWidth() const { return props.width; }

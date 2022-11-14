@@ -14,14 +14,21 @@
 #include "scene/camera/camera.h"
 #include <GLFW/glfw3.h>
 
+static void GLFWErrorCallback(int error, const char* description)
+{
+    SK_ERROR("GLFW({}): {}", error, description);
+}
+
 Application::Application(ApplicationCommandLineArgs args)
     : command_line_args(args)
 {
     Log::init(); 
     SK_INFO("Started");
-    Window::init();
+    glfwInit();
+    glfwSetErrorCallback(GLFWErrorCallback);
     Input::init();
     Graphics::init(*this);
+    window = new Window();
     Resources::init();
     Renderer::init();
     Dispatcher::subscribe(this, &Application::onWindowClose);
@@ -35,12 +42,12 @@ Application::~Application()
     Dispatcher::unsubscribe(this, &Application::onWindowResize);
     Dispatcher::unsubscribe(this, &Application::onKeyPress);
     SceneManager::destroy();
-    Window::destroy();
+    delete window;
+    glfwTerminate();
     Renderer::destroy();
     Resources::destroy();
     DescriptorAllocator::destroy();
     Graphics::destroy();
-    glfwTerminate();
     SK_INFO("Terminated");
 }
 
@@ -55,7 +62,7 @@ void Application::run()
 
 void Application::update()
 {
-    if (Window::isMinimized())
+    if (Window::getActive().isMinimized())
     {
         glfwWaitEvents();
         return;
@@ -63,7 +70,7 @@ void Application::update()
 
     glfwPollEvents();
 
-    if (Window::isMinimized())
+    if (Window::getActive().isMinimized())
     {
         glfwWaitEvents();
         return;
@@ -78,7 +85,7 @@ void Application::update()
     Graphics::update();
     Renderer::render(SceneManager::getActive().get() ? SceneManager::getActive()->getMainCamera() : nullptr);
 
-    Window::update();
+    Window::getActive().update();
     Time::update();
 }
 
@@ -90,8 +97,6 @@ void Application::onWindowClose(const WindowCloseEvent &e)
 
 void Application::onWindowResize(const WindowResizeEvent& e)
 {
-    Graphics::physical_device->updateSurfaceCapabilities();
-    Graphics::swap_chain->recreate();
     if (fully_initialized)
         update();
 }
@@ -101,10 +106,10 @@ void Application::onKeyPress(const KeyPressEvent& e)
     switch (e.key)
     {
     case Keys::ESCAPE:
-        Dispatcher::post(WindowCloseEvent());
+        Dispatcher::post(WindowCloseEvent(e.window));
         break;
     case Keys::F11:
-        Window::setFullscreen(!Window::isFullscreen());
+        e.window.setFullscreen(!e.window.isFullscreen());
         break;
     }
 }

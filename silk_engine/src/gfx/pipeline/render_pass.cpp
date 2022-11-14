@@ -76,8 +76,8 @@ void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_cont
             begin_info.framebuffer = framebuffer;
 
             begin_info.renderArea.offset = { 0, 0 };
-            begin_info.renderArea.extent.width = Window::getWidth();
-            begin_info.renderArea.extent.height = Window::getHeight();
+            begin_info.renderArea.extent.width = Window::getActive().getWidth();
+            begin_info.renderArea.extent.height = Window::getActive().getHeight();
 
             std::vector<VkClearValue> clear_values;
             for (const auto& subpass : subpasses)

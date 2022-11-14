@@ -3,10 +3,12 @@
 #include "core/event.h"
 #include "gfx/pipeline/render_pass.h"
 
+class Surface;
+
 class SwapChain : NonCopyable
 {
 public:
-    SwapChain(VkSwapchainKHR old_swap_chain = nullptr);
+    SwapChain(const Surface& surface, VkSwapchainKHR old_swap_chain = nullptr);
     ~SwapChain();
 
     Image::Format getFormat() const { return image_format; }
@@ -38,5 +40,6 @@ private:
     Image::Format depth_format;
     Image::Format image_format;
     VkColorSpaceKHR color_space;
-    VkSampleCountFlagBits sample_count;
+    VkSampleCountFlagBits sample_count; 
+    const Surface& surface;
 };

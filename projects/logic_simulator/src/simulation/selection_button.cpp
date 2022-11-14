@@ -11,16 +11,16 @@ SelectionButton::SelectionButton(float x, float y, float width, float height)
 
 bool SelectionButton::onMousePress(const MousePressEvent& e)
 {
-	return math::isPointInRectangle(Window::getMouse(), { x, y, width, height });
+	return math::isPointInRectangle(Window::getActive().getMouse(), { x, y, width, height });
 }
 
 void SelectionButton::render() const
 {
 	float add = 1.0f;
-	if (math::isPointInRectangle(Window::getMouse(), { x, y, width, height }))
+	if (math::isPointInRectangle(Window::getActive().getMouse(), { x, y, width, height }))
 	{
 		add = 1.2f;
-		if (Window::isMouseDown(MouseButtons::LEFT))
+		if (Window::getActive().isMouseDown(MouseButtons::LEFT))
 			add *= 1.3f;
 	}
 

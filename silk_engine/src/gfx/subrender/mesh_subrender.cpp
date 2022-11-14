@@ -1,5 +1,5 @@
 #include "mesh_subrender.h"
-#include "gfx/graphics.h"
+#include "gfx/window/window.h"
 #include "gfx/window/swap_chain.h"
 #include "gfx/pipeline/graphics_pipeline.h"
 #include "scene/resources.h"
@@ -12,21 +12,21 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
     using enum GpuType;
     shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
     graphics_pipeline->setShader(makeShared<Shader>("3D"))
-        .setSamples(Graphics::swap_chain->getSamples())
+        .setSamples(Window::getActive().getSwapChain().getSamples())
         .setStage(pipeline_stage)
         .build();
     Resources::add<GraphicsPipeline>("3D", graphics_pipeline);
 
     graphics_pipeline = makeShared<GraphicsPipeline>();
     graphics_pipeline->setShader(makeShared<Shader>("2D"))
-        .setSamples(Graphics::swap_chain->getSamples())
+        .setSamples(Window::getActive().getSwapChain().getSamples())
         .setStage(pipeline_stage)
         .build();
     Resources::add<GraphicsPipeline>("2D", graphics_pipeline);
 
     graphics_pipeline = makeShared<GraphicsPipeline>();
     graphics_pipeline->setShader(makeShared<Shader>("font"))
-        .setSamples(Graphics::swap_chain->getSamples())
+        .setSamples(Window::getActive().getSwapChain().getSamples())
         .setStage(pipeline_stage)
         .build();
     Resources::add<GraphicsPipeline>("Font", graphics_pipeline);

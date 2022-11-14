@@ -32,8 +32,8 @@ Gate* SelectionGui::onMousePress(const MousePressEvent& e)
 
 void SelectionGui::render()
 {
-	float w = Window::getWidth();
-	float h = Window::getHeight();
+	float w = Window::getActive().getWidth();
+	float h = Window::getActive().getHeight();
 
 	Renderer::color({ 0.4f, 0.4f, 0.4f, 0.25f });
 	int rows = (h * 2) / w + 1;

@@ -227,7 +227,7 @@ void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const sha
 
 void Renderer::waitForPreviousFrame()
 {
-	Graphics::swap_chain->acquireNextImage(swap_chain_image_available);
+	Window::getActive().getSwapChain().acquireNextImage(swap_chain_image_available);
 	previous_frame_finished->wait();
 	previous_frame_finished->reset();
 }
@@ -247,16 +247,16 @@ void Renderer::render(Camera* camera)
 
 				VkViewport viewport = {};
 				viewport.x = 0.0f;
-				viewport.y = Window::getHeight();
-				viewport.width = Window::getWidth();
-				viewport.height = -(float)Window::getHeight();
+				viewport.y = Window::getActive().getHeight();
+				viewport.width = Window::getActive().getWidth();
+				viewport.height = -(float)Window::getActive().getHeight();
 				viewport.minDepth = 0.0f;
 				viewport.maxDepth = 1.0f;
 				cb.setViewport({ viewport });
 
 				VkRect2D scissor = {};
 				scissor.offset = { 0, 0 };
-				scissor.extent = { Window::getWidth(), Window::getHeight() };
+				scissor.extent = { Window::getActive().getWidth(), Window::getActive().getHeight() };
 				cb.setScissor({ scissor });
 
 				auto& render_pass = render_stage.getRenderPass();
@@ -279,7 +279,7 @@ void Renderer::render(Camera* camera)
 	submit_info.signal_semaphores = { render_finished };
 	submit_info.fence = previous_frame_finished;
 	Graphics::execute(submit_info);
-	Graphics::swap_chain->present(render_finished);
+	Window::getActive().getSwapChain().present(render_finished);
 
 	Graphics::stats.instance_batches += instance_batches.size();
 	for (const auto& instance_batch : instance_batches)
@@ -423,11 +423,11 @@ void Renderer::updateUniformData(Camera* camera)
 		global_uniform_data.camera_position = camera->position;
 		global_uniform_data.camera_direction = camera->direction;
 	}
-	global_uniform_data.projection_view2D = math::ortho(0.0f, (float)Window::getWidth(), 0.0f, (float)Window::getHeight(), 0.0f, 1.0f);
+	global_uniform_data.projection_view2D = math::ortho(0.0f, (float)Window::getActive().getWidth(), 0.0f, (float)Window::getActive().getHeight(), 0.0f, 1.0f);
 	global_uniform_data.delta_time = Time::dt;
 	global_uniform_data.time = Time::runtime;
 	global_uniform_data.frame = Time::frame;
-	global_uniform_data.resolution = uvec2(Window::getWidth(), Window::getHeight());
+	global_uniform_data.resolution = uvec2(Window::getActive().getWidth(), Window::getActive().getHeight());
 	global_uniform_data.lights = lights;
 	global_uniform_buffer->setData(&global_uniform_data, sizeof(GlobalUniformData));
 }

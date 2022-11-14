@@ -36,6 +36,7 @@ private:
     void onKeyPress(const KeyPressEvent &e);
 
 private:
+    Window* window;
     ApplicationCommandLineArgs command_line_args;
     bool running = true;
     bool fully_initialized = false;

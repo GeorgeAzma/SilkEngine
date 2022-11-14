@@ -15,7 +15,7 @@ public:
 
     void simulateLogic() override
     {
-        if (math::isPointInRectangle(Window::getMouse(), { x, y, getWidth(), getHeight() }))
+        if (math::isPointInRectangle(Window::getActive().getMouse(), { x, y, getWidth(), getHeight() }))
             outputs[0] = !outputs[0];
     }
 

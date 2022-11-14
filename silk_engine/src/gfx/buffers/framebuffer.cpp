@@ -4,12 +4,13 @@
 #include "gfx/window/swap_chain.h"
 #include "gfx/devices/logical_device.h"
 
-Framebuffer::Framebuffer(VkRenderPass render_pass, uint32_t width, uint32_t height) : 
+Framebuffer::Framebuffer(const SwapChain& swap_chain, VkRenderPass render_pass, uint32_t width, uint32_t height) : 
+    swap_chain(swap_chain),
     render_pass(render_pass),
-    framebuffers(Graphics::swap_chain->getImageCount()),
-    attachments(Graphics::swap_chain->getImageCount()),
-    width(width ? width : Window::getWidth()),
-    height(height ? height : Window::getHeight())
+    framebuffers(swap_chain.getImageCount()),
+    attachments(swap_chain.getImageCount()),
+    width(width),
+    height(height)
 {
 }
 
@@ -47,8 +48,9 @@ Framebuffer& Framebuffer::addAttachment(Image::Format format, VkSampleCountFlagB
     return *this;
 }
 
-Framebuffer& Framebuffer::addAttachment(const std::vector<shared<Image>>& images)
+Framebuffer& Framebuffer::addSwapchainAttachments()
 {
+    const auto& images = swap_chain.getImages();
     for (size_t i = 0; i < attachments.size(); ++i)
         attachments[i].emplace_back(images[i]);
     return *this;
@@ -76,10 +78,10 @@ void Framebuffer::build()
 
 const std::vector<shared<Image>>& Framebuffer::getAttachments() const
 {
-   return attachments[Graphics::swap_chain->getImageIndex()];
+   return attachments[swap_chain.getImageIndex()];
 }
 
 Framebuffer::operator const VkFramebuffer& () const
 { 
-    return framebuffers[Graphics::swap_chain->getImageIndex()];
+    return framebuffers[swap_chain.getImageIndex()];
 }

@@ -8,7 +8,7 @@
 
 void CameraController2D::onCreate()
 {
-	Window::lockMouse();
+	Window::getActive().setCursorMode(CursorMode::LOCKED);
 }
 
 void CameraController2D::onUpdate()
@@ -16,20 +16,20 @@ void CameraController2D::onUpdate()
 	auto& camera = get<CameraComponent>().camera;
 
 	auto old_position = camera.position;
-	float speed = 2.0f * Time::dt * (1 + Window::isKeyDown(Keys::LEFT_SHIFT) * 20);
-	if (Window::isKeyDown(Keys::W))
+	float speed = 2.0f * Time::dt * (1 + Window::getActive().isKeyDown(Keys::LEFT_SHIFT) * 20);
+	if (Window::getActive().isKeyDown(Keys::W))
 	{
 		camera.position.y += speed;
 	}
-	if (Window::isKeyDown(Keys::A))
+	if (Window::getActive().isKeyDown(Keys::A))
 	{
 		camera.position.x -= speed;
 	}
-	if (Window::isKeyDown(Keys::S))
+	if (Window::getActive().isKeyDown(Keys::S))
 	{
 		camera.position.y -= speed;
 	}
-	if (Window::isKeyDown(Keys::D))
+	if (Window::getActive().isKeyDown(Keys::D))
 	{
 		camera.position.x += speed;
 	}

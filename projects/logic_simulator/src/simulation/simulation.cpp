@@ -59,25 +59,25 @@ void Simulation::update()
 
 	if (moving_gate)
 	{
-		moving_gate->x = Window::getMouse().x + offset.x;
-		moving_gate->y = Window::getMouse().y + offset.y;
+		moving_gate->x = Window::getActive().getMouse().x + offset.x;
+		moving_gate->y = Window::getActive().getMouse().y + offset.y;
 		moving_gate->size = zoomed_size;
 	}
-	else if (Window::isMouseDown(MouseButtons::MIDDLE))
+	else if (Window::getActive().isMouseDown(MouseButtons::MIDDLE))
 	{
 		for (auto& gate : gates)
 		{
-			gate->x += Window::getMouse().x - start_pos.x;
-			gate->y += Window::getMouse().y - start_pos.y;
+			gate->x += Window::getActive().getMouse().x - start_pos.x;
+			gate->y += Window::getActive().getMouse().y - start_pos.y;
 		}
-		start_pos = Window::getMouse();
+		start_pos = Window::getActive().getMouse();
 	}
 
 	selection_gui.render();
 
 	Renderer::color(Colors::WHITE);
-	Renderer::text(std::format("Instances: {}", Graphics::stats.instances).c_str(), 30, Window::getHeight() - 70, 30);
-	Renderer::text(std::format("Instance Batches: {}", Graphics::stats.instance_batches).c_str(), 30, Window::getHeight() - 120, 30);
+	Renderer::text(std::format("Instances: {}", Graphics::stats.instances).c_str(), 30, Window::getActive().getHeight() - 70, 30);
+	Renderer::text(std::format("Instance Batches: {}", Graphics::stats.instance_batches).c_str(), 30, Window::getActive().getHeight() - 120, 30);
 }
 
 void Simulation::onMousePress(const MousePressEvent& e)
@@ -92,12 +92,12 @@ void Simulation::onMousePress(const MousePressEvent& e)
 		}
 		for (auto& g : gates)
 		{
-			if (math::isPointInRectangle(Window::getMouse(), { g->x, g->y, g->getWidth(), g->getHeight() }))
+			if (math::isPointInRectangle(Window::getActive().getMouse(), { g->x, g->y, g->getWidth(), g->getHeight() }))
 			{
 				moving_gate = g;
 				moving_gate->onMousePress(e);
 				start_pos = vec2(g->x, g->y);
-				offset = vec2(g->x, g->y) - Window::getMouse();
+				offset = vec2(g->x, g->y) - Window::getActive().getMouse();
 				if (gates.back().get() != moving_gate.get())
 					std::swap(g, gates.back());
 				return;
@@ -106,7 +106,7 @@ void Simulation::onMousePress(const MousePressEvent& e)
 		Pin destination_pin{};
 		for (const auto& g : gates)
 		{
-			auto pin = g->getPinIndexAtLocation(Window::getMouse());	
+			auto pin = g->getPinIndexAtLocation(Window::getActive().getMouse());
 			if (pin.first != -1)
 			{
 				if (!have_selection_pin)
@@ -131,7 +131,7 @@ void Simulation::onMousePress(const MousePressEvent& e)
 	}
 	else if (e.button == MouseButtons::MIDDLE)
 	{
-		start_pos = Window::getMouse();
+		start_pos = Window::getActive().getMouse();
 	}
 	if (have_selection_pin)
 		selected_pin = {};
@@ -154,7 +154,7 @@ void Simulation::onMouseRelease(const MouseReleaseEvent& e)
 	{
 		for (auto i = gates.rbegin(); i != gates.rend(); ++i)
 		{
-			if (math::isPointInRectangle(Window::getMouse(), { (*i)->x, (*i)->y, (*i)->getWidth(), (*i)->getHeight() }))
+			if (math::isPointInRectangle(Window::getActive().getMouse(), { (*i)->x, (*i)->y, (*i)->getWidth(), (*i)->getHeight() }))
 			{
 				gates.erase((i + 1).base());
 				break;
@@ -162,7 +162,7 @@ void Simulation::onMouseRelease(const MouseReleaseEvent& e)
 		}
 		for (auto& g : gates)
 		{
-			auto pin = g->getPinIndexAtLocation(Window::getMouse());
+			auto pin = g->getPinIndexAtLocation(Window::getActive().getMouse());
 			if (pin.first != -1 && pin.second == 1)
 			{
 				g->clearConnections(pin.first);
@@ -179,8 +179,8 @@ void Simulation::onMouseScroll(const MouseScrollEvent& e)
 	for (auto& g : gates)
 	{
 		g->size = zoomed_size;
-		g->x += e.y * (g->x - Window::getMouse().x) * zoom_amount;
-		g->y += e.y * (g->y - Window::getMouse().y) * zoom_amount;
+		g->x += e.y * (g->x - Window::getActive().getMouse().x) * zoom_amount;
+		g->y += e.y * (g->y - Window::getActive().getMouse().y) * zoom_amount;
 	}
 }
 

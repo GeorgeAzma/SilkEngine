@@ -1,6 +1,5 @@
 #include "graphics.h"
 #include "instance.h"
-#include "window/surface.h"
 #include "devices/physical_device.h"
 #include "devices/logical_device.h"
 #include "window/swap_chain.h"
@@ -28,12 +27,10 @@ void Graphics::init(const Application& app)
 	SK_ASSERT(!instance, "Reinitializing vulkan instance is not allowed");
 
 	instance = new Instance(app.getName());
-	surface = new Surface();
 	physical_device = new PhysicalDevice();
 	logical_device = new LogicalDevice();
 	command_queue = new CommandQueue();
 	allocator = new Allocator();
-	swap_chain = new SwapChain();
 	pipeline_cache = new PipelineCache();
 
 	Font::init();
@@ -43,12 +40,10 @@ void Graphics::destroy()
 {
 	Font::destroy();
 	delete pipeline_cache;
-	delete swap_chain;
 	delete allocator;
 	delete command_queue;
 	delete logical_device;
 	delete physical_device;
-	delete surface;
 	delete instance;
 }
 
@@ -75,9 +70,9 @@ void Graphics::execute(const CommandBuffer::SubmitInfo& submit_info)
 
 void Graphics::screenshot(std::string_view file)
 {
-	int width = Window::getWidth();
-	int height = Window::getHeight();
-	int channels = Image::getFormatChannelCount(swap_chain->getFormat());
+	int width = Window::getActive().getWidth();
+	int height = Window::getActive().getHeight();
+	int channels = Image::getFormatChannelCount(Window::getActive().getSwapChain().getFormat());
 	 
 	Image::Props props{};
 	props.width = width;
@@ -86,11 +81,11 @@ void Graphics::screenshot(std::string_view file)
 	props.create_view = false;
 	props.layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	props.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-	props.format = swap_chain->getFormat();
+	props.format = Window::getActive().getSwapChain().getFormat();
 	props.tiling = VK_IMAGE_TILING_OPTIMAL;
 	shared<Image> destination = makeShared<Image>(props);
 
-	swap_chain->getImages()[swap_chain->getImageIndex()]->copyImage(destination);
+	Window::getActive().getSwapChain().getImages()[Window::getActive().getSwapChain().getImageIndex()]->copyImage(destination);
 
 	void* data;
 	Buffer sb(destination->getSize(), Buffer::TRANSFER_DST, { Allocation::RANDOM_ACCESS | Allocation::MAPPED });

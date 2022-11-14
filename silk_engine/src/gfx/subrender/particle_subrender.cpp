@@ -1,7 +1,7 @@
 #include "particle_subrender.h"
 #include "gfx/particle_system.h"
 #include "gfx/renderer.h"
-#include "gfx/graphics.h"
+#include "gfx/window/window.h"
 #include "gfx/window/swap_chain.h"
 
 ParticleSubrender::ParticleSubrender(const PipelineStage& pipeline_stage)
@@ -9,7 +9,7 @@ ParticleSubrender::ParticleSubrender(const PipelineStage& pipeline_stage)
 {    
     using enum GpuType;
     pipeline.setShader(makeShared<Shader>("particle"))
-        .setSamples(Graphics::swap_chain->getSamples())
+        .setSamples(Window::getActive().getSwapChain().getSamples())
         .setStage(pipeline_stage)
         .build();
 }

@@ -13,11 +13,9 @@ enum class APIVersion
 class CommandQueue;
 class WindowResizeEvent;
 class Instance;
-class Surface;
 class PhysicalDevice;
 class LogicalDevice;
 class Allocator;
-class SwapChain;
 class PipelineCache;
 class DescriptorPool;
 class DescriptorSet;
@@ -54,11 +52,9 @@ public:
 
 public:
 	static inline Instance* instance = nullptr;
-	static inline Surface* surface = nullptr;
 	static inline PhysicalDevice* physical_device = nullptr;
 	static inline LogicalDevice* logical_device = nullptr;
 	static inline Allocator* allocator = nullptr;
 	static inline CommandQueue* command_queue = nullptr;
-	static inline SwapChain* swap_chain = nullptr;
 	static inline PipelineCache* pipeline_cache = nullptr;
 };

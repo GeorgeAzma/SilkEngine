@@ -18,18 +18,12 @@ public:
 	PhysicalDevice();
 
 	VkDevice createLogicalDevice(const VkDeviceCreateInfo& create_info) const;
-
-	void updateSurfaceDetails();
-	void updateSurfaceCapabilities();
 	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const;
 
 	const QueueFamilyIndices& getQueueFamilyIndices() const { return queue_family_indices; }
 	const VkPhysicalDeviceProperties& getProperties() const { return properties; }
 	const VkPhysicalDeviceFeatures& getFeatures() const { return features; }
 	VkSampleCountFlagBits getMaxSampleCount() const { return max_usable_sample_count; }
-	VkSurfaceCapabilitiesKHR getSurfaceCapabilities() const { return surface_capabilities; }
-	std::vector<VkSurfaceFormatKHR> getSurfaceFormats() const { return surface_formats; }
-	std::vector<VkPresentModeKHR> getPresentModes() const { return present_modes; }
 	VkFormatProperties getFormatProperties(VkFormat format) const;
 	VkImageFormatProperties getImageFormatProperties(VkFormat format, VkImageType type, VkImageTiling tilling, VkImageUsageFlags usage, VkImageCreateFlags flags) const;
 	VkFormat getDepthFormat() const { return depth_format; }
@@ -53,10 +47,6 @@ private:
 	VkPhysicalDeviceProperties properties;
 	VkPhysicalDeviceFeatures features;
 	VkSampleCountFlagBits max_usable_sample_count;
-
-	VkSurfaceCapabilitiesKHR surface_capabilities;
-	std::vector<VkSurfaceFormatKHR> surface_formats;
-	std::vector<VkPresentModeKHR> present_modes;
 
 	VkFormat depth_format;
 	VkFormat stencil_format;

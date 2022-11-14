@@ -2,6 +2,10 @@
 
 #include <typeindex>
 
+class Window;
+class Monitor;
+class Joystick;
+
 //EVENT
 struct Event
 {
@@ -9,169 +13,182 @@ struct Event
 };
 
 //WINDOW EVENTS
-struct WindowResizeEvent : Event
+struct WindowEvent : Event
 {
-    WindowResizeEvent(uint32_t width, uint32_t height)
-        : width(width), height(height) {}
+    WindowEvent(Window& window) 
+        : window(window) {}
+
+    Window& window;
+};
+
+struct WindowResizeEvent : public WindowEvent
+{
+    WindowResizeEvent(Window& window, uint32_t width, uint32_t height)
+        : WindowEvent(window), width(width), height(height) {}
 
     const uint32_t width, height;
 };
 
-struct WindowCloseEvent : Event
+struct WindowCloseEvent : WindowEvent
 {
-    WindowCloseEvent() {}
+    WindowCloseEvent(Window& window)
+        : WindowEvent(window) {}
 };
 
-struct WindowMaximizeEvent : Event
+struct WindowMaximizeEvent : WindowEvent
 {
-    WindowMaximizeEvent(bool maximized) 
-        : maximized(maximized) {}
+    WindowMaximizeEvent(Window& window, bool maximized)
+        : WindowEvent(window), maximized(maximized) {}
 
     const bool maximized;
 };
 
-struct WindowFocusEvent : Event
+struct WindowFocusEvent : WindowEvent
 {
-    WindowFocusEvent(bool focused) 
-        : focused(focused) {}
+    WindowFocusEvent(Window& window, bool focused)
+        : WindowEvent(window), focused(focused) {}
 
     const bool focused;
 };
 
-struct WindowIconifyEvent : Event
+struct WindowMinimizeEvent : WindowEvent
 {
-    WindowIconifyEvent(bool iconified)
-        : iconified(iconified) {}
+    WindowMinimizeEvent(Window& window, bool minimized)
+        : WindowEvent(window), minimized(minimized) {}
 
-    const bool iconified;
+    const bool minimized;
 };
 
-struct WindowRefreshEvent : Event
+struct WindowRefreshEvent : WindowEvent
 {
-    WindowRefreshEvent() {}
+    WindowRefreshEvent(Window& window)
+        : WindowEvent(window) {}
 };
 
-struct WindowMoveEvent : Event
+struct WindowMoveEvent : WindowEvent
 {
-    WindowMoveEvent(int32_t x, int32_t y)
-        : x(x), y(y) {}
+    WindowMoveEvent(Window& window, int32_t x, int32_t y)
+        : WindowEvent(window), x(x), y(y) {}
 
     const int32_t x, y;
 };
 
-struct WindowContentScaleEvent : Event
+struct WindowContentScaleEvent : WindowEvent
 {
-    WindowContentScaleEvent(float x, float y)
-        : x(x), y(y) {}
+    WindowContentScaleEvent(Window& window, float x, float y)
+        : WindowEvent(window), x(x), y(y) {}
 
     const float x, y;
 };
 
-struct SwapchainRecreate : Event
+//MONITOR EVENTS
+struct MonitorEvent : Event
 {
-    SwapchainRecreate() {}
+    MonitorEvent(Monitor& monitor, bool connected)
+        : monitor(monitor), connected(connected) {}
+
+    Monitor& monitor;
+    const bool connected;
 };
 
 //KEY EVENTS
-struct KeyPressEvent : Event
+struct KeyPressEvent : WindowEvent
 {
-    KeyPressEvent(uint16_t key, uint32_t repeat_count)
-        : key(key), repeat_count(repeat_count) {}
+    KeyPressEvent(Window& window, uint16_t key, uint32_t repeat_count)
+        : WindowEvent(window), key(key), repeat_count(repeat_count) {}
 
     const int key;
     const uint repeat_count;
  };
 
-struct KeyReleaseEvent : Event
+struct KeyReleaseEvent : WindowEvent
 {
-    KeyReleaseEvent(uint16_t key)
-        : key(key) {}
+    KeyReleaseEvent(Window& window, uint16_t key)
+        : WindowEvent(window), key(key) {}
 
     const uint16_t key;
  };
 
 //MOUSE EVENTS
-struct MousePressEvent : Event
+struct MousePressEvent : WindowEvent
 {
-    MousePressEvent(uint32_t button)
-        : button(button) {}
+    MousePressEvent(Window& window, uint32_t button)
+        : WindowEvent(window), button(button) {}
 
     const uint32_t button;
  };
 
-struct MouseReleaseEvent : Event
+struct MouseReleaseEvent : WindowEvent
 {
-    MouseReleaseEvent(uint32_t button)
-        : button(button) {}
+    MouseReleaseEvent(Window& window, uint32_t button)
+        : WindowEvent(window), button(button) {}
 
     const uint32_t button;
  };
 
-struct MouseMoveEvent : Event
+struct MouseMoveEvent : WindowEvent
 {
-    MouseMoveEvent(double x, double y)
-        : x(x), y(y) {}
+    MouseMoveEvent(Window& window, double x, double y)
+        : WindowEvent(window), x(x), y(y) {}
 
     const double x, y;
  };
 
-struct MouseDragEvent : Event
+struct MouseDragEvent : WindowEvent
 {
-    MouseDragEvent(uint32_t button, double x, double y)
-        : button(button), x(x), y(y) {}
+    MouseDragEvent(Window& window, uint32_t button, double x, double y)
+        : WindowEvent(window), button(button), x(x), y(y) {}
 
     const uint32_t button;
     const double x, y;
  };
 
-struct MouseScrollEvent : public Event
+struct MouseScrollEvent : public WindowEvent
 {
-    MouseScrollEvent(double x, double y)
-        : x(x), y(y) {}
+    MouseScrollEvent(Window& window, double x, double y)
+        : WindowEvent(window), x(x), y(y) {}
 
     const double x, y;
  };
 
-struct MouseEnterEvent : Event
+struct MouseEnterEvent : WindowEvent
 {
-    MouseEnterEvent() {}
+    MouseEnterEvent(Window& window, bool entered)
+        : WindowEvent(window), entered(entered) {}
+
+    const bool entered;
 };
 
-struct MouseLeaveEvent : Event
+struct DragAndDropEvent : WindowEvent
 {
-    MouseLeaveEvent() {}
-};
-
-struct DragAndDropEvent : Event
-{
-    DragAndDropEvent(const std::vector<const char*>& paths)
-        : paths(paths) {}
+    DragAndDropEvent(Window& window, const std::vector<const char*>& paths)
+        : WindowEvent(window), paths(paths) {}
 
     const std::vector<const char*> paths;
 };
 
-struct WindowFullscreenEvent : Event
+struct WindowFullscreenEvent : WindowEvent
 {
-    WindowFullscreenEvent(bool fullscreen)
-        : fullscreen(fullscreen) {}
+    WindowFullscreenEvent(Window& window, bool fullscreen)
+        : WindowEvent(window), fullscreen(fullscreen) {}
 
     const bool fullscreen;
 };
 
-struct CharacterWriteEvent : Event
+struct CharacterWriteEvent : WindowEvent
 {
-    CharacterWriteEvent(char character)
-        : character(character) {}
+    CharacterWriteEvent(Window& window, char character)
+        : WindowEvent(window), character(character) {}
 
     const char character;
 };
 
 struct JoystickEvent : Event
 {
-    JoystickEvent(uint32_t id, bool connected)
-        : id(id), connected(connected) {}
+    JoystickEvent(Joystick& joystick, bool connected)
+        : joystick(joystick), connected(connected) {}
 
-    const uint32_t id;
+    Joystick& joystick;
     const bool connected;
 };
 
