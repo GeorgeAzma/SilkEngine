@@ -1,0 +1,72 @@
+layout(local_size_x = 64) in;
+
+struct IndexedDrawCommand
+{
+	uint index_count;
+    uint instance_count;
+    uint first_index;
+    int vertex_offset;
+    uint first_instance;
+};
+
+layout(binding = 0) buffer IndirectBuffer
+{
+    IndexedDrawCommand draw[];
+};
+
+layout(binding = 1) readonly buffer CullData
+{
+    mat4 transform[];
+};
+
+layout(binding = 2) writeonly buffer Rendered
+{
+    bool rendered[];
+};
+
+layout(push_constant) uniform PushConstant
+{
+    vec3 min_bound;
+    uint index;
+    vec3 max_bound;
+    uint count;
+    vec4 planes[6];
+};
+
+bool isBoxVisible(vec3 min_bound, vec3 max_bound)
+{
+    for (uint i = 0; i < 6; ++i)
+    {
+        if (dot(planes[i], vec4(min_bound.x, min_bound.y, min_bound.z, 1.0)) < 0.0 &&
+        	dot(planes[i], vec4(max_bound.x, min_bound.y, min_bound.z, 1.0)) < 0.0 &&
+        	dot(planes[i], vec4(min_bound.x, max_bound.y, min_bound.z, 1.0)) < 0.0 &&
+        	dot(planes[i], vec4(max_bound.x, max_bound.y, min_bound.z, 1.0)) < 0.0 &&
+        	dot(planes[i], vec4(min_bound.x, min_bound.y, max_bound.z, 1.0)) < 0.0 &&
+        	dot(planes[i], vec4(max_bound.x, min_bound.y, max_bound.z, 1.0)) < 0.0 &&
+        	dot(planes[i], vec4(min_bound.x, max_bound.y, max_bound.z, 1.0)) < 0.0 &&
+        	dot(planes[i], vec4(max_bound.x, max_bound.y, max_bound.z, 1.0)) < 0.0)
+        	    return false;
+	}
+    return true;
+}
+
+void main()
+{
+    uint ID = gl_GlobalInvocationID.x;
+    if(ID >= count)
+        return;
+    
+    vec3 world_min = (transform[ID] * vec4(min_bound, 1)).xyz;
+    vec3 world_max = (transform[ID] * vec4(max_bound, 1)).xyz;
+    bool visible = isBoxVisible(world_min, world_max);
+
+    if(!visible)
+    {
+        atomicAdd(draw[index].instance_count, -1);
+        rendered[ID] = false;
+    }
+    else
+    {
+        rendered[ID] = true;
+    }
+}

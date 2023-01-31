@@ -38,12 +38,12 @@ void MyScene::onStart()
 void MyScene::onUpdate()
 {
     if (Window::getActive().isKeyPressed(Keys::F2))
-        Graphics::screenshot(std::format("data/images/screenshots/screenshot.png"));
+        Graphics::screenshot(path(std::format("res/images/screenshots/screenshot.png")));
     if (Window::getActive().isKeyPressed(Keys::R))
         Resources::reloadShaders();
 
     if (c())
-        Window::getActive().setTitle(std::format("Vulkan - {0} FPS ({1:.4} ms) | {2}x{3}", int(1.0 / Time::dt), (Time::dt * 1000), Window::getActive().getWidth(), Window::getActive().getHeight()));
+        Window::getActive().setTitle(std::format("Vulkan - {} FPS ({:.4} ms) | {}x{}", int(1.0 / Time::dt), (Time::dt * 1000), Window::getActive().getWidth(), Window::getActive().getHeight()));
 
     Renderer::color(Colors::WHITE);
     Renderer::draw(Resources::get<GraphicsPipeline>("3D"), Resources::get<Mesh>("Cube"), mat4(1));

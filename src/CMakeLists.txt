@@ -7,7 +7,7 @@ add_executable(${PROJECT} "")
 
 set(VS_STARTUP_PROJECT ${PROJECT})
 
-file(GLOB_RECURSE PROJECT_SOURCES "*.cpp")
+file(GLOB_RECURSE PROJECT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 target_sources(${PROJECT} PRIVATE ${PROJECT_SOURCES})
 
 target_link_libraries(${PROJECT} ${ENGINE_NAME})
