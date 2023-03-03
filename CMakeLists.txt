@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.24)
 
 include(FetchContent)
 include(ExternalProject)
@@ -60,7 +60,6 @@ macro(externalProject)
         DEPENDS ${SUBPROJECT_DEPENDS_ON}
         BUILD_ALWAYS OFF
         UPDATE_COMMAND ""
-        DOWNLOAD_EXTRACT_TIMESTAMP ON
     )
     if(SUBPROJECT_DEPENDS_ON)
         ExternalProject_Add_StepDependencies(${SUBPROJECT_NAME} build ${SUBPROJECT_DEPENDS_ON})
@@ -93,7 +92,6 @@ macro(externalProjectGit)
         DEPENDS ${SUBPROJECT_DEPENDS_ON}
         BUILD_ALWAYS OFF
         UPDATE_COMMAND ""
-        DOWNLOAD_EXTRACT_TIMESTAMP ON
     )
     if(SUBPROJECT_DEPENDS_ON)
         ExternalProject_Add_StepDependencies(${SUBPROJECT_NAME} build ${SUBPROJECT_DEPENDS_ON})

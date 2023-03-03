@@ -44,14 +44,18 @@ void MyScene::onUpdate()
 
     if (c())
         Window::getActive().setTitle(std::format("Vulkan - {} FPS ({:.4} ms) | {}x{}", int(1.0 / Time::dt), (Time::dt * 1000), Window::getActive().getWidth(), Window::getActive().getHeight()));
-
+    
     Renderer::color(Colors::WHITE);
-    Renderer::draw(Resources::get<GraphicsPipeline>("3D"), Resources::get<Mesh>("Cube"), mat4(1));
-    Renderer::roundedRectangle(10.0f, 10.0f, 100.0f, 30.0f);
-    Renderer::roundedRectangle(300.0f, 10.0f, 100.0f, 30.0f);
-    Renderer::rectangle(100.0f, 30.0f, 20.0f, 40.0f);
-    Renderer::circle(10.0f, 300.0f, 32.0f);
-    Renderer::triangle(100.0f, 100.0f, 40.0f);
+
+    int n = 100;
+    std::vector<vec2> p(n);
+    for (int i = 0; i < n; ++i)
+    {
+        p[i].x = i / float(n - 1);
+        p[i].y = cos(pi<float>() * 2.0 * 3 * p[i].x) * 100.0f + 200.0f;
+        p[i].x *= Window::getActive().getWidth();
+    }
+    Renderer::line(p, 4.0f);
 }
 
 void MyScene::onStop()

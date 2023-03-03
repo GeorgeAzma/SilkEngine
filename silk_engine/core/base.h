@@ -80,7 +80,7 @@ using ulonglong = unsigned long long;
 using ulong = unsigned long;
 using uint = unsigned int;
 using ushort = unsigned short;
-using uchar = unsigned char; std::byte;
+using uchar = unsigned char;
 
 using path = std::filesystem::path;
 

@@ -22,7 +22,7 @@ class Renderer
 		shared<Font> font = nullptr;
 		mat4 transform = mat4(1);
 		bool transformed = false;
-		float depth = 0.0f;
+		float depth = 1.0f;
 	} active;
 
 public:
@@ -97,8 +97,8 @@ public:
 
 	//Slow function for quickly drawing stuff
 	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const mat4& transform, const std::vector<shared<Image>>& images = {});
-	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, const std::vector<shared<Image>>& images);
-	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth = 1.0f);
+	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth = 1.0f, const std::vector<shared<Image>>& images = {});
+	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float width, float height, const std::vector<shared<Image>>& images = {});
 
 	static Light* addLight(const Light& light);
 	static void createInstance(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data);

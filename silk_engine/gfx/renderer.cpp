@@ -65,7 +65,7 @@ void Renderer::reset()
 
 void Renderer::triangle(float x, float y, float width, float height)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Triangle"), x, y, active.depth, width, height, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Triangle"), x, y, width, height);
 }
 
 void Renderer::triangle(float x, float y, float size)
@@ -75,17 +75,17 @@ void Renderer::triangle(float x, float y, float size)
 
 void Renderer::triangle(float x1, float y1, float x2, float y2, float x3, float y3)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(TriangleMesh(x1, y1, x2, y2, x3, y3)), 0, 0, active.depth, 1, 1, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(TriangleMesh(x1, y1, x2, y2, x3, y3)), 0, 0, 1, 1);
 }
 
 void Renderer::rectangle(float x, float y, float width, float height)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rectangle"), x, y, active.depth, width, height, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rectangle"), x, y, width, height);
 }
 
 void Renderer::roundedRectangle(float x, float y, float width, float height)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rounded Rectangle"), x, y, active.depth, width, height, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rounded Rectangle"), x, y, width, height);
 }
 
 void Renderer::square(float x, float y, float size)
@@ -95,17 +95,17 @@ void Renderer::square(float x, float y, float size)
 
 void Renderer::roundedSquare(float x, float y, float size)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rounded Rectangle"), x, y, active.depth, size, size, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rounded Rectangle"), x, y, size, size);
 }
 
 void Renderer::ellipse(float x, float y, float width, float height)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Circle"), x, y, active.depth, width, height, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Circle"), x, y, width, height);
 }
 
 void Renderer::ellipseOutline(float x, float y, float width, float height)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Circle Outline"), x, y, active.depth, width, height, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Circle Outline"), x, y, width, height);
 }
 
 void Renderer::circle(float x, float y, float radius)
@@ -120,7 +120,7 @@ void Renderer::circleOutline(float x, float y, float radius)
 
 void Renderer::line(const std::vector<vec2>& points, float width)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(LineMesh(points, width)), 0, 0, active.depth, 1, 1, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(LineMesh(points, width)), 0, 0, 1, 1);
 }
 
 void Renderer::line(float x1, float y1, float x2, float y2, float width)
@@ -132,30 +132,30 @@ void Renderer::line(float x1, float y1, float x2, float y2, float width)
 			dx * l, dy * l, 0, 0,
 			-dy * width, dx * width, 0, 0,
 			0, 0, 1, 0,
-			x1 + dy * width * 0.5f, y1 - dx * width * 0.5f, active.depth, 1
+			x1 + dy * width * 0.5f, y1 - dx * width * 0.5f, 1, 1
 		});
 }
 
 void Renderer::bezier(float x1, float y1, float px, float py, float x2, float y2, float width)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px, py, x2, y2, 64u, width)), 0, 0, active.depth, 1, 1, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px, py, x2, y2, 64u, width)), 0, 0, 1, 1);
 }
 
 void Renderer::bezier(float x1, float y1, float px1, float py1, float px2, float py2, float x2, float y2, float width)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px1, py1, px2, py2, x2, y2, 64u, width)), 0, 0, active.depth, 1, 1, 1);
+	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px1, py1, px2, py2, x2, y2, 64u, width)), 0, 0, 1, 1);
 }
 
 void Renderer::text(const std::string& text, float x, float y, float width, float height)
 {
-	draw(Resources::get<GraphicsPipeline>("Font"), makeShared<Mesh>(TextMesh(text, 64, active.font)), x, y, 0.0f, width, height, active.depth, { active.font->getAtlas() });
+	draw(Resources::get<GraphicsPipeline>("Font"), makeShared<Mesh>(TextMesh(text, 64, active.font)), x, y, width, height, { active.font->getAtlas() });
 }
 
 void Renderer::text(const std::string& text, float x, float y, float size)
 {
 	if (text.empty())
 		return;
-	draw(Resources::get<GraphicsPipeline>("Font"), makeShared<Mesh>(TextMesh(text, 32, active.font)), x, y, 0.0f, size, size, active.depth, { active.font->getAtlas() });
+	draw(Resources::get<GraphicsPipeline>("Font"), makeShared<Mesh>(TextMesh(text, 32, active.font)), x, y, size, size, { active.font->getAtlas() });
 }
 
 void Renderer::tetrahedron(float x, float y, float z, float size)
@@ -185,12 +185,12 @@ void Renderer::ellipsoid(float x, float y, float z, float width, float height, f
 
 void Renderer::image(const shared<Image>& image, float x, float y, float width, float height)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rectangle"), x, y, active.depth, width, height, 1, { image });
+	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rectangle"), x, y, width, height, { image });
 }
 
 void Renderer::image(const shared<Image>& image, float x, float y, float size)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rectangle"), x, y, active.depth, size, size, 1, { image });
+	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rectangle"), x, y, size, size, { image });
 }
 
 void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const mat4& transform, const std::vector<shared<Image>>& images)
@@ -212,17 +212,18 @@ void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const sha
 		0, height, 0, 0,
 		0, 0, depth, 0,
 		x, y, z, 1
-		}, images);
+		}, images.size() ? images : (active.image.get() ? std::vector<shared<Image>>{ active.image } : std::vector<shared<Image>>{}));
 }
 
-void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
+void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float width, float height, const std::vector<shared<Image>>& images)
 {
 	draw(graphics_pipeline, mesh, {
 		width, 0, 0, 0,
 		0, height, 0, 0,
-		0, 0, depth, 0,
-		x, y, z, 1
-		}, active.image.get() ? std::vector<shared<Image>>{ active.image } : std::vector<shared<Image>>{});
+		0, 0, 1, 0,
+		x, y, active.depth, 1
+		}, images.size() ? images : (active.image.get() ? std::vector<shared<Image>>{ active.image } : std::vector<shared<Image>>{}));
+	active.depth -= 1e-10;
 }
 
 void Renderer::waitForPreviousFrame()

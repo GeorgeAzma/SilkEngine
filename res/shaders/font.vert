@@ -2,7 +2,6 @@ layout(location = 0) in vec2 vertex_position;
 layout(location = 1) in vec2 vertex_texture_coordinate;
 layout(location = 2) in vec4 vertex_color;
 
-//Instanced
 layout(location = 3) in mat4 instance_transform;
 layout(location = 7) in uint instance_image_index;
 layout(location = 8) in vec4 instance_color;

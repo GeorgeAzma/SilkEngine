@@ -24,6 +24,8 @@ Fence::State Fence::getState() const
 
 void Fence::reset() const
 {
+	if (!signaled)
+		return;
 	Graphics::logical_device->resetFences({ fence });
 	signaled = false;
 }

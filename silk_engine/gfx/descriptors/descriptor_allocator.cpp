@@ -55,8 +55,8 @@ shared<DescriptorPool> DescriptorAllocator::createPool()
 {
 	shared<DescriptorPool> pool = makeShared<DescriptorPool>();
 	for(const auto& size : descriptor_sizes.sizes)
-		pool->addSize(size.first, size.second * 64);
-	pool->setMaxSets(256);
+		pool->addSize(size.first, size.second * 32);
+	pool->setMaxSets(64);
 	pool->build();
 	used_pools.push_back(pool);
 	return pool;

@@ -12,7 +12,6 @@ layout(location = 0) out VertexOutput
     vec2 texture_coordinate;
     vec3 normal;
     flat uint instance_image_index;
-    flat vec4 instance_color;
     vec3 world_position;
     vec4 color;
 } vertex_output;
@@ -27,8 +26,7 @@ void main()
     vertex_output.texture_coordinate = vertex_texture_coordinate;
     vertex_output.normal = mat3(transpose(inverse(instance_transform))) * vertex_normal;
     vertex_output.instance_image_index = instance_image_index;
-    vertex_output.instance_color = instance_color;
-    vertex_output.color = vertex_color;
+    vertex_output.color = vertex_color * instance_color;
     const vec4 world_position = instance_transform * vec4(vertex_position, 1.0);
     vertex_output.world_position = world_position.xyz;
     gl_Position = global_uniform.projection_view * world_position;

@@ -11,6 +11,7 @@ ParticleSubrender::ParticleSubrender(const PipelineStage& pipeline_stage)
     pipeline.setShader(makeShared<Shader>("particle"))
         .setSamples(Window::getActive().getSwapChain().getSamples())
         .setStage(pipeline_stage)
+        .setDepthCompareOp(GraphicsPipeline::CompareOp::LESS)
         .build();
 }
 

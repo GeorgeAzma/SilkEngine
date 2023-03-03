@@ -13,12 +13,9 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData)
 {
-    std::string message = "[Vulkan]";
+    std::string message = "[Vulkan] ";
 
-    message += ' ';
     message += pCallbackData->pMessage;
-    message += '\n';
-
 
     switch (messageSeverity)
     {
