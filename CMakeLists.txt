@@ -31,9 +31,7 @@ GLFW_INCLUDE_NONE
 
 # Vulkan
 find_package(Vulkan REQUIRED)
-list(APPEND INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 list(APPEND EXTRA_LIBS ${Vulkan_LIBRARIES})
-
 string(FIND ${Vulkan_LIBRARIES} "/Lib" Vulkan_PATH_POS)
 string(SUBSTRING ${Vulkan_LIBRARIES} 0 ${Vulkan_PATH_POS} VULKAN_PATH)
 list(APPEND EXTRA_LIBS 

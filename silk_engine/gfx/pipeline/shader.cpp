@@ -5,8 +5,6 @@
 #include <shaderc/shaderc.hpp>
 #include <spirv_cross/spirv_cross.hpp>
 
-//void __CRTDECL operator delete(void* _Block, size_t _Size) noexcept {}
-
 shaderc::Compiler Shader::compiler{};
 
 Shader::Stage::Stage(const path& file)
@@ -46,8 +44,7 @@ bool Shader::Stage::compile()
 	shaderc::CompileOptions options{};
 	options.SetTargetEnvironment(shaderc_target_env_vulkan, api_version);
 	options.SetForcedVersionProfile(450, shaderc_profile_core);
-	// shaderc_optimization_level_performance crashes for some reason, if you enable it and don't wanna crash, uncomment code above (operator delete() code), note memory will leak while the code is uncommented, so only uncomment when you are compiling shaders first time
-	//options.SetOptimizationLevel(shaderc_optimization_level_performance);
+	options.SetOptimizationLevel(shaderc_optimization_level_performance);
 	options.SetGenerateDebugInfo();
 
 	std::string source;
@@ -150,12 +147,15 @@ void Shader::compile()
 
 void Shader::reflect()
 {
+	using namespace spirv_cross;
 	reflection_data = {};
 	for (const auto& stage : stages)
 	{
 		auto type = stage->type;
 		spirv_cross::Compiler compiler(stage->binary);
-		spirv_cross::ShaderResources shader_resources = compiler.get_shader_resources();
+		spirv_cross::ShaderResources shader_resources;
+		try { shader_resources = compiler.get_shader_resources(); }
+		catch (const spirv_cross::CompilerError& e) { SK_ERROR(e.what()); }
 	
 		for (const spirv_cross::Resource& sampled_image : shader_resources.sampled_images)
 			loadResource(sampled_image, compiler, shader_resources, type, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
