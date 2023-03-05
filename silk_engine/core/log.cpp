@@ -1,10 +1,10 @@
 #include "log.h"
 #ifdef SK_ENABLE_DEBUG_OUTPUT
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/spdlog.h>
-shared<spdlog::logger> Log::core_logger;
-shared<spdlog::logger> Log::client_logger;
+    #include <spdlog/sinks/stdout_color_sinks.h>
+    #include <spdlog/sinks/basic_file_sink.h>
+    #include <spdlog/spdlog.h>
+    shared<spdlog::logger> Log::core_logger;
+    shared<spdlog::logger> Log::client_logger;
 #endif
 
 void Log::init()

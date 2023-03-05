@@ -42,6 +42,6 @@ VkResult DescriptorPool::allocate(VkDescriptorSet& descriptor_set, const VkDescr
 
 void DescriptorPool::deallocate()
 {
-	SK_ASSERT(allocated_descriptor_sets > 0, "Can't deallocate pool's descriptor set when it doesn't have any");
+	SK_VERIFY(allocated_descriptor_sets > 0, "Can't deallocate pool's descriptor set when it doesn't have any");
 	--allocated_descriptor_sets;
 }

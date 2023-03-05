@@ -137,8 +137,7 @@ VkPhysicalDevice PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vec
 			candidates.insert(std::make_pair(score, device));
 	}
 
-	SK_ASSERT(candidates.rbegin()->first >= 0, 
-		"Vulkan: Couldn't find suitable vulkan GPU");
+	SK_ASSERT(candidates.rbegin()->first >= 0, "Couldn't find suitable vulkan GPU");
 
 	return candidates.rbegin()->second;
 }

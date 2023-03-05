@@ -36,7 +36,7 @@ PipelineCache::PipelineCache()
 
 PipelineCache::~PipelineCache()
 {
-	SK_ASSERT(pipeline_cache, "No pipeline cache to write");
+	SK_VERIFY(pipeline_cache, "No pipeline cache to write");
 	std::vector<uint8_t> data = Graphics::logical_device->getPipelineCacheData(pipeline_cache);
 	std::ofstream cache("res/cache/pipeline_cache.bin", std::ios::binary);
 	cache.write((const char*)data.data(), data.size());

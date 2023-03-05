@@ -9,7 +9,7 @@ RawModel::RawModel(const path& file)
 
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(file_path.string(), aiProcess_Triangulate | aiProcess_ImproveCacheLocality | aiProcess_JoinIdenticalVertices | aiProcess_OptimizeGraph | aiProcess_OptimizeMeshes);
-    SK_ASSERT(scene && (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) != AI_SCENE_FLAGS_INCOMPLETE && scene->mRootNode, "Assimp: Couldn't load model at path: {}", file_path);
+    SK_VERIFY(scene && (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) != AI_SCENE_FLAGS_INCOMPLETE && scene->mRootNode, "Assimp: Couldn't load model at path: {}", file_path);
 
     directory = file.string().substr(0, file.string().find_last_of('/'));
 

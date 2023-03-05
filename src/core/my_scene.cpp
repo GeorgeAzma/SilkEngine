@@ -46,7 +46,7 @@ void MyScene::onUpdate()
         Window::getActive().setTitle(std::format("Vulkan - {} FPS ({:.4} ms) | {}x{}", int(1.0 / Time::dt), (Time::dt * 1000), Window::getActive().getWidth(), Window::getActive().getHeight()));
     
     Renderer::color(Colors::WHITE);
-
+    
     int n = 100;
     std::vector<vec2> p(n);
     for (int i = 0; i < n; ++i)

@@ -26,8 +26,9 @@ public:
 	const T* getSubrender()
 	{
 		TypeID type_id = TypeInfo<Subrender>::getTypeID<T>();
-		if (auto it = subrenders.find(type_id);  it != subrenders.end() && it->second)
-			return (T*)(it->second.get());
+		for (const auto& [tid, stage, subrender] : subrenders)
+			if (type_id == tid)
+				return subrender.get();
 		return nullptr;
 	}
 
@@ -35,30 +36,29 @@ public:
 	void addSubrender(const PipelineStage& stage)
 	{
 		TypeID type_id = TypeInfo<Subrender>::getTypeID<T>();
-		stages.emplace(StageIndex(stage, subrenders.size()), type_id);
-		subrenders.emplace(type_id, makeUnique<T>(stage));
+		subrenders.emplace_back(type_id, stage, makeUnique<T>(stage));
 	}
 
 	template<typename T>
 	void removeSubrender()
 	{
 		TypeID type_id = TypeInfo<Subrender>::getTypeID<T>();
-		removeSubrenderStage(type_id);
-		subrenders.erase(type_id);
+		for (auto i = subrenders.begin(); i != subrenders.end(); ++i)
+			if (std::get<0>(*i) == type_id)
+			{
+				subrenders.erase(i);
+				break;
+			}
 	}
 
 	void clearSubrenders()
 	{
 		subrenders.clear();
-		stages.clear();
 	}
 
-	void removeSubrenderStage(const TypeID& id);
 	void renderStage(const PipelineStage& pipeline_stage);
 
 private:
-	using StageIndex = std::pair<PipelineStage, std::size_t>;
 	std::vector<RenderStage> render_stages;
-	std::unordered_map<TypeID, unique<Subrender>> subrenders;
-	std::multimap<StageIndex, TypeID> stages;
+	std::vector<std::tuple<TypeID, PipelineStage, unique<Subrender>>> subrenders;
 };

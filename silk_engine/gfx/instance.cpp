@@ -78,8 +78,8 @@ Instance::Instance(std::string_view app_name)
     {
         "VK_LAYER_KHRONOS_validation"
     };
-    SK_ASSERT(checkExtensionSupport(required_extensions), "Vulkan: Required extension(s) not found");
-    //SK_ASSERT(checkValidationLayerSupport(required_validation_layers), "Vulkan: Required validation layers(s) not found");
+    SK_VERIFY(checkExtensionSupport(required_extensions), "Vulkan: Required extension(s) not found");
+    //SK_VERIFY(checkValidationLayerSupport(required_validation_layers), "Vulkan: Required validation layers(s) not found");
 #endif
 
     VkInstanceCreateInfo ci{};

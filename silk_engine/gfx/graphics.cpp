@@ -24,7 +24,7 @@
 
 void Graphics::init(const Application& app)
 {
-	SK_ASSERT(!instance, "Reinitializing vulkan instance is not allowed");
+	SK_VERIFY(!instance, "Vulkan: Reinitializing instance is not allowed");
 
 	instance = new Instance(app.getName());
 	physical_device = new PhysicalDevice();
@@ -98,7 +98,7 @@ void Graphics::screenshot(const path& file)
 
 void Graphics::vulkanAssert(VkResult result)
 {
-	SK_ASSERT(result == VK_SUCCESS, std::string("Vulkan: ") + stringifyResult(result));
+	SK_VERIFY(result == VK_SUCCESS, std::string("Vulkan: ") + stringifyResult(result));
 }
 
 uint32_t Graphics::apiVersion(APIVersion api_version)

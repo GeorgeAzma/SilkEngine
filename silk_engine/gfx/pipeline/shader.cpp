@@ -43,8 +43,11 @@ bool Shader::Stage::compile()
 	}
 	shaderc::CompileOptions options{};
 	options.SetTargetEnvironment(shaderc_target_env_vulkan, api_version);
-	options.SetForcedVersionProfile(450, shaderc_profile_core);
+	options.SetForcedVersionProfile(450, shaderc_profile_none);
 	options.SetOptimizationLevel(shaderc_optimization_level_performance);
+	options.SetSourceLanguage(shaderc_source_language_glsl);
+	options.SetTargetSpirv(shaderc_spirv_version_1_6);
+	options.SetWarningsAsErrors();
 	options.SetGenerateDebugInfo();
 
 	std::string source;
@@ -73,15 +76,17 @@ bool Shader::Stage::compile()
 	case TESSELATION_CONTROL: shaderc_type = shaderc_tess_control_shader; break;
 	case TESSELATION_EVALUATION: shaderc_type = shaderc_tess_evaluation_shader; break;
 	}
-	shaderc::SpvCompilationResult compilation_result = compiler.CompileGlslToSpv(source.data(), shaderc_type, file.string().c_str(), options);
-	bool compiled = compilation_result.GetCompilationStatus() == shaderc_compilation_status_success;
-	if (compiled)
-		binary = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend());
-	else
+	auto compilation_result = compiler.CompileGlslToSpv(source.data(), shaderc_type, file.string().c_str(), options);
+	if (compilation_result.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
 		SK_ERROR("Shader stage({}) failed: {}", file, compilation_result.GetErrorMessage());
 		return false;
 	}
+
+	if (compilation_result.GetNumWarnings())
+		SK_WARN("Shader stage({}) warning: {}", file, compilation_result.GetErrorMessage());
+
+	binary = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend()); 
 
 	createModule(); 
 	saveCache();
@@ -91,7 +96,7 @@ bool Shader::Stage::compile()
 
 void Shader::Stage::createModule()
 {
-	SK_ASSERT(!module, "Module has already been created");
+	SK_VERIFY(!module, "Module has already been created");
 	VkShaderModuleCreateInfo ci{};
 	ci.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	ci.codeSize = binary.size() * sizeof(uint32_t);

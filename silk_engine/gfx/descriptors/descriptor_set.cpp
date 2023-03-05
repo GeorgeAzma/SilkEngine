@@ -94,7 +94,7 @@ void DescriptorSet::setImageInfo(size_t binding, const std::vector<VkDescriptorI
 	{
 		if (write_descriptor_sets[i].dstBinding == binding)
 		{
-			SK_ASSERT(image_info.size() == write_descriptor_sets[i].descriptorCount, "Invalid image_info size: {}, should be {}", image_info.size(), write_descriptor_sets[i].descriptorCount);
+			SK_VERIFY(image_info.size() == write_descriptor_sets[i].descriptorCount, "Invalid image_info size: {}, should be {}", image_info.size(), write_descriptor_sets[i].descriptorCount);
 			std::copy(image_info.begin(), image_info.end(), image_infos[i].begin());
 			write_descriptor_sets[i].pImageInfo = image_infos[i].data();
 			needs_update = true;
@@ -109,7 +109,7 @@ void DescriptorSet::setBufferInfo(size_t binding, const std::vector<VkDescriptor
 	{
 		if (write_descriptor_sets[i].dstBinding == binding)
 		{
-			SK_ASSERT(buffer_info.size() == write_descriptor_sets[i].descriptorCount, "Invalid buffer_info size: {}, should be {}", buffer_info.size(), write_descriptor_sets[i].descriptorCount);
+			SK_VERIFY(buffer_info.size() == write_descriptor_sets[i].descriptorCount, "Invalid buffer_info size: {}, should be {}", buffer_info.size(), write_descriptor_sets[i].descriptorCount);
 			std::copy(buffer_info.begin(), buffer_info.end(), buffer_infos[i].begin());
 			write_descriptor_sets[i].pBufferInfo = buffer_infos[i].data();
 			needs_update = true;

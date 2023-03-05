@@ -35,7 +35,7 @@ void RawAudio::load(const path& file)
 	path file_path = path("res/audio") / file;
 
 	std::ifstream wav_file(file_path, std::ios::binary);
-	SK_ASSERT(wav_file.is_open(), "Couldn't open WAV file: {}", file_path);
+	SK_VERIFY(wav_file.is_open(), "Couldn't open WAV file: {}", file_path);
 
 	char id[4];
 	uint32_t block_align = 1;
@@ -45,7 +45,7 @@ void RawAudio::load(const path& file)
 		{
 			RiffChunk riff_chunk{};
 			wav_file.read((char*)&riff_chunk, sizeof(riff_chunk));
-			SK_ASSERT((riff_chunk.type[0] == 'W' &&
+			SK_VERIFY((riff_chunk.type[0] == 'W' &&
 					   riff_chunk.type[1] == 'A' &&
 					   riff_chunk.type[2] == 'V' &&
 					   riff_chunk.type[3] == 'E'), "Invalid riff chunk");

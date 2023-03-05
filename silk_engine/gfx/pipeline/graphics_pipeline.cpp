@@ -86,8 +86,8 @@ GraphicsPipeline& GraphicsPipeline::setSubpass(uint32_t subpass)
 
 GraphicsPipeline& GraphicsPipeline::setStage(const PipelineStage& stage)
 {
-	render_pass = *Renderer::getRenderPass(stage.first);
-	subpass = stage.second;
+	render_pass = *Renderer::getRenderPass(stage.render_pass);
+	subpass = stage.subpass;
 	return *this;
 }
 

@@ -34,7 +34,7 @@ void RawImage<uint8_t>::load(const path& file)
 
 	stbi_set_flip_vertically_on_load(true);
 	stbi_uc* pixel_data = stbi_load(file_path.string().c_str(), (int*)&width, (int*)&height, (int*)&channels, 0);
-	SK_ASSERT(pixel_data, "Failed to load image: {}", file_path);
+	SK_VERIFY(pixel_data, "Failed to load image: {}", file_path);
 
 	allocate();
 	memcpy(pixels.data(), pixel_data, pixels.size() * sizeof(uint8_t));
@@ -46,7 +46,7 @@ void RawImage<uint8_t>::load(const path& file)
 
 void RawImage<uint8_t>::load(std::span<const path> files)
 {
-	SK_ASSERT(files.size(), "You have to specify at least one filepath for loading images");
+	SK_VERIFY(files.size(), "You have to specify at least one filepath for loading images");
 
 	if (files.size() == 1)
 	{
@@ -76,7 +76,7 @@ void RawImage<uint8_t>::load(std::span<const path> files)
 		if (image_data.channels == 3)
 			image_data.align4();
 
-		SK_ASSERT(image_data.width == width
+		SK_VERIFY(image_data.width == width
 				  && image_data.height == height
 				  && image_data.channels == channels,
 				  "Error while loading images, couldn't load image at {0}. width, height and channel count should match in all the images", files[i]);

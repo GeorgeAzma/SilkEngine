@@ -217,7 +217,7 @@ void Scene::onImageComponentUpdate(entt::registry& registry, entt::entity entity
 	if (auto mesh_component = registry.try_get<MeshComponent>(entity))
 	{
 		ImageComponent& image = registry.get<ImageComponent>(entity); 
-		SK_ASSERT(mesh_component->instance->images.size() >= image.images.size(), "Couldn't update image component because amount of images specified is more than instance's image count");
+		SK_VERIFY(mesh_component->instance->images.size() >= image.images.size(), "Couldn't update image component because amount of images specified is more than instance's image count");
 		auto& instance = mesh_component->instance;
 		bool same = true;
 		for (size_t i = 0; i < instance->images.size(); ++i)

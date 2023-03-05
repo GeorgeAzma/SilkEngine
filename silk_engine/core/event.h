@@ -224,7 +224,7 @@ public:
 
     void operator()(const Event& event) const
     {
-        SK_ASSERT(instance && member_function, 
+        SK_VERIFY(instance && member_function, 
             "Attempted to call \"onEvent(const EventType&)\" when it was nullptr, did you forget to unsubscribe event when class got deleted?");
         (instance->*member_function)((const EventType&)event);
     }

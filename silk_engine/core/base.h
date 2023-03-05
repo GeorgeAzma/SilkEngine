@@ -35,20 +35,6 @@ constexpr const char* ENGINE_NAME = "SilkEngine";
 #define SK_ENABLE_DEBUG_OUTPUT
 #endif
 
-#ifdef SK_ENABLE_DEBUG_OUTPUT
-#if defined(SK_PLATFORM_WINDOWS)
-#define SK_DEBUG_BREAK() __debugbreak()
-#elif defined(SK_PLATFORM_LINUX)
-#include <signal.h>
-#define SK_DEBUG_BREAK() raise(SIGTRAP)
-#else
-#define SK_DEBUG_BREAK()
-//#error "Platform doesn't support debugbreak yet!"
-#endif
-#else
-#define SK_DEBUG_BREAK()
-#endif
-
 #define SK_MAKE_VERSION(major, minor, patch) \
     (((uint32_t(major)) << 22)               \
     | ((uint32_t(minor)) << 12)              \

@@ -51,7 +51,7 @@ Color::Color(std::string hex, float a)
 	if (hex[0] == '#')
 		hex.erase(0, 1);
 
-	SK_ASSERT(hex.size() == 6, "Invalid hex string size");
+	SK_VERIFY(hex.size() == 6, "Invalid hex string size");
 	auto hex_value = std::stoul(hex, nullptr, 16);
 
 	r = float((hex_value >> 16) & 0xff) * N;

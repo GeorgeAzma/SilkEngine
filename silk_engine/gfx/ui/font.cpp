@@ -4,7 +4,7 @@
 void Font::init()
 {
 	FT_Error result = FT_Init_FreeType(&free_type_library);
-	SK_ASSERT(!result, "FreeType: Couldn't initialize free type");
+	SK_VERIFY(!result, "FreeType: Couldn't initialize free type");
 }
 
 void Font::destroy()
@@ -16,7 +16,7 @@ Font::Font(const path& file, uint32_t size)
 	: characters(MAX_CHARACTER_COUNT), size(size), file(path("res/fonts") / file)
 {
 	FT_Error result = FT_New_Face(free_type_library, this->file.string().c_str(), 0, &face);
-	SK_ASSERT(!result, "FreeType: Couldn't create new face: {}", this->file.string());
+	SK_VERIFY(!result, "FreeType: Couldn't create new face: {}", this->file.string());
 
 	FT_Set_Pixel_Sizes(face, 0, size);
 	
@@ -30,12 +30,12 @@ Font::Font(const path& file, uint32_t size)
 
 	//This is just random assumption to make aspect ratio of texture atlas as close to 1 as possible
 	const uint max_width = (size + padding) * sqrt(MAX_CHARACTER_COUNT); 
-	SK_ASSERT(max_width > 0, "FreeType: Invalid texture input, it is too small");
+	SK_VERIFY(max_width > 0, "FreeType: Invalid texture input, it is too small");
 
 	for (size_t i = 0; i < MAX_CHARACTER_COUNT; ++i)
 	{
 		FT_Error result = FT_Load_Char(face, i, FT_LOAD_RENDER);
-		SK_ASSERT(!result, "FreeType: Couldn't load character: {}, from file {}", i, file);
+		SK_VERIFY(!result, "FreeType: Couldn't load character: {}, from file {}", i, file);
 		if (row_width + face->glyph->bitmap.width + 1 + padding >= max_width)
 		{
 			width = std::max(width, row_width);
@@ -64,7 +64,7 @@ Font::Font(const path& file, uint32_t size)
 	for (size_t i = 0; i < MAX_CHARACTER_COUNT; ++i)
 	{
 		FT_Error result = FT_Load_Char(face, i, FT_LOAD_RENDER);
-		SK_ASSERT(!result, "FreeType: Couldn't load character: {}, from file {}, Error: {}", i, file, FT_Error_String(result));
+		SK_VERIFY(!result, "FreeType: Couldn't load character: {}, from file {}, Error: {}", i, file, FT_Error_String(result));
 		
 		if (origin_x + face->glyph->bitmap.width + 1 + padding >= max_width)
 		{

@@ -2,7 +2,7 @@
 
 SphereMesh::SphereMesh(uint32_t resolution)
 {
-	SK_ASSERT(resolution >= 2, "Sphere resolution is too low");
+	SK_VERIFY(resolution >= 2, "Sphere resolution is too low");
 	size_t vertices_size = resolution * resolution;
 	uint32_t lines = resolution - 1;
 	size_t indices_size = lines * lines * 6;

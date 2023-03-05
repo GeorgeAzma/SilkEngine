@@ -9,7 +9,7 @@ InstanceImages::InstanceImages(uint32_t max_images)
 
 uint32_t InstanceImages::add(const std::vector<shared<Image>>& new_images)
 {
-	SK_ASSERT(new_images.size(), "You should specify more than 0 images to add");
+	SK_VERIFY(new_images.size(), "You should specify more than 0 images to add");
 
 	enum Action : uint8_t { Add, Replace, Use };
 
@@ -63,7 +63,7 @@ void InstanceImages::remove(size_t index, size_t count)
 {
 	for (size_t i = 0; i < count; ++i)
 	{
-		SK_ASSERT(image_owners[index + i] > 0, "Couldn't remove image from instance images");
+		SK_VERIFY(image_owners[index + i] > 0, "Couldn't remove image from instance images");
 		--image_owners[index + i];
 	}
 }

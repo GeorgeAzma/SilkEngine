@@ -31,7 +31,7 @@ void Camera::setFOV(float fov)
 
 void Camera::setNear(float near)
 {
-	SK_ASSERT(type == Camera::Type::PERSPECTIVE, "Only perspective cameras have near variable");
+	SK_VERIFY(type == Camera::Type::PERSPECTIVE, "Only perspective cameras have near variable");
 	this->near = near;
 	projection = math::perspective(math::radians(fov), Window::getActive().getAspectRatio(), near, far);
 	updateProjectionView();
@@ -39,7 +39,7 @@ void Camera::setNear(float near)
 
 void Camera::setFar(float far)
 {
-	SK_ASSERT(type == Camera::Type::PERSPECTIVE, "Only perspective cameras have near variable");
+	SK_VERIFY(type == Camera::Type::PERSPECTIVE, "Only perspective cameras have far variable");
 	this->far = far;
 	projection = math::perspective(math::radians(fov), Window::getActive().getAspectRatio(), near, far);
 	updateProjectionView();

@@ -3,7 +3,7 @@
 
 BezierMesh::BezierMesh(float x1, float y1, float px, float py, float x2, float y2, uint32_t resolution, float width, uint32_t edge_resolution, bool tile_UVs)
 {
-    SK_ASSERT(resolution > 2, "Resolution of bezier curve must be more than 2, if it's 2 or 1 use line mesh or circle mesh accordingly");
+    SK_VERIFY(resolution > 2, "Resolution of bezier curve must be more than 2, if it's 2 or 1 use line mesh or circle mesh accordingly");
     std::vector<vec2> points(resolution);
     points.front() = { x1, y1 };
     vec2 p = { px, py };
@@ -23,7 +23,7 @@ BezierMesh::BezierMesh(float x1, float y1, float px, float py, float x2, float y
 
 BezierMesh::BezierMesh(float x1, float y1, float px1, float py1, float px2, float py2, float x2, float y2, uint32_t resolution, float width, uint32_t edge_resolution, bool tile_UVs)
 {
-    SK_ASSERT(resolution > 3, "Resolution of cubic bezier curve must be more than 3, if it's 3, 2 or 1 use quadratic bezier mesh, line mesh or circle mesh accordingly");
+    SK_VERIFY(resolution > 3, "Resolution of cubic bezier curve must be more than 3, if it's 3, 2 or 1 use quadratic bezier mesh, line mesh or circle mesh accordingly");
     std::vector<vec2> points(resolution);
     points.front() = { x1, y1 };
     vec2 p1 = { px1, py1 };

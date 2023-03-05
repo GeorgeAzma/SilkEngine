@@ -1,3 +1,8 @@
 #pragma once
 
-using PipelineStage = std::pair<uint32_t, uint32_t>;
+struct PipelineStage
+{
+	uint32_t render_pass;
+	uint32_t subpass;
+	bool operator==(const PipelineStage& other) const { return render_pass == other.render_pass && subpass == other.subpass; }
+};

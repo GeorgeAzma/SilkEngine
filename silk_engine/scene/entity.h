@@ -10,7 +10,7 @@ public:
 	template<typename T, typename... Args>
 	T& add(Args&&... args)
 	{
-		SK_ASSERT(!has<T>(), "Entity already has specified component");
+		SK_VERIFY(!has<T>(), "Entity already has specified component");
 		return scene->registry.emplace<T>(entity, std::forward<Args>(args)...);
 	}
 
@@ -23,14 +23,14 @@ public:
 	template<typename T>
 	void remove() const
 	{
-		SK_ASSERT(has<T>(), "Entity doesn't have specified component");
+		SK_VERIFY(has<T>(), "Entity doesn't have specified component");
 		scene->registry.remove<T>(entity);
 	}
 
 	template<typename T>
 	T& get()
 	{
-		SK_ASSERT(has<T>(), "Entity doesn't have specified component");
+		SK_VERIFY(has<T>(), "Entity doesn't have specified component");
 		return scene->registry.get<T>(entity);
 	}
 

@@ -245,7 +245,7 @@ void Renderer::render(Camera* camera)
 			for (auto& render_stage : render_pipeline->getRenderStages())
 			{
 				render_stage.update();
-
+				
 				VkViewport viewport = {};
 				viewport.x = 0.0f;
 				viewport.y = Window::getActive().getHeight();
@@ -254,22 +254,22 @@ void Renderer::render(Camera* camera)
 				viewport.minDepth = 0.0f;
 				viewport.maxDepth = 1.0f;
 				cb.setViewport({ viewport });
-
+				
 				VkRect2D scissor = {};
 				scissor.offset = { 0, 0 };
 				scissor.extent = { Window::getActive().getWidth(), Window::getActive().getHeight() };
 				cb.setScissor({ scissor });
-
+				
 				auto& render_pass = render_stage.getRenderPass();
 				render_pass->begin(*render_stage.getFramebuffer());
 				for (size_t i = 0; i < render_pass->getSubpassCount(); ++i)
 				{
-					stage.second = i;
+					stage.subpass = i;
 					render_pipeline->renderStage(stage);
 					render_pass->nextSubpass();
 				}
 				render_pass->end();
-				++stage.first;
+				++stage.render_pass;
 			}
 		});
 
@@ -332,7 +332,7 @@ void Renderer::createInstance(const shared<RenderedInstance>& instance, const sh
 	if (instance->images.size())
 	{
 		uint32_t image_index = instance_batches[instance->instance_batch_index].instance_images.add(instance->images);
-		SK_ASSERT(image_index != UINT32_MAX, "Instance has too much images");
+		SK_VERIFY(image_index != UINT32_MAX, "Instance has too much images");
 		instance_batches[instance->instance_batch_index].instance_data[instance->instance_data_index].image_index = image_index;
 	}
 }

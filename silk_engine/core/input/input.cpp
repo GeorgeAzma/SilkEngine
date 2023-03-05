@@ -4,7 +4,7 @@
 
 void Input::init()
 {
-    Joystick::init();
+    //Joystick::init();
 }
 
 std::string Input::getClipboardString()
