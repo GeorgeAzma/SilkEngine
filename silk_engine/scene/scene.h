@@ -59,22 +59,6 @@ private:
 	void destroy();
 
 	void onWindowResize(const WindowResizeEvent& e);
-	
-	void onMeshComponentCreate(entt::registry& registry, entt::entity entity);
-	void onTextComponentCreate(entt::registry& registry, entt::entity entity);
-	void onModelComponentCreate(entt::registry& registry, entt::entity entity);	
-	void onLightComponentCreate(entt::registry& registry, entt::entity entity);
-
-	void onTransformComponentUpdate(entt::registry& registry, entt::entity entity);
-	void onColorComponentUpdate(entt::registry& registry, entt::entity entity);
-	void onMaterialComponentUpdate(entt::registry& registry, entt::entity entity);
-	void onLightComponentUpdate(entt::registry& registry, entt::entity entity);
-	void onImageComponentUpdate(entt::registry& registry, entt::entity entity);
-	void onTextComponentUpdate(entt::registry& registry, entt::entity entity);
-	
-	void onMeshComponentDestroy(entt::registry& registry, entt::entity entity);
-	void onModelComponentDestroy(entt::registry& registry, entt::entity entity);
-	void onLightComponentDestroy(entt::registry& registry, entt::entity entity);
 
 private:
 	std::vector<shared<Entity>> entities;

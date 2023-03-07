@@ -32,6 +32,8 @@ public:
 	VkSemaphore createSemaphore(const VkSemaphoreCreateFlags& flags = {}) const;
 	void destroySemaphore(VkSemaphore semaphore) const;
 	VkResult waitForFences(const std::vector<VkFence>& fences, VkBool32 wait_all = VK_TRUE, uint64_t timeout = UINT64_MAX) const;
+	VkResult waitForSemaphores(const std::vector<VkSemaphore>& semaphores, const std::vector<uint64_t>& values, VkBool32 wait_any = false, uint64_t timeout = UINT64_MAX) const;
+	VkResult signalSemaphore(const VkSemaphore& semaphore, uint64_t value) const;
 	VkFramebuffer createFramebuffer(const VkFramebufferCreateInfo& framebuffer_info) const;
 	void destroyFramebuffer(VkFramebuffer framebuffer) const;
 	VkDescriptorPool createDescriptorPool(const VkDescriptorPoolCreateInfo& descriptor_pool_info) const;

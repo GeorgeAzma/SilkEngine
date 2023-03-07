@@ -1,7 +1,7 @@
 #pragma once
 
-#include "scene/scene.h"
-#include "gfx/images/image.h"
+#include "silk_engine/scene/scene.h"
+#include "silk_engine/gfx/images/image.h"
 
 class MyScene : public Scene
 {

@@ -7,12 +7,13 @@ public:
 
     ~DebugTimer();
 
-    //Stops the timer and returns time in milliseconds (or prints it if print parameter is true)
     void operator()();
     void reset();
 
 private:
+#ifdef SK_ENABLE_DEBUG_OUTPUT
     double start = 0.0;
     std::string name = "Timer";
     bool is_reset = true;
+#endif
 };

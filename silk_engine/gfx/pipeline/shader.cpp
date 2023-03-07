@@ -76,7 +76,9 @@ bool Shader::Stage::compile()
 	case TESSELATION_CONTROL: shaderc_type = shaderc_tess_control_shader; break;
 	case TESSELATION_EVALUATION: shaderc_type = shaderc_tess_evaluation_shader; break;
 	}
+	DebugTimer t(std::format("Compiling shader stage({})", file.filename()));
 	auto compilation_result = compiler.CompileGlslToSpv(source.data(), shaderc_type, file.string().c_str(), options);
+	t();
 	if (compilation_result.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
 		SK_ERROR("Shader stage({}) failed: {}", file, compilation_result.GetErrorMessage());
@@ -106,17 +108,12 @@ void Shader::Stage::createModule()
 
 void Shader::Stage::loadCache()
 {
-	std::ifstream cache(getCachePath(), std::ios::binary | std::ios::ate);
-	size_t size = cache.tellg();
-	binary.resize(size / sizeof(uint32_t));
-	cache.seekg(std::ios::beg);
-	cache.read((char*)binary.data(), size);
+	File::read(getCachePath(), binary, std::ios::binary);
 }
 
 void Shader::Stage::saveCache() const
 {
-	std::ofstream cache(getCachePath(), std::ios::binary);
-	cache.write((const char*)binary.data(), binary.size() * sizeof(uint32_t));
+	File::write(getCachePath(), binary.data(), binary.size() * sizeof(uint32_t));
 }
 
 path Shader::Stage::getCachePath() const

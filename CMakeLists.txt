@@ -15,12 +15,23 @@ set(CMAKE_INSTALL_BINDIR ${CMAKE_INSTALL_PREFIX}/bin)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
+project(Project LANGUAGES CXX)
+
+if($<CONFIG:RELEASE>)
+    set(CONFIG_MODE RELEASE)
+	set(TESTING_ENABLED OFF)
+else()
+    set(CONFIG_MODE DEBUG)
+	set(TESTING_ENABLED ON)
+endif()
+
+
 # Get rid of console window in release build
 if(MSVC)
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
 endif()
 
-project(SilkEngine VERSION 1.0.0 LANGUAGES C CXX)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_compile_definitions(
 _USE_MATH_DEFINES
@@ -30,13 +41,8 @@ GLFW_INCLUDE_NONE
 #|-----Vendor-----|#
 
 # Vulkan
-find_package(Vulkan REQUIRED)
-list(APPEND EXTRA_LIBS ${Vulkan_LIBRARIES})
-string(FIND ${Vulkan_LIBRARIES} "/Lib" Vulkan_PATH_POS)
-string(SUBSTRING ${Vulkan_LIBRARIES} 0 ${Vulkan_PATH_POS} VULKAN_PATH)
-list(APPEND EXTRA_LIBS 
-    ${VULKAN_PATH}/Lib/${CMAKE_STATIC_LIBRARY_PREFIX}shaderc_combined$<$<CONFIG:DEBUG>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}
-)
+find_package(Vulkan REQUIRED COMPONENTS shaderc_combined)
+list(APPEND EXTRA_LIBS ${Vulkan_LIBRARIES} Vulkan::shaderc_combined)
 
 macro(externalProject)
     set(one_value_args NAME INCLUDE_DIR)
@@ -56,6 +62,7 @@ macro(externalProject)
             -DCMAKE_INSTALL_BINDIR=${CMAKE_INSTALL_BINDIR}
             ${SUBPROJECT_BUILD_ARGS}
         DEPENDS ${SUBPROJECT_DEPENDS_ON}
+        DOWNLOAD_EXTRACT_TIMESTAMP
         BUILD_ALWAYS OFF
         UPDATE_COMMAND ""
     )
@@ -161,7 +168,6 @@ if(INCLUDE_SUBDIRS)
         list(APPEND INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/ext/${subdir})
     endforeach()
 endif()
-list(APPEND INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/ext/spdlog/include)
 
 file(GLOB_RECURSE EXTERNAL_PROJECT_LIBS "${CMAKE_INSTALL_PREFIX}/*${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
@@ -172,3 +178,6 @@ endif()
 # |-----Sub Directories-----|
 add_subdirectory("silk_engine")
 add_subdirectory("src")
+if(${TESTING_ENABLED})
+    add_subdirectory("tests")
+endif()

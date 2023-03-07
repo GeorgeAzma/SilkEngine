@@ -26,9 +26,6 @@
 
 #include <vulkan/vulkan.h>
 
-#include "platform.h"
-#include "utils/math.h"
-
 constexpr const char* ENGINE_NAME = "SilkEngine";
 
 #ifndef SK_DIST
@@ -70,6 +67,14 @@ using uchar = unsigned char;
 
 using path = std::filesystem::path;
 
+template <typename T>
+concept IsContainer = requires (T t, size_t n)
+{
+    typename T::value_type;
+    { t.data() } -> std::same_as<typename T::value_type*>;
+    { t.resize(n) };
+};
+
 template<typename T, typename... Args>
 static constexpr auto makeShared(Args&&... args)
 {
@@ -88,7 +93,7 @@ static constexpr auto makeArray(T&&... values) -> std::array<typename std::decay
     return std::array<typename std::decay<typename std::common_type<T...>::type>::type, sizeof...(T)>{std::forward<T>(values)...};
 }
 
-#include "core/log.h"
+#include "utils/math.h"
 
 namespace std
 {
@@ -133,7 +138,7 @@ namespace std
         template <typename FormatContext>
         auto format(Seconds t, FormatContext& ctx)
         {
-            if (t < Seconds(1.0))
+            if (t < Seconds(1.0) && t > Seconds(0.0))
             {
                 Seconds t2 { Seconds(1.0) / t };
                 constexpr size_t BASE = 1000;
@@ -141,7 +146,7 @@ namespace std
 
                 size_t unit = 0;
                 size_t base = BASE;
-                for (; t2 >= base; ++unit, base *= BASE);
+                for (; t2 >= base && unit < sizeof(UNITS); ++unit, base *= BASE);
 
                 auto out = formatter<double>::format(t * base, ctx);
 
@@ -149,9 +154,15 @@ namespace std
                 *out++ = 's';
                 return out;
             }
-            else
+            else if (t >= Seconds(1.0))
             {
                 auto out = formatter<double>::format(t, ctx);
+                *out++ = 's';
+                return out;
+            }
+            else
+            {
+                auto out = formatter<double>::format(0.0, ctx);
                 *out++ = 's';
                 return out;
             }
@@ -160,7 +171,7 @@ namespace std
 
 
     template <length_t L, typename T, qualifier Q>
-    struct formatter<glm::vec<L, T, Q>> : formatter<T>
+    struct formatter<vec<L, T, Q>> : formatter<T>
     {
         template <typename FormatContext>
         auto format(const vec<L, T, Q>& vec, FormatContext& ctx)
@@ -187,5 +198,8 @@ namespace std
     };
 }
 
+#include "platform.h"
 #include "utils/time.h"
 #include "utils/RNG.h"
+#include "core/log.h"
+#include "utils/debug_timer.h"

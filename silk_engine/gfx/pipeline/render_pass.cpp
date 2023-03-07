@@ -48,8 +48,8 @@ void RenderPass::build()
         subpass_dependency.srcSubpass = i ? (i - 1) : VK_SUBPASS_EXTERNAL;
         subpass_dependency.dstSubpass = i;
         subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        subpass_dependency.srcAccessMask = VK_ACCESS_NONE;
         subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        subpass_dependency.srcAccessMask = VK_ACCESS_NONE;
         subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
         subpass_dependencies[i] = std::move(subpass_dependency);
     }

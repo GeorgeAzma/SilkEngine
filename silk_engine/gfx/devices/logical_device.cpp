@@ -159,6 +159,27 @@ VkResult LogicalDevice::waitForFences(const std::vector<VkFence>& fences, VkBool
 	return vkWaitForFences(logical_device, fences.size(), fences.data(), wait_all, timeout);
 }
 
+VkResult LogicalDevice::waitForSemaphores(const std::vector<VkSemaphore>& semaphores, const std::vector<uint64_t>& values, VkBool32 wait_any, uint64_t timeout) const
+{
+	SK_VERIFY(semaphores.size() == values.size());
+	VkSemaphoreWaitInfo semaphore_wait_info{};
+	semaphore_wait_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
+	semaphore_wait_info.pSemaphores = semaphores.data();
+	semaphore_wait_info.semaphoreCount = semaphores.size();
+	semaphore_wait_info.pValues = values.data();
+	semaphore_wait_info.flags = wait_any * VK_SEMAPHORE_WAIT_ANY_BIT;
+	return vkWaitSemaphores(logical_device, &semaphore_wait_info, timeout);
+}
+
+VkResult LogicalDevice::signalSemaphore(const VkSemaphore& semaphore, uint64_t value) const
+{
+	VkSemaphoreSignalInfo semaphore_signal_info{};
+	semaphore_signal_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SIGNAL_INFO;
+	semaphore_signal_info.semaphore = semaphore;
+	semaphore_signal_info.value = value;
+	return vkSignalSemaphore(logical_device, &semaphore_signal_info);
+}
+
 VkFramebuffer LogicalDevice::createFramebuffer(const VkFramebufferCreateInfo& framebuffer_info) const
 {
 	VkFramebuffer framebuffer = nullptr;

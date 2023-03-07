@@ -1,13 +1,14 @@
+#include "silk_engine/scene/resources.h"
+#include "silk_engine/gfx/window/window.h"
+#include "silk_engine/core/input/keys.h"
+#include "silk_engine/core/input/mouse_buttons.h"
+#include "silk_engine/gfx/window/window.h"
+#include "silk_engine/scene/camera/camera_controller.h"
+#include "silk_engine/scene/components.h"
+#include "silk_engine/gfx/renderer.h"
+#include "silk_engine/utils/cooldown.h"
+
 #include "my_scene.h"
-#include "scene/resources.h"
-#include "gfx/window/window.h"
-#include "core/input/keys.h"
-#include "core/input/mouse_buttons.h"
-#include "gfx/window/window.h"
-#include "scene/camera/camera_controller.h"
-#include "scene/components.h"
-#include "gfx/renderer.h"
-#include "utils/cooldown.h"
 
 Cooldown c(200ms);
 
@@ -46,13 +47,12 @@ void MyScene::onUpdate()
         Window::getActive().setTitle(std::format("Vulkan - {} FPS ({:.4} ms) | {}x{}", int(1.0 / Time::dt), (Time::dt * 1000), Window::getActive().getWidth(), Window::getActive().getHeight()));
     
     Renderer::color(Colors::WHITE);
-    
     int n = 100;
     std::vector<vec2> p(n);
     for (int i = 0; i < n; ++i)
     {
         p[i].x = i / float(n - 1);
-        p[i].y = cos(pi<float>() * 2.0 * 3 * p[i].x) * 100.0f + 200.0f;
+        p[i].y = cos(pi<float>() * 2.0 * 3.0 * p[i].x) * 100.0f + 200.0f;
         p[i].x *= Window::getActive().getWidth();
     }
     Renderer::line(p, 4.0f);

@@ -1,13 +1,12 @@
 #pragma once
 
-#include "core/entry_point.h"
-#include "core/application.h"
-#include "scene/scene.h"
+#include "silk_engine/core/application.h"
+#include "silk_engine/scene/scene.h"
 
 class MyApp : public Application
 {
 public:
-    MyApp(ApplicationCommandLineArgs args);
+    MyApp(const ApplicationCommandLineArgs& args);
     void onUpdate() override;
     ~MyApp();
 

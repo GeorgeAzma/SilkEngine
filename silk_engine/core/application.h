@@ -23,13 +23,14 @@ public:
 
     virtual std::string getName() const { return "App"; }
 
+    void run();
+
     ApplicationCommandLineArgs getCommandLineArgs() const { return command_line_args; }
 
 protected:
     virtual void onUpdate() = 0;
 
 private:
-    void run();
     void update();
     void onWindowClose(const WindowCloseEvent &e);
     void onWindowResize(const WindowResizeEvent &e);
