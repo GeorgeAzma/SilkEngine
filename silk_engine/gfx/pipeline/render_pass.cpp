@@ -64,7 +64,7 @@ void RenderPass::build()
     ci.pDependencies = subpass_dependencies.data();
     render_pass = Graphics::logical_device->createRenderPass(ci);
 }
-
+    
 void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_contents)
 {
     Graphics::submit(

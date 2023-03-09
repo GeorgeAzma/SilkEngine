@@ -29,8 +29,17 @@ PhysicalDevice::PhysicalDevice()
 	vkGetPhysicalDeviceFeatures(physical_device, &features);
 	queue_family_indices = findQueueFamilies(physical_device);
 	max_usable_sample_count = getMaxSampleCount(properties.limits.framebufferColorSampleCounts & properties.limits.framebufferDepthSampleCounts);
-	depth_format = findDepthFormat();
-	stencil_format = findStencilFormat();
+#ifdef SK_ENABLE_DEBUG_OUTPUT
+	std::string device_type = "Other";
+	switch (properties.deviceType)
+	{
+	case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: device_type = "Integrated GPU"; break;
+	case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU: device_type = "Discrete GPU"; break;
+	case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU: device_type = "Virtual GPU"; break;
+	case VK_PHYSICAL_DEVICE_TYPE_CPU: device_type = "CPU"; break;
+	}
+	SK_INFO("{}: {}", device_type, properties.deviceName);
+#endif
 }
 
 VkDevice PhysicalDevice::createLogicalDevice(const VkDeviceCreateInfo& create_info) const
@@ -93,38 +102,13 @@ VkFormat PhysicalDevice::findSupportedFormat(const std::vector<VkFormat>& candid
 	for (VkFormat format : candidates)
 	{
 		VkFormatProperties props = getFormatProperties(format);
-		if ((tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features
-			|| (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)))
+		if ((tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) || 
+			(tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features))
 			return format;
 	}
 
 	SK_ERROR("Vulkan: Couldn't find supported format");
 	return VkFormat(0);
-}
-
-VkFormat PhysicalDevice::findDepthFormat() const
-{
-	return findSupportedFormat
-	(
-		{ VK_FORMAT_D32_SFLOAT,
-		VK_FORMAT_D32_SFLOAT_S8_UINT,
-		VK_FORMAT_D24_UNORM_S8_UINT },
-		VK_IMAGE_TILING_OPTIMAL,
-		VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
-	);
-}
-
-VkFormat PhysicalDevice::findStencilFormat() const
-{
-	using enum VkFormat;
-	return findSupportedFormat
-	(
-		{ VK_FORMAT_D32_SFLOAT_S8_UINT,
-		VK_FORMAT_D24_UNORM_S8_UINT,
-		VK_FORMAT_S8_UINT },
-		VK_IMAGE_TILING_OPTIMAL,
-		VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
-	);
 }
 
 VkPhysicalDevice PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vector<VkPhysicalDevice>& physical_devices)
@@ -137,7 +121,7 @@ VkPhysicalDevice PhysicalDevice::chooseMostSuitablePhysicalDevice(const std::vec
 			candidates.insert(std::make_pair(score, device));
 	}
 
-	SK_ASSERT(candidates.rbegin()->first >= 0, "Couldn't find suitable vulkan GPU");
+	SK_ASSERT(candidates.rbegin()->first >= 0, "Vulkan: Couldn't find suitable vulkan GPU");
 
 	return candidates.rbegin()->second;
 }

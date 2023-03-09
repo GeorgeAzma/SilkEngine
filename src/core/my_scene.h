@@ -12,6 +12,4 @@ public:
 
 private:
 	shared<Entity> camera;
-	shared<Image> image;
-	std::vector<u8vec4> pixels;
 };

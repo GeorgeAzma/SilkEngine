@@ -34,7 +34,7 @@ SwapChain::SwapChain(const Surface& surface, VkSwapchainKHR old_swap_chain)
 	this->present_mode = present_mode;
 
 	image_format = Image::Format(surface_formats.rbegin()->second.format);
-	depth_format = Image::Format(Graphics::physical_device->getDepthFormat());
+	depth_format = Image::Format(Graphics::physical_device->findSupportedFormat({ VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM }, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT ));
 	sample_count = Graphics::physical_device->getMaxSampleCount();
 	color_space = surface_formats.rbegin()->second.colorSpace;
 

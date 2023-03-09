@@ -42,7 +42,7 @@ Framebuffer& Framebuffer::addAttachment(Image::Format format, VkSampleCountFlagB
     image_props.mipmap = false;
     image_props.samples = samples;
     image_props.usage = Image::isDepthFormat(format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    if (multisampled && samples == VK_SAMPLE_COUNT_1_BIT)
+    if (multisampled)
         image_props.usage |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
     addAttachment(image_props);
     return *this;

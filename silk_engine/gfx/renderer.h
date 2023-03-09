@@ -28,7 +28,7 @@ class Renderer
 public:
 	static constexpr size_t MAX_INSTANCE_BATCHES = 8192;
 	static constexpr size_t MAX_INSTANCES = 8192;
-	static constexpr size_t MAX_IMAGE_SLOTS = 64; //Can be more
+	static constexpr size_t MAX_IMAGE_SLOTS = 32; //Can be more
 	static constexpr size_t MAX_LIGHTS = 64;
 
 public:

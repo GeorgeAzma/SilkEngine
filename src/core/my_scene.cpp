@@ -19,21 +19,6 @@ void MyScene::onStart()
     camera->add<CameraComponent>();
     camera->add<ScriptComponent>().bind<CameraController>();
     camera->get<CameraComponent>().camera.position = vec3(0.0f, 0.0f, -5.0f);
-
-    Image::Props props{ 32, 32, 1, 1, Image::Format::RGBA };
-    props.tiling = VK_IMAGE_TILING_LINEAR;
-    image = makeShared<Image>(props);
-    pixels.resize(image->getPixelCount());
-    for (size_t i = 0; i < image->getWidth(); ++i)
-        for (size_t j = 0; j < image->getHeight(); ++j)
-            pixels[i + j * image->getWidth()] = (i + j % 2) % (RNG::Int() % 2 + 2) ? u8vec4{ 255, 0, 255, 255 } : u8vec4{ 0, 255, 0, 255 };
-
-    image->setData(pixels.data());
-    Renderer::addLight(Light{ .position = vec3(100.0f, 100.0f, -100.0f), .color = vec3(3)});
-    Renderer::addLight(Light{ .position = vec3(-100.0f, 100.0f, 0.0f), .color = vec3(3) });
-    Renderer::addLight(Light{ .position = vec3(0.0f, -100.0f, 0.0f), .color = vec3(3) });
-    Renderer::addLight(Light{ .position = vec3(0.0f, 0.0f, 100.0f), .color = vec3(3) });
-    Window::getActive().setCursorMode(CursorMode::LOCKED);
 }
 
 void MyScene::onUpdate()
@@ -60,5 +45,4 @@ void MyScene::onUpdate()
 
 void MyScene::onStop()
 {
-    image = nullptr;
 }

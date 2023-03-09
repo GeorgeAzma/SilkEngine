@@ -26,8 +26,6 @@ public:
 	VkSampleCountFlagBits getMaxSampleCount() const { return max_usable_sample_count; }
 	VkFormatProperties getFormatProperties(VkFormat format) const;
 	VkImageFormatProperties getImageFormatProperties(VkFormat format, VkImageType type, VkImageTiling tilling, VkImageUsageFlags usage, VkImageCreateFlags flags) const;
-	VkFormat getDepthFormat() const { return depth_format; }
-	VkFormat getStencilFormat() const { return stencil_format; }
 	operator const VkPhysicalDevice& () const { return physical_device; }
 
 private:
@@ -35,9 +33,7 @@ private:
 	static VkPhysicalDevice chooseMostSuitablePhysicalDevice(const std::vector<VkPhysicalDevice>& physical_devices);
 	static int ratePhysicalDevice(VkPhysicalDevice physical_device);
 	static bool checkPhysicalDeviceExtensionSupport(const std::vector<const char*>& required_extensions, VkPhysicalDevice physical_device);
-	static VkSampleCountFlagBits getMaxSampleCount(VkSampleCountFlags counts);	
-	VkFormat findDepthFormat() const;
-	VkFormat findStencilFormat() const;
+	static VkSampleCountFlagBits getMaxSampleCount(VkSampleCountFlags counts);
 
 private:
 	VkPhysicalDevice physical_device = nullptr;
@@ -47,7 +43,4 @@ private:
 	VkPhysicalDeviceProperties properties;
 	VkPhysicalDeviceFeatures features;
 	VkSampleCountFlagBits max_usable_sample_count;
-
-	VkFormat depth_format;
-	VkFormat stencil_format;
 };

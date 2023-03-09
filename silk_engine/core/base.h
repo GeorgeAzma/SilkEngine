@@ -26,7 +26,7 @@
 
 #include <vulkan/vulkan.h>
 
-constexpr const char* ENGINE_NAME = "SilkEngine";
+constexpr const char* ENGINE_NAME = "Silk";
 
 #ifndef SK_DIST
 #define SK_ENABLE_DEBUG_OUTPUT

@@ -278,7 +278,7 @@ void Image::transitionLayout(VkImageLayout new_layout)
 				source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 				break;
 			case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-				barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+				barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 				source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 				break;
 			case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
@@ -312,10 +312,15 @@ void Image::transitionLayout(VkImageLayout new_layout)
 				destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 				break;
 			case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-				barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+				barrier.dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 				destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 				break;
 			case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+				if (barrier.srcAccessMask == VK_ACCESS_NONE)
+				{
+					barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+					source_stage = VK_PIPELINE_STAGE_HOST_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT;
+				}
 				barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 				destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 				break;
@@ -448,10 +453,7 @@ void Image::create()
 		}
 
 		if (props.create_sampler)
-		{
-			props.sampler_props.mip_levels = mip_levels;
 			sampler = makeUnique<Sampler>(props.sampler_props);
-		}
 
 		transitionLayout(props.layout);
 	}
