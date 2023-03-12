@@ -19,7 +19,7 @@ SwapChain::SwapChain(const Surface& surface, VkSwapchainKHR old_swap_chain)
 		if (score >= 0)
 			surface_formats.insert(std::make_pair(score, available_format));
 	}
-	SK_ASSERT(surface_formats.rbegin()->first >= 0, "Vulkan: Couldn't find supported formats to choose from");
+	SK_ASSERT(surface_formats.size() > 0, "Vulkan: Couldn't find supported formats to choose from");
 
 	//Choose present mode
 	VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
@@ -108,13 +108,12 @@ void SwapChain::create(VkSwapchainKHR old_swap_chain)
 		ci.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 	else SK_WARN("Swap chain doesn't support trasfer destination usage");
 
-	const auto& indices = Graphics::physical_device->getQueueFamilyIndices();
-	if (indices.graphics != indices.present)
+	uint32_t queue_family_indices[] = { Graphics::physical_device->getGraphicsQueue(), Graphics::physical_device->getPresentQueue() };
+	if (Graphics::physical_device->getGraphicsQueue() != Graphics::physical_device->getPresentQueue())
 	{
 		ci.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-		auto queue_family_indices = indices.getIndices();
-		ci.queueFamilyIndexCount = queue_family_indices.size();
-		ci.pQueueFamilyIndices = queue_family_indices.data();
+		ci.queueFamilyIndexCount = countof(queue_family_indices);
+		ci.pQueueFamilyIndices = queue_family_indices;
 	}
 	else ci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 

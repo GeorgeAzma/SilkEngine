@@ -7,8 +7,8 @@
 
 //TODO: Doesn't account for: "Any primary command buffer that is in the recording or executable state and has resetting command buffer recorded into it, becomes invalid."
 
-CommandBuffer::CommandBuffer(CommandPool& command_pool, VkCommandBufferLevel level, VkQueueFlagBits queue_type)
-	: level(level), queue_type(queue_type), pool(command_pool),
+CommandBuffer::CommandBuffer(CommandPool& command_pool, VkCommandBufferLevel level)
+	: level(level), pool(command_pool),
 	is_primary(level == VK_COMMAND_BUFFER_LEVEL_PRIMARY)
 {
 	command_buffer = pool.allocate(level);
@@ -464,7 +464,7 @@ void CommandBuffer::drawIndexedIndirect(VkBuffer indirect_buffer, uint32_t offse
 }
 #pragma endregion
 
-void CommandBuffer::submit(const SubmitInfo& info)
+void CommandBuffer::submit(const SubmitInfo& info, VkQueueFlagBits queue_type)
 {
 	end();
 	if (state != State::EXECUTABLE)
@@ -488,7 +488,7 @@ void CommandBuffer::submit(const SubmitInfo& info)
 	state = State::PENDING;
 }
 
-void CommandBuffer::submitImmidiatly()
+void CommandBuffer::submitImmidiatly(VkQueueFlagBits queue_type)
 {
 	end();
 	if (state != State::EXECUTABLE)

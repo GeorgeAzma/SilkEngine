@@ -37,7 +37,7 @@ public:
 	};
 
 public:
-	CommandBuffer(CommandPool& command_pool, VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY, VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT);
+	CommandBuffer(CommandPool& command_pool, VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 	~CommandBuffer();
 
 	void begin(VkCommandBufferUsageFlags usage = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
@@ -92,8 +92,8 @@ public:
 	void drawIndirect(VkBuffer indirect_buffer, uint32_t offset, uint32_t draw_count, uint32_t stride) const;
 	void drawIndexedIndirect(VkBuffer indirect_buffer, uint32_t offset, uint32_t draw_count, uint32_t stride) const;
 
-	void submit(const SubmitInfo& info = {});
-	void submitImmidiatly();
+	void submit(const SubmitInfo& info = {}, VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT);
+	void submitImmidiatly(VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT);
 	void reset(bool free = false);
 
 	bool isPrimary() const { return is_primary; }
@@ -104,7 +104,6 @@ public:
 private:
 	VkCommandBuffer command_buffer;
 	VkCommandBufferLevel level;
-	VkQueueFlagBits queue_type;
 	CommandPool& pool;
 	State state = State::INITIAL;
 	bool is_primary = false;

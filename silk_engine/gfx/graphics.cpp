@@ -1,4 +1,5 @@
 #include "graphics.h"
+#include "debug_messenger.h"
 #include "instance.h"
 #include "devices/physical_device.h"
 #include "devices/logical_device.h"
@@ -26,7 +27,13 @@ void Graphics::init(const Application& app)
 {
 	SK_VERIFY(!instance, "Vulkan: Reinitializing instance is not allowed");
 
+#ifdef SK_ENABLE_DEBUG_MESSENGER
+	debug_messenger = new DebugMessenger();
+#endif
 	instance = new Instance(app.getName());
+#ifdef SK_ENABLE_DEBUG_MESSENGER
+	debug_messenger->init();
+#endif
 	physical_device = new PhysicalDevice();
 	logical_device = new LogicalDevice();
 	command_queue = new CommandQueue();
@@ -44,6 +51,9 @@ void Graphics::destroy()
 	delete command_queue;
 	delete logical_device;
 	delete physical_device;
+#ifdef SK_ENABLE_DEBUG_MESSENGER
+	delete debug_messenger;
+#endif
 	delete instance;
 }
 
@@ -99,19 +109,6 @@ void Graphics::screenshot(const path& file)
 void Graphics::vulkanAssert(VkResult result)
 {
 	SK_VERIFY(result == VK_SUCCESS, std::string("Vulkan: ") + stringifyResult(result));
-}
-
-uint32_t Graphics::apiVersion(APIVersion api_version)
-{
-	switch (api_version)
-	{
-	case APIVersion::VULKAN_1_0: return VK_API_VERSION_1_0;
-	case APIVersion::VULKAN_1_1: return VK_API_VERSION_1_1;
-	case APIVersion::VULKAN_1_2: return VK_API_VERSION_1_2;
-	case APIVersion::VULKAN_1_3: return VK_API_VERSION_1_3;
-	}
-
-	return uint32_t(0);
 }
 
 std::string Graphics::stringifyResult(VkResult result)

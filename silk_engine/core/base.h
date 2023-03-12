@@ -23,6 +23,7 @@
 #include <format>
 #include <mutex>
 #include <span>
+#include <numeric>
 
 #include <vulkan/vulkan.h>
 
@@ -31,6 +32,8 @@ constexpr const char* ENGINE_NAME = "Silk";
 #ifndef SK_DIST
 #define SK_ENABLE_DEBUG_OUTPUT
 #endif
+
+#define SK_ENABLE_DEBUG_MESSENGER (VK_EXT_debug_utils && defined(SK_ENABLE_DEBUG_OUTPUT))
 
 #define SK_MAKE_VERSION(major, minor, patch) \
     (((uint32_t(major)) << 22)               \
@@ -200,6 +203,6 @@ namespace std
 
 #include "platform.h"
 #include "utils/time.h"
-#include "utils/RNG.h"
+#include "utils/random.h"
 #include "core/log.h"
 #include "utils/debug_timer.h"

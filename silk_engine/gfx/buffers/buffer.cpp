@@ -10,9 +10,13 @@ Buffer::Buffer(VkDeviceSize size, Usage usage, const Allocation::Props& allocati
 	ci.size = size;
 	ci.usage = (VkBufferUsageFlags)usage;
 	ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	allocation_ci.usage = (VmaMemoryUsage)allocation_props.prefer_device;
+	allocation_ci.usage = (VmaMemoryUsage)allocation_props.preferred_device;
 	allocation_ci.flags = allocation_props.flags;
-	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &ci, &allocation_ci, &buffer, &(VmaAllocation&)allocation, nullptr));
+	allocation_ci.priority = allocation_props.priority;
+	allocation_ci.priority += 0.1f * ((usage & UsageBits::VERTEX) > 0);
+	allocation_ci.priority += 0.1f * ((usage & UsageBits::INDEX) > 0);
+	allocation_ci.priority += 0.1f * ((usage & UsageBits::STORAGE) > 0);
+	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &ci, &allocation_ci, &buffer, (VmaAllocation*)&allocation, nullptr));
 } 
 
 Buffer::~Buffer()

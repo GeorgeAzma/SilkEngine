@@ -161,6 +161,7 @@ Image::Image(uint32_t width, uint32_t height, Format format, VkImage img)
 	props.create_sampler = false;
 	props.mipmap = false;
 	props.layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	props.allocation_props.priority = 1.0f;
 	image = img;
 	create();
 }
@@ -440,10 +441,11 @@ void Image::create()
 		ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		ci.samples = props.samples;
 
-		VmaAllocationCreateInfo allocation_info{};
-		allocation_info.usage = (VmaMemoryUsage)props.allocation_props.prefer_device;	
-		allocation_info.flags = props.allocation_props.flags;
-		Graphics::vulkanAssert(VkResult(vmaCreateImage(*Graphics::allocator, &ci, &allocation_info, &image, (VmaAllocation*)&allocation, nullptr)));
+		VmaAllocationCreateInfo allocation_ci{};
+		allocation_ci.usage = (VmaMemoryUsage)props.allocation_props.preferred_device;
+		allocation_ci.flags = props.allocation_props.flags;
+		allocation_ci.priority = props.allocation_props.priority;
+		Graphics::vulkanAssert(VkResult(vmaCreateImage(*Graphics::allocator, &ci, &allocation_ci, &image, (VmaAllocation*)&allocation, nullptr)));
 		
 		if (props.data)
 		{

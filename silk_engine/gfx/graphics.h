@@ -4,14 +4,15 @@
 
 enum class APIVersion
 {
-	VULKAN_1_0,
-	VULKAN_1_1,
-	VULKAN_1_2,
-	VULKAN_1_3,
+	VULKAN_1_0 = VK_API_VERSION_1_0,
+	VULKAN_1_1 = VK_API_VERSION_1_1,
+	VULKAN_1_2 = VK_API_VERSION_1_2,
+	VULKAN_1_3 = VK_API_VERSION_1_3,
 };
 
 class CommandQueue;
 class WindowResizeEvent;
+class DebugMessenger;
 class Instance;
 class PhysicalDevice;
 class LogicalDevice;
@@ -48,9 +49,11 @@ public:
 	static void screenshot(const path& file);
 	static void vulkanAssert(VkResult result);
 	static std::string stringifyResult(VkResult result);
-	static uint32_t apiVersion(APIVersion api_version);
 
 public:
+#ifdef SK_ENABLE_DEBUG_MESSENGER
+	static inline DebugMessenger* debug_messenger = nullptr;
+#endif
 	static inline Instance* instance = nullptr;
 	static inline PhysicalDevice* physical_device = nullptr;
 	static inline LogicalDevice* logical_device = nullptr;

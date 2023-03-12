@@ -65,21 +65,19 @@ public:
 	void destroySwapChain(VkSwapchainKHR swap_chain) const;
 	VkResult acquireNextImage(VkSwapchainKHR swap_chain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* image_index) const;
 	std::vector<VkImage> getSwapChainImages(VkSwapchainKHR swap_chain) const;
+	VkQueue getQueue(uint32_t queue_family_index, uint32_t queue_index) const;
 
-	operator const VkDevice& () const { return logical_device; }
 	const Queue& getGraphicsQueue() const;
 	const Queue& getTransferQueue() const;
 	const Queue& getPresentQueue() const;
 	const Queue& getComputeQueue() const;
 	const Queue& getQueue(VkQueueFlags queue) const;
+	operator const VkDevice& () const { return logical_device; }
 
 	static constexpr std::vector<const char*> getRequiredExtensions() { return { "VK_KHR_swapchain" }; }
+	static constexpr std::vector<const char*> getPreferredExtensions() { return { "VK_EXT_memory_priority" }; }
 
 private:
-	std::unordered_map<uint32_t, shared<QueueFamily>> queue_families;
-	shared<Queue> graphics_queue = nullptr;
-	shared<Queue> transfer_queue = nullptr;
-	shared<Queue> present_queue = nullptr;
-	shared<Queue> compute_queue = nullptr;
+	std::vector<std::vector<Queue>> queues;
 	VkDevice logical_device = nullptr;
 };

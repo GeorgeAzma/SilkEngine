@@ -7,6 +7,9 @@ class Monitor
 public:
 	static void init();
 
+	static Monitor getPrimary();
+	static std::vector<Monitor> getMonitors();
+
 	Monitor(GLFWmonitor* monitor)
 		: monitor(monitor) {}
 
@@ -15,11 +18,10 @@ public:
 	ivec2 getPosition() const;
 	ivec4 getWorkArea() const;
 	vec2 getContentScale() const;
-	GLFWmonitor* getGLFWMonitor() const { return monitor; }
 
-	static Monitor getPrimary();
-	static std::vector<Monitor> getMonitors();
+	operator GLFWmonitor*() const { return monitor; }
+	operator const GLFWmonitor*() const { return monitor; }
 
 private:
-	GLFWmonitor* monitor;
+	GLFWmonitor* monitor = nullptr;
 };

@@ -5,7 +5,7 @@ class Queue
 	friend class QueueFamily;
 
 public:
-	Queue(float priority = 1.0f);
+	Queue(VkQueue queue, float priority = 1.0f);
 
 	VkResult present(const VkPresentInfoKHR& present_info) const;
 	void submit(const VkSubmitInfo& submit_info, VkFence fence) const;
@@ -16,5 +16,5 @@ public:
 
 private:
 	VkQueue queue = nullptr;
-	float priority;
+	float priority = 1.0f;
 };

@@ -1,8 +1,6 @@
 #pragma once
 
 #include "core/event.h"
-#include "surface.h"
-#include "swap_chain.h"
 
 enum class CursorHotSpot
 {
@@ -41,6 +39,9 @@ enum class CursorMode
 
 struct GLFWcursor;
 struct GLFWwindow;
+struct GLFWmonitor;
+class Surface;
+class SwapChain;
 
 class Window
 {
@@ -61,12 +62,12 @@ public:
     int32_t getX() const { return data.x; }
     int32_t getY() const { return data.y; }
     float getAspectRatio() const { return (float)data.width / data.height; }
-    GLFWwindow* getGLFWWindow() const { return window; }
     vec2 getMouse() const { return data.mouse; }
     Surface& getSurface() { return *surface; }
     SwapChain& getSwapChain() { return *swap_chain; }
     float getOpacity() const { return opacity; }
     CursorMode getCursorMode() const { return cursor_mode; }
+    GLFWmonitor* getMonitor() const;
 
     bool isFullscreen() const { return data.fullscreen; }
     bool isVsync() const { return vsync; }
@@ -107,6 +108,7 @@ public:
     void setDecorated(bool decorated);
     void setAlwaysOnTop(bool always_on_top);
     void setAutoMinify(bool auto_minify);
+    void setFocusOnShow(bool focus_on_show);
 	void setCursorMode(CursorMode mode);
 
     void align(WindowAlignment a = WindowAlignment::CENTER);
@@ -117,6 +119,8 @@ public:
     void maximize();
     void restore();
     void requestAttention();
+
+    operator GLFWwindow* () const { return window; }
 
 private:
     static inline Window* active_window = nullptr;
@@ -167,6 +171,7 @@ private:
     bool vsync = false;
     bool transparent = false;
     bool auto_minify = false;
+    bool focus_on_show = false;
     CursorMode cursor_mode = CursorMode::NORMAL;
 
     Surface* surface = nullptr;

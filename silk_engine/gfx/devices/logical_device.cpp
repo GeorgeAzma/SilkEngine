@@ -1,23 +1,24 @@
 #include "logical_device.h"
 #include "physical_device.h"
 #include "gfx/graphics.h"
-#include "gfx/queues/queue_family.h"
+#include "gfx/queues/queue.h"
 
 LogicalDevice::LogicalDevice()
 {
-	const auto& queue_family_indices = Graphics::physical_device->getQueueFamilyIndices();
-
-	std::vector<VkDeviceQueueCreateInfo> queue_cis;
-
-	std::vector<uint32_t> queue_families = queue_family_indices.getIndices();
-	std::set<uint32_t> unique_queue_families(queue_families.begin(), queue_families.end());
+	std::vector<uint32_t> queue_family_indices = Graphics::physical_device->getQueueFamilyIndices();
+	std::ranges::sort(queue_family_indices);
+	queue_family_indices.erase(std::unique(queue_family_indices.begin(), queue_family_indices.end()), queue_family_indices.end());
 
 	float queue_priority = 1.0f;
-	for (uint32_t queue_family_index : unique_queue_families)
+	std::vector<VkDeviceQueueCreateInfo> device_queues(queue_family_indices.size());
+	for (size_t i = 0; i < queue_family_indices.size(); ++ i)
 	{
-		shared<QueueFamily> queue_family = makeShared<QueueFamily>(queue_family_index, std::vector<float>{ queue_priority });
-		this->queue_families.emplace(queue_family_index, queue_family);
-		queue_cis.emplace_back(*queue_family);
+		VkDeviceQueueCreateInfo device_queue_ci{};
+		device_queue_ci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		device_queue_ci.pQueuePriorities = &queue_priority;
+		device_queue_ci.queueCount = 1;
+		device_queue_ci.queueFamilyIndex = queue_family_indices[i];
+		device_queues[i] = std::move(device_queue_ci);
 	}
 
 	// Specifies which device features we want by enabling them
@@ -42,25 +43,36 @@ LogicalDevice::LogicalDevice()
 
 	VkDeviceCreateInfo ci{};
 	ci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-	ci.queueCreateInfoCount = queue_cis.size();
-	ci.pQueueCreateInfos = queue_cis.data();
+	ci.queueCreateInfoCount = device_queues.size();
+	ci.pQueueCreateInfos = device_queues.data();
 	ci.pEnabledFeatures = &device_features;
-	auto required_extensions = getRequiredExtensions();
-	ci.enabledExtensionCount = required_extensions.size();
-	ci.ppEnabledExtensionNames = required_extensions.data();
+
+	std::vector<const char*> enabled_extensions;
+
+	for (const auto& required_extension : getRequiredExtensions())
+			enabled_extensions.emplace_back(required_extension);
+
+	for (const auto& preferred_extension : getPreferredExtensions())
+		if (Graphics::physical_device->supportsExtension(preferred_extension))
+			enabled_extensions.emplace_back(preferred_extension);
+
+	ci.enabledExtensionCount = enabled_extensions.size();
+	ci.ppEnabledExtensionNames = enabled_extensions.data();
 	ci.pNext = &vulkan_12_device_features;
 
 	logical_device = Graphics::physical_device->createLogicalDevice(ci);
 
-	//Get handles of the requried queues
-	if (queue_family_indices.graphics)
-		graphics_queue = this->queue_families.at(*queue_family_indices.graphics)->getQueue(logical_device, 0);
-	if (queue_family_indices.transfer)
-		transfer_queue = this->queue_families.at(*queue_family_indices.transfer)->getQueue(logical_device, 0);
-	if (queue_family_indices.present)
-		present_queue = this->queue_families.at(*queue_family_indices.present)->getQueue(logical_device, 0);
-	if (queue_family_indices.compute)
-		compute_queue = this->queue_families.at(*queue_family_indices.compute)->getQueue(logical_device, 0);
+	queues.resize(device_queues.size());
+	for (size_t i = 0; i < device_queues.size(); ++i)
+	{
+		const auto& device_queue = device_queues[i];
+		queues[i].resize(device_queue.queueCount, Queue(nullptr, 0.0f));
+		for (size_t queue_index = 0; queue_index < device_queue.queueCount; ++queue_index)
+		{
+			VkQueue queue = getQueue(device_queue.queueFamilyIndex, queue_index);
+			queues[i][queue_index] = Queue(queue, device_queue.pQueuePriorities[queue_index]);
+		}
+	}
 }
 
 LogicalDevice::~LogicalDevice()
@@ -68,6 +80,7 @@ LogicalDevice::~LogicalDevice()
 	vkDestroyDevice(logical_device, nullptr);
 }
 
+#pragma region Commands
 VkCommandPool LogicalDevice::createCommandPool(const VkCommandPoolCreateInfo& ci) const
 {
 	VkCommandPool command_pool = nullptr;
@@ -365,7 +378,7 @@ VkResult LogicalDevice::acquireNextImage(VkSwapchainKHR swap_chain, uint64_t tim
 {
 	return vkAcquireNextImageKHR(logical_device, swap_chain, timeout, semaphore, fence, image_index);
 }
-
+#pragma endregion
 std::vector<VkImage> LogicalDevice::getSwapChainImages(VkSwapchainKHR swap_chain) const
 {
 	uint32_t image_count = 0;
@@ -375,24 +388,31 @@ std::vector<VkImage> LogicalDevice::getSwapChainImages(VkSwapchainKHR swap_chain
 	return images;
 }
 
+VkQueue LogicalDevice::getQueue(uint32_t queue_family_index, uint32_t queue_index) const
+{
+	VkQueue queue = nullptr;
+	vkGetDeviceQueue(logical_device, queue_family_index, queue_index, &queue);
+	return queue;
+}
+
 const Queue& LogicalDevice::getGraphicsQueue() const 
 { 
-	return *graphics_queue; 
+	return queues[Graphics::physical_device->getGraphicsQueue()][0];
 }
 
 const Queue& LogicalDevice::getTransferQueue() const 
 { 
-	return *transfer_queue; 
+	return queues[Graphics::physical_device->getTransferQueue()][0];
 }
 
 const Queue& LogicalDevice::getPresentQueue() const 
-{ 
-	return *present_queue; 
+{
+	return queues[Graphics::physical_device->getPresentQueue()][0];
 }
 
 const Queue& LogicalDevice::getComputeQueue() const 
-{ 
-	return *compute_queue; 
+{
+	return queues[Graphics::physical_device->getComputeQueue()][0];
 }
 
 const Queue& LogicalDevice::getQueue(VkQueueFlags queue) const
@@ -404,5 +424,5 @@ const Queue& LogicalDevice::getQueue(VkQueueFlags queue) const
 	case VK_QUEUE_COMPUTE_BIT: return Graphics::logical_device->getComputeQueue();
 	}
 
-	return Graphics::logical_device->getGraphicsQueue(); //Or nullptr
+	return Graphics::logical_device->getGraphicsQueue();
 }

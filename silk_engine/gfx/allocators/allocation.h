@@ -25,7 +25,8 @@ public:
 	struct Props
 	{
 		Flags flags = 0;
-		Device prefer_device = Device::AUTO;
+		Device preferred_device = Device::AUTO;
+		float priority = 0.0f;
 	};
 
 public:

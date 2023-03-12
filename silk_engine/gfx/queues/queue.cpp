@@ -1,7 +1,8 @@
 #include "queue.h"
 #include "gfx/fence.h"
 
-Queue::Queue(float priority) : priority(priority)
+Queue::Queue(VkQueue queue, float priority) 
+	: queue(queue), priority(priority)
 {
 }
 

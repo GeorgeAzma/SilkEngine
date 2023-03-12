@@ -8,17 +8,14 @@ public:
 
 	static void init();
 
-	const char* getName();
-
-	static Joystick getActive();
-
-	bool operator==(const Joystick& other) const { return id == other.id; }
-	bool operator==(int id) const { return this->id == id; }
-	bool isValid() const { return id != -1; }
+	std::span<const float> getAxes() const;
+	std::span<const unsigned char> getButtons() const;
+	const char* getGUID() const;
+	std::span<const unsigned char> getHats() const;
+	const char* getName() const;
+	bool isGamepad() const;
+	bool isPresent() const;
 
 private:
 	int id = -1;
-
-	static inline std::vector<Joystick> joysticks;
-	static Joystick active_joystick;
 };

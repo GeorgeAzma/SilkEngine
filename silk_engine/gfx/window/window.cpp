@@ -2,6 +2,9 @@
 #include "core/input/keys.h"
 #include "core/event.h"
 #include "gfx/images/raw_image.h"
+#include "monitor.h"
+#include "surface.h"
+#include "swap_chain.h"
 #include <GLFW/glfw3.h>
 
 Window::Window()
@@ -19,7 +22,7 @@ Window::Window()
     // Creating window
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    window = glfwCreateWindow(data.width, data.height, data.title.c_str(), data.fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+    window = glfwCreateWindow(data.width, data.height, data.title.c_str(), data.fullscreen ? Monitor::getPrimary() : nullptr, nullptr);
 
     glfwDefaultWindowHints();
 
@@ -34,16 +37,18 @@ Window::Window()
     glfwSetWindowSizeCallback(window,
         [](GLFWwindow *window, int width, int height)
         {
+            SK_TRACE("Window resized: {}x{}", width, height);
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             data.width = width;
             data.height = height;
             data.window->recreate();
             Dispatcher::post(WindowResizeEvent(*data.window, width, height));
         });
-
+    
     glfwSetWindowPosCallback(window,
         [](GLFWwindow* window, int x, int y)
         {
+            SK_TRACE("Window moved: ({}, {})", x, y);
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             if (!data.fullscreen)
             {
@@ -56,6 +61,7 @@ Window::Window()
     glfwSetWindowMaximizeCallback(window,
         [](GLFWwindow* window, int maximized)
         {
+            SK_TRACE("Window {}", maximized == GLFW_TRUE ? "maximized" : "restored");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             data.maximized = maximized;
             Dispatcher::post(WindowMaximizeEvent(*data.window, maximized));
@@ -64,6 +70,7 @@ Window::Window()
     glfwSetWindowFocusCallback(window, 
         [](GLFWwindow* window, int focused) 
         {
+            SK_TRACE("Window {}focused", focused == GLFW_TRUE ? "" : "un");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             data.focused = focused;
             Dispatcher::post(WindowFocusEvent(*data.window, focused));
@@ -72,6 +79,7 @@ Window::Window()
     glfwSetWindowIconifyCallback(window, 
         [](GLFWwindow* window, int minimized) 
         {
+            SK_TRACE("Window {}", minimized == GLFW_TRUE ? "minimized" : "restored");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             data.minimized = minimized;
             Dispatcher::post(WindowMinimizeEvent(*data.window, minimized));
@@ -80,6 +88,7 @@ Window::Window()
     glfwSetWindowRefreshCallback(window, 
         [](GLFWwindow* window) 
         {
+            SK_TRACE("Window refreshed");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             Dispatcher::post(WindowRefreshEvent(*data.window));
         });
@@ -87,6 +96,7 @@ Window::Window()
     glfwSetWindowContentScaleCallback(window, 
         [](GLFWwindow* window, float x, float y)
         {
+            SK_TRACE("Window content scaled: ({}, {})", x, y);
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             Dispatcher::post(WindowContentScaleEvent(*data.window, x, y));
             data.dpi = { x, y };
@@ -95,6 +105,7 @@ Window::Window()
     glfwSetWindowCloseCallback(window,
         [](GLFWwindow *window)
         {
+            SK_TRACE("Window closed");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             Dispatcher::post(WindowCloseEvent(*data.window));
         });
@@ -215,8 +226,13 @@ void Window::recreate()
     if (isMinimized())
         return;
 
-    surface->update(getWidth(), getHeight());
+    surface->updateCapabilities();
     swap_chain->recreate();
+}
+
+GLFWmonitor* Window::getMonitor() const
+{
+    return glfwGetWindowMonitor(window);
 }
 
 bool Window::shouldClose() const
@@ -356,7 +372,7 @@ void Window::setOpacity(float opacity)
     if (this->opacity == opacity)
         return;
     this->opacity = opacity;
-    glfwSetWindowAttrib(window, GLFW_TRANSPARENT_FRAMEBUFFER, opacity < 1.0f); // TODO: This might invalidate some vulkan object and mess things up, test it
+    glfwSetWindowAttrib(window, GLFW_TRANSPARENT_FRAMEBUFFER, opacity < 1.0f); // TODO: This may invalidate some vulkan object and mess things up, test it
     glfwSetWindowOpacity(window, opacity);
 }
 
@@ -436,7 +452,7 @@ void Window::setCursor(const path& file, CursorHotSpot hot_spot)
     }
 
     data.cursor = glfwCreateCursor(cursor_image, x, y);
-    glfwSetCursor(Window::getGLFWWindow(), data.cursor);
+    glfwSetCursor(window, data.cursor);
 }
 
 void Window::setAutoMinify(bool auto_minify)
@@ -445,6 +461,14 @@ void Window::setAutoMinify(bool auto_minify)
         return;
     this->auto_minify = auto_minify;
     glfwSetWindowAttrib(window, GLFW_AUTO_ICONIFY, auto_minify);
+}
+
+void Window::setFocusOnShow(bool focus_on_show)
+{
+    if (this->focus_on_show == focus_on_show)
+        return;
+    this->focus_on_show = focus_on_show;
+    glfwSetWindowAttrib(window, GLFW_FOCUS_ON_SHOW, focus_on_show);
 }
 
 void Window::setCursorMode(CursorMode mode)
@@ -456,16 +480,16 @@ void Window::setCursorMode(CursorMode mode)
     switch (mode)
     {
     case CursorMode::NORMAL:
-        glfwSetInputMode(Window::getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         break;
     case CursorMode::HIDDEN:
-        glfwSetInputMode(Window::getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
         break;
     case CursorMode::LOCKED:
-        glfwSetInputMode(Window::getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         break;
     case CursorMode::CAPTURED:
-        glfwSetInputMode(Window::getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
         break;
     }
 }
@@ -479,12 +503,12 @@ void Window::align(WindowAlignment a)
     auto& y = data.y;
     switch (a)
     {
-    case WindowAlignment::CENTER:
-        x = (glfwGetVideoMode(glfwGetPrimaryMonitor())->width - data.width) / 2;
-        y = (glfwGetVideoMode(glfwGetPrimaryMonitor())->height - data.height) / 2;
+    case WindowAlignment::CENTER:Monitor::getPrimary().getPhysicalSize();
+        x = (Monitor::getPrimary().getWorkArea().z - data.width) / 2;
+        y = (Monitor::getPrimary().getWorkArea().w - data.height) / 2;
         break;
     case WindowAlignment::TOP:
-        x = (glfwGetVideoMode(glfwGetPrimaryMonitor())->width - data.width) / 2;
+        x = (Monitor::getPrimary().getWorkArea().z - data.width) / 2;
         y = 0;
         break;
     case WindowAlignment::TOP_LEFT:
@@ -492,28 +516,28 @@ void Window::align(WindowAlignment a)
         y = 0;
         break;
     case WindowAlignment::TOP_RIGHT:
-        x = (glfwGetVideoMode(glfwGetPrimaryMonitor())->width - data.width);
+        x = (Monitor::getPrimary().getWorkArea().z - data.width);
         y = 0;
         break;
     case WindowAlignment::LEFT:
         x = 0;
-        y = (glfwGetVideoMode(glfwGetPrimaryMonitor())->height - data.height) / 2;
+        y = (Monitor::getPrimary().getWorkArea().w - data.height) / 2;
         break;
     case WindowAlignment::RIGHT:
-        x = (glfwGetVideoMode(glfwGetPrimaryMonitor())->width - data.width);
-        y = (glfwGetVideoMode(glfwGetPrimaryMonitor())->height - data.height) / 2;
+        x = (Monitor::getPrimary().getWorkArea().z - data.width);
+        y = (Monitor::getPrimary().getWorkArea().w - data.height) / 2;
         break;
     case WindowAlignment::BOTTOM:
-        x = (glfwGetVideoMode(glfwGetPrimaryMonitor())->width - data.width) / 2;
-        y = (glfwGetVideoMode(glfwGetPrimaryMonitor())->height - data.height);
+        x = (Monitor::getPrimary().getWorkArea().z - data.width) / 2;
+        y = (Monitor::getPrimary().getWorkArea().w - data.height);
         break;
     case WindowAlignment::BOTTOM_LEFT:
         x = 0;
-        y = (glfwGetVideoMode(glfwGetPrimaryMonitor())->height - data.height);
+        y = (Monitor::getPrimary().getWorkArea().w - data.height);
         break;
     case WindowAlignment::BOTTOM_RIGHT:
-        x = (glfwGetVideoMode(glfwGetPrimaryMonitor())->width - data.width);
-        y = (glfwGetVideoMode(glfwGetPrimaryMonitor())->height - data.height);
+        x = (Monitor::getPrimary().getWorkArea().z - data.width);
+        y = (Monitor::getPrimary().getWorkArea().w - data.height);
         break;
     };
     glfwSetWindowPos(window, x, y);

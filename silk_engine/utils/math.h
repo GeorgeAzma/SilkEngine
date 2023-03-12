@@ -9,6 +9,8 @@
 #include <glm/gtx/norm.hpp>
 #include <glm/gtc/constants.hpp>
 
+using glm::countof;
+
 namespace math
 {
 	using namespace glm;

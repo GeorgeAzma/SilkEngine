@@ -1,6 +1,6 @@
 #pragma once
 
-class RNG 
+class Random 
 {
 public:
 	using result_type = uint64_t;

@@ -7,7 +7,7 @@ CommandPool::CommandPool(VkCommandPoolCreateFlags flags, std::optional<uint32_t>
 {
 	VkCommandPoolCreateInfo ci{};
 	ci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	ci.queueFamilyIndex = queue_family_index  ? *queue_family_index : *Graphics::physical_device->getQueueFamilyIndices().graphics;
+	ci.queueFamilyIndex = queue_family_index  ? *queue_family_index : Graphics::physical_device->getGraphicsQueue();
 	ci.flags = flags;	
 	command_pool = Graphics::logical_device->createCommandPool(ci);
 }

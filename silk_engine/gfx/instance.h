@@ -2,7 +2,6 @@
 
 class Instance : NonCopyable
 {
-#define SK_ENABLE_DEBUG_UTILS (VK_EXT_debug_utils && defined(SK_ENABLE_DEBUG_OUTPUT))
 public:
     Instance(std::string_view app_name);
     ~Instance();
@@ -13,13 +12,7 @@ public:
     operator const VkInstance& () const { return instance; }
 
 private:
-    bool checkExtensionSupport(const std::vector<const char*>& required_extensions) const;
-    bool checkValidationLayerSupport(const std::vector<const char*>& required_layers) const;
-
-private:
     VkInstance instance = nullptr;
-    std::vector<VkPhysicalDevice> physical_devices;
-#ifdef SK_ENABLE_DEBUG_UTILS
-    VkDebugUtilsMessengerEXT debug_messenger;
-#endif
+    std::vector<VkPhysicalDevice> physical_devices; 
+    std::unordered_map<std::string_view, uint32_t> available_extensions; // extension name | extension spec version
 };

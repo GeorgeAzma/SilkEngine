@@ -20,8 +20,9 @@ Framebuffer::~Framebuffer()
         Graphics::logical_device->destroyFramebuffer(framebuffers[i]);
 }
 
-Framebuffer& Framebuffer::addAttachment(const Image::Props& image_props)
+Framebuffer& Framebuffer::addAttachment(Image::Props image_props)
 {
+    image_props.allocation_props.priority = 1.0f;
     if (image_props.samples != VK_SAMPLE_COUNT_1_BIT)
         multisampled = true;
     for (size_t i = 0; i < framebuffers.size(); ++i)
@@ -56,7 +57,7 @@ Framebuffer& Framebuffer::addSwapchainAttachments()
     return *this;
 }
 
-void Framebuffer::build()
+void Framebuffer::build(bool imageless)
 {
     for (size_t i = 0; i < framebuffers.size(); ++i)
     {
@@ -72,6 +73,7 @@ void Framebuffer::build()
         ci.width = width;
         ci.height = height;
         ci.layers = 1;
+        ci.flags = imageless * VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT;
         framebuffers[i] = Graphics::logical_device->createFramebuffer(ci);
     }
 }

@@ -12,20 +12,15 @@
 #include "gfx/descriptors/descriptor_allocator.h"
 #include "gfx/devices/logical_device.h"
 #include "scene/camera/camera.h"
+#include "gfx/window/glfw.h"
 #include <GLFW/glfw3.h>
-
-static void GLFWErrorCallback(int error, const char* description)
-{
-    SK_ERROR("GLFW({}): {}", error, description);
-}
 
 Application::Application(ApplicationCommandLineArgs args)
     : command_line_args(args)
 {
     Log::init(); 
     SK_INFO("Started");
-    glfwInit();
-    glfwSetErrorCallback(GLFWErrorCallback);
+    GLFW::init();
     Input::init();
     Graphics::init(*this);
     window = new Window();
@@ -43,7 +38,7 @@ Application::~Application()
     Dispatcher::unsubscribe(this, &Application::onKeyPress);
     SceneManager::destroy();
     delete window;
-    glfwTerminate();
+    GLFW::destroy();
     Renderer::destroy();
     Resources::destroy();
     DescriptorAllocator::destroy();
@@ -91,7 +86,6 @@ void Application::update()
 
 void Application::onWindowClose(const WindowCloseEvent &e)
 {
-    SK_INFO("Window closed");
     running = false;
 }
 

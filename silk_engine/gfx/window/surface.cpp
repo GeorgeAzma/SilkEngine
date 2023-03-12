@@ -7,19 +7,11 @@
 
 Surface::Surface(const Window& window)
 {
-	Graphics::vulkanAssert(glfwCreateWindowSurface(*Graphics::instance, window.getGLFWWindow(), nullptr, &surface));
+	Graphics::vulkanAssert(glfwCreateWindowSurface(*Graphics::instance, window, nullptr, &surface));
 
-	update(window.getWidth(), window.getHeight());
-
-	uint32_t format_count = 0;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(*Graphics::physical_device, surface, &format_count, nullptr);
-	formats.resize(format_count);
-	vkGetPhysicalDeviceSurfaceFormatsKHR(*Graphics::physical_device, surface, &format_count, formats.data());
-
-	uint32_t present_mode_count = 0;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(*Graphics::physical_device, surface, &present_mode_count, nullptr);
-	present_modes.resize(present_mode_count);
-	vkGetPhysicalDeviceSurfacePresentModesKHR(*Graphics::physical_device, surface, &present_mode_count, present_modes.data());
+	updateCapabilities();
+	formats = Graphics::physical_device->getSurfaceFormats(surface);
+	present_modes = Graphics::physical_device->getSurfacePresentModes(surface);
 }
 
 Surface::~Surface()
@@ -27,7 +19,7 @@ Surface::~Surface()
 	Graphics::instance->destroySurface(surface);
 }
 
-void Surface::update(uint32_t width, uint32_t height)
+void Surface::updateCapabilities()
 {
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*Graphics::physical_device, surface, &capabilities);
+	capabilities = Graphics::physical_device->getSurfaceCapabilities(surface);
 }
