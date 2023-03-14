@@ -2,6 +2,8 @@
 
 #include "subpass.h"
 
+class Framebuffer;
+
 class RenderPass : NonCopyable
 {
 public:
@@ -12,7 +14,7 @@ public:
 
 	void build();
 
-	void begin(VkFramebuffer framebuffer, VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
+	void begin(const Framebuffer&, VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
 	void nextSubpass(VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
 	void end();
 

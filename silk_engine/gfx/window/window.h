@@ -72,7 +72,7 @@ public:
     bool isFullscreen() const { return data.fullscreen; }
     bool isVsync() const { return vsync; }
     bool isTransparent() const { return transparent; }
-    bool isMinimized() const { return data.minimized; }
+    bool isMinimized() const { return data.minimized || data.width == 0 || data.height == 0; }
     bool isMaximized() const { return data.maximized; }
     bool isFocused() const { return data.focused; }
     bool isMouseDown(int button) const { return data.mouse_buttons[button]; }

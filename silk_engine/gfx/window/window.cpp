@@ -33,18 +33,6 @@ Window::Window()
     Dispatcher::post(WindowResizeEvent(*this, data.width, data.height));
     Dispatcher::post(WindowMoveEvent(*this, data.x, data.y));
 
-    // Event callbacks
-    glfwSetWindowSizeCallback(window,
-        [](GLFWwindow *window, int width, int height)
-        {
-            SK_TRACE("Window resized: {}x{}", width, height);
-            UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
-            data.width = width;
-            data.height = height;
-            data.window->recreate();
-            Dispatcher::post(WindowResizeEvent(*data.window, width, height));
-        });
-    
     glfwSetWindowPosCallback(window,
         [](GLFWwindow* window, int x, int y)
         {
@@ -56,6 +44,27 @@ Window::Window()
                 data.y = y;
                 Dispatcher::post(WindowMoveEvent(*data.window, x, y));
             }
+        });
+
+    glfwSetFramebufferSizeCallback(window,
+        [](GLFWwindow* window, int width, int height)
+        {
+            SK_TRACE("Framebuffer resized: {}x{}", width, height);
+            UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
+            data.width = width;
+            data.height = height;
+            Dispatcher::post(FramebufferResizeEvent(*data.window, width, height));
+        });
+
+    // Event callbacks
+    glfwSetWindowSizeCallback(window,
+        [](GLFWwindow *window, int width, int height)
+        {
+            SK_TRACE("Window resized: {}x{}", width, height);
+            UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
+            data.width = width;
+            data.height = height;
+            Dispatcher::post(WindowResizeEvent(*data.window, width, height));
         });
 
     glfwSetWindowMaximizeCallback(window,

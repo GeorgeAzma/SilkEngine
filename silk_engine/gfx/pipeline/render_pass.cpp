@@ -3,6 +3,7 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/window/window.h"
 #include "gfx/buffers/command_buffer.h"
+#include "gfx/buffers/framebuffer.h"
 
 RenderPass::~RenderPass()
 {
@@ -65,7 +66,7 @@ void RenderPass::build()
     render_pass = Graphics::logical_device->createRenderPass(ci);
 }
     
-void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_contents)
+void RenderPass::begin(const Framebuffer& framebuffer, VkSubpassContents subpass_contents)
 {
     Graphics::submit(
         [&](CommandBuffer& cb)
@@ -76,8 +77,8 @@ void RenderPass::begin(VkFramebuffer framebuffer, VkSubpassContents subpass_cont
             begin_info.framebuffer = framebuffer;
 
             begin_info.renderArea.offset = { 0, 0 };
-            begin_info.renderArea.extent.width = Window::getActive().getWidth();
-            begin_info.renderArea.extent.height = Window::getActive().getHeight();
+            begin_info.renderArea.extent.width = framebuffer.getWidth();
+            begin_info.renderArea.extent.height = framebuffer.getHeight();
 
             std::vector<VkClearValue> clear_values;
             for (const auto& subpass : subpasses)
@@ -97,7 +98,10 @@ void RenderPass::nextSubpass(VkSubpassContents subpass_contents)
         [&](CommandBuffer& cb)
         {
             if (cb.getActive().subpass == (subpasses.size() - 1))
+            {
+                SK_ERROR("nextSubpass was called when there was no next subpass");
                 return;
+            }
             cb.nextSubpass(subpass_contents);
         });
 }

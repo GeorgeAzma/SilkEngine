@@ -22,8 +22,8 @@ public:
     
     void recreate();
 
-    void acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence = nullptr);
-    VkResult present(VkSemaphore wait_semaphore);
+    bool acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence = nullptr);
+    bool present(VkSemaphore wait_semaphore);
 
     operator const VkSwapchainKHR& () const { return swap_chain; }
 

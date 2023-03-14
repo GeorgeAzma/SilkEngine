@@ -33,13 +33,7 @@ public:
 
 public:
 	Subpass() = default;
-	Subpass(const Subpass& last_subpass)
-	{
-		std::vector<VkAttachmentReference> input_attachment_references(last_subpass.attachments.size());
-		for (size_t i = 0; i < last_subpass.attachments.size(); ++i)
-			input_attachment_references[i] = last_subpass.attachments[i].reference;
-		input_attachment_references = std::move(input_attachment_references);
-	}
+	Subpass(const Subpass& last_subpass);
 
 	void addAttachment(const AttachmentProps& props);
 	void build();

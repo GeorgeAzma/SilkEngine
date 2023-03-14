@@ -15,6 +15,9 @@
 #include "gfx/window/glfw.h"
 #include <GLFW/glfw3.h>
 
+//TODO: Subpass attachment references/descriptions
+//FIXME: App slowing down every time when window is resized and update is called right after
+
 Application::Application(ApplicationCommandLineArgs args)
     : command_line_args(args)
 {
@@ -27,14 +30,14 @@ Application::Application(ApplicationCommandLineArgs args)
     Resources::init();
     Renderer::init();
     Dispatcher::subscribe(this, &Application::onWindowClose);
-    Dispatcher::subscribe(this, &Application::onWindowResize);
+    Dispatcher::subscribe(this, &Application::onFramebufferResize);
     Dispatcher::subscribe(this, &Application::onKeyPress);
 }
 
 Application::~Application()
 {
     Dispatcher::unsubscribe(this, &Application::onWindowClose);
-    Dispatcher::unsubscribe(this, &Application::onWindowResize);
+    Dispatcher::unsubscribe(this, &Application::onFramebufferResize);
     Dispatcher::unsubscribe(this, &Application::onKeyPress);
     SceneManager::destroy();
     delete window;
@@ -48,36 +51,26 @@ Application::~Application()
 
 void Application::run()
 {
-    fully_initialized = true;
     while (running)
-        update();
+    {
+        glfwPollEvents();
 
+        while (Window::getActive().isMinimized())
+            glfwWaitEvents();
+
+        update();
+    }
     Graphics::logical_device->wait();
 }
 
 void Application::update()
 {
-    if (Window::getActive().isMinimized())
-    {
-        glfwWaitEvents();
-        return;
-    }
-
-    glfwPollEvents();
-
-    if (Window::getActive().isMinimized())
-    {
-        glfwWaitEvents();
-        return;
-    }
-
-    Renderer::waitForPreviousFrame();
+    Renderer::wait();
 
     Renderer::reset();
     onUpdate();
     SceneManager::update();
 
-    Graphics::update();
     Renderer::render(SceneManager::getActive().get() ? SceneManager::getActive()->getMainCamera() : nullptr);
 
     Window::getActive().update();
@@ -89,10 +82,12 @@ void Application::onWindowClose(const WindowCloseEvent &e)
     running = false;
 }
 
-void Application::onWindowResize(const WindowResizeEvent& e)
+void Application::onFramebufferResize(const FramebufferResizeEvent& e)
 {
-    if (fully_initialized)
-        update();
+    if (Window::getActive().isMinimized())
+        return;
+    update();
+    update();
 }
 
 void Application::onKeyPress(const KeyPressEvent& e)

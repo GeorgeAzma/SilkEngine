@@ -25,17 +25,7 @@ class Application;
 class Graphics
 {
 public:
-	static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 	static constexpr APIVersion API_VERSION = APIVersion::VULKAN_1_3;
-
-public:
-	static inline struct Statistics
-	{
-		size_t instance_batches = 0;
-		size_t instances = 0;
-		size_t vertices = 0;
-		size_t indices = 0;
-	} stats{};
 
 public:
 	static void init(const Application& app);

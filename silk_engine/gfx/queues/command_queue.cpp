@@ -2,11 +2,10 @@
 
 void CommandQueue::submit(std::function<void(CommandBuffer&)>&& command)
 {
-	CommandBuffer& cb = thread_data.buffer;
 	//if (cb.getState() == CommandBuffer::State::PENDING || cb.getState() == CommandBuffer::State::INVALID)
 	//	thread_data.pool.reset();
-	cb.begin();
-	std::forward<std::function<void(CommandBuffer&)>>(command)(cb);
+	thread_data.buffer.begin();
+	std::forward<std::function<void(CommandBuffer&)>>(command)(thread_data.buffer);
 }
 
 void CommandQueue::execute()

@@ -29,6 +29,14 @@ struct WindowResizeEvent : public WindowEvent
     const uint32_t width, height;
 };
 
+struct FramebufferResizeEvent : public WindowEvent
+{
+    FramebufferResizeEvent(Window& window, uint32_t width, uint32_t height)
+        : WindowEvent(window), width(width), height(height) {}
+
+    const uint32_t width, height;
+};
+
 struct WindowCloseEvent : WindowEvent
 {
     WindowCloseEvent(Window& window)

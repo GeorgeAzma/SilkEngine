@@ -31,7 +31,14 @@ public:
 	static constexpr size_t MAX_IMAGE_SLOTS = 32; //Can be more
 	static constexpr size_t MAX_LIGHTS = 64;
 
-public:
+	static inline struct Statistics
+	{
+		size_t instance_batches = 0;
+		size_t instances = 0;
+		size_t vertices = 0;
+		size_t indices = 0;
+	} stats{};
+
 	struct GlobalUniformData
 	{
 		mat4 projection_view;
@@ -50,10 +57,11 @@ public:
 
 public:
 	static void init();
-	static void waitForPreviousFrame();
 	static void render(Camera* camera = nullptr);
 	static void destroy();
 	static void reset();
+	static void wait();
+	static void onResize();
 
 	template<typename T>
 	static void setRenderPipeline() { render_pipeline = makeUnique<T>(); }

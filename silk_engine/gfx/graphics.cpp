@@ -59,7 +59,6 @@ void Graphics::destroy()
 
 void Graphics::update()
 {
-	stats = {};
 	DescriptorAllocator::reset();
 }
 

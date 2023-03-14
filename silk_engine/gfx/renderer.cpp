@@ -36,6 +36,7 @@ void Renderer::init()
 
 	setRenderPipeline<DefaultRenderPipeline>();
 	render_pipeline->init();
+	onResize();
 
 	reset();
 }
@@ -61,6 +62,22 @@ void Renderer::reset()
 	active = {};
 	active.image = Resources::white_image;
 	active.font = Resources::get<Font>("Arial");
+}
+
+void Renderer::wait()
+{
+	previous_frame_finished->wait();
+	previous_frame_finished->reset();
+}
+
+void Renderer::onResize()
+{
+	if (Window::getActive().isMinimized())
+		return;
+	DebugTimer t("Renderer::onResize");
+	Window::getActive().recreate();
+	for (auto& render_stage : render_pipeline->getRenderStages())
+		render_stage.onResize(Window::getActive().getSwapChain());
 }
 
 void Renderer::triangle(float x, float y, float width, float height)
@@ -226,38 +243,41 @@ void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const sha
 	active.depth -= 1e-10;
 }
 
-void Renderer::waitForPreviousFrame()
-{
-	Window::getActive().getSwapChain().acquireNextImage(swap_chain_image_available);
-	previous_frame_finished->wait();
-	previous_frame_finished->reset();
-}
-
 void Renderer::render(Camera* camera)
 {
+	stats = {};
+	Graphics::update();
 	updateUniformData(camera);
 	updateDrawCommands();
-	render_pipeline->update();
+
+	if (!Window::getActive().getSwapChain().acquireNextImage(Renderer::swap_chain_image_available))
+	{
+		SK_ERROR("Unexpected, window should already be updated |||||\n\n\n\n\n\n\n\n\n\n\n\n\n||||||||||||||||||||||");
+		onResize();
+	}
+
+	render_pipeline->update(); 
 
 	Graphics::submit([&](CommandBuffer& cb)
 		{
 			PipelineStage stage{};
 			for (auto& render_stage : render_pipeline->getRenderStages())
 			{
-				render_stage.update();
+				float width = render_stage.getFramebuffer()->getWidth();
+				float height = render_stage.getFramebuffer()->getHeight();
 				
 				VkViewport viewport = {};
 				viewport.x = 0.0f;
-				viewport.y = Window::getActive().getHeight();
-				viewport.width = Window::getActive().getWidth();
-				viewport.height = -(float)Window::getActive().getHeight();
+				viewport.y = height;
+				viewport.width = width;
+				viewport.height = -height;
 				viewport.minDepth = 0.0f;
 				viewport.maxDepth = 1.0f;
 				cb.setViewport({ viewport });
 				
 				VkRect2D scissor = {};
 				scissor.offset = { 0, 0 };
-				scissor.extent = { Window::getActive().getWidth(), Window::getActive().getHeight() };
+				scissor.extent = { (uint32_t)width, (uint32_t)height };
 				cb.setScissor({ scissor });
 				
 				auto& render_pass = render_stage.getRenderPass();
@@ -266,7 +286,8 @@ void Renderer::render(Camera* camera)
 				{
 					stage.subpass = i;
 					render_pipeline->renderStage(stage);
-					render_pass->nextSubpass();
+					if (i < render_pass->getSubpassCount() - 1)
+						render_pass->nextSubpass();
 				}
 				render_pass->end();
 				++stage.render_pass;
@@ -280,14 +301,15 @@ void Renderer::render(Camera* camera)
 	submit_info.signal_semaphores = { render_finished };
 	submit_info.fence = previous_frame_finished;
 	Graphics::execute(submit_info);
-	Window::getActive().getSwapChain().present(render_finished);
+	if (!Window::getActive().getSwapChain().present(render_finished))
+		onResize();
 
-	Graphics::stats.instance_batches += instance_batches.size();
+	stats.instance_batches += instance_batches.size();
 	for (const auto& instance_batch : instance_batches)
 	{
-		Graphics::stats.instances += instance_batch.instances.size();
-		Graphics::stats.vertices += instance_batch.mesh->getVertexCount() * instance_batch.instances.size();
-		Graphics::stats.indices += instance_batch.mesh->getIndexCount() * instance_batch.instances.size();
+		stats.instances += instance_batch.instances.size();
+		stats.vertices += instance_batch.mesh->getVertexCount() * instance_batch.instances.size();
+		stats.indices += instance_batch.mesh->getIndexCount() * instance_batch.instances.size();
 	}
 }
 

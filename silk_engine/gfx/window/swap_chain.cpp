@@ -44,19 +44,26 @@ SwapChain::SwapChain(const Surface& surface, VkSwapchainKHR old_swap_chain)
 void SwapChain::recreate()
 {
 	Graphics::logical_device->wait();
+	this->images.clear();
 	VkSwapchainKHR old_swapchain = swap_chain;
 	create(old_swapchain);
 	Graphics::logical_device->destroySwapChain(old_swapchain);
 }
 
-void SwapChain::acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence)
+bool SwapChain::acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence)
 {
-	auto result = Graphics::logical_device->acquireNextImage(swap_chain, UINT64_MAX, signal_semaphore, signal_fence, &image_index);
+	VkResult result = Graphics::logical_device->acquireNextImage(swap_chain, UINT64_MAX, signal_semaphore, signal_fence, &image_index);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
-		recreate();
+		return false;
+	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+	{
+		SK_ERROR("Vulkan: Couldn't acquire next swap chain image");
+		return false;
+	}
+	return true;
 }
 
-VkResult SwapChain::present(VkSemaphore wait_semaphore)
+bool SwapChain::present(VkSemaphore wait_semaphore)
 {
 	VkPresentInfoKHR present_info{};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -65,7 +72,15 @@ VkResult SwapChain::present(VkSemaphore wait_semaphore)
 	present_info.pImageIndices = &image_index;
 	present_info.pWaitSemaphores = &wait_semaphore;
 	present_info.waitSemaphoreCount = wait_semaphore ? 1 : 0;
-	return Graphics::logical_device->getPresentQueue().present(present_info);
+	VkResult result = Graphics::logical_device->getPresentQueue().present(present_info);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+		return false;
+	else if (result != VK_SUCCESS)
+	{
+		SK_ERROR("Vulkan: Couldn't present a swap chain image");
+		return false;
+	}
+	return true;
 }
 
 void SwapChain::create(VkSwapchainKHR old_swap_chain)

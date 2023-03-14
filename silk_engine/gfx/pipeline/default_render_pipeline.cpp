@@ -19,7 +19,7 @@ DefaultRenderPipeline::DefaultRenderPipeline()
 		Attachment(swap_chain.getDepthFormat(), swap_chain.getSamples()),
 		Attachment(swap_chain.getFormat(), VK_SAMPLE_COUNT_1_BIT, true)
 	};
-	addRenderStage(RenderStage(swap_chain, render_pass, attachments));
+	addRenderStage(RenderStage(render_pass, attachments));
 }
 
 void DefaultRenderPipeline::init()

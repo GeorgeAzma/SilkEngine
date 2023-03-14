@@ -33,14 +33,13 @@ protected:
 private:
     void update();
     void onWindowClose(const WindowCloseEvent &e);
-    void onWindowResize(const WindowResizeEvent &e);
+    void onFramebufferResize(const FramebufferResizeEvent& e);
     void onKeyPress(const KeyPressEvent &e);
-
+    
 private:
     Window* window;
     ApplicationCommandLineArgs command_line_args;
     bool running = true;
-    bool fully_initialized = false;
 
 private:
     friend int ::main(int argc, char **argv);
