@@ -22,11 +22,11 @@ Framebuffer::~Framebuffer()
 
 Framebuffer& Framebuffer::addAttachment(Image::Props image_props)
 {
-    image_props.allocation_props.priority = 1.0f;
     if (image_props.samples != VK_SAMPLE_COUNT_1_BIT)
         multisampled = true;
+    shared<Image> image = makeShared<Image>(image_props);
     for (size_t i = 0; i < framebuffers.size(); ++i)
-        attachments[i].emplace_back(makeShared<Image>(image_props));
+        attachments[i].emplace_back(image);
     return *this;
 }
 
@@ -42,6 +42,9 @@ Framebuffer& Framebuffer::addAttachment(Image::Format format, VkSampleCountFlagB
     image_props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
     image_props.mipmap = false;
     image_props.samples = samples;
+    image_props.tiling = VK_IMAGE_TILING_OPTIMAL;
+    image_props.allocation_props.preferred_device = Allocation::Device::GPU;
+    image_props.allocation_props.priority = 1.0f;
     image_props.usage = Image::isDepthFormat(format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     if (multisampled)
         image_props.usage |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
@@ -52,7 +55,7 @@ Framebuffer& Framebuffer::addAttachment(Image::Format format, VkSampleCountFlagB
 Framebuffer& Framebuffer::addSwapchainAttachments()
 {
     const auto& images = swap_chain.getImages();
-    for (size_t i = 0; i < attachments.size(); ++i)
+    for (size_t i = 0; i < images.size(); ++i)
         attachments[i].emplace_back(images[i]);
     return *this;
 }

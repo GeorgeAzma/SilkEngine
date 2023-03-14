@@ -15,7 +15,7 @@
 #include "gfx/window/glfw.h"
 #include <GLFW/glfw3.h>
 
-//TODO: Subpass attachment references/descriptions
+//TODO: Subpass attachment references/descriptions. Not all previous subpass outputs are inputs of the next subpass etc.
 //FIXME: App slowing down every time when window is resized and update is called right after
 
 Application::Application(ApplicationCommandLineArgs args)
