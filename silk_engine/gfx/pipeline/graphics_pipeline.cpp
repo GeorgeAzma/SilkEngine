@@ -50,8 +50,6 @@ GraphicsPipeline::GraphicsPipeline()
 
 	dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 
-	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-
 	vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
 	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -60,10 +58,9 @@ GraphicsPipeline::GraphicsPipeline()
 	ci.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 }
 
-GraphicsPipeline& GraphicsPipeline::setShader(const shared<Shader>& shader, const std::vector<Constant>& constants)
+void GraphicsPipeline::bind()
 {
-	IsetShader(shader, constants);
-	return *this;
+	Graphics::submit([&](CommandBuffer& cb) { cb.bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline, layout); });
 }
 
 GraphicsPipeline& GraphicsPipeline::setSamples(VkSampleCountFlagBits sample_count)
@@ -200,11 +197,19 @@ GraphicsPipeline& GraphicsPipeline::setColorWriteMask(ColorComponent mask)
 	return *this;
 }
 
+GraphicsPipeline& GraphicsPipeline::setShader(const shared<Shader>& shader, const std::vector<Pipeline::Constant>& constants)
+{
+	SK_VERIFY(!this->shader, "Must not call setShader more than once");
+	Pipeline::setShader(shader, constants);
+	return *this;
+}
+
 void GraphicsPipeline::build()
 {
 	dynamic_state.dynamicStateCount = dynamic_states.size();
 	dynamic_state.pDynamicStates = dynamic_states.data();
 
+	ci.pViewportState = &viewport_info;
 	ci.pVertexInputState = &vertex_input_info;
 	ci.pInputAssemblyState = &input_assembly_info;
 	ci.pRasterizationState = &rasterizer;
@@ -218,28 +223,19 @@ void GraphicsPipeline::build()
 	create();
 }
 
-void GraphicsPipeline::bind()
+void GraphicsPipeline::create()
 {
-	Graphics::submit([&](CommandBuffer& cb) { cb.bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline, layout); });
-}
-
-void GraphicsPipeline::IsetShader(const shared<Shader>& shader, const std::vector<Constant>& constants)
-{
-	Pipeline::IsetShader(shader, constants);
+	ci.layout = layout;
 
 	ci.stageCount = shader_stage_infos.size();
 	ci.pStages = shader_stage_infos.data();
-	// TODO: Support per pipeline buffer layout, when you need it (probably almost never)
-	vertex_input_info.vertexBindingDescriptionCount = this->shader->getBufferLayout().getBindingDescriptions().size();
-	vertex_input_info.pVertexBindingDescriptions = this->shader->getBufferLayout().getBindingDescriptions().data();
-	vertex_input_info.vertexAttributeDescriptionCount = this->shader->getBufferLayout().getAttributeDescriptions().size();
-	vertex_input_info.pVertexAttributeDescriptions = this->shader->getBufferLayout().getAttributeDescriptions().data();
-}
 
-void GraphicsPipeline::create()
-{
-	layout = Graphics::logical_device->createPipelineLayout(pipeline_layout_info);
-	ci.layout = layout;
+	// TODO: Support per pipeline buffer layout, when you need it (probably almost never)
+	vertex_input_info.vertexBindingDescriptionCount = shader->getBufferLayout().getBindingDescriptions().size();
+	vertex_input_info.pVertexBindingDescriptions = shader->getBufferLayout().getBindingDescriptions().data();
+	vertex_input_info.vertexAttributeDescriptionCount = shader->getBufferLayout().getAttributeDescriptions().size();
+	vertex_input_info.pVertexAttributeDescriptions = shader->getBufferLayout().getAttributeDescriptions().data();
 	ci.pViewportState = &viewport_info;
-	pipeline = Graphics::logical_device->createGraphicsPipeline(*Graphics::pipeline_cache, ci);
+	
+	pipeline = Graphics::logical_device->createGraphicsPipeline(cache, ci);
 }

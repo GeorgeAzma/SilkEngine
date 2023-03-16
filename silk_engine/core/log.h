@@ -2,8 +2,8 @@
 
 #ifdef SK_ENABLE_DEBUG_OUTPUT
     #define SPDLOG_USE_STD_FORMAT
+    #define SPDLOG_ACTIVE_LEVEL 0
     #include <spdlog/spdlog.h>
-    #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
 #endif
 
 class Log

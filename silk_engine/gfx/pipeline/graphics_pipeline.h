@@ -3,6 +3,7 @@
 #include "pipeline.h"
 #include "pipeline_stage.h"
 
+
 class GraphicsPipeline : public Pipeline
 {
 public:
@@ -96,7 +97,8 @@ public:
 public:
 	GraphicsPipeline();
 
-	GraphicsPipeline& setShader(const shared<Shader>& shader, const std::vector<Constant>& constants = {});
+	void bind();
+
 	GraphicsPipeline& setSamples(VkSampleCountFlagBits sample_count);
 	GraphicsPipeline& setRenderPass(VkRenderPass render_pass);
 	GraphicsPipeline& setSubpass(uint32_t subpass);
@@ -113,15 +115,17 @@ public:
 	GraphicsPipeline& setColorBlendOp(BlendOp blend_op);
 	GraphicsPipeline& setAlphaBlendOp(BlendOp blend_op);
 	GraphicsPipeline& setColorWriteMask(ColorComponent mask);
+	GraphicsPipeline& setShader(const shared<Shader>& shader, const std::vector<Pipeline::Constant>& constants = {});
 
 	void build();
-	void bind();
-	
-private:
-	void IsetShader(const shared<Shader>& shader, const std::vector<Constant>& constants = {}) override;
+
 	void create() override;
 
+	const VkGraphicsPipelineCreateInfo& getCreateInfo() const { return ci; }
+
 private:
+
+	VkGraphicsPipelineCreateInfo ci{};
 	std::vector<VkDynamicState> dynamic_states{ VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 	VkPipelineVertexInputStateCreateInfo vertex_input_info{};
 	VkPipelineRasterizationStateCreateInfo rasterizer{};
@@ -134,5 +138,4 @@ private:
 	VkPipelineDynamicStateCreateInfo dynamic_state{};
 	VkRenderPass render_pass = nullptr;
 	uint32_t subpass = 0;
-	VkGraphicsPipelineCreateInfo ci{};
 };

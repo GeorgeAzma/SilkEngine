@@ -323,7 +323,7 @@ void Image::transitionLayout(VkImageLayout new_layout)
 	layout = new_layout;
 }
 
-void Image::insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, uint32_t base_mip_level, uint32_t base_layer)
+void Image::insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, uint32_t base_mip_level, uint32_t base_layer) const
 {
 	insertMemoryBarrier(image, source_access_mask, destination_access_mask, layout, new_layout, source_stage_mask, destination_stage_mask, getFormatVulkanAspectFlags(props.format), mip_levels, base_mip_level, props.layers, base_layer);
 	layout = new_layout;
@@ -578,7 +578,7 @@ void Image::getData(void* data, uint32_t base_layer, uint32_t layers)
 	}
 }
 
-bool Image::copyImage(const shared<Image>& destination, uint32_t layer)
+bool Image::copyImage(const Image& destination, uint32_t layer)
 {
 	bool supports_blit = true;
 	
@@ -588,7 +588,7 @@ bool Image::copyImage(const shared<Image>& destination, uint32_t layer)
 		supports_blit = false;
 	}
 
-	if (!destination->isFeatureSupported(VK_FORMAT_FEATURE_BLIT_DST_BIT))
+	if (!destination.isFeatureSupported(VK_FORMAT_FEATURE_BLIT_DST_BIT))
 	{
 		SK_WARN("Device does not support blitting to linear tiled images, using copy instead of blit!");
 		supports_blit = false;
@@ -598,8 +598,8 @@ bool Image::copyImage(const shared<Image>& destination, uint32_t layer)
 	Graphics::submit(
 		[&](CommandBuffer& cb)
 		{
-			VkImageLayout last_destination_layout = destination->getLayout();
-			destination->insertMemoryBarrier(VK_ACCESS_NONE, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0);
+			VkImageLayout last_destination_layout = destination.getLayout();
+			destination.insertMemoryBarrier(VK_ACCESS_NONE, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0);
 
 			VkImageLayout last_layout = getLayout();
 			insertMemoryBarrier(VK_ACCESS_MEMORY_READ_BIT, VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, layer);
@@ -614,13 +614,13 @@ bool Image::copyImage(const shared<Image>& destination, uint32_t layer)
 				blit.srcSubresource.layerCount = 1;
 				blit.srcOffsets[0] = VkOffset3D(0, 0, 0);
 				blit.srcOffsets[1] = VkOffset3D((int32_t)props.width, (int32_t)props.height, (int32_t)props.depth);
-				blit.dstSubresource.aspectMask = getFormatVulkanAspectFlags(destination->getProps().format);
+				blit.dstSubresource.aspectMask = getFormatVulkanAspectFlags(destination.getProps().format);
 				blit.dstSubresource.mipLevel = 0;
 				blit.dstSubresource.baseArrayLayer = 0;
 				blit.dstSubresource.layerCount = 1;
 				blit.dstOffsets[0] = VkOffset3D(0, 0, 0);
 				blit.dstOffsets[1] = VkOffset3D((int32_t)props.width, (int32_t)props.height, (int32_t)props.depth);
-				cb.blitImage(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, *destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { blit }, VK_FILTER_NEAREST);
+				cb.blitImage(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { blit }, VK_FILTER_NEAREST);
 			}
 			else
 			{
@@ -630,15 +630,15 @@ bool Image::copyImage(const shared<Image>& destination, uint32_t layer)
 				region.srcSubresource.mipLevel = 0;
 				region.srcSubresource.baseArrayLayer = layer;
 				region.srcSubresource.layerCount = 1;
-				region.dstSubresource.aspectMask = getFormatVulkanAspectFlags(destination->getProps().format);
+				region.dstSubresource.aspectMask = getFormatVulkanAspectFlags(destination.getProps().format);
 				region.dstSubresource.mipLevel = 0;
 				region.dstSubresource.baseArrayLayer = 0;
 				region.dstSubresource.layerCount = 1;
 				region.extent = VkExtent3D(props.width, props.height, props.depth);
-				cb.copyImage(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, *destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { region });
+				cb.copyImage(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { region });
 			}
 
-			destination->insertMemoryBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT, last_destination_layout, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0);
+			destination.insertMemoryBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT, last_destination_layout, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0);
 			insertMemoryBarrier(VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_MEMORY_READ_BIT, last_layout, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, layer);
 		});
 	Graphics::execute();

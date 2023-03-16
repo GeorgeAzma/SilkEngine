@@ -1,0 +1,62 @@
+macro(externalProject)
+    set(one_value_args NAME INCLUDE_DIR)
+    set(multi_value_args BUILD_ARGS DEPENDS_ON)
+    cmake_parse_arguments(SUBPROJECT "" "${one_value_args}" "${multi_value_args}" ${ARGN})
+    ExternalProject_Add(${SUBPROJECT_NAME}
+        PREFIX ${SUBPROJECT_NAME}
+        URL ${CMAKE_SOURCE_DIR}/ext/${SUBPROJECT_NAME}.zip
+        CMAKE_ARGS 
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+            -DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_INSTALL_INCLUDEDIR}
+            -DCMAKE_INSTALL_LIBDIR=${CMAKE_INSTALL_LIBDIR}
+            -DCMAKE_INSTALL_DOCDIR=${CMAKE_INSTALL_DOCDIR}
+            -DCMAKE_INSTALL_BINDIR=${CMAKE_INSTALL_BINDIR}
+            ${SUBPROJECT_BUILD_ARGS}
+        DEPENDS ${SUBPROJECT_DEPENDS_ON}
+        DOWNLOAD_EXTRACT_TIMESTAMP
+        BUILD_ALWAYS OFF
+        UPDATE_COMMAND ""
+    )
+    if(SUBPROJECT_DEPENDS_ON)
+        ExternalProject_Add_StepDependencies(${SUBPROJECT_NAME} build ${SUBPROJECT_DEPENDS_ON})
+    endif()
+    if(SUBPROJECT_INCLUDE_DIR)
+        list(APPEND INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX}/include/${SUBPROJECT_INCLUDE_DIR})
+    endif()
+    list(APPEND DEPENDENCIES_TO_ADD ${SUBPROJECT_NAME})
+endmacro() 
+
+macro(externalProjectGit)
+    set(one_value_args NAME GIT_REPO GIT_TAG INCLUDE_DIR)
+    set(multi_value_args BUILD_ARGS DEPENDS_ON)
+    cmake_parse_arguments(SUBPROJECT "" "${one_value_args}" "${multi_value_args}" ${ARGN})
+    ExternalProject_Add(${SUBPROJECT_NAME}
+        PREFIX ${SUBPROJECT_NAME}
+        GIT_REPOSITORY ${GIT_REPO}
+        GIT_TAG ${GIT_TAG}
+        GIT_SHALLOW ON
+        CMAKE_ARGS 
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+            -DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_INSTALL_INCLUDEDIR}
+            -DCMAKE_INSTALL_LIBDIR=${CMAKE_INSTALL_LIBDIR}
+            -DCMAKE_INSTALL_DOCDIR=${CMAKE_INSTALL_DOCDIR}
+            -DCMAKE_INSTALL_BINDIR=${CMAKE_INSTALL_BINDIR}
+            ${SUBPROJECT_BUILD_ARGS}
+        DEPENDS ${SUBPROJECT_DEPENDS_ON}
+        BUILD_ALWAYS OFF
+        UPDATE_COMMAND ""
+    )
+    if(SUBPROJECT_DEPENDS_ON)
+        ExternalProject_Add_StepDependencies(${SUBPROJECT_NAME} build ${SUBPROJECT_DEPENDS_ON})
+    endif()
+    if(SUBPROJECT_INCLUDE_DIR)
+        list(APPEND INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX}/include/${SUBPROJECT_INCLUDE_DIR})
+    endif()
+    list(APPEND DEPENDENCIES_TO_ADD ${SUBPROJECT_NAME})
+endmacro() 

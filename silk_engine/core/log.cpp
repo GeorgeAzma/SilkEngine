@@ -4,7 +4,7 @@
 #endif
 
 using namespace spdlog;
-#define SPDLOG_WCHAR_TO_UTF8_SUPPORT
+
 void Log::init()
 {
 #ifdef SK_ENABLE_DEBUG_OUTPUT
@@ -17,10 +17,15 @@ void Log::init()
     core_sink->set_color(level::warn, "\033[33m");
     core_sink->set_color(level::err, "\033[31m");
     core_sink->set_color(level::critical, "\033[1m\033[41m");
+    core_sink->set_level(level::trace);
 
     core_logger = makeShared<logger>(ENGINE_NAME, core_sink);
+    core_logger->set_level(level::trace);
+    core_logger->flush_on(level::trace);
     register_logger(core_logger);
     client_logger = makeShared<logger>("App", core_sink);
+    client_logger->set_level(level::trace);
+    client_logger->flush_on(level::trace);
     register_logger(client_logger);
 #endif
 }

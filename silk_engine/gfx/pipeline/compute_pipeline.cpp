@@ -6,7 +6,7 @@
 
 ComputePipeline::ComputePipeline(const shared<Shader>& shader, const std::vector<Constant>& constants)
 {
-	IsetShader(shader, constants);
+	Pipeline::setShader(shader, constants);
 	ci.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
 	create();
 }
@@ -14,12 +14,6 @@ ComputePipeline::ComputePipeline(const shared<Shader>& shader, const std::vector
 void ComputePipeline::bind()
 {
 	Graphics::submit([&](CommandBuffer& cb) { cb.bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, pipeline, layout); });
-}
-
-void ComputePipeline::IsetShader(const shared<Shader>& shader, const std::vector<Constant>& constants)
-{
-	Pipeline::IsetShader(shader, constants);
-	ci.stage = shader_stage_infos.front();
 }
 
 void ComputePipeline::dispatch(uint32_t global_invocation_count_x, uint32_t global_invocation_count_y, uint32_t global_invocation_count_z) const
@@ -32,7 +26,7 @@ void ComputePipeline::dispatch(uint32_t global_invocation_count_x, uint32_t glob
 
 void ComputePipeline::create()
 {
-	layout = Graphics::logical_device->createPipelineLayout(pipeline_layout_info);
 	ci.layout = layout;
+	ci.stage = shader_stage_infos.front();
 	pipeline = Graphics::logical_device->createComputePipeline(*Graphics::pipeline_cache, ci);
 }

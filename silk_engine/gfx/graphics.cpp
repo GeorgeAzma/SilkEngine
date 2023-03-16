@@ -96,7 +96,7 @@ void Graphics::screenshot(const path& file)
 	shared<Image> destination = makeShared<Image>(props);
 	
 	auto& img = Window::getActive().getSwapChain().getImages()[Window::getActive().getSwapChain().getImageIndex()];
-	img->copyImage(destination);
+	img->copyImage(*destination);
 
 	void* data;
 	Buffer sb(img->getSize(), Buffer::TRANSFER_DST, { Allocation::RANDOM_ACCESS | Allocation::MAPPED });

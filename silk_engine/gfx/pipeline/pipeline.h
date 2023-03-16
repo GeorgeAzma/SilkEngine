@@ -4,6 +4,21 @@
 
 class Pipeline : NonCopyable
 {
+private:
+	struct StageSpecializationInfo
+	{
+		VkSpecializationInfo specialization_info{};
+		std::vector<uint8_t> constant_data;
+		std::vector<VkSpecializationMapEntry> entries;
+		void build()
+		{
+			specialization_info.mapEntryCount = entries.size();
+			specialization_info.pMapEntries = entries.data();
+			specialization_info.dataSize = constant_data.size();
+			specialization_info.pData = constant_data.data();
+		}
+	};
+
 public:
 	struct Constant
 	{
@@ -15,16 +30,7 @@ public:
 public:
 	virtual ~Pipeline();
 
-	void recreate(bool recreate_shader = true)
-	{
-		destroy();
-		if (recreate_shader)
-		{
-			shader->compile();
-			IsetShader(shader, constants);
-		}
-		create();
-	}
+	void recreate(const std::vector<Constant>& constants = {});
 
 	void pushConstant(std::string_view name, const void* data) const;
 
@@ -32,27 +38,21 @@ public:
 	const VkPipelineLayout& getLayout() const { return layout; }
 	operator const VkPipeline& () const { return pipeline; }
 
-protected:
-	struct StageSpecializationInfo
-	{
-		VkSpecializationInfo specialization_info{};
-		std::vector<uint8_t> constant_data;
-		std::vector<VkSpecializationMapEntry> entries;
-	};
+private:
+	void destroy();
 
 protected:
-	virtual void IsetShader(const shared<Shader>& shader, const std::vector<Constant>& constants = {});
-	void destroy();
 	virtual void create() = 0;
 
 protected:
-	VkPipelineCache cache;
-	VkPipeline pipeline;
-	VkPipelineLayout layout;
+	void setShader(const shared<Shader>& shader, const std::vector<Constant>& constants = {});
 
-	VkPipelineLayoutCreateInfo pipeline_layout_info{};
+protected:
+	VkPipelineCache cache = nullptr;
+	VkPipeline pipeline = nullptr;
+	VkPipelineLayout layout = nullptr;
 	shared<Shader> shader = nullptr;
-	std::vector<VkPipelineShaderStageCreateInfo> shader_stage_infos;
-	std::vector<StageSpecializationInfo> stage_specialization_infos;
-	std::vector<Constant> constants;
+	std::vector<VkPipelineShaderStageCreateInfo> shader_stage_infos{};
+	std::vector<StageSpecializationInfo> stage_specialization_infos{};
+	std::vector<Constant> constants{};
 };

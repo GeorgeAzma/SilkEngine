@@ -106,9 +106,9 @@ public:
 
 	void setData(const void* data, uint32_t base_layer = 0, uint32_t layers = 1);
 	void getData(void* data, uint32_t base_layer = 0, uint32_t layers = 1);
-	bool copyImage(const shared<Image>& destination, uint32_t layer = 0);
+	bool copyImage(const Image& destination, uint32_t layer = 0);
 	void transitionLayout(VkImageLayout new_layout);
-	void insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VkPipelineStageFlags destination_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, uint32_t base_mip_level = 0, uint32_t base_layer = 0);
+	void insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VkPipelineStageFlags destination_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, uint32_t base_mip_level = 0, uint32_t base_layer = 0) const;
 	bool isFeatureSupported(VkFormatFeatureFlags feature) const;
 	void copyFromBuffer(VkBuffer buffer, uint32_t base_layer = 0, uint32_t layers = 1);
 	void copyToBuffer(VkBuffer buffer, uint32_t base_layer = 0, uint32_t layers = 1);
@@ -126,7 +126,7 @@ protected:
 	VkImage image = nullptr;
 	unique<Sampler> sampler = nullptr;
 	unique<ImageView> view = nullptr;
-	VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
+	mutable VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
 	Allocation allocation{};
 	Props props = {};
 	uint32_t mip_levels = 1;

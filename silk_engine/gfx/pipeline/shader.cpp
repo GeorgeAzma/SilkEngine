@@ -23,6 +23,7 @@ Shader::Stage::Stage(const path& file)
 
 Shader::Stage::~Stage()
 {
+	saveCache();
 	Graphics::logical_device->destroyShaderModule(module);
 }
 
@@ -91,7 +92,6 @@ bool Shader::Stage::compile()
 	binary = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend()); 
 
 	createModule(); 
-	saveCache();
 
 	return true;
 }
@@ -183,7 +183,7 @@ void Shader::reflect()
 		for (const spirv_cross::Resource& push_constant : shader_resources.push_constant_buffers)
 			loadPushConstant(push_constant, compiler, shader_resources, type);
 	
-		if (type == Stage::Type::VERTEX)
+		if (VkShaderStageFlags(type) & VkShaderStageFlags(Stage::Type::VERTEX))
 		{
 			constexpr GpuType lut[8][4]
 			{
