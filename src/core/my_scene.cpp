@@ -24,7 +24,6 @@ void MyScene::onStart()
 
 void MyScene::onUpdate()
 {
-    SK_TRACE("{}", fmt::bg(std::terminal_color::yellow), "Hello world");
     if (Window::getActive().isKeyPressed(Keys::F2))
         Graphics::screenshot(path(std::format("res/images/screenshots/screenshot.png")));
     if (Window::getActive().isKeyPressed(Keys::R))
