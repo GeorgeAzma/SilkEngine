@@ -1,27 +1,26 @@
 #include "log.h"
 #ifdef SK_ENABLE_DEBUG_OUTPUT
-    #include <spdlog/sinks/stdout_color_sinks.h>
-    #include <spdlog/sinks/basic_file_sink.h>
-    #include <spdlog/spdlog.h>
-    shared<spdlog::logger> Log::core_logger;
-    shared<spdlog::logger> Log::client_logger;
+    #include <spdlog/sinks/ansicolor_sink.h>
 #endif
 
+using namespace spdlog;
+#define SPDLOG_WCHAR_TO_UTF8_SUPPORT
 void Log::init()
 {
 #ifdef SK_ENABLE_DEBUG_OUTPUT
-    std::vector<spdlog::sink_ptr> log_sinks;
-    log_sinks.emplace_back(makeShared<spdlog::sinks::stdout_color_sink_mt>());
-    //"%^[%T] %n: %v%$
-    log_sinks[0]->set_pattern("%^ [%n]: %v%$");
-    core_logger = makeShared<spdlog::logger>(ENGINE_NAME, begin(log_sinks), end(log_sinks));
-    spdlog::register_logger(core_logger);
-    core_logger->set_level(spdlog::level::trace);
-    core_logger->flush_on(spdlog::level::trace);
+    using sink_type = sinks::ansicolor_stdout_sink_mt;
+    auto core_sink = makeShared<sink_type>();
+    core_sink->set_pattern("%^[%n][%s:%#][%!] %v%$");
+    core_sink->set_color(level::trace, "\033[37m\033[2m");
+    core_sink->set_color(level::debug, "\033[37m\033[2m");
+    core_sink->set_color(level::info, "\033[36m");
+    core_sink->set_color(level::warn, "\033[33m");
+    core_sink->set_color(level::err, "\033[31m");
+    core_sink->set_color(level::critical, "\033[1m\033[41m");
 
-    client_logger = makeShared<spdlog::logger>("App", begin(log_sinks), end(log_sinks));
-    spdlog::register_logger(client_logger);
-    client_logger->set_level(spdlog::level::trace);
-    client_logger->flush_on(spdlog::level::trace);
+    core_logger = makeShared<logger>(ENGINE_NAME, core_sink);
+    register_logger(core_logger);
+    client_logger = makeShared<logger>("App", core_sink);
+    register_logger(client_logger);
 #endif
 }

@@ -9,7 +9,6 @@
 #include "silk_engine/utils/cooldown.h"
 
 #include "my_scene.h"
-#include <spdlog/fmt/bundled/color.h>
 
 Cooldown c(200ms);
 

@@ -11,8 +11,10 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugMessenger::debugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData)
 {
-    std::string message = "[Vulkan] ";
-    message += pCallbackData->pMessage;
+    std::string message = pCallbackData->pMessage;
+    std::string delimiter = std::format("MessageID = 0x{:x} | ", *(const uint32_t*)&pCallbackData->messageIdNumber);
+    if (auto off = message.find(delimiter); off != std::string::npos)
+        message = message.substr(off + delimiter.size());
 
     switch (messageSeverity)
     {
