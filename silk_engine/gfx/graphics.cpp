@@ -79,6 +79,7 @@ void Graphics::execute(const CommandBuffer::SubmitInfo& submit_info)
 
 void Graphics::screenshot(const path& file)
 {
+	// TODO: fix
 	int width = Window::getActive().getWidth();
 	int height = Window::getActive().getHeight();
 	int channels = Image::getFormatChannelCount(Window::getActive().getSwapChain().getFormat());
@@ -93,12 +94,13 @@ void Graphics::screenshot(const path& file)
 	props.format = Window::getActive().getSwapChain().getFormat();
 	props.tiling = VK_IMAGE_TILING_OPTIMAL;
 	shared<Image> destination = makeShared<Image>(props);
-
-	Window::getActive().getSwapChain().getImages()[Window::getActive().getSwapChain().getImageIndex()]->copyImage(destination);
+	
+	auto& img = Window::getActive().getSwapChain().getImages()[Window::getActive().getSwapChain().getImageIndex()];
+	img->copyImage(destination);
 
 	void* data;
-	Buffer sb(destination->getSize(), Buffer::TRANSFER_DST, { Allocation::RANDOM_ACCESS | Allocation::MAPPED });
-	destination->copyToBuffer(sb);
+	Buffer sb(img->getSize(), Buffer::TRANSFER_DST, { Allocation::RANDOM_ACCESS | Allocation::MAPPED });
+	img->copyToBuffer(sb);
 	sb.getAllocation().map(&data);
 	stbi_write_png(file.string().c_str(), width, height, channels, data, 0);
 	

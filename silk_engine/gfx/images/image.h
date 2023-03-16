@@ -38,8 +38,18 @@ public:
 	static VkImageAspectFlags getFormatVulkanAspectFlags(Format format);
 	static uint8_t getFormatChannelCount(Format format);
 	static size_t getFormatSize(Format format);
-	static bool isStencilFormat(Format format);
-	static bool isDepthFormat(Format format);
+	static bool isStencilFormat(Format format)
+	{
+		return format == Format::STENCIL || format == Format::DEPTH_STENCIL;
+	}
+	static bool isDepthFormat(Format format)
+	{
+		return format == Format::DEPTH || format == Format::DEPTH_STENCIL;
+	}
+	static bool isDepthStencilFormat(Format format)
+	{
+		return format == Format::DEPTH || format == Format::STENCIL || format == Format::DEPTH_STENCIL;
+	}
 	static uint32_t calculateMipLevels(uint32_t width, uint32_t height = 1, uint32_t depth = 1);
 
 	struct Props

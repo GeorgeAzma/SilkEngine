@@ -19,7 +19,6 @@ public:
 	const SwapChain& getSwapChain() const { return swap_chain; }
 	uint32_t getWidth() const { return width; }
 	uint32_t getHeight() const { return height; }
-	bool isMultisampled() const { return multisampled; }
 	const std::vector<shared<Image>>& getAttachments() const;
 	operator const VkFramebuffer& () const;
 
@@ -28,7 +27,6 @@ private:
 	VkRenderPass render_pass = nullptr;
 	uint32_t width = 0;
 	uint32_t height = 0; 
-	bool multisampled = false;
 	std::vector<std::vector<shared<Image>>> attachments;
 	const SwapChain& swap_chain;
 };

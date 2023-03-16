@@ -22,8 +22,6 @@ Framebuffer::~Framebuffer()
 
 Framebuffer& Framebuffer::addAttachment(Image::Props image_props)
 {
-    if (image_props.samples != VK_SAMPLE_COUNT_1_BIT)
-        multisampled = true;
     shared<Image> image = makeShared<Image>(image_props);
     for (size_t i = 0; i < framebuffers.size(); ++i)
         attachments[i].emplace_back(image);
@@ -32,8 +30,6 @@ Framebuffer& Framebuffer::addAttachment(Image::Props image_props)
 
 Framebuffer& Framebuffer::addAttachment(Image::Format format, VkSampleCountFlagBits samples)
 {
-    if (samples != VK_SAMPLE_COUNT_1_BIT)
-        multisampled = true;
     Image::Props image_props{};
     image_props.create_sampler = false;
     image_props.format = format;
@@ -45,8 +41,8 @@ Framebuffer& Framebuffer::addAttachment(Image::Format format, VkSampleCountFlagB
     image_props.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_props.allocation_props.preferred_device = Allocation::Device::GPU;
     image_props.allocation_props.priority = 1.0f;
-    image_props.usage = Image::isDepthFormat(format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    if (multisampled)
+    image_props.usage = Image::isDepthStencilFormat(format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    if (samples != VK_SAMPLE_COUNT_1_BIT)
         image_props.usage |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
     addAttachment(image_props);
     return *this;
@@ -64,7 +60,7 @@ void Framebuffer::build(bool imageless)
 {
     for (size_t i = 0; i < framebuffers.size(); ++i)
     {
-        std::vector<VkImageView> attachment_views(attachments.size());
+        std::vector<VkImageView> attachment_views(attachments[i].size());
         for (size_t j = 0; j < attachments[i].size(); ++j)
             attachment_views[j] = attachments[i][j]->getView();
 

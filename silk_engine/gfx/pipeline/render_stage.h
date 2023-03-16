@@ -13,7 +13,7 @@ struct Attachment
 class RenderStage
 {
 public:
-	RenderStage(const shared<RenderPass>& render_pass, const std::vector<Attachment>& framebuffer_attachments, const ivec2& viewport = ivec2(0));
+	RenderStage(const shared<RenderPass>& render_pass, const ivec2& viewport = ivec2(0));
 
 	void onResize(const SwapChain& swap_chain);
 
@@ -24,6 +24,5 @@ public:
 private:
 	shared<RenderPass> render_pass = nullptr;
 	shared<Framebuffer> framebuffer = nullptr;
-	std::vector<Attachment> framebuffer_attachments;
 	ivec2 viewport = ivec2(0);
 };

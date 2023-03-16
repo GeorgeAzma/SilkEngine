@@ -103,16 +103,6 @@ uint8_t Image::getFormatChannelCount(Format format)
 	return 4;
 }
 
-bool Image::isStencilFormat(Format format)
-{
-	return format == Format::STENCIL || format == Format::DEPTH_STENCIL;
-}
-
-bool Image::isDepthFormat(Format format)
-{
-	return format == Format::DEPTH || format == Format::DEPTH_STENCIL;
-}
-
 uint32_t Image::calculateMipLevels(uint32_t width, uint32_t height, uint32_t depth)
 {
 	return floor(std::log2(std::max({ width, height, depth }))) + 1;

@@ -17,6 +17,7 @@
 
 //TODO: Subpass attachment references/descriptions. Not all previous subpass outputs are inputs of the next subpass etc.
 //FIXME: App slowing down every time when window is resized and update is called right after
+//FIXME/TODO: Command queue
 
 Application::Application(ApplicationCommandLineArgs args)
     : command_line_args(args)

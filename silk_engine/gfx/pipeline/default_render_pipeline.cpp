@@ -7,19 +7,16 @@
 DefaultRenderPipeline::DefaultRenderPipeline()
 {
 	const auto& swap_chain = Window::getActive().getSwapChain();
-	shared<RenderPass> render_pass = makeShared<RenderPass>();
-	render_pass->addSubpass();
-	render_pass->addAttachment({ swap_chain.getFormat(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, swap_chain.getSamples()});
-	render_pass->addAttachment({ swap_chain.getDepthFormat(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, swap_chain.getSamples() });
-	render_pass->addAttachment({ swap_chain.getFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR });
-	render_pass->build();
-	std::vector<Attachment> attachments 
-	{ 
-		Attachment(swap_chain.getFormat(), swap_chain.getSamples()),
-		Attachment(swap_chain.getDepthFormat(), swap_chain.getSamples()),
-		Attachment(swap_chain.getFormat(), VK_SAMPLE_COUNT_1_BIT, true)
-	};
-	addRenderStage(RenderStage(render_pass, attachments));
+	shared<RenderPass> render_pass = shared<RenderPass>(new RenderPass({
+		{
+			{
+				{ swap_chain.getDepthFormat(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, swap_chain.getSamples() },
+				{ swap_chain.getFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, swap_chain.getSamples() }
+			},
+			{}
+		}
+	}));
+	addRenderStage(RenderStage(render_pass));
 }
 
 void DefaultRenderPipeline::init()

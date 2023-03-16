@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/event.h"
-#include "gfx/pipeline/render_pass.h"
+#include "gfx/images/image.h"
 
 class Surface;
 
