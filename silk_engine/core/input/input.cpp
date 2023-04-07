@@ -1,10 +1,9 @@
 #include "input.h"
 #include "joystick.h"
-#include <GLFW/glfw3.h>
 
 void Input::init()
 {
-    //Joystick::init();
+    Joystick::init();
 }
 
 std::string Input::getClipboardString()

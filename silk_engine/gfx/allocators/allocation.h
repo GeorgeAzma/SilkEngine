@@ -30,6 +30,8 @@ public:
 	};
 
 public:
+	Allocation(VmaAllocation allocation = nullptr);
+
 	void map(void** data) const;
 	void* getMappedData() const;
 	void unmap() const;
@@ -39,7 +41,7 @@ public:
 	void setData(const void* data, VkDeviceSize size, VkDeviceSize offset = 0) const;
 	void getData(void* data, VkDeviceSize size, VkDeviceSize offset = 0) const;
 
-	operator VmaAllocation& () { return allocation; }
+	operator const VmaAllocation& () const { return allocation; }
 
 private:
 	VmaAllocation allocation = nullptr;

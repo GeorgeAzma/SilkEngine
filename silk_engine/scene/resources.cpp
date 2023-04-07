@@ -8,7 +8,7 @@
 #include "meshes/triangle_mesh.h"
 #include "meshes/tetrahedron_mesh.h"
 #include "meshes/rounded_rectangle_mesh.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/window/swap_chain.h"
 #include "gfx/descriptors/descriptor_set_layout.h"
 #include "gfx/pipeline/graphics_pipeline.h"

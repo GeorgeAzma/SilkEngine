@@ -1,6 +1,6 @@
 #include "render_stage.h"
 #include "gfx/window/window.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/window/swap_chain.h"
 
 RenderStage::RenderStage(const shared<RenderPass>& render_pass, const ivec2& viewport)

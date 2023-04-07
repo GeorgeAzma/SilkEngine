@@ -1,7 +1,7 @@
 #ifdef SK_ENABLE_DEBUG_MESSENGER
 
 #include "debug_messenger.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/instance.h"
 
 
@@ -75,13 +75,13 @@ DebugMessenger::DebugMessenger()
     ci.pfnUserCallback = debugCallback;
 }
 
-void DebugMessenger::init()
+void DebugMessenger::init(VkInstance instance)
 {
-    create(*Graphics::instance, &ci, nullptr, &debug_messenger);
+    create(instance, &ci, nullptr, &debug_messenger);
 }
 
 DebugMessenger::~DebugMessenger()
 {
-    destroy(*Graphics::instance, debug_messenger, nullptr);
+    destroy(RenderContext::getInstance(), debug_messenger, nullptr);
 }
 #endif

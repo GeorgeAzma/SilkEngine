@@ -1,5 +1,5 @@
 #include "pipeline.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/buffers/command_buffer.h"
 
@@ -78,20 +78,20 @@ void Pipeline::setShader(const shared<Shader>& shader, const std::vector<Constan
 	pipeline_layout_info.pushConstantRangeCount = shader->getPushConstants().size();
 	pipeline_layout_info.pPushConstantRanges = shader->getPushConstants().data();
 
-	layout = Graphics::logical_device->createPipelineLayout(pipeline_layout_info);
+	layout = RenderContext::getLogicalDevice().createPipelineLayout(pipeline_layout_info);
 }
 
 void Pipeline::destroy()
 {
-	Graphics::logical_device->wait();
+	RenderContext::getLogicalDevice().wait();
 	if (pipeline)
 	{
-		Graphics::logical_device->destroyPipeline(pipeline);
+		RenderContext::getLogicalDevice().destroyPipeline(pipeline);
 		pipeline = nullptr;
 	}
 	if (layout)
 	{
-		Graphics::logical_device->destroyPipelineLayout(layout);
+		RenderContext::getLogicalDevice().destroyPipelineLayout(layout);
 		layout = nullptr;
 	}
 }

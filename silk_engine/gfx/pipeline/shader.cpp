@@ -2,6 +2,7 @@
 #include "io/file.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/renderer.h"
+#include "gfx/instance.h"
 #include <shaderc/shaderc.hpp>
 #include <spirv_cross/spirv_cross.hpp>
 
@@ -24,23 +25,23 @@ Shader::Stage::Stage(const path& file)
 Shader::Stage::~Stage()
 {
 	saveCache();
-	Graphics::logical_device->destroyShaderModule(module);
+	RenderContext::getLogicalDevice().destroyShaderModule(module);
 }
 
 bool Shader::Stage::compile()
 {
 	if (module)
 	{
-		Graphics::logical_device->destroyShaderModule(module);
+		RenderContext::getLogicalDevice().destroyShaderModule(module);
 		module = nullptr;
 	}
 	shaderc_env_version api_version;
-	switch (Graphics::API_VERSION)
+	switch (RenderContext::getInstance().getVulkanVersion())
 	{
-	case APIVersion::VULKAN_1_0: api_version = shaderc_env_version_vulkan_1_0; break;
-	case APIVersion::VULKAN_1_1: api_version = shaderc_env_version_vulkan_1_1; break;
-	case APIVersion::VULKAN_1_2: api_version = shaderc_env_version_vulkan_1_2; break;
-	case APIVersion::VULKAN_1_3: api_version = shaderc_env_version_vulkan_1_3; break;
+	case VulkanVersion::VULKAN_1_0: api_version = shaderc_env_version_vulkan_1_0; break;
+	case VulkanVersion::VULKAN_1_1: api_version = shaderc_env_version_vulkan_1_1; break;
+	case VulkanVersion::VULKAN_1_2: api_version = shaderc_env_version_vulkan_1_2; break;
+	case VulkanVersion::VULKAN_1_3: api_version = shaderc_env_version_vulkan_1_3; break;
 	}
 	shaderc::CompileOptions options{};
 	options.SetTargetEnvironment(shaderc_target_env_vulkan, api_version);
@@ -103,7 +104,7 @@ void Shader::Stage::createModule()
 	ci.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	ci.codeSize = binary.size() * sizeof(uint32_t);
 	ci.pCode = binary.data();
-	module = Graphics::logical_device->createShaderModule(ci);
+	module = RenderContext::getLogicalDevice().createShaderModule(ci);
 }
 
 void Shader::Stage::loadCache()
@@ -348,7 +349,7 @@ void Shader::bindDescriptorSets()
 void Shader::pushConstants(std::string_view name, const void* data) const
 {
 	const auto& push_constant = reflection_data.push_constant_map.at(name);
-	Graphics::submit([&](CommandBuffer& cb) { cb.pushConstants(push_constant.stageFlags, push_constant.offset, push_constant.size, data); });
+	RenderContext::submit([&](CommandBuffer& cb) { cb.pushConstants(push_constant.stageFlags, push_constant.offset, push_constant.size, data); });
 }
 
 void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, Stage::Type stage, VkDescriptorType type)

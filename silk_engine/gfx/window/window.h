@@ -70,7 +70,6 @@ public:
     GLFWmonitor* getMonitor() const;
 
     bool isFullscreen() const { return data.fullscreen; }
-    bool isVsync() const { return vsync; }
     bool isTransparent() const { return transparent; }
     bool isMinimized() const { return data.minimized || data.width == 0 || data.height == 0; }
     bool isMaximized() const { return data.maximized; }
@@ -88,7 +87,6 @@ public:
     bool isAutoMinify() const { return auto_minify; }
     bool shouldClose() const;
    
-    void setVsync(bool vsync);
     void setFullscreen(bool fullscreen);
     void toggleFullscreen() { setFullscreen(!isFullscreen()); }
     void setX(int32_t x);
@@ -168,7 +166,6 @@ private:
     float resizable = true;
     bool decorated = true;
     bool always_on_top = false;
-    bool vsync = false;
     bool transparent = false;
     bool auto_minify = false;
     bool focus_on_show = false;

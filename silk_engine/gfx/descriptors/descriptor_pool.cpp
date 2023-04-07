@@ -1,10 +1,10 @@
 #include "descriptor_pool.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/devices/logical_device.h"
 
 DescriptorPool::~DescriptorPool()
 {
-	Graphics::logical_device->destroyDescriptorPool(descriptor_pool);
+	RenderContext::getLogicalDevice().destroyDescriptorPool(descriptor_pool);
 }
 
 DescriptorPool& DescriptorPool::addSize(VkDescriptorType type, uint32_t count)
@@ -26,7 +26,7 @@ void DescriptorPool::build()
 	ci.poolSizeCount = sizes.size();
 	ci.pPoolSizes = sizes.data();
 	ci.maxSets = max_sets;
-	descriptor_pool = Graphics::logical_device->createDescriptorPool(ci);
+	descriptor_pool = RenderContext::getLogicalDevice().createDescriptorPool(ci);
 }
 
 VkResult DescriptorPool::allocate(VkDescriptorSet& descriptor_set, const VkDescriptorSetLayout& descriptor_set_layout)
@@ -37,7 +37,7 @@ VkResult DescriptorPool::allocate(VkDescriptorSet& descriptor_set, const VkDescr
 	alloc_info.descriptorPool = descriptor_pool;
 	alloc_info.descriptorSetCount = 1;
 	alloc_info.pSetLayouts = &descriptor_set_layout;
-	return Graphics::logical_device->allocateDescriptorSets(alloc_info, descriptor_set);
+	return RenderContext::getLogicalDevice().allocateDescriptorSets(alloc_info, descriptor_set);
 }
 
 void DescriptorPool::deallocate()

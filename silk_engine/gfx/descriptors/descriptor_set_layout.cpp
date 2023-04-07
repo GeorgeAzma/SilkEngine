@@ -1,5 +1,5 @@
 #include "descriptor_set_layout.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/devices/logical_device.h"
 
 DescriptorSetLayout& DescriptorSetLayout::addBinding(uint32_t binding, VkDescriptorType descriptor_type, VkShaderStageFlags shader_stages, size_t count)
@@ -26,10 +26,10 @@ void DescriptorSetLayout::build()
 	ci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	ci.bindingCount = bindings_vector.size();
 	ci.pBindings = bindings_vector.data();
-	layout = Graphics::logical_device->createDescriptorSetLayout(ci);
+	layout = RenderContext::getLogicalDevice().createDescriptorSetLayout(ci);
 }
 
 DescriptorSetLayout::~DescriptorSetLayout()
 {
-	Graphics::logical_device->destroyDescriptorSetLayout(layout);
+	RenderContext::getLogicalDevice().destroyDescriptorSetLayout(layout);
 }

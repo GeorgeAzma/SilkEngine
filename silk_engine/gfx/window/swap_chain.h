@@ -8,7 +8,7 @@ class Surface;
 class SwapChain : NonCopyable
 {
 public:
-    SwapChain(const Surface& surface, VkSwapchainKHR old_swap_chain = nullptr);
+    SwapChain(const Surface& surface);
     ~SwapChain();
 
     Image::Format getFormat() const { return image_format; }
@@ -19,17 +19,13 @@ public:
     size_t getImageCount() const { return images.size(); }
     uint32_t getImageIndex() const { return image_index; }
     const std::vector<shared<Image>>& getImages() const { return images; }
-    
-    void recreate();
+
+    void create();
 
     bool acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence = nullptr);
     bool present(VkSemaphore wait_semaphore);
 
     operator const VkSwapchainKHR& () const { return swap_chain; }
-
-private:
-    void create(VkSwapchainKHR old_swap_chain = nullptr);
-    void destroy();
 
 private:
     VkSwapchainKHR swap_chain = nullptr;
@@ -42,4 +38,5 @@ private:
     VkColorSpaceKHR color_space;
     VkSampleCountFlagBits sample_count; 
     const Surface& surface;
+    bool vsync = false;
 };

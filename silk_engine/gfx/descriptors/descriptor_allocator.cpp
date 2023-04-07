@@ -1,5 +1,5 @@
 #include "descriptor_allocator.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/devices/logical_device.h"
 
 void DescriptorAllocator::reset()
@@ -8,7 +8,7 @@ void DescriptorAllocator::reset()
 	{
 		if (!p->allocatedDescriptorSetCount())
 		{
-			Graphics::logical_device->resetDescriptorPool(*p);
+			RenderContext::getLogicalDevice().resetDescriptorPool(*p);
 			free_pools.emplace_back(p);
 		}
 	}

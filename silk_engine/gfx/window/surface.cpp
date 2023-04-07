@@ -1,25 +1,38 @@
 #include "surface.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
+#include "gfx/devices/logical_device.h"
 #include "gfx/devices/physical_device.h"
 #include "gfx/instance.h"
 #include "window.h"
-#include <GLFW/glfw3.h>
 
 Surface::Surface(const Window& window)
 {
-	Graphics::vulkanAssert(glfwCreateWindowSurface(*Graphics::instance, window, nullptr, &surface));
+	RenderContext::vulkanAssert(glfwCreateWindowSurface(RenderContext::getInstance(), window, nullptr, &surface));
 
 	updateCapabilities();
-	formats = Graphics::physical_device->getSurfaceFormats(surface);
-	present_modes = Graphics::physical_device->getSurfacePresentModes(surface);
+	formats = RenderContext::getPhysicalDevice().getSurfaceFormats(surface);
+	present_modes = RenderContext::getPhysicalDevice().getSurfacePresentModes(surface);
+
+	// Find queue family that supports both present and graphics queue, if there is none, then find queue family with only present queue
+	const auto& queue_family_props = RenderContext::getPhysicalDevice().getQueueFamilyProperties();
+	for (size_t i = 0; i < queue_family_props.size(); ++i)
+	{
+		if (RenderContext::getPhysicalDevice().getSurfaceSupport(i, surface))
+		{
+			present_queue = i;
+			if (queue_family_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+				break;
+		}
+
+	}
 }
 
 Surface::~Surface()
 {
-	Graphics::instance->destroySurface(surface);
+	RenderContext::getInstance().destroySurface(surface);
 }
 
 void Surface::updateCapabilities()
 {
-	capabilities = Graphics::physical_device->getSurfaceCapabilities(surface);
+	capabilities = RenderContext::getPhysicalDevice().getSurfaceCapabilities(surface);
 }

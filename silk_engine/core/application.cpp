@@ -2,7 +2,7 @@
 #include "input/input.h"
 #include "time.h"
 #include "input/keys.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/devices/physical_device.h"
 #include "scene/resources.h"
 #include "gfx/window/window.h"
@@ -13,7 +13,6 @@
 #include "gfx/devices/logical_device.h"
 #include "scene/camera/camera.h"
 #include "gfx/window/glfw.h"
-#include <GLFW/glfw3.h>
 
 //TODO: Subpass attachment references/descriptions. Not all previous subpass outputs are inputs of the next subpass etc.
 //FIXME: App slowing down every time when window is resized and update is called right after
@@ -26,7 +25,7 @@ Application::Application(ApplicationCommandLineArgs args)
     SK_INFO("Started");
     GLFW::init();
     Input::init();
-    Graphics::init(*this);
+    RenderContext::init(*this);
     window = new Window();
     Resources::init();
     Renderer::init();
@@ -46,7 +45,7 @@ Application::~Application()
     Renderer::destroy();
     Resources::destroy();
     DescriptorAllocator::destroy();
-    Graphics::destroy();
+    RenderContext::destroy();
     SK_INFO("Terminated");
 }
 
@@ -61,7 +60,7 @@ void Application::run()
 
         update();
     }
-    Graphics::logical_device->wait();
+    RenderContext::getLogicalDevice().wait();
 }
 
 void Application::update()

@@ -1,12 +1,13 @@
 #include "logical_device.h"
 #include "physical_device.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/queues/queue.h"
+#include "gfx/window/surface.h"
 
-LogicalDevice::LogicalDevice()
+LogicalDevice::LogicalDevice(const PhysicalDevice& physical_device)
+	: physical_device(physical_device)
 {
-	std::vector<uint32_t> queue_family_indices = Graphics::physical_device->getQueueFamilyIndices();
-	std::ranges::sort(queue_family_indices);
+	std::vector<uint32_t> queue_family_indices = physical_device.getQueueFamilyIndices();
 	queue_family_indices.erase(std::unique(queue_family_indices.begin(), queue_family_indices.end()), queue_family_indices.end());
 
 	float queue_priority = 1.0f;
@@ -53,14 +54,14 @@ LogicalDevice::LogicalDevice()
 			enabled_extensions.emplace_back(required_extension);
 
 	for (const auto& preferred_extension : getPreferredExtensions())
-		if (Graphics::physical_device->supportsExtension(preferred_extension))
+		if (physical_device.supportsExtension(preferred_extension))
 			enabled_extensions.emplace_back(preferred_extension);
 
 	ci.enabledExtensionCount = enabled_extensions.size();
 	ci.ppEnabledExtensionNames = enabled_extensions.data();
 	ci.pNext = &vulkan_12_device_features;
 
-	logical_device = Graphics::physical_device->createLogicalDevice(ci);
+	logical_device = physical_device.createLogicalDevice(ci);
 
 	queues.resize(device_queues.size());
 	for (size_t i = 0; i < device_queues.size(); ++i)
@@ -84,7 +85,7 @@ LogicalDevice::~LogicalDevice()
 VkCommandPool LogicalDevice::createCommandPool(const VkCommandPoolCreateInfo& ci) const
 {
 	VkCommandPool command_pool = nullptr;
-	Graphics::vulkanAssert(vkCreateCommandPool(logical_device, &ci, nullptr, &command_pool));
+	RenderContext::vulkanAssert(vkCreateCommandPool(logical_device, &ci, nullptr, &command_pool));
 	return command_pool;
 }
 
@@ -101,7 +102,7 @@ void LogicalDevice::destroyCommandPool(VkCommandPool command_pool) const
 VkQueryPool LogicalDevice::createQueryPool(const VkQueryPoolCreateInfo& ci) const
 {
 	VkQueryPool query_pool = nullptr;
-	Graphics::vulkanAssert(vkCreateQueryPool(logical_device, &ci, nullptr, &query_pool));
+	RenderContext::vulkanAssert(vkCreateQueryPool(logical_device, &ci, nullptr, &query_pool));
 	return query_pool;
 }
 
@@ -118,7 +119,7 @@ void LogicalDevice::resetQueryPool(VkQueryPool query_pool, uint32_t first_query,
 std::vector<VkCommandBuffer> LogicalDevice::allocateCommandBuffers(const VkCommandBufferAllocateInfo& allocate_info) const
 {
 	std::vector<VkCommandBuffer> command_buffers(allocate_info.commandBufferCount, nullptr);
-	Graphics::vulkanAssert(vkAllocateCommandBuffers(logical_device, &allocate_info, command_buffers.data()));
+	RenderContext::vulkanAssert(vkAllocateCommandBuffers(logical_device, &allocate_info, command_buffers.data()));
 	return command_buffers;
 }
 
@@ -129,7 +130,7 @@ void LogicalDevice::freeCommandBuffers(VkCommandPool command_pool, const std::ve
 
 void LogicalDevice::resetFences(const std::vector<VkFence>& fences) const
 {
-	Graphics::vulkanAssert(vkResetFences(logical_device, fences.size(), fences.data()));
+	RenderContext::vulkanAssert(vkResetFences(logical_device, fences.size(), fences.data()));
 }
 
 VkFence LogicalDevice::createFence(bool signaled) const
@@ -138,7 +139,7 @@ VkFence LogicalDevice::createFence(bool signaled) const
 	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	fence_info.flags = signaled * VK_FENCE_CREATE_SIGNALED_BIT;
 	VkFence fence = nullptr;
-	Graphics::vulkanAssert(vkCreateFence(logical_device, &fence_info, nullptr, &fence));
+	RenderContext::vulkanAssert(vkCreateFence(logical_device, &fence_info, nullptr, &fence));
 	return fence;
 }
 
@@ -158,7 +159,7 @@ VkSemaphore LogicalDevice::createSemaphore(const VkSemaphoreCreateFlags& flags) 
 	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 	semaphore_info.flags = flags;
 	VkSemaphore semaphore = nullptr;
-	Graphics::vulkanAssert(vkCreateSemaphore(logical_device, &semaphore_info, nullptr, &semaphore));
+	RenderContext::vulkanAssert(vkCreateSemaphore(logical_device, &semaphore_info, nullptr, &semaphore));
 	return semaphore;
 }
 
@@ -196,7 +197,7 @@ VkResult LogicalDevice::signalSemaphore(const VkSemaphore& semaphore, uint64_t v
 VkFramebuffer LogicalDevice::createFramebuffer(const VkFramebufferCreateInfo& framebuffer_info) const
 {
 	VkFramebuffer framebuffer = nullptr;
-	Graphics::vulkanAssert(vkCreateFramebuffer(logical_device, &framebuffer_info, nullptr, &framebuffer));
+	RenderContext::vulkanAssert(vkCreateFramebuffer(logical_device, &framebuffer_info, nullptr, &framebuffer));
 	return framebuffer;
 }
 
@@ -208,13 +209,13 @@ void LogicalDevice::destroyFramebuffer(VkFramebuffer framebuffer) const
 VkDescriptorPool LogicalDevice::createDescriptorPool(const VkDescriptorPoolCreateInfo& descriptor_pool_info) const
 {
 	VkDescriptorPool descriptor_pool = nullptr;
-	Graphics::vulkanAssert(vkCreateDescriptorPool(logical_device, &descriptor_pool_info, nullptr, &descriptor_pool));
+	RenderContext::vulkanAssert(vkCreateDescriptorPool(logical_device, &descriptor_pool_info, nullptr, &descriptor_pool));
 	return descriptor_pool;
 }	
 
 void LogicalDevice::resetDescriptorPool(VkDescriptorPool descriptor_pool, VkDescriptorPoolResetFlags flags) const
 {
-	Graphics::vulkanAssert(vkResetDescriptorPool(logical_device, descriptor_pool, flags));
+	RenderContext::vulkanAssert(vkResetDescriptorPool(logical_device, descriptor_pool, flags));
 }
 
 void LogicalDevice::destroyDescriptorPool(VkDescriptorPool descriptor_pool) const
@@ -241,7 +242,7 @@ void LogicalDevice::updateDescriptorSets(const std::vector<VkWriteDescriptorSet>
 VkDescriptorSetLayout LogicalDevice::createDescriptorSetLayout(const VkDescriptorSetLayoutCreateInfo& descriptor_set_layout_create_info) const
 {
 	VkDescriptorSetLayout descriptor_set_layout = nullptr;
-	Graphics::vulkanAssert(vkCreateDescriptorSetLayout(logical_device, &descriptor_set_layout_create_info, nullptr, &descriptor_set_layout));
+	RenderContext::vulkanAssert(vkCreateDescriptorSetLayout(logical_device, &descriptor_set_layout_create_info, nullptr, &descriptor_set_layout));
 	return descriptor_set_layout;
 }
 
@@ -260,7 +261,7 @@ VkSubresourceLayout LogicalDevice::getImageSubresourceLayout(VkImage image, cons
 VkImageView LogicalDevice::createImageView(const VkImageViewCreateInfo& image_view_info) const
 {
 	VkImageView image_view = nullptr;
-	Graphics::vulkanAssert(vkCreateImageView(logical_device, &image_view_info, nullptr, &image_view));
+	RenderContext::vulkanAssert(vkCreateImageView(logical_device, &image_view_info, nullptr, &image_view));
 	return image_view;
 }
 
@@ -272,7 +273,7 @@ void LogicalDevice::destroyImageView(VkImageView image_view) const
 VkSampler LogicalDevice::createSampler(const VkSamplerCreateInfo& sampler_info) const
 {
 	VkSampler sampler = nullptr;
-	Graphics::vulkanAssert(vkCreateSampler(logical_device, &sampler_info, nullptr, &sampler));
+	RenderContext::vulkanAssert(vkCreateSampler(logical_device, &sampler_info, nullptr, &sampler));
 	return sampler;
 }
 
@@ -284,7 +285,7 @@ void LogicalDevice::destroySampler(VkSampler sampler) const
 VkPipelineLayout LogicalDevice::createPipelineLayout(const VkPipelineLayoutCreateInfo& pipeline_layout_info) const
 {
 	VkPipelineLayout pipeline_layout = nullptr;
-	Graphics::vulkanAssert(vkCreatePipelineLayout(logical_device, &pipeline_layout_info, nullptr, &pipeline_layout));
+	RenderContext::vulkanAssert(vkCreatePipelineLayout(logical_device, &pipeline_layout_info, nullptr, &pipeline_layout));
 	return pipeline_layout;
 }
 
@@ -296,14 +297,14 @@ void LogicalDevice::LogicalDevice::destroyPipelineLayout(VkPipelineLayout pipeli
 VkPipeline LogicalDevice::createComputePipeline(VkPipelineCache pipeline_cache, const VkComputePipelineCreateInfo& compute_pipeline_info) const
 {
 	VkPipeline compute_pipeline = nullptr;
-	Graphics::vulkanAssert(vkCreateComputePipelines(logical_device, pipeline_cache, 1, &compute_pipeline_info, nullptr, &compute_pipeline));
+	RenderContext::vulkanAssert(vkCreateComputePipelines(logical_device, pipeline_cache, 1, &compute_pipeline_info, nullptr, &compute_pipeline));
 	return compute_pipeline;
 }
 
 VkPipeline LogicalDevice::createGraphicsPipeline(VkPipelineCache pipeline_cache, const VkGraphicsPipelineCreateInfo& graphics_pipeline_info) const
 {
 	VkPipeline graphics_pipeline = nullptr;
-	Graphics::vulkanAssert(vkCreateGraphicsPipelines(logical_device, pipeline_cache, 1, &graphics_pipeline_info, nullptr, &graphics_pipeline));
+	RenderContext::vulkanAssert(vkCreateGraphicsPipelines(logical_device, pipeline_cache, 1, &graphics_pipeline_info, nullptr, &graphics_pipeline));
 	return graphics_pipeline;
 }
 
@@ -336,7 +337,7 @@ std::vector<uint8_t> LogicalDevice::getPipelineCacheData(VkPipelineCache pipelin
 VkRenderPass LogicalDevice::createRenderPass(const VkRenderPassCreateInfo& render_pass_info) const
 {
 	VkRenderPass render_pass = nullptr;
-	Graphics::vulkanAssert(vkCreateRenderPass(logical_device, &render_pass_info, nullptr, &render_pass));
+	RenderContext::vulkanAssert(vkCreateRenderPass(logical_device, &render_pass_info, nullptr, &render_pass));
 	return render_pass;
 }
 
@@ -353,7 +354,7 @@ void LogicalDevice::wait() const
 VkShaderModule LogicalDevice::createShaderModule(const VkShaderModuleCreateInfo& shader_module_info) const
 {
 	VkShaderModule shader = nullptr;
-	Graphics::vulkanAssert(vkCreateShaderModule(logical_device, &shader_module_info, nullptr, &shader));
+	RenderContext::vulkanAssert(vkCreateShaderModule(logical_device, &shader_module_info, nullptr, &shader));
 	return shader;
 }
 
@@ -365,7 +366,7 @@ void LogicalDevice::destroyShaderModule(VkShaderModule shader_module) const
 VkSwapchainKHR LogicalDevice::createSwapChain(const VkSwapchainCreateInfoKHR& swap_chain_info) const
 {
 	VkSwapchainKHR swap_chain = nullptr;
-	Graphics::vulkanAssert(vkCreateSwapchainKHR(logical_device, &swap_chain_info, nullptr, &swap_chain));
+	RenderContext::vulkanAssert(vkCreateSwapchainKHR(logical_device, &swap_chain_info, nullptr, &swap_chain));
 	return swap_chain;
 }
 
@@ -397,32 +398,32 @@ VkQueue LogicalDevice::getQueue(uint32_t queue_family_index, uint32_t queue_inde
 
 const Queue& LogicalDevice::getGraphicsQueue() const 
 { 
-	return queues[Graphics::physical_device->getGraphicsQueue()][0];
+	return queues[RenderContext::getPhysicalDevice().getGraphicsQueue()][0];
 }
 
 const Queue& LogicalDevice::getTransferQueue() const 
 { 
-	return queues[Graphics::physical_device->getTransferQueue()][0];
-}
-
-const Queue& LogicalDevice::getPresentQueue() const 
-{
-	return queues[Graphics::physical_device->getPresentQueue()][0];
+	return queues[RenderContext::getPhysicalDevice().getTransferQueue()][0];
 }
 
 const Queue& LogicalDevice::getComputeQueue() const 
 {
-	return queues[Graphics::physical_device->getComputeQueue()][0];
+	return queues[RenderContext::getPhysicalDevice().getComputeQueue()][0];
+}
+
+const Queue& LogicalDevice::getPresentQueue(const Surface& surface) const
+{
+	return queues[surface.getPresentQueue()][0];
 }
 
 const Queue& LogicalDevice::getQueue(VkQueueFlags queue) const
 {
 	switch (queue)
 	{
-	case VK_QUEUE_GRAPHICS_BIT: return Graphics::logical_device->getGraphicsQueue();
-	case VK_QUEUE_TRANSFER_BIT: return Graphics::logical_device->getTransferQueue();
-	case VK_QUEUE_COMPUTE_BIT: return Graphics::logical_device->getComputeQueue();
+	case VK_QUEUE_GRAPHICS_BIT: return RenderContext::getLogicalDevice().getGraphicsQueue();
+	case VK_QUEUE_TRANSFER_BIT: return RenderContext::getLogicalDevice().getTransferQueue();
+	case VK_QUEUE_COMPUTE_BIT: return RenderContext::getLogicalDevice().getComputeQueue();
 	}
 
-	return Graphics::logical_device->getGraphicsQueue();
+	return RenderContext::getLogicalDevice().getGraphicsQueue();
 }

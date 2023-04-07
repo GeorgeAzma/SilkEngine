@@ -6,7 +6,9 @@ file(GLOB_RECURSE SILK_ENGINE_SOURCES *.cpp)
 add_library(${ENGINE_NAME} STATIC ${SILK_ENGINE_SOURCES})
 target_include_directories(${ENGINE_NAME} PUBLIC ${INCLUDE_DIRS})
 target_include_directories(${ENGINE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-add_dependencies(${ENGINE_NAME} ${DEPENDENCIES_TO_ADD})
+if(DEPENDENCIES_TO_ADD)
+	add_dependencies(${ENGINE_NAME} ${DEPENDENCIES_TO_ADD})
+endif()
 
 #Defines
 if(${CONFIG_MODE} STREQUAL RELEASE)

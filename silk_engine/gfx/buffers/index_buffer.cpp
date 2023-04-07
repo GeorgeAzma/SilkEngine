@@ -1,5 +1,5 @@
 #include "index_buffer.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/buffers/command_buffer.h"
 
 IndexBuffer::IndexBuffer(const void* data, VkDeviceSize count, IndexType index_type)
@@ -10,7 +10,7 @@ IndexBuffer::IndexBuffer(const void* data, VkDeviceSize count, IndexType index_t
 
 void IndexBuffer::bind(VkDeviceSize offset) const
 {
-	Graphics::submit([&](CommandBuffer& cb) { cb.bindIndexBuffer(buffer, offset, indexType(index_type)); });
+	RenderContext::submit([&](CommandBuffer& cb) { cb.bindIndexBuffer(buffer, offset, indexType(index_type)); });
 }
 
 VkIndexType IndexBuffer::indexType(IndexType index_type)

@@ -1,7 +1,7 @@
 #include "physical_device.h"
 #include "logical_device.h"
 #include "gfx/window/swap_chain.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/window/surface.h"
 #include "gfx/window/window.h"
 #include "gfx/instance.h"
@@ -13,7 +13,7 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device)
 
 PhysicalDevice::PhysicalDevice()
 {
-	init(chooseMostSuitablePhysicalDevice(Graphics::instance->getAvailablePhysicalDevices()));
+	init(chooseMostSuitablePhysicalDevice(RenderContext::getInstance().getAvailablePhysicalDevices()));
 
 #ifdef SK_ENABLE_DEBUG_OUTPUT
 	std::string device_type = "Other";
@@ -30,13 +30,13 @@ PhysicalDevice::PhysicalDevice()
 
 bool PhysicalDevice::supportsExtension(const char* extension_name) const 
 { 
-	return available_extensions.contains(extension_name); 
+	return supported_extensions.contains(extension_name); 
 }
 
 VkDevice PhysicalDevice::createLogicalDevice(const VkDeviceCreateInfo& create_info) const
 {
 	VkDevice device = nullptr;
-	Graphics::vulkanAssert(vkCreateDevice(physical_device, &create_info, nullptr, &device));
+	RenderContext::vulkanAssert(vkCreateDevice(physical_device, &create_info, nullptr, &device));
 	return device;
 }
 
@@ -58,6 +58,7 @@ void PhysicalDevice::init(VkPhysicalDevice physical_device)
 {
 	this->physical_device = physical_device;
 	vkGetPhysicalDeviceProperties(physical_device, &properties);
+	vkGetPhysicalDeviceMemoryProperties(physical_device, &memory_properties);
 	vkGetPhysicalDeviceFeatures(physical_device, &features);
 
 	uint32_t queue_family_count = 0;
@@ -70,30 +71,69 @@ void PhysicalDevice::init(VkPhysicalDevice physical_device)
 	std::vector<VkExtensionProperties> available_extensions(available_extension_count);
 	vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &available_extension_count, available_extensions.data());
 	for (const auto& available_extension : available_extensions)
-		this->available_extensions.emplace(available_extension.extensionName, available_extension.specVersion);
+		this->supported_extensions.emplace(available_extension.extensionName, available_extension.specVersion);
 	
-	present_queue = 0; // TODO:
-	queue_family_indices.emplace_back(0);
-
-	for (size_t i = 0; i < queue_family_properties.size(); ++i)
+	// Try to find a queue family index that supports compute but not graphics
+	for (uint32_t i = 0; i < queue_family_properties.size(); i++)
 	{
-		const auto& queue_family_property = queue_family_properties[i];
-		if (queue_family_property.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-		{
-			graphics_queue = i;
-			queue_family_indices.emplace_back(i);
-		}
-		if (queue_family_property.queueFlags & VK_QUEUE_COMPUTE_BIT)
+		if ((queue_family_properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT) && ((queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0))
 		{
 			compute_queue = i;
 			queue_family_indices.emplace_back(i);
+			break;
 		}
-		if (queue_family_property.queueFlags & VK_QUEUE_TRANSFER_BIT)
+	}
+
+	// Try to find a queue family index that supports transfer but not graphics
+	for (uint32_t i = 0; i < queue_family_properties.size(); i++)
+	{
+		if ((queue_family_properties[i].queueFlags & VK_QUEUE_TRANSFER_BIT) && ((queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0) && ((queue_family_properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT) == 0))
 		{
 			transfer_queue = i;
 			queue_family_indices.emplace_back(i);
+			break;
 		}
 	}
+
+	// Try to find a graphics queue family
+	for (size_t i = 0; i < queue_family_properties.size(); ++i)
+	{
+		if (queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		{
+			graphics_queue = i;
+			queue_family_indices.emplace_back(i);
+			break;
+		}
+	}
+
+	// Try to find compute/graphics combined queue family, if compute only queue family does not exist
+	if (compute_queue == -1)
+	{
+		for (size_t i = 0; i < queue_family_properties.size(); ++i)
+		{
+			if (queue_family_properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT)
+			{
+				compute_queue = i;
+				queue_family_indices.emplace_back(i);
+				break;
+			}
+		}
+	}
+
+	// Try to find compute/graphics combined queue family, if compute only queue family does not exist
+	if (transfer_queue == -1)
+	{
+		for (size_t i = 0; i < queue_family_properties.size(); ++i)
+		{
+			if (queue_family_properties[i].queueFlags & VK_QUEUE_TRANSFER_BIT)
+			{
+				transfer_queue = i;
+				queue_family_indices.emplace_back(i);
+			}
+		}
+	}
+
+	std::ranges::sort(queue_family_indices); // If you remove this make sure to add it in logical device
 
 	max_usable_sample_count = getMaxSampleCount(properties.limits.framebufferColorSampleCounts & properties.limits.framebufferDepthSampleCounts);
 }
@@ -115,18 +155,18 @@ VkFormat PhysicalDevice::findSupportedFormat(const std::vector<VkFormat>& candid
 std::vector<VkSurfaceFormatKHR> PhysicalDevice::getSurfaceFormats(VkSurfaceKHR surface) const
 {
 	uint32_t format_count = 0;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(*Graphics::physical_device, surface, &format_count, nullptr);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, nullptr);
 	std::vector<VkSurfaceFormatKHR> formats(format_count);
-	vkGetPhysicalDeviceSurfaceFormatsKHR(*Graphics::physical_device, surface, &format_count, formats.data());
+	vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, formats.data());
 	return formats;
 }
 
 std::vector<VkPresentModeKHR> PhysicalDevice::getSurfacePresentModes(VkSurfaceKHR surface) const
 {
 	uint32_t present_mode_count = 0;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(*Graphics::physical_device, surface, &present_mode_count, nullptr);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &present_mode_count, nullptr);
 	std::vector<VkPresentModeKHR> present_modes(present_mode_count);
-	vkGetPhysicalDeviceSurfacePresentModesKHR(*Graphics::physical_device, surface, &present_mode_count, present_modes.data());
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &present_mode_count, present_modes.data());
 	return present_modes;
 }
 
@@ -137,10 +177,10 @@ VkSurfaceCapabilitiesKHR PhysicalDevice::getSurfaceCapabilities(VkSurfaceKHR sur
 	return capabilities;
 }
 
-bool PhysicalDevice::getSurfaceSupport(uint32_t queue_index, VkSurfaceKHR surface) const
+bool PhysicalDevice::getSurfaceSupport(uint32_t queue_family_index, VkSurfaceKHR surface) const
 {
 	VkBool32 supported = false;
-	vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, queue_index, Window::getActive().getSurface(), &supported);
+	vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, queue_family_index, surface, &supported);
 	return supported;
 }
 
@@ -170,11 +210,11 @@ int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
 		return -1;
 
 	for (const auto& required_extension : LogicalDevice::getRequiredExtensions())
-		if (!pd.available_extensions.contains(required_extension))
+		if (!pd.supported_extensions.contains(required_extension))
 			return -1;
 
 	for (const auto& preferred_extension : LogicalDevice::getPreferredExtensions())
-		if (pd.available_extensions.contains(preferred_extension))
+		if (pd.supported_extensions.contains(preferred_extension))
 			score += 50;
 
 	// TODO:
@@ -182,18 +222,13 @@ int PhysicalDevice::ratePhysicalDevice(VkPhysicalDevice physical_device)
 	//if (!is_swap_chain_adequate) 
 	//	return -1;
 
-	VkPhysicalDeviceProperties properties{};
-	vkGetPhysicalDeviceProperties(physical_device, &properties);
-	VkPhysicalDeviceFeatures features{};
-	vkGetPhysicalDeviceFeatures(physical_device, &features);
+	const VkPhysicalDeviceProperties& properties = pd.getProperties();
+	const VkPhysicalDeviceFeatures& features = pd.getFeatures();
 
-	if (!(features.multiDrawIndirect && features.samplerAnisotropy))
-		return -1;
-
+	score += features.multiDrawIndirect * 1200;
+	score += features.samplerAnisotropy * 900;
 	score += (pd.compute_queue != -1) * 700;
 	score += (pd.transfer_queue != -1) * 300;
-	score += (pd.present_queue != -1) * 400;
-
 	score += (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) * 500;
 	score += features.multiDrawIndirect * 250;
 	score += features.geometryShader * 200;

@@ -33,5 +33,5 @@ if(CREATE_INSTALLER)
     include(CPack)
 endif()
 
-add_executable(${MAIN_PROJECT_NAME}Exe main.cpp)
-target_link_libraries(${MAIN_PROJECT_NAME}Exe PRIVATE ${MAIN_PROJECT_NAME})
+add_executable(${MAIN_PROJECT_NAME}Runtime main.cpp)
+target_link_libraries(${MAIN_PROJECT_NAME}Runtime PRIVATE ${MAIN_PROJECT_NAME})

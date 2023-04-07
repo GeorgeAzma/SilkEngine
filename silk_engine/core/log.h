@@ -45,6 +45,7 @@ private:
         return _sk_assert(assert_expr, "");
     }
 
+    #define SK_PROFILE_FUNCTION(...) DebugTimer __timer(__FUNCTION__)
     #define SK_TRACE(...) SPDLOG_LOGGER_TRACE(SK_LOGGER, __VA_ARGS__)
     #define SK_INFO(...) SPDLOG_LOGGER_INFO(SK_LOGGER, __VA_ARGS__)
     #define SK_WARN(...) SPDLOG_LOGGER_WARN(SK_LOGGER, __VA_ARGS__)
@@ -53,6 +54,7 @@ private:
     #define SK_VERIFY(x, ...) do { if (!(x)) { SPDLOG_LOGGER_ERROR(SK_LOGGER, _sk_assert(#x, __VA_ARGS__)); } } while(0)
     #define SK_ASSERT(x, ...) do { if (!(x)) { SPDLOG_LOGGER_CRITICAL(SK_LOGGER, _sk_assert(#x, __VA_ARGS__)); std::abort(); } } while(0)
 #else
+    #define SK_PROFILE_FUNCTION(...)
     #define SK_TRACE(...)
     #define SK_INFO(...)
     #define SK_WARN(...)

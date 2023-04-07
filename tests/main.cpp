@@ -5,10 +5,10 @@
 TEST(AppTest, RuntimeTest)
 {
 	auto app = new MyApp({ 0, nullptr });
-	EXPECT_TRUE(Graphics::instance);
-	EXPECT_TRUE(Graphics::logical_device);
-	EXPECT_TRUE(Graphics::allocator);
-	EXPECT_TRUE(Graphics::command_queue);
+	EXPECT_TRUE(RenderContext::instance);
+	EXPECT_TRUE(RenderContext::logical_device);
+	EXPECT_TRUE(RenderContext::allocator);
+	EXPECT_TRUE(RenderContext::command_queue);
 	delete app;
 }
 

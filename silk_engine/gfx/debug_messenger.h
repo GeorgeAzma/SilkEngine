@@ -14,7 +14,7 @@ public:
     DebugMessenger();
     ~DebugMessenger();
 
-    void init();
+    void init(VkInstance instance);
 
     const VkDebugUtilsMessengerCreateInfoEXT& getCreateInfo() const { return ci; }
     const std::vector<const char*>& getRequiredValidationLayers() const { return required_validation_layers; }

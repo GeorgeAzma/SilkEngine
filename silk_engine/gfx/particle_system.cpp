@@ -118,7 +118,7 @@ void ParticleSystem::render(GraphicsPipeline& graphics_pipeline)
         graphics_pipeline.getShader()->setIfExists("GlobalUniform", { *Renderer::getGlobalUniformBuffer() }); //TODO: Unsafe, change
         graphics_pipeline.getShader()->setIfExists("images", instance_images->getDescriptorImageInfos());
         graphics_pipeline.getShader()->bindDescriptorSets();
-        Graphics::submit([&](CommandBuffer& cb) { cb.drawIndexed(vao->getIndexBuffer()->getCount(), particle_data.size(), 0, 0, 0); });
+        RenderContext::submit([&](CommandBuffer& cb) { cb.drawIndexed(vao->getIndexBuffer()->getCount(), particle_data.size(), 0, 0, 0); });
     }
 }
 

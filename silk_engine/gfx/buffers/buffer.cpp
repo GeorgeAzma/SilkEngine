@@ -1,6 +1,6 @@
 #include "buffer.h"
 #include "gfx/allocators/allocator.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/queues/command_queue.h"
 #include "command_buffer.h"
 
@@ -10,18 +10,18 @@ Buffer::Buffer(VkDeviceSize size, Usage usage, const Allocation::Props& allocati
 	ci.size = size;
 	ci.usage = (VkBufferUsageFlags)usage;
 	ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	allocation_ci.usage = (VmaMemoryUsage)allocation_props.preferred_device;
-	allocation_ci.flags = allocation_props.flags;
-	allocation_ci.priority = allocation_props.priority;
-	allocation_ci.priority += 0.1f * ((usage & UsageBits::VERTEX) > 0);
-	allocation_ci.priority += 0.1f * ((usage & UsageBits::INDEX) > 0);
-	allocation_ci.priority += 0.1f * ((usage & UsageBits::STORAGE) > 0);
-	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &ci, &allocation_ci, &buffer, (VmaAllocation*)&allocation, nullptr));
+	alloc_ci.usage = (VmaMemoryUsage)allocation_props.preferred_device;
+	alloc_ci.flags = allocation_props.flags;
+	alloc_ci.priority = allocation_props.priority;
+	alloc_ci.priority += 0.1f * ((usage & UsageBits::VERTEX) > 0);
+	alloc_ci.priority += 0.1f * ((usage & UsageBits::INDEX) > 0);
+	alloc_ci.priority += 0.1f * ((usage & UsageBits::STORAGE) > 0);
+	allocation = RenderContext::getAllocator().allocateBuffer(ci, alloc_ci, buffer);
 } 
 
 Buffer::~Buffer()
 {
-	vmaDestroyBuffer(*Graphics::allocator, buffer, allocation);
+	RenderContext::getAllocator().destroyBuffer(buffer, allocation);
 }
 
 void Buffer::resize(VkDeviceSize size)
@@ -29,8 +29,8 @@ void Buffer::resize(VkDeviceSize size)
 	if (size == ci.size)
 		return;
 	ci.size = size;
-	vmaDestroyBuffer(*Graphics::allocator, buffer, allocation);
-	Graphics::vulkanAssert(vmaCreateBuffer(*Graphics::allocator, &ci, &allocation_ci, &buffer, &(VmaAllocation&)allocation, nullptr));
+	RenderContext::getAllocator().destroyBuffer(buffer, allocation);
+	allocation = RenderContext::getAllocator().allocateBuffer(ci, alloc_ci, buffer);
 }
 
 void Buffer::copy(VkBuffer destination, VkDeviceSize size, VkDeviceSize offset, VkDeviceSize dst_offset) const
@@ -73,12 +73,12 @@ void Buffer::insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_ac
 	barrier.buffer = buffer;
 	barrier.offset = offset;
 	barrier.size = size;
-	Graphics::submit([&] (CommandBuffer& cb) { cb.pipelineBarrier(source_stage_mask, destination_stage_mask, VkDependencyFlags(0), {}, { barrier }, {}); });
+	RenderContext::submit([&] (CommandBuffer& cb) { cb.pipelineBarrier(source_stage_mask, destination_stage_mask, VkDependencyFlags(0), {}, { barrier }, {}); });
 }
 
 void Buffer::copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDeviceSize dst_offset, VkDeviceSize src_offset)
 {
-	Graphics::submit([&] (CommandBuffer& cb)
+	RenderContext::submit([&] (CommandBuffer& cb)
 		{
 			VkBufferCopy copy_region{};
 			copy_region.srcOffset = src_offset;
@@ -86,5 +86,5 @@ void Buffer::copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDe
 			copy_region.size = size;
 			cb.copyBuffer(source, destination, { copy_region });
 		});
-	Graphics::execute();
+	RenderContext::execute();
 }

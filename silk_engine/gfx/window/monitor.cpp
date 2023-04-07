@@ -1,6 +1,5 @@
 #include "monitor.h"
 #include "core/event.h"
-#include <GLFW/glfw3.h>
 
 void Monitor::init()
 {

@@ -26,6 +26,8 @@
 #include <numeric>
 
 #include <vulkan/vulkan.h>
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
 
 constexpr const char* ENGINE_NAME = "Silk";
 
@@ -114,7 +116,7 @@ namespace std
     };
 
     template <>
-    struct formatter<Bytes> : formatter<double> 
+    struct formatter<Bytes>: formatter<double>
     {
         template <typename FormatContext>
         auto format(Bytes b, FormatContext& ctx)
@@ -124,10 +126,11 @@ namespace std
 
             size_t unit = 0;
             size_t base = BASE;
-            for (; b >= base; ++unit, base *= BASE);
+            for (; b >= base && unit < sizeof(UNITS); ++unit, base *= BASE);
             base /= BASE;
 
-            auto out = formatter<double>::format(b / base, ctx);
+            auto&& out = ctx.out();
+            format_to(out, "{:.3g} ", double(b) / base);
             if (unit)
                 *out++ = UNITS[unit];
             *out++ = 'B';
@@ -136,7 +139,7 @@ namespace std
     };
 
     template <>
-    struct formatter<Seconds> : formatter<double>
+    struct formatter<Seconds>: formatter<double>
     {
         template <typename FormatContext>
         auto format(Seconds t, FormatContext& ctx)
@@ -174,7 +177,7 @@ namespace std
 
 
     template <length_t L, typename T, qualifier Q>
-    struct formatter<vec<L, T, Q>> : formatter<T>
+    struct formatter<vec<L, T, Q>>: formatter<T>
     {
         template <typename FormatContext>
         auto format(const vec<L, T, Q>& vec, FormatContext& ctx)
@@ -187,9 +190,9 @@ namespace std
             return out;
         }
     };
-    
+
     template <>
-    struct formatter<path> : formatter<double>
+    struct formatter<path>: formatter<double>
     {
         template <typename FormatContext>
         auto format(const path& p, FormatContext& ctx)

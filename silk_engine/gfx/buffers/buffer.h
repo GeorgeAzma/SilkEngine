@@ -45,6 +45,6 @@ protected:
 protected:
 	VkBuffer buffer = nullptr;
 	VkBufferCreateInfo ci{};
-	VmaAllocationCreateInfo allocation_ci{};
+	VmaAllocationCreateInfo alloc_ci{};
 	Allocation allocation{};
 };

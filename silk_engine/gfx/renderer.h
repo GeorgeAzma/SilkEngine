@@ -61,7 +61,6 @@ public:
 	static void destroy();
 	static void reset();
 	static void wait();
-	static void onResize();
 
 	template<typename T>
 	static void setRenderPipeline() { render_pipeline = makeUnique<T>(); }

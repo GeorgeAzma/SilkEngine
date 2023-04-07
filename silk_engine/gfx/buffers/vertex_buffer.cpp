@@ -1,5 +1,5 @@
 #include "vertex_buffer.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/buffers/command_buffer.h"
 
 VertexBuffer::VertexBuffer(const void* data, VkDeviceSize vertex_size, uint32_t vertex_count, bool instanced)
@@ -11,5 +11,5 @@ VertexBuffer::VertexBuffer(const void* data, VkDeviceSize vertex_size, uint32_t 
 
 void VertexBuffer::bind(size_t binding)
 {
-	Graphics::submit([&](CommandBuffer& cb) { cb.bindVertexBuffers(binding, { buffer }); });
+	RenderContext::submit([&](CommandBuffer& cb) { cb.bindVertexBuffers(binding, { buffer }); });
 }

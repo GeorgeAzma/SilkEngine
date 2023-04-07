@@ -48,7 +48,6 @@ protected:
 	void setShader(const shared<Shader>& shader, const std::vector<Constant>& constants = {});
 
 protected:
-	VkPipelineCache cache = nullptr;
 	VkPipeline pipeline = nullptr;
 	VkPipelineLayout layout = nullptr;
 	shared<Shader> shader = nullptr;

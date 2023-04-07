@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/descriptors/descriptor_set.h"
 #include "gfx/buffers/buffer_layout.h"
 

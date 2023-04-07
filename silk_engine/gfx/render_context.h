@@ -2,14 +2,6 @@
 
 #include "buffers/command_buffer.h"
 
-enum class APIVersion
-{
-	VULKAN_1_0 = VK_API_VERSION_1_0,
-	VULKAN_1_1 = VK_API_VERSION_1_1,
-	VULKAN_1_2 = VK_API_VERSION_1_2,
-	VULKAN_1_3 = VK_API_VERSION_1_3,
-};
-
 class CommandQueue;
 class WindowResizeEvent;
 class DebugMessenger;
@@ -22,11 +14,8 @@ class DescriptorPool;
 class DescriptorSet;
 class Application;
 
-class Graphics
+class RenderContext
 {
-public:
-	static constexpr APIVersion API_VERSION = APIVersion::VULKAN_1_3;
-
 public:
 	static void init(const Application& app);
 	static void destroy();
@@ -40,10 +29,13 @@ public:
 	static void vulkanAssert(VkResult result);
 	static std::string stringifyResult(VkResult result);
 
-public:
-#ifdef SK_ENABLE_DEBUG_MESSENGER
-	static inline DebugMessenger* debug_messenger = nullptr;
-#endif
+	static const Instance& getInstance() { return *instance; }
+	static const LogicalDevice& getLogicalDevice() { return *logical_device; }
+	static const PhysicalDevice& getPhysicalDevice();
+	static const Allocator& getAllocator() { return *allocator; }
+	static const PipelineCache& getPipelineCache() { return *pipeline_cache; }
+
+private:
 	static inline Instance* instance = nullptr;
 	static inline PhysicalDevice* physical_device = nullptr;
 	static inline LogicalDevice* logical_device = nullptr;

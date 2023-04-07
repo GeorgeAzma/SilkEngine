@@ -1,21 +1,63 @@
 #include "allocator.h"
-#include "gfx/graphics.h"
+#include "allocation.h"
+#include "gfx/render_context.h"
 #include "gfx/instance.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/devices/physical_device.h"
 
-Allocator::Allocator()
+Allocator::Allocator(const PhysicalDevice& physical_device, const LogicalDevice& logical_device)
 {
 	VmaAllocatorCreateInfo allocator_info{};
-	allocator_info.vulkanApiVersion = uint32_t(Graphics::API_VERSION);
-	allocator_info.instance = *Graphics::instance;
-	allocator_info.physicalDevice = *Graphics::physical_device;
-	allocator_info.device = *Graphics::logical_device;
-	allocator_info.flags = Graphics::physical_device->supportsExtension("VK_EXT_memory_priority") * VMA_ALLOCATOR_CREATE_EXT_MEMORY_PRIORITY_BIT;
+	allocator_info.vulkanApiVersion = uint32_t(RenderContext::getInstance().getVulkanVersion());
+	allocator_info.instance = RenderContext::getInstance();
+	allocator_info.physicalDevice = physical_device;
+	allocator_info.device = logical_device;
+	allocator_info.flags = physical_device.supportsExtension("VK_EXT_memory_priority") * VMA_ALLOCATOR_CREATE_EXT_MEMORY_PRIORITY_BIT;
 	vmaCreateAllocator(&allocator_info, &allocator);
 }
 
 Allocator::~Allocator()
 {
 	vmaDestroyAllocator(allocator);
+}
+
+void Allocator::map(VmaAllocation allocation, void** data) const
+{
+	RenderContext::vulkanAssert(vmaMapMemory(allocator, allocation, data));
+}
+
+void Allocator::unmap(VmaAllocation allocation) const
+{
+	vmaUnmapMemory(allocator, allocation);
+}
+
+VkMemoryPropertyFlags Allocator::getAllocationProperties(VmaAllocation allocation) const
+{
+	VkMemoryPropertyFlags mem_prop_flags = 0;
+	vmaGetAllocationMemoryProperties(allocator, allocation, &mem_prop_flags);
+	return mem_prop_flags;
+}
+
+Allocation Allocator::allocateBuffer(const VkBufferCreateInfo& buffer_create_info, const VmaAllocationCreateInfo& alloc_ci, VkBuffer& buffer) const
+{
+	VmaAllocation alloc = nullptr;
+	RenderContext::vulkanAssert(vmaCreateBuffer(allocator, &buffer_create_info, &alloc_ci, &buffer, &alloc, nullptr));
+	return Allocation(alloc);
+}
+
+Allocation Allocator::allocateImage(const VkImageCreateInfo& image_create_info, const VmaAllocationCreateInfo& alloc_ci, VkImage& image) const
+{
+	VmaAllocation alloc = nullptr;
+	RenderContext::vulkanAssert(vmaCreateImage(allocator, &image_create_info, &alloc_ci, &image, &alloc, nullptr));
+	return Allocation(alloc);
+}
+
+void Allocator::destroyBuffer(VkBuffer buffer, VmaAllocation allocation) const
+{
+	vmaDestroyBuffer(allocator, buffer, allocation);
+}
+
+void Allocator::destroyImage(VkImage image, VmaAllocation allocation) const
+{
+	vmaDestroyImage(allocator, image, allocation);
 }

@@ -1,7 +1,7 @@
 #include "image.h"
 #include "raw_image.h"
 #include "gfx/window/window.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/buffers/buffer.h"
 #include "gfx/devices/physical_device.h"
 #include "gfx/devices/logical_device.h"
@@ -203,8 +203,8 @@ Image::~Image()
 {
 	view = nullptr;
 	sampler = nullptr;
-	if(allocation != nullptr)
-		vmaDestroyImage(*Graphics::allocator, image, (VmaAllocation)allocation);
+	if (VmaAllocation(allocation) != nullptr)
+		RenderContext::getAllocator().destroyImage(image, allocation);
 }
 
 VkDescriptorImageInfo Image::getDescriptorInfo() const
@@ -224,7 +224,7 @@ void Image::transitionLayout(VkImageLayout new_layout)
 	if (layout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
 		return;
 
-	Graphics::submit(
+	RenderContext::submit(
 		[&](CommandBuffer& cb)
 		{
 			VkImageMemoryBarrier barrier = {};
@@ -318,7 +318,7 @@ void Image::transitionLayout(VkImageLayout new_layout)
 			}
 			cb.pipelineBarrier(source_stage, destination_stage, VkDependencyFlags(0), {}, {}, { barrier });
 		});
-	Graphics::execute();
+	RenderContext::execute();
 
 	layout = new_layout;
 }
@@ -331,7 +331,7 @@ void Image::insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags 
 
 bool Image::isFeatureSupported(VkFormatFeatureFlags feature) const
 {
-	VkFormatProperties format_properties = Graphics::physical_device->getFormatProperties(VkFormat(props.format));
+	VkFormatProperties format_properties = RenderContext::getPhysicalDevice().getFormatProperties(VkFormat(props.format));
 	const VkFormatFeatureFlags& features = (props.tiling == VK_IMAGE_TILING_OPTIMAL) ? format_properties.optimalTilingFeatures : format_properties.linearTilingFeatures;
 	return (features & feature) == feature;
 }
@@ -341,7 +341,7 @@ void Image::copyFromBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers
 	VkImageLayout old_layout = layout;
 	transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-	Graphics::submit(
+	RenderContext::submit(
 		[&](CommandBuffer& cb) 
 		{
 			VkBufferImageCopy region{};
@@ -356,7 +356,7 @@ void Image::copyFromBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers
 			region.imageExtent = VkExtent3D(props.width, props.height, props.depth); 
 			cb.copyBufferToImage(buffer, image, layout, { region }); 
 		});
-	Graphics::execute();
+	RenderContext::execute();
 
 	transitionLayout(old_layout);
 }
@@ -366,7 +366,7 @@ void Image::copyToBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers)
 	VkImageLayout old_layout = layout;
 	transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
-	Graphics::submit(
+	RenderContext::submit(
 		[&](CommandBuffer& cb)
 		{
 			VkBufferImageCopy region{};
@@ -381,7 +381,7 @@ void Image::copyToBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers)
 			region.imageSubresource.mipLevel = 0;
 			cb.copyImageToBuffer(image, layout, buffer, { region });
 		});
-	Graphics::execute();
+	RenderContext::execute();
 
 	transitionLayout(old_layout);
 }
@@ -390,7 +390,7 @@ void Image::insertMemoryBarrier(const VkImage& image, VkAccessFlags source_acces
 {
 	if (old_layout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
 		return;
-	Graphics::submit(
+	RenderContext::submit(
 		[&](CommandBuffer& cb) 
 		{ 
 			VkImageMemoryBarrier barrier{};
@@ -431,11 +431,11 @@ void Image::create()
 		ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		ci.samples = props.samples;
 
-		VmaAllocationCreateInfo allocation_ci{};
-		allocation_ci.usage = (VmaMemoryUsage)props.allocation_props.preferred_device;
-		allocation_ci.flags = props.allocation_props.flags;
-		allocation_ci.priority = props.allocation_props.priority;
-		Graphics::vulkanAssert(VkResult(vmaCreateImage(*Graphics::allocator, &ci, &allocation_ci, &image, (VmaAllocation*)&allocation, nullptr)));
+		VmaAllocationCreateInfo alloc_ci{};
+		alloc_ci.usage = (VmaMemoryUsage)props.allocation_props.preferred_device;
+		alloc_ci.flags = props.allocation_props.flags;
+		alloc_ci.priority = props.allocation_props.priority;
+		allocation = RenderContext::getAllocator().allocateImage(ci, alloc_ci, image);
 		
 		if (props.data)
 		{
@@ -459,7 +459,7 @@ void Image::generateMipmaps()
 	if (mip_levels <= 1)
 		return;
 
-	Graphics::submit(
+	RenderContext::submit(
 		[&](CommandBuffer& cb)
 		{
 			VkImageMemoryBarrier barrier{};
@@ -521,7 +521,7 @@ void Image::generateMipmaps()
 			cb.pipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, {}, {}, { barrier });
 
 		});
-	Graphics::execute();
+	RenderContext::execute();
 }
 
 void Image::setData(const void* data, uint32_t base_layer, uint32_t layers)
@@ -595,7 +595,7 @@ bool Image::copyImage(const Image& destination, uint32_t layer)
 	}
 
 	//Do the actual blit from the swapchain image to our host visible destination image.
-	Graphics::submit(
+	RenderContext::submit(
 		[&](CommandBuffer& cb)
 		{
 			VkImageLayout last_destination_layout = destination.getLayout();
@@ -641,7 +641,7 @@ bool Image::copyImage(const Image& destination, uint32_t layer)
 			destination.insertMemoryBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT, last_destination_layout, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0);
 			insertMemoryBarrier(VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_MEMORY_READ_BIT, last_layout, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, layer);
 		});
-	Graphics::execute();
+	RenderContext::execute();
 
 	return supports_blit;
 }

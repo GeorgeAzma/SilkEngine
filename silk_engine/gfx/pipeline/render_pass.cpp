@@ -1,5 +1,5 @@
 #include "render_pass.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/buffers/framebuffer.h"
 
@@ -119,18 +119,18 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
     ci.pSubpasses = subpass_descriptions.data();
     ci.dependencyCount = subpass_dependencies.size();
     ci.pDependencies = subpass_dependencies.data();
-    render_pass = Graphics::logical_device->createRenderPass(ci);
+    render_pass = RenderContext::getLogicalDevice().createRenderPass(ci);
 }
 
 RenderPass::~RenderPass()
 {
-    Graphics::logical_device->destroyRenderPass(render_pass);
+    RenderContext::getLogicalDevice().destroyRenderPass(render_pass);
 }
 
 void RenderPass::begin(const Framebuffer& framebuffer, VkSubpassContents subpass_contents)
 {
     current_subpass = 0;
-    Graphics::submit(
+    RenderContext::submit(
         [&](CommandBuffer& cb)
         {
             VkRenderPassBeginInfo begin_info{};
@@ -156,7 +156,7 @@ void RenderPass::nextSubpass(VkSubpassContents subpass_contents)
     if (current_subpass >= (subpass_count - 1))
         return;
 
-    Graphics::submit(
+    RenderContext::submit(
         [&](CommandBuffer& cb)
         {
             cb.nextSubpass(subpass_contents);
@@ -166,5 +166,5 @@ void RenderPass::nextSubpass(VkSubpassContents subpass_contents)
 
 void RenderPass::end()
 {
-    Graphics::submit([&](CommandBuffer& cb) { cb.endRenderPass(); });
+    RenderContext::submit([&](CommandBuffer& cb) { cb.endRenderPass(); });
 }

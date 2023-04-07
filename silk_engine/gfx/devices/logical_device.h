@@ -2,11 +2,13 @@
 
 class Queue;
 class QueueFamily;
+class PhysicalDevice;
+class Surface;
 
 class LogicalDevice : NonCopyable
 {
 public:
-	LogicalDevice();
+	LogicalDevice(const PhysicalDevice& physical_device);
 	~LogicalDevice();
 
 	void wait() const;
@@ -69,9 +71,10 @@ public:
 
 	const Queue& getGraphicsQueue() const;
 	const Queue& getTransferQueue() const;
-	const Queue& getPresentQueue() const;
 	const Queue& getComputeQueue() const;
+	const Queue& getPresentQueue(const Surface& surface) const;
 	const Queue& getQueue(VkQueueFlags queue) const;
+	const PhysicalDevice& getPhysicalDevice() const { return physical_device; }
 	operator const VkDevice& () const { return logical_device; }
 
 	static constexpr std::vector<const char*> getRequiredExtensions() { return { "VK_KHR_swapchain" }; }
@@ -80,4 +83,5 @@ public:
 private:
 	std::vector<std::vector<Queue>> queues;
 	VkDevice logical_device = nullptr;
+	const PhysicalDevice& physical_device;
 };

@@ -24,7 +24,7 @@ void MyScene::onStart()
 void MyScene::onUpdate()
 {
     if (Window::getActive().isKeyPressed(Keys::F2))
-        Graphics::screenshot(path(std::format("res/images/screenshots/screenshot.png")));
+        RenderContext::screenshot(path(std::format("res/images/screenshots/screenshot.png")));
     if (Window::getActive().isKeyPressed(Keys::R))
         Resources::reloadShaders();
 

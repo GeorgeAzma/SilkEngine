@@ -1,14 +1,17 @@
 #include "allocation.h"
 #include "allocator.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 
+Allocation::Allocation(VmaAllocation allocation)
+	: allocation(allocation) {}
+
 void Allocation::map(void** data) const
 {
 	if (!(*data = allocation->GetMappedData()))
-		vmaMapMemory(*Graphics::allocator, allocation, data);
+		RenderContext::getAllocator().map(allocation, data);
 }
 
 void* Allocation::getMappedData() const 
@@ -19,13 +22,12 @@ void* Allocation::getMappedData() const
 void Allocation::unmap() const
 {
 	if (allocation->GetMappedData() && !allocation->IsPersistentMap())
-		vmaUnmapMemory(*Graphics::allocator, allocation);
+		RenderContext::getAllocator().unmap(allocation);
 }
 
 bool Allocation::isHostVisible() const
 {
-	VkMemoryPropertyFlags memory_propery_flags;
-	vmaGetAllocationMemoryProperties(*Graphics::allocator, allocation, &memory_propery_flags);
+	VkMemoryPropertyFlags memory_propery_flags = RenderContext::getAllocator().getAllocationProperties(allocation);
 	return (memory_propery_flags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 }
 

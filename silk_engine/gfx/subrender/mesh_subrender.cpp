@@ -50,7 +50,7 @@ void MeshSubrender::render()
 
         instance_batch.bind();
 
-        Graphics::submit([&](CommandBuffer& cb){ cb.drawIndexedIndirect(*Renderer::getIndirectBuffer(), draw_index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand)); });
+        RenderContext::submit([&](CommandBuffer& cb){ cb.drawIndexedIndirect(*Renderer::getIndirectBuffer(), draw_index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand)); });
         ++draw_index;
     }
 }

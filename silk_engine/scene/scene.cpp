@@ -9,7 +9,7 @@
 #include "gfx/window/swap_chain.h"
 #include "core/event.h"
 #include "gfx/window/window.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "meshes/text_mesh.h"
 #include "camera/camera.h"
 #include "gfx/renderer.h"

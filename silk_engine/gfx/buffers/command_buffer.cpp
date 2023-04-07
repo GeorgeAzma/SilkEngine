@@ -1,5 +1,5 @@
 #include "command_buffer.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/queues/queue.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/allocators/command_pool.h"
@@ -484,7 +484,7 @@ void CommandBuffer::submit(const SubmitInfo& info, VkQueueFlagBits queue_type)
 
 	if (info.fence)
 		info.fence->reset();
-	Graphics::logical_device->getQueue(queue_type).submit(submit_info, info.fence ? *info.fence : nullptr);
+	RenderContext::getLogicalDevice().getQueue(queue_type).submit(submit_info, info.fence ? *info.fence : nullptr);
 	state = State::PENDING;
 }
 
@@ -499,7 +499,7 @@ void CommandBuffer::submitImmidiatly(VkQueueFlagBits queue_type)
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &command_buffer;
 	
-	Graphics::logical_device->getQueue(queue_type).submitImmidiatly(submit_info);
+	RenderContext::getLogicalDevice().getQueue(queue_type).submitImmidiatly(submit_info);
 	state = State::INVALID;
 }
 

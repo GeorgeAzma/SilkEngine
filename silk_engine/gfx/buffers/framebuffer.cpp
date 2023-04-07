@@ -1,5 +1,5 @@
 #include "framebuffer.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/window/window.h"
 #include "gfx/window/swap_chain.h"
 #include "gfx/devices/logical_device.h"
@@ -17,7 +17,7 @@ Framebuffer::Framebuffer(const SwapChain& swap_chain, VkRenderPass render_pass, 
 Framebuffer::~Framebuffer()
 {
     for (size_t i = 0; i < framebuffers.size(); ++i)
-        Graphics::logical_device->destroyFramebuffer(framebuffers[i]);
+        RenderContext::getLogicalDevice().destroyFramebuffer(framebuffers[i]);
 }
 
 Framebuffer& Framebuffer::addAttachment(Image::Props image_props)
@@ -73,7 +73,7 @@ void Framebuffer::build(bool imageless)
         ci.height = height;
         ci.layers = 1;
         ci.flags = imageless * VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT;
-        framebuffers[i] = Graphics::logical_device->createFramebuffer(ci);
+        framebuffers[i] = RenderContext::getLogicalDevice().createFramebuffer(ci);
     }
 }
 

@@ -1,6 +1,6 @@
 #include "image_view.h"
 #include "image.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/devices/logical_device.h"
 
 ImageView::ImageView(VkImage image, Image::Format format, size_t base_mip_level, uint32_t mip_levels, size_t base_layer, size_t layers, Image::Type image_type, VkComponentMapping components)
@@ -16,7 +16,7 @@ ImageView::ImageView(VkImage image, Image::Format format, size_t base_mip_level,
 	ci.subresourceRange.levelCount = mip_levels;
 	ci.subresourceRange.baseArrayLayer = base_layer;
 	ci.subresourceRange.layerCount = layers;
-	image_view = Graphics::logical_device->createImageView(ci);
+	image_view = RenderContext::getLogicalDevice().createImageView(ci);
 }
 
 ImageView::ImageView(const Image& image, size_t base_mip_level, uint32_t mip_levels, size_t base_layer, size_t layers, VkComponentMapping components)
@@ -26,5 +26,5 @@ ImageView::ImageView(const Image& image, size_t base_mip_level, uint32_t mip_lev
 
 ImageView::~ImageView()
 {
-	Graphics::logical_device->destroyImageView(image_view);
+	RenderContext::getLogicalDevice().destroyImageView(image_view);
 }

@@ -1,3 +1,5 @@
+include(ExternalProject)
+
 macro(externalProject)
     set(one_value_args NAME INCLUDE_DIR)
     set(multi_value_args BUILD_ARGS DEPENDS_ON)
@@ -60,3 +62,23 @@ macro(externalProjectGit)
     endif()
     list(APPEND DEPENDENCIES_TO_ADD ${SUBPROJECT_NAME})
 endmacro() 
+
+
+
+
+
+
+list(APPEND INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX}/include)
+
+subdirList(INCLUDE_SUBDIRS ${CMAKE_SOURCE_DIR}/ext)
+if(INCLUDE_SUBDIRS)
+    foreach(subdir ${INCLUDE_SUBDIRS})
+        list(APPEND INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/ext/${subdir})
+    endforeach()
+endif()
+
+file(GLOB_RECURSE EXTERNAL_PROJECT_LIBS "${CMAKE_INSTALL_PREFIX}/*${CMAKE_STATIC_LIBRARY_SUFFIX}")
+
+if(EXTERNAL_PROJECT_LIBS)
+    list(APPEND EXTRA_LIBS ${EXTERNAL_PROJECT_LIBS})
+endif()

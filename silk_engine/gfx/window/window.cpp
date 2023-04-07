@@ -5,7 +5,6 @@
 #include "monitor.h"
 #include "surface.h"
 #include "swap_chain.h"
-#include <GLFW/glfw3.h>
 
 Window::Window()
 {
@@ -27,7 +26,6 @@ Window::Window()
     glfwDefaultWindowHints();
 
     glfwSetWindowUserPointer(window, &data);
-    setVsync(vsync);
     align(WindowAlignment::CENTER);
 
     Dispatcher::post(WindowResizeEvent(*this, data.width, data.height));
@@ -36,7 +34,7 @@ Window::Window()
     glfwSetWindowPosCallback(window,
         [](GLFWwindow* window, int x, int y)
         {
-            SK_TRACE("Window moved: ({}, {})", x, y);
+            SK_INFO("Window moved: ({}, {})", x, y);
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             if (!data.fullscreen)
             {
@@ -49,7 +47,7 @@ Window::Window()
     glfwSetFramebufferSizeCallback(window,
         [](GLFWwindow* window, int width, int height)
         {
-            SK_TRACE("Framebuffer resized: {}x{}", width, height);
+            SK_INFO("Framebuffer resized: {}x{}", width, height);
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             data.width = width;
             data.height = height;
@@ -60,7 +58,7 @@ Window::Window()
     glfwSetWindowSizeCallback(window,
         [](GLFWwindow *window, int width, int height)
         {
-            SK_TRACE("Window resized: {}x{}", width, height);
+            SK_INFO("Window resized: {}x{}", width, height);
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             data.width = width;
             data.height = height;
@@ -70,7 +68,7 @@ Window::Window()
     glfwSetWindowMaximizeCallback(window,
         [](GLFWwindow* window, int maximized)
         {
-            SK_TRACE("Window {}", maximized == GLFW_TRUE ? "maximized" : "restored");
+            SK_INFO("Window {}", maximized == GLFW_TRUE ? "maximized" : "restored");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             data.maximized = maximized;
             Dispatcher::post(WindowMaximizeEvent(*data.window, maximized));
@@ -79,7 +77,7 @@ Window::Window()
     glfwSetWindowFocusCallback(window, 
         [](GLFWwindow* window, int focused) 
         {
-            SK_TRACE("Window {}focused", focused == GLFW_TRUE ? "" : "un");
+            SK_INFO("Window {}focused", focused == GLFW_TRUE ? "" : "un");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             data.focused = focused;
             Dispatcher::post(WindowFocusEvent(*data.window, focused));
@@ -88,7 +86,7 @@ Window::Window()
     glfwSetWindowIconifyCallback(window, 
         [](GLFWwindow* window, int minimized) 
         {
-            SK_TRACE("Window {}", minimized == GLFW_TRUE ? "minimized" : "restored");
+            SK_INFO("Window {}", minimized == GLFW_TRUE ? "minimized" : "restored");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             data.minimized = minimized;
             Dispatcher::post(WindowMinimizeEvent(*data.window, minimized));
@@ -97,7 +95,7 @@ Window::Window()
     glfwSetWindowRefreshCallback(window, 
         [](GLFWwindow* window) 
         {
-            SK_TRACE("Window refreshed");
+            SK_INFO("Window refreshed");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             Dispatcher::post(WindowRefreshEvent(*data.window));
         });
@@ -105,7 +103,7 @@ Window::Window()
     glfwSetWindowContentScaleCallback(window, 
         [](GLFWwindow* window, float x, float y)
         {
-            SK_TRACE("Window content scaled: ({}, {})", x, y);
+            SK_INFO("Window content scaled: ({}, {})", x, y);
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             Dispatcher::post(WindowContentScaleEvent(*data.window, x, y));
             data.dpi = { x, y };
@@ -114,7 +112,7 @@ Window::Window()
     glfwSetWindowCloseCallback(window,
         [](GLFWwindow *window)
         {
-            SK_TRACE("Window closed");
+            SK_INFO("Window closed");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             Dispatcher::post(WindowCloseEvent(*data.window));
         });
@@ -236,7 +234,7 @@ void Window::recreate()
         return;
 
     surface->updateCapabilities();
-    swap_chain->recreate();
+    swap_chain->create();
 }
 
 GLFWmonitor* Window::getMonitor() const
@@ -247,14 +245,6 @@ GLFWmonitor* Window::getMonitor() const
 bool Window::shouldClose() const
 {
     return glfwWindowShouldClose(window);
-}
-
-void Window::setVsync(bool vsync)
-{
-    if (this->vsync == vsync)
-        return;
-    this->vsync = vsync;
-    glfwSwapInterval((int)vsync);
 }
 
 void Window::setFullscreen(bool fullscreen)

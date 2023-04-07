@@ -3,7 +3,7 @@
 class DebugTimer
 {
 public:
-    DebugTimer(std::string_view name = "Timer");
+    DebugTimer(std::string_view name = "");
 
     ~DebugTimer();
 

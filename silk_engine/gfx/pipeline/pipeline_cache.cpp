@@ -1,12 +1,12 @@
 #include "pipeline_cache.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/devices/physical_device.h"
 #include "io/file.h"
 
 bool PipelineCache::Header::isValid() const
 {
-	const VkPhysicalDeviceProperties& props = Graphics::physical_device->getProperties(); 
+	const VkPhysicalDeviceProperties& props = RenderContext::getPhysicalDevice().getProperties(); 
     if (length <= 0 || version != VK_PIPELINE_CACHE_HEADER_VERSION_ONE || vendor != props.vendorID || device != props.deviceID || memcmp(uuid, props.pipelineCacheUUID, sizeof(uuid)) != 0)
         return false;
 	return true;
@@ -31,14 +31,14 @@ PipelineCache::PipelineCache()
 			ci.pInitialData = cache.data();
 		}
 	}
-	pipeline_cache = Graphics::logical_device->createPipelineCache(ci);
+	pipeline_cache = RenderContext::getLogicalDevice().createPipelineCache(ci);
 }
 
 PipelineCache::~PipelineCache()
 {
 	SK_VERIFY(pipeline_cache, "No pipeline cache to write");
-	std::vector<uint8_t> data = Graphics::logical_device->getPipelineCacheData(pipeline_cache);
+	std::vector<uint8_t> data = RenderContext::getLogicalDevice().getPipelineCacheData(pipeline_cache);
 	std::ofstream cache("res/cache/pipeline_cache.bin", std::ios::binary);
 	cache.write((const char*)data.data(), data.size());
-	Graphics::logical_device->destroyPipelineCache(pipeline_cache);
+	RenderContext::getLogicalDevice().destroyPipelineCache(pipeline_cache);
 }

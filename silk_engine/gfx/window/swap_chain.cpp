@@ -1,13 +1,12 @@
 #include "swap_chain.h"
 #include "gfx/devices/physical_device.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/window/window.h"
 #include "gfx/window/surface.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/queues/queue.h"
-#include <GLFW/glfw3.h>
 
-SwapChain::SwapChain(const Surface& surface, VkSwapchainKHR old_swap_chain)
+SwapChain::SwapChain(const Surface& surface)
 	: surface(surface)
 {
 	//Choose format
@@ -22,37 +21,17 @@ SwapChain::SwapChain(const Surface& surface, VkSwapchainKHR old_swap_chain)
 	SK_ASSERT(surface_formats.size() > 0, "Vulkan: Couldn't find supported formats to choose from");
 
 	//Choose present mode
-	VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
-	for (const auto& available_present_mode : surface.getPresentModes())
-	{
-		if (available_present_mode == VK_PRESENT_MODE_MAILBOX_KHR)
-		{
-			present_mode = available_present_mode;
-			break;
-		}
-	}
-	this->present_mode = present_mode;
-
 	image_format = Image::Format(surface_formats.rbegin()->second.format);
-	depth_format = Image::Format(Graphics::physical_device->findSupportedFormat({ VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM }, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT ));
-	sample_count = Graphics::physical_device->getMaxSampleCount();
+	depth_format = Image::Format(RenderContext::getPhysicalDevice().findSupportedFormat({ VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM }, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT ));
+	sample_count = RenderContext::getPhysicalDevice().getMaxSampleCount();
 	color_space = surface_formats.rbegin()->second.colorSpace;
 
-	create(old_swap_chain);
-}
-
-void SwapChain::recreate()
-{
-	Graphics::logical_device->wait();
-	this->images.clear();
-	VkSwapchainKHR old_swapchain = swap_chain;
-	create(old_swapchain);
-	Graphics::logical_device->destroySwapChain(old_swapchain);
+	create();
 }
 
 bool SwapChain::acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence)
 {
-	VkResult result = Graphics::logical_device->acquireNextImage(swap_chain, UINT64_MAX, signal_semaphore, signal_fence, &image_index);
+	VkResult result = RenderContext::getLogicalDevice().acquireNextImage(swap_chain, UINT64_MAX, signal_semaphore, signal_fence, &image_index);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 		return false;
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
@@ -72,7 +51,7 @@ bool SwapChain::present(VkSemaphore wait_semaphore)
 	present_info.pImageIndices = &image_index;
 	present_info.pWaitSemaphores = &wait_semaphore;
 	present_info.waitSemaphoreCount = wait_semaphore ? 1 : 0;
-	VkResult result = Graphics::logical_device->getPresentQueue().present(present_info);
+	VkResult result = RenderContext::getLogicalDevice().getPresentQueue(surface).present(present_info);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 		return false;
 	else if (result != VK_SUCCESS)
@@ -83,7 +62,7 @@ bool SwapChain::present(VkSemaphore wait_semaphore)
 	return true;
 }
 
-void SwapChain::create(VkSwapchainKHR old_swap_chain)
+void SwapChain::create()
 {
 	const auto& caps = surface.getCapabilities();
 	extent = VkExtent2D
@@ -93,6 +72,27 @@ void SwapChain::create(VkSwapchainKHR old_swap_chain)
 	);
 	if (extent.width == 0 || extent.height == 0)
 		return;
+
+	RenderContext::getLogicalDevice().wait();
+	this->images.clear();
+
+	VkSwapchainKHR old_swap_chain = swap_chain;
+	swap_chain = nullptr;
+
+	VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
+	if (!vsync)
+	{
+		for (const auto& available_present_mode : surface.getPresentModes())
+		{
+			if (available_present_mode == VK_PRESENT_MODE_MAILBOX_KHR)
+			{
+				present_mode = available_present_mode;
+				break;
+			}
+		}
+	}
+	this->present_mode = present_mode;
+
 
 	uint32_t image_count = caps.minImageCount + 1;
 	if (caps.maxImageCount > 0)
@@ -123,8 +123,8 @@ void SwapChain::create(VkSwapchainKHR old_swap_chain)
 		ci.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 	else SK_WARN("Swap chain doesn't support trasfer destination usage");
 
-	uint32_t queue_family_indices[] = { Graphics::physical_device->getGraphicsQueue(), Graphics::physical_device->getPresentQueue() };
-	if (Graphics::physical_device->getGraphicsQueue() != Graphics::physical_device->getPresentQueue())
+	uint32_t queue_family_indices[] = { RenderContext::getPhysicalDevice().getGraphicsQueue(), surface.getPresentQueue() };
+	if (queue_family_indices[0] != queue_family_indices[1])
 	{
 		ci.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 		ci.queueFamilyIndexCount = countof(queue_family_indices);
@@ -132,21 +132,22 @@ void SwapChain::create(VkSwapchainKHR old_swap_chain)
 	}
 	else ci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	swap_chain = Graphics::logical_device->createSwapChain(ci);
+	swap_chain = RenderContext::getLogicalDevice().createSwapChain(ci);
 
-	std::vector<VkImage> images = Graphics::logical_device->getSwapChainImages(swap_chain);
+	std::vector<VkImage> images = RenderContext::getLogicalDevice().getSwapChainImages(swap_chain);
 	this->images.resize(image_count);
 
 	for (size_t i = 0; i < images.size(); ++i)
 		this->images[i] = makeShared<Image>(getWidth(), getHeight(), getFormat(), images[i]);
-}
 
-void SwapChain::destroy()
-{
-	Graphics::logical_device->destroySwapChain(swap_chain);
+	if (old_swap_chain)
+	{
+		RenderContext::getLogicalDevice().destroySwapChain(old_swap_chain);
+		old_swap_chain = nullptr;
+	}
 }
 
 SwapChain::~SwapChain()
 {
-	destroy();
+	RenderContext::getLogicalDevice().destroySwapChain(swap_chain);
 }

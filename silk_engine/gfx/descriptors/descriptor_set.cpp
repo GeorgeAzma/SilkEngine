@@ -1,6 +1,6 @@
 #include "descriptor_set.h"
 #include "descriptor_allocator.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/descriptors/descriptor_pool.h"
 #include "scene/resources.h"
@@ -78,14 +78,14 @@ void DescriptorSet::update()
 
 void DescriptorSet::forceUpdate()
 {
-	Graphics::logical_device->updateDescriptorSets(write_descriptor_sets);
+	RenderContext::getLogicalDevice().updateDescriptorSets(write_descriptor_sets);
 	needs_update = false;
 }
 
 void DescriptorSet::bind(size_t first_set)
 {
 	update();
-	Graphics::submit([&](CommandBuffer& cb) { cb.bindDescriptorSets(first_set, { descriptor_set }); });
+	RenderContext::submit([&](CommandBuffer& cb) { cb.bindDescriptorSets(first_set, { descriptor_set }); });
 }
 
 void DescriptorSet::setImageInfo(size_t binding, const std::vector<VkDescriptorImageInfo>& image_info)

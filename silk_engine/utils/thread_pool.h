@@ -1,7 +1,6 @@
 #pragma once
 
 #include <future>
-#include <GLFW/glfw3.h>
 
 class ThreadPool
 {
@@ -26,14 +25,14 @@ public:
     template<typename Fn, typename... Args, typename R = std::invoke_result_t<std::decay_t<Fn>, std::decay_t<Args>...>, typename = std::enable_if_t<!std::is_void_v<R>>>
     std::future<R> submitFuture(Fn&& function, Args&&... args)
     {
-        std::shared_ptr<std::promise<R>> task_promise(new std::promise<R>);
+        shared<std::promise<R>> task_promise(new std::promise<R>);
         std::future<R> future = task_promise->get_future();
         {
-             std::scoped_lock lock(queue_mutex);
-             tasks.emplace([function, args..., task_promise]
-                 {
-                     task_promise->set_value(function(args...));
-                 });
+            std::scoped_lock lock(queue_mutex);
+            tasks.emplace([function, args..., task_promise]
+                {
+                    task_promise->set_value(function(args...));
+                });
         }
         ++running_tasks;
         condition.notify_one();
@@ -50,8 +49,8 @@ public:
         for (size_t i = 0u; i < threads.size(); ++i)
         {
             const size_t invocations = length + (i < remain);
-            submit([invocations, index, func]{
-                for(size_t i = 0u; i < invocations; ++i)
+            submit([invocations, index, func] {
+                for (size_t i = 0u; i < invocations; ++i)
                     func(index + i);
                 });
             index += invocations;

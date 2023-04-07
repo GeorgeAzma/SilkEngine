@@ -1,18 +1,18 @@
 #include "semaphore.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/devices/logical_device.h"
 
 Semaphore::Semaphore()
 {
-	semaphore = Graphics::logical_device->createSemaphore();
+	semaphore = RenderContext::getLogicalDevice().createSemaphore();
 }
 
 Semaphore::~Semaphore()
 {
-	Graphics::logical_device->destroySemaphore(semaphore);
+	RenderContext::getLogicalDevice().destroySemaphore(semaphore);
 }
 
 void Semaphore::signal(uint64_t value) const
 {
-	Graphics::logical_device->signalSemaphore(semaphore, value);
+	RenderContext::getLogicalDevice().signalSemaphore(semaphore, value);
 }

@@ -1,5 +1,5 @@
 #include "vertex_array.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/buffers/command_buffer.h"
 
 VertexArray::~VertexArray()
@@ -26,7 +26,7 @@ void VertexArray::bind() const
 	std::vector<VkBuffer> buffers(vertex_buffers.size());
 	for (size_t i = 0; i < vertex_buffers.size(); ++i)
 		buffers[i] = *vertex_buffers[i];
-	Graphics::submit([&](CommandBuffer& cb) { cb.bindVertexBuffers(0, buffers); });
+	RenderContext::submit([&](CommandBuffer& cb) { cb.bindVertexBuffers(0, buffers); });
 	if (index_buffer)
 		index_buffer->bind();
 }
@@ -35,7 +35,7 @@ void VertexArray::draw() const
 {
 	bind();
 	if (index_buffer)
-		Graphics::submit([&](CommandBuffer& cb) { cb.drawIndexed(index_buffer->getCount(), 1, 0, 0, 0); });
+		RenderContext::submit([&](CommandBuffer& cb) { cb.drawIndexed(index_buffer->getCount(), 1, 0, 0, 0); });
 	else
-		Graphics::submit([&](CommandBuffer& cb) { cb.draw(vertex_buffers.front()->getCount(), 1, 0, 0); });
+		RenderContext::submit([&](CommandBuffer& cb) { cb.draw(vertex_buffers.front()->getCount(), 1, 0, 0); });
 }

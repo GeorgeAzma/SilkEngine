@@ -1,5 +1,4 @@
 #include "glfw.h"
-#include <GLFW/glfw3.h>
 
 void GLFW::init()
 {

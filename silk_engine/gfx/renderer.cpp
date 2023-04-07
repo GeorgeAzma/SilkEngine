@@ -1,5 +1,5 @@
 #include "renderer.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "scene/instance.h"
 #include "gfx/window/window.h"
 #include "gfx/window/swap_chain.h"
@@ -31,12 +31,14 @@ void Renderer::init()
 	global_uniform_buffer = makeUnique<Buffer>(sizeof(GlobalUniformData), Buffer::UNIFORM | Buffer::TRANSFER_DST, Allocation::Props{ Allocation::MAPPED | Allocation::SEQUENTIAL_WRITE });
 
 	previous_frame_finished = new Fence(true);
-	swap_chain_image_available = Graphics::logical_device->createSemaphore();
-	render_finished = Graphics::logical_device->createSemaphore();
+	swap_chain_image_available = RenderContext::getLogicalDevice().createSemaphore();
+	render_finished = RenderContext::getLogicalDevice().createSemaphore();
 
 	setRenderPipeline<DefaultRenderPipeline>();
 	render_pipeline->init();
-	onResize();
+
+	for (auto& render_stage : render_pipeline->getRenderStages())
+		render_stage.onResize(Window::getActive().getSwapChain());
 
 	reset();
 }
@@ -44,8 +46,8 @@ void Renderer::init()
 void Renderer::destroy()
 {
 	delete previous_frame_finished;
-	Graphics::logical_device->destroySemaphore(swap_chain_image_available);
-	Graphics::logical_device->destroySemaphore(render_finished);
+	RenderContext::getLogicalDevice().destroySemaphore(swap_chain_image_available);
+	RenderContext::getLogicalDevice().destroySemaphore(render_finished);
 	active = {};
 	instances.clear();
 	instance_batches.clear();
@@ -68,16 +70,6 @@ void Renderer::wait()
 {
 	previous_frame_finished->wait();
 	previous_frame_finished->reset();
-}
-
-void Renderer::onResize()
-{
-	if (Window::getActive().isMinimized())
-		return;
-	DebugTimer t("Renderer::onResize");
-	Window::getActive().recreate();
-	for (auto& render_stage : render_pipeline->getRenderStages())
-		render_stage.onResize(Window::getActive().getSwapChain());
 }
 
 void Renderer::triangle(float x, float y, float width, float height)
@@ -246,19 +238,21 @@ void Renderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const sha
 void Renderer::render(Camera* camera)
 {
 	stats = {};
-	Graphics::update();
+	RenderContext::update();
 	updateUniformData(camera);
 	updateDrawCommands();
 
 	if (!Window::getActive().getSwapChain().acquireNextImage(Renderer::swap_chain_image_available))
 	{
-		SK_ERROR("Unexpected, window should already be updated |||||\n\n\n\n\n\n\n\n\n\n\n\n\n||||||||||||||||||||||");
-		onResize();
+		SK_ERROR("Unexpected, window should already be updated");
+		Window::getActive().recreate();
+		for (auto& render_stage : render_pipeline->getRenderStages())
+			render_stage.onResize(Window::getActive().getSwapChain());
 	}
 
 	render_pipeline->update(); 
 
-	Graphics::submit([&](CommandBuffer& cb)
+	RenderContext::submit([&](CommandBuffer& cb)
 		{
 			PipelineStage stage{};
 			for (auto& render_stage : render_pipeline->getRenderStages())
@@ -300,9 +294,13 @@ void Renderer::render(Camera* camera)
 	submit_info.wait_semaphores = { swap_chain_image_available };
 	submit_info.signal_semaphores = { render_finished };
 	submit_info.fence = previous_frame_finished;
-	Graphics::execute(submit_info);
+	RenderContext::execute(submit_info);
 	if (!Window::getActive().getSwapChain().present(render_finished))
-		onResize();
+	{
+		Window::getActive().recreate();
+		for (auto& render_stage : render_pipeline->getRenderStages())
+			render_stage.onResize(Window::getActive().getSwapChain());
+	}
 
 	stats.instance_batches += instance_batches.size();
 	for (const auto& instance_batch : instance_batches)

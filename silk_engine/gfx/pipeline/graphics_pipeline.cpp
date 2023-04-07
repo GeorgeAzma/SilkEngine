@@ -1,6 +1,6 @@
 #include "graphics_pipeline.h"
 #include "pipeline_cache.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/window/swap_chain.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/buffers/command_buffer.h"
@@ -60,7 +60,7 @@ GraphicsPipeline::GraphicsPipeline()
 
 void GraphicsPipeline::bind()
 {
-	Graphics::submit([&](CommandBuffer& cb) { cb.bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline, layout); });
+	RenderContext::submit([&](CommandBuffer& cb) { cb.bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline, layout); });
 }
 
 GraphicsPipeline& GraphicsPipeline::setSamples(VkSampleCountFlagBits sample_count)
@@ -237,5 +237,5 @@ void GraphicsPipeline::create()
 	vertex_input_info.pVertexAttributeDescriptions = shader->getBufferLayout().getAttributeDescriptions().data();
 	ci.pViewportState = &viewport_info;
 	
-	pipeline = Graphics::logical_device->createGraphicsPipeline(cache, ci);
+	pipeline = RenderContext::getLogicalDevice().createGraphicsPipeline(RenderContext::getPipelineCache(), ci);
 }

@@ -14,11 +14,12 @@ public:
 	std::vector<VkSurfaceFormatKHR> getSurfaceFormats(VkSurfaceKHR surface) const;
 	std::vector<VkPresentModeKHR> getSurfacePresentModes(VkSurfaceKHR surface) const;
 	VkSurfaceCapabilitiesKHR getSurfaceCapabilities(VkSurfaceKHR surface) const;
-	bool getSurfaceSupport(uint32_t queue_index, VkSurfaceKHR surface) const;
+	bool getSurfaceSupport(uint32_t queue_family_index, VkSurfaceKHR surface) const;
 
 	const std::vector<VkQueueFamilyProperties>& getQueueFamilyProperties() const { return queue_family_properties; }
 	const std::vector<uint32_t>& getQueueFamilyIndices() const { return queue_family_indices; }
 	const VkPhysicalDeviceProperties& getProperties() const { return properties; }
+	const VkPhysicalDeviceMemoryProperties& getMemoryProperties() const { return memory_properties; }
 	const VkPhysicalDeviceFeatures& getFeatures() const { return features; }
 	VkSampleCountFlagBits getMaxSampleCount() const { return max_usable_sample_count; }
 	VkFormatProperties getFormatProperties(VkFormat format) const;
@@ -26,7 +27,6 @@ public:
 	int getGraphicsQueue() const { return graphics_queue; }
 	int getComputeQueue() const { return compute_queue; }
 	int getTransferQueue() const { return transfer_queue; }
-	int getPresentQueue() const { return present_queue; }
 	operator const VkPhysicalDevice& () const { return physical_device; }
 
 private:
@@ -40,13 +40,13 @@ private:
 private:
 	VkPhysicalDevice physical_device = nullptr;
 	std::vector<VkQueueFamilyProperties> queue_family_properties;
-	std::vector<uint32_t> queue_family_indices; 
-	std::unordered_map<std::string, uint32_t> available_extensions; // extension name | extension spec version
-	int graphics_queue = -1;
-	int compute_queue = -1;
-	int transfer_queue = -1;
-	int present_queue = -1;
+	std::vector<uint32_t> queue_family_indices; // Sorted
+	std::unordered_map<std::string, uint32_t> supported_extensions; // extension name | extension spec version
+	int32_t graphics_queue = -1;
+	int32_t compute_queue = -1;
+	int32_t transfer_queue = -1;
 	VkPhysicalDeviceProperties properties;
+	VkPhysicalDeviceMemoryProperties memory_properties;
 	VkPhysicalDeviceFeatures features;
 	VkSampleCountFlagBits max_usable_sample_count;
 };

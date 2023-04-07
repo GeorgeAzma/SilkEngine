@@ -1,49 +1,31 @@
-#include "graphics.h"
-#include "debug_messenger.h"
+#include "render_context.h"
+#include "core/application.h"
 #include "instance.h"
 #include "devices/physical_device.h"
 #include "devices/logical_device.h"
-#include "window/swap_chain.h"
-#include "allocators/command_pool.h"
-#include "descriptors/descriptor_pool.h"
-#include "descriptors/descriptor_allocator.h"
 #include "allocators/allocator.h"
-#include "descriptors/descriptor_set.h"
-#include "ui/font.h"
-#include "utils/cooldown.h"
-#include "window/window.h"
-#include "scene/resources.h"
-#include "buffers/command_buffer.h"
-#include "scene/components.h"
-#include "scene/scene_manager.h"
-#include "renderer.h"
-#include "pipeline/compute_pipeline.h"
 #include "pipeline/pipeline_cache.h"
-#include "core/application.h"
+#include "ui/font.h"
+#include "descriptors/descriptor_allocator.h"
 #include "queues/command_queue.h"
+#include "window/window.h"
+#include "window/swap_chain.h"
+#include "buffers/buffer.h"
 #include <stb_image_write.h>
 
-void Graphics::init(const Application& app)
+void RenderContext::init(const Application& app)
 {
-	SK_VERIFY(!instance, "Vulkan: Reinitializing instance is not allowed");
-
-#ifdef SK_ENABLE_DEBUG_MESSENGER
-	debug_messenger = new DebugMessenger();
-#endif
 	instance = new Instance(app.getName());
-#ifdef SK_ENABLE_DEBUG_MESSENGER
-	debug_messenger->init();
-#endif
 	physical_device = new PhysicalDevice();
-	logical_device = new LogicalDevice();
+	logical_device = new LogicalDevice(*physical_device);
 	command_queue = new CommandQueue();
-	allocator = new Allocator();
+	allocator = new Allocator(*physical_device, *logical_device);
 	pipeline_cache = new PipelineCache();
 
 	Font::init();
 }
 
-void Graphics::destroy()
+void RenderContext::destroy()
 {
 	Font::destroy();
 	delete pipeline_cache;
@@ -51,33 +33,30 @@ void Graphics::destroy()
 	delete command_queue;
 	delete logical_device;
 	delete physical_device;
-#ifdef SK_ENABLE_DEBUG_MESSENGER
-	delete debug_messenger;
-#endif
 	delete instance;
 }
 
-void Graphics::update()
+void RenderContext::update()
 {
 	DescriptorAllocator::reset();
 }
 
-void Graphics::submit(std::function<void(CommandBuffer&)>&& command)
+void RenderContext::submit(std::function<void(CommandBuffer&)>&& command)
 {
 	command_queue->submit(std::forward<std::function<void(CommandBuffer&)>>(command));
 }
 
-void Graphics::execute()
+void RenderContext::execute()
 {
 	command_queue->execute();
 }
 
-void Graphics::execute(const CommandBuffer::SubmitInfo& submit_info)
+void RenderContext::execute(const CommandBuffer::SubmitInfo& submit_info)
 {
 	command_queue->execute(submit_info);
 }
 
-void Graphics::screenshot(const path& file)
+void RenderContext::screenshot(const path& file)
 {
 	// TODO: fix
 	int width = Window::getActive().getWidth();
@@ -107,12 +86,12 @@ void Graphics::screenshot(const path& file)
 	SK_TRACE("Screenshot saved at {}", file);
 }
 
-void Graphics::vulkanAssert(VkResult result)
+void RenderContext::vulkanAssert(VkResult result)
 {
 	SK_VERIFY(result == VK_SUCCESS, std::string("Vulkan: ") + stringifyResult(result));
 }
 
-std::string Graphics::stringifyResult(VkResult result)
+std::string RenderContext::stringifyResult(VkResult result)
 {
 	switch (result)
 	{
@@ -168,3 +147,5 @@ std::string Graphics::stringifyResult(VkResult result)
 		return "Unknown Vulkan error";
 	}
 }
+
+const PhysicalDevice& RenderContext::getPhysicalDevice() { return logical_device->getPhysicalDevice(); }

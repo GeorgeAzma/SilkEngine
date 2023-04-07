@@ -1,5 +1,5 @@
 #include "sampler.h"
-#include "gfx/graphics.h"
+#include "gfx/render_context.h"
 #include "gfx/devices/physical_device.h"
 #include "gfx/devices/logical_device.h"
 
@@ -15,7 +15,7 @@ Sampler::Sampler(const Props& props)
 	if (props.anisotropy != 1.0f)
 	{
 		ci.anisotropyEnable = VK_TRUE;
-		ci.maxAnisotropy = props.anisotropy == 0.0f ? Graphics::physical_device->getProperties().limits.maxSamplerAnisotropy : props.anisotropy;
+		ci.maxAnisotropy = props.anisotropy == 0.0f ? RenderContext::getPhysicalDevice().getProperties().limits.maxSamplerAnisotropy : props.anisotropy;
 	}
 	else
 	{
@@ -30,10 +30,10 @@ Sampler::Sampler(const Props& props)
 	ci.mipLodBias = 0.0f;
 	ci.minLod = 0.0f; 
 	ci.maxLod = VK_LOD_CLAMP_NONE;
-	sampler = Graphics::logical_device->createSampler(ci);
+	sampler = RenderContext::getLogicalDevice().createSampler(ci);
 }
 
 Sampler::~Sampler()
 {
-	Graphics::logical_device->destroySampler(sampler);
+	RenderContext::getLogicalDevice().destroySampler(sampler);
 }
