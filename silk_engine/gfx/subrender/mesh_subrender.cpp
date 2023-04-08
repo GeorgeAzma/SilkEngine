@@ -1,6 +1,5 @@
 #include "mesh_subrender.h"
-#include "gfx/window/window.h"
-#include "gfx/window/swap_chain.h"
+#include "gfx/devices/physical_device.h"
 #include "gfx/pipeline/graphics_pipeline.h"
 #include "scene/resources.h"
 #include "gfx/renderer.h"
@@ -12,7 +11,7 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
     using enum GpuType;
     shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
     graphics_pipeline->setShader(makeShared<Shader>("3D"))
-        .setSamples(Window::getActive().getSwapChain().getSamples())
+        .setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
         .setStage(pipeline_stage)
         .setDepthCompareOp(GraphicsPipeline::CompareOp::LESS)
         .build();
@@ -20,7 +19,7 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
 
     graphics_pipeline = makeShared<GraphicsPipeline>();
     graphics_pipeline->setShader(makeShared<Shader>("2D"))
-        .setSamples(Window::getActive().getSwapChain().getSamples())
+        .setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
         .setStage(pipeline_stage)
         .setDepthCompareOp(GraphicsPipeline::CompareOp::LESS_OR_EQUAL)
         .build();
@@ -28,7 +27,7 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
 
     graphics_pipeline = makeShared<GraphicsPipeline>();
     graphics_pipeline->setShader(makeShared<Shader>("font"))
-        .setSamples(Window::getActive().getSwapChain().getSamples())
+        .setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
         .setStage(pipeline_stage)
         .setDepthCompareOp(GraphicsPipeline::CompareOp::ALWAYS)
         .build();

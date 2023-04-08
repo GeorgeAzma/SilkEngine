@@ -8,30 +8,32 @@ class ImageView;
 class Image : NonCopyable
 {
 public:
-	enum class Type
+	enum class Type : std::underlying_type_t<VkImageViewType>
 	{
-		_1D,
-		_2D,
-		_3D,
-		CUBEMAP,
-		_1D_ARRAY,
-		_2D_ARRAY,
-		CUBEMAP_ARRAY
+		_1D = VK_IMAGE_VIEW_TYPE_1D,
+		_2D = VK_IMAGE_VIEW_TYPE_2D,
+		_3D = VK_IMAGE_VIEW_TYPE_3D,
+		CUBE = VK_IMAGE_VIEW_TYPE_CUBE,
+		_1D_ARRAY = VK_IMAGE_VIEW_TYPE_1D_ARRAY,
+		_2D_ARRAY = VK_IMAGE_VIEW_TYPE_2D_ARRAY,
+		CUBE_ARRAY = VK_IMAGE_VIEW_TYPE_CUBE_ARRAY
 	};
 
 	static VkImageType getVulkanTypeFromType(Type type);
-	static VkImageViewType getVulkanViewTypeFromType(Type type);
 
-	enum class Format
+	enum class Format : std::underlying_type_t<VkFormat>
 	{
 		RED = VK_FORMAT_R8_UNORM,
 		RG = VK_FORMAT_R8G8_UNORM,
 		RGB = VK_FORMAT_R8G8B8_UNORM,
 		RGBA = VK_FORMAT_R8G8B8A8_UNORM,
 		BGRA = VK_FORMAT_B8G8R8A8_UNORM,
-		DEPTH_STENCIL = VK_FORMAT_D24_UNORM_S8_UINT,
+		DEPTH16 = VK_FORMAT_D16_UNORM,
 		DEPTH = VK_FORMAT_D32_SFLOAT,
-		STENCIL = VK_FORMAT_S8_UINT
+		STENCIL = VK_FORMAT_S8_UINT,
+		DEPTH16_STENCIL = VK_FORMAT_D16_UNORM_S8_UINT,
+		DEPTH24_STENCIL = VK_FORMAT_D24_UNORM_S8_UINT,
+		DEPTH_STENCIL = VK_FORMAT_D32_SFLOAT_S8_UINT
 	};
 
 	static Format getFormatFromChannelCount(uint8_t channels);
@@ -40,15 +42,15 @@ public:
 	static size_t getFormatSize(Format format);
 	static bool isStencilFormat(Format format)
 	{
-		return format == Format::STENCIL || format == Format::DEPTH_STENCIL;
+		return format >= Format::STENCIL && format <= Format::DEPTH_STENCIL;
 	}
 	static bool isDepthFormat(Format format)
 	{
-		return format == Format::DEPTH || format == Format::DEPTH_STENCIL;
+		return format >= Format::DEPTH16 && format <= Format::DEPTH_STENCIL && format != Format::STENCIL;
 	}
 	static bool isDepthStencilFormat(Format format)
 	{
-		return format == Format::DEPTH || format == Format::STENCIL || format == Format::DEPTH_STENCIL;
+		return format >= Format::DEPTH16 && format <= Format::DEPTH_STENCIL;
 	}
 	static uint32_t calculateMipLevels(uint32_t width, uint32_t height = 1, uint32_t depth = 1);
 

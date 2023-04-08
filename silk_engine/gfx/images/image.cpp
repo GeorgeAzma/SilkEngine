@@ -19,30 +19,14 @@ VkImageType Image::getVulkanTypeFromType(Type type)
 		return VK_IMAGE_TYPE_1D;
 	case Type::_2D:
 	case Type::_2D_ARRAY:
-	case Type::CUBEMAP:
-	case Type::CUBEMAP_ARRAY:
+	case Type::CUBE:
+	case Type::CUBE_ARRAY:
 		return VK_IMAGE_TYPE_2D;
 	case Type::_3D:
 		return VK_IMAGE_TYPE_3D;	
 	}
 
 	return VK_IMAGE_TYPE_2D;
-}
-
-VkImageViewType Image::getVulkanViewTypeFromType(Type type)
-{
-	switch (type)
-	{
-	case Type::_1D: return VK_IMAGE_VIEW_TYPE_1D;
-	case Type::_1D_ARRAY: return VK_IMAGE_VIEW_TYPE_1D_ARRAY;
-	case Type::_2D: return VK_IMAGE_VIEW_TYPE_2D;
-	case Type::_2D_ARRAY: return VK_IMAGE_VIEW_TYPE_2D_ARRAY;
-	case Type::CUBEMAP: return VK_IMAGE_VIEW_TYPE_CUBE;
-	case Type::CUBEMAP_ARRAY: return VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
-	case Type::_3D: return VK_IMAGE_VIEW_TYPE_3D;
-	}
-
-	return VK_IMAGE_VIEW_TYPE_2D;
 }
 
 Image::Format Image::getFormatFromChannelCount(uint8_t channels)
@@ -67,9 +51,12 @@ size_t Image::getFormatSize(Format format)
 	case Format::RGB: return 3;
 	case Format::RGBA: return 4;
 	case Format::BGRA: return 4;
-	case Format::DEPTH_STENCIL: return 4;
+	case Format::DEPTH16: return 2;
 	case Format::DEPTH: return 4;
 	case Format::STENCIL: return 1;
+	case Format::DEPTH16_STENCIL: return 3;
+	case Format::DEPTH24_STENCIL: return 4;
+	case Format::DEPTH_STENCIL: return 5;
 	}
 
 	return 4;
@@ -95,9 +82,13 @@ uint8_t Image::getFormatChannelCount(Format format)
 	case Format::RGB: return 3;
 	case Format::RGBA: return 4;
 	case Format::BGRA: return 4;
-	case Format::DEPTH_STENCIL: return 1; //NOTE: Might be 2, probably not gonna use this anyways tho
-	case Format::DEPTH: return 1;
-	case Format::STENCIL: return 1;
+	case Format::DEPTH16:
+	case Format::DEPTH:
+	case Format::STENCIL:
+	case Format::DEPTH16_STENCIL:
+	case Format::DEPTH24_STENCIL:
+	case Format::DEPTH_STENCIL:  //NOTE: Might be 2, probably not gonna use this anyways tho
+		return 1;
 	}
 
 	return 4;
@@ -421,7 +412,7 @@ void Image::create()
 		ci.format = VkFormat(props.format);
 		ci.tiling = props.tiling;
 		ci.usage = props.usage;
-		ci.flags = (props.type == Type::CUBEMAP) * VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+		ci.flags = (props.type == Type::CUBE) * VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 		ci.initialLayout = props.initial_layout;
 		layout = props.initial_layout;
 		ci.extent = { props.width, props.height, props.depth };
@@ -444,6 +435,7 @@ void Image::create()
 				generateMipmaps();
 		}
 
+		// TODO: Should cache samplers
 		if (props.create_sampler)
 			sampler = makeUnique<Sampler>(props.sampler_props);
 

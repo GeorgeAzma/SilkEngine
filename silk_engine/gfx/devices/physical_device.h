@@ -22,6 +22,7 @@ public:
 	const VkPhysicalDeviceMemoryProperties& getMemoryProperties() const { return memory_properties; }
 	const VkPhysicalDeviceFeatures& getFeatures() const { return features; }
 	VkSampleCountFlagBits getMaxSampleCount() const { return max_usable_sample_count; }
+	VkFormat getDepthFormat() const { return depth_format; }
 	VkFormatProperties getFormatProperties(VkFormat format) const;
 	VkImageFormatProperties getImageFormatProperties(VkFormat format, VkImageType type, VkImageTiling tilling, VkImageUsageFlags usage, VkImageCreateFlags flags) const;
 	int getGraphicsQueue() const { return graphics_queue; }
@@ -49,4 +50,5 @@ private:
 	VkPhysicalDeviceMemoryProperties memory_properties;
 	VkPhysicalDeviceFeatures features;
 	VkSampleCountFlagBits max_usable_sample_count;
+	VkFormat depth_format = VkFormat(0);
 };

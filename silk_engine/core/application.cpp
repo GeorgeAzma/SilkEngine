@@ -21,13 +21,7 @@
 Application::Application(ApplicationCommandLineArgs args)
     : command_line_args(args)
 {
-    Log::init(); 
-    SK_INFO("Started");
-    GLFW::init();
-    Input::init();
-    RenderContext::init(*this);
     window = new Window();
-    Resources::init();
     Renderer::init();
     Dispatcher::subscribe(this, &Application::onWindowClose);
     Dispatcher::subscribe(this, &Application::onFramebufferResize);
@@ -41,12 +35,7 @@ Application::~Application()
     Dispatcher::unsubscribe(this, &Application::onKeyPress);
     SceneManager::destroy();
     delete window;
-    GLFW::destroy();
     Renderer::destroy();
-    Resources::destroy();
-    DescriptorAllocator::destroy();
-    RenderContext::destroy();
-    SK_INFO("Terminated");
 }
 
 void Application::run()

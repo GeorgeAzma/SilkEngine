@@ -9,24 +9,7 @@
 SwapChain::SwapChain(const Surface& surface)
 	: surface(surface)
 {
-	//Choose format
-	std::multimap<int, VkSurfaceFormatKHR> surface_formats;
-	for (const auto& available_format : surface.getFormats())
-	{
-		int score = (available_format.format == VK_FORMAT_B8G8R8A8_UNORM) * 1000 +
-			(available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) * 400;
-		if (score >= 0)
-			surface_formats.insert(std::make_pair(score, available_format));
-	}
-	SK_ASSERT(surface_formats.size() > 0, "Vulkan: Couldn't find supported formats to choose from");
-
-	//Choose present mode
-	image_format = Image::Format(surface_formats.rbegin()->second.format);
-	depth_format = Image::Format(RenderContext::getPhysicalDevice().findSupportedFormat({ VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM }, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT ));
-	sample_count = RenderContext::getPhysicalDevice().getMaxSampleCount();
-	color_space = surface_formats.rbegin()->second.colorSpace;
-
-	create();
+	recreate();
 }
 
 bool SwapChain::acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence)
@@ -62,7 +45,7 @@ bool SwapChain::present(VkSemaphore wait_semaphore)
 	return true;
 }
 
-void SwapChain::create()
+void SwapChain::recreate()
 {
 	const auto& caps = surface.getCapabilities();
 	extent = VkExtent2D
@@ -89,29 +72,53 @@ void SwapChain::create()
 				present_mode = available_present_mode;
 				break;
 			}
+			if (available_present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
+				present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 		}
 	}
 	this->present_mode = present_mode;
-
 
 	uint32_t image_count = caps.minImageCount + 1;
 	if (caps.maxImageCount > 0)
 		image_count = std::min(image_count, caps.maxImageCount);
 
+	VkSurfaceTransformFlagsKHR transform = caps.currentTransform;
+	if (caps.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
+		transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+	else
+		transform = caps.currentTransform;
+
+	VkCompositeAlphaFlagBitsKHR composite_alpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; // Choose non opaque composite alpha for transparent windows
+	VkCompositeAlphaFlagBitsKHR composite_alpha_flags[] = 
+	{
+		VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+		VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
+		VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,
+		VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
+	};
+	for (auto& composite_alpha_flag : composite_alpha_flags) 
+	{
+		if (caps.supportedCompositeAlpha & composite_alpha_flag)
+		{
+			composite_alpha = composite_alpha_flag;
+			break;
+		}
+	}
+
 	VkSwapchainCreateInfoKHR ci{};
 	ci.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	ci.surface = surface;
 	ci.minImageCount = image_count;
-	ci.imageFormat = VkFormat(getFormat());
-	ci.imageColorSpace = color_space;
+	ci.imageFormat = surface.getFormat().format;
+	ci.imageColorSpace = surface.getFormat().colorSpace;
 	ci.imageExtent = extent;
 	ci.imageArrayLayers = 1; //For stereoscopic 3D apps
 	ci.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	ci.preTransform = caps.currentTransform;
-	ci.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; //For transparent windows
+	ci.preTransform = (VkSurfaceTransformFlagBitsKHR)transform;
+	ci.compositeAlpha = composite_alpha;
 	ci.presentMode = present_mode;
 	ci.clipped = VK_TRUE;
-	ci.oldSwapchain = old_swap_chain; //Necessary for resizing and such
+	ci.oldSwapchain = old_swap_chain;
 
 	// Enable transfer source on swap chain images if supported
 	if (caps.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
@@ -138,7 +145,7 @@ void SwapChain::create()
 	this->images.resize(image_count);
 
 	for (size_t i = 0; i < images.size(); ++i)
-		this->images[i] = makeShared<Image>(getWidth(), getHeight(), getFormat(), images[i]);
+		this->images[i] = makeShared<Image>(getWidth(), getHeight(), Image::Format(surface.getFormat().format), images[i]);
 
 	if (old_swap_chain)
 	{

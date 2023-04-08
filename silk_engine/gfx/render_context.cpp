@@ -10,23 +10,24 @@
 #include "queues/command_queue.h"
 #include "window/window.h"
 #include "window/swap_chain.h"
+#include "window/surface.h"
 #include "buffers/buffer.h"
 #include <stb_image_write.h>
 
-void RenderContext::init(const Application& app)
+void RenderContext::init(std::string_view app_name)
 {
-	instance = new Instance(app.getName());
+	instance = new Instance(app_name);
 	physical_device = new PhysicalDevice();
 	logical_device = new LogicalDevice(*physical_device);
 	command_queue = new CommandQueue();
 	allocator = new Allocator(*physical_device, *logical_device);
 	pipeline_cache = new PipelineCache();
-
 	Font::init();
 }
 
 void RenderContext::destroy()
 {
+	DescriptorAllocator::destroy();
 	Font::destroy();
 	delete pipeline_cache;
 	delete allocator;
@@ -61,7 +62,7 @@ void RenderContext::screenshot(const path& file)
 	// TODO: fix
 	int width = Window::getActive().getWidth();
 	int height = Window::getActive().getHeight();
-	int channels = Image::getFormatChannelCount(Window::getActive().getSwapChain().getFormat());
+	int channels = Image::getFormatChannelCount(Image::Format(Window::getActive().getSurface().getFormat().format));
 	 
 	Image::Props props{};
 	props.width = width;
@@ -70,7 +71,7 @@ void RenderContext::screenshot(const path& file)
 	props.create_view = false;
 	props.layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	props.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-	props.format = Window::getActive().getSwapChain().getFormat();
+	props.format = Image::Format(Window::getActive().getSurface().getFormat().format);
 	props.tiling = VK_IMAGE_TILING_OPTIMAL;
 	shared<Image> destination = makeShared<Image>(props);
 	

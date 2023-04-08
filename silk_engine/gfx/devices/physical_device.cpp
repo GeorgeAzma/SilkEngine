@@ -136,17 +136,20 @@ void PhysicalDevice::init(VkPhysicalDevice physical_device)
 	std::ranges::sort(queue_family_indices); // If you remove this make sure to add it in logical device
 
 	max_usable_sample_count = getMaxSampleCount(properties.limits.framebufferColorSampleCounts & properties.limits.framebufferDepthSampleCounts);
+	depth_format = findSupportedFormat({ VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D16_UNORM }, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
 VkFormat PhysicalDevice::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const
 {
-	for (VkFormat format : candidates)
-	{
-		VkFormatProperties props = getFormatProperties(format);
-		if ((tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) || 
-			(tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features))
-			return format;
-	}
+	if (tiling == VK_IMAGE_TILING_OPTIMAL)
+		for (VkFormat format : candidates)
+			if ((getFormatProperties(format).optimalTilingFeatures & features) == features)
+				return format;
+
+	if (tiling == VK_IMAGE_TILING_LINEAR)
+		for (VkFormat format : candidates)
+			if ((getFormatProperties(format).linearTilingFeatures & features) == features)
+				return format;
 
 	SK_ERROR("Vulkan: Couldn't find supported format");
 	return VkFormat(0);

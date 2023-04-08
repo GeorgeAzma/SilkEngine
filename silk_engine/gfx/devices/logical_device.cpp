@@ -78,6 +78,7 @@ LogicalDevice::LogicalDevice(const PhysicalDevice& physical_device)
 
 LogicalDevice::~LogicalDevice()
 {
+	wait();
 	vkDestroyDevice(logical_device, nullptr);
 }
 

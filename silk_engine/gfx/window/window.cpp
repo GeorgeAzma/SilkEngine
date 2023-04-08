@@ -234,7 +234,7 @@ void Window::recreate()
         return;
 
     surface->updateCapabilities();
-    swap_chain->create();
+    swap_chain->recreate();
 }
 
 GLFWmonitor* Window::getMonitor() const

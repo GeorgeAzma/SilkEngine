@@ -17,7 +17,7 @@ class Application;
 class RenderContext
 {
 public:
-	static void init(const Application& app);
+	static void init(std::string_view app_name);
 	static void destroy();
 	static void update();
 

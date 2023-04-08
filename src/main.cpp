@@ -1,9 +1,7 @@
+#include "entry_point.h"
 #include "core/my_app.h"
 
-int main(int argc, char** argv)
+Application* createApplication(int argc, char** argv)
 {
-    auto app = new MyApp({ argc, argv });
-    app->run();
-    delete app;
-    return EXIT_SUCCESS;
+    return new MyApp({ argc, argv });
 }

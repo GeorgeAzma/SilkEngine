@@ -8,7 +8,7 @@ ImageView::ImageView(VkImage image, Image::Format format, size_t base_mip_level,
 	VkImageViewCreateInfo ci{};
 	ci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	ci.image = image;
-	ci.viewType = Image::getVulkanViewTypeFromType(image_type);
+	ci.viewType = VkImageViewType(image_type);
 	ci.format = VkFormat(format);
 	ci.components = components;
 	ci.subresourceRange.aspectMask = Image::getFormatVulkanAspectFlags(format);

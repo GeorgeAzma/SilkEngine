@@ -40,7 +40,6 @@ private:
     Window* window;
     ApplicationCommandLineArgs command_line_args;
     bool running = true;
-
-private:
-    friend int ::main(int argc, char **argv);
 };
+
+Application* createApplication(int argc, char** argv);
