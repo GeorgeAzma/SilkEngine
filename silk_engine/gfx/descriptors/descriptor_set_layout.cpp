@@ -2,6 +2,11 @@
 #include "gfx/render_context.h"
 #include "gfx/devices/logical_device.h"
 
+DescriptorSetLayout::~DescriptorSetLayout()
+{
+	RenderContext::getLogicalDevice().destroyDescriptorSetLayout(layout);
+}
+
 DescriptorSetLayout& DescriptorSetLayout::addBinding(uint32_t binding, VkDescriptorType descriptor_type, VkShaderStageFlags shader_stages, size_t count)
 {
 	VkDescriptorSetLayoutBinding layout_binding{};
@@ -29,7 +34,23 @@ void DescriptorSetLayout::build()
 	layout = RenderContext::getLogicalDevice().createDescriptorSetLayout(ci);
 }
 
-DescriptorSetLayout::~DescriptorSetLayout()
+shared<DescriptorSetLayout> DescriptorSetLayout::get(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
-	RenderContext::getLogicalDevice().destroyDescriptorSetLayout(layout);
+	auto layout = descriptor_set_layouts.find(bindings);
+	if (layout != descriptor_set_layouts.end())
+		return layout->second;
+
+	return add(bindings);
+}
+
+shared<DescriptorSetLayout> DescriptorSetLayout::add(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+{
+	shared<DescriptorSetLayout> new_layout = makeShared<DescriptorSetLayout>();
+	for (size_t i = 0; i < bindings.size(); ++i)
+		new_layout->addBinding(bindings[i].binding, bindings[i].descriptorType, bindings[i].stageFlags, bindings[i].descriptorCount);
+	new_layout->build();
+
+	descriptor_set_layouts[bindings] = new_layout;
+
+	return new_layout;
 }

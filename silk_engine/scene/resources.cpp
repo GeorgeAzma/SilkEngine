@@ -101,7 +101,6 @@ void Resources::destroy()
     resources<Image>.clear();
     resources<Font>.clear();
     white_image = nullptr;
-    descriptor_set_layouts.clear();
 }
 
 template<typename T>
@@ -117,21 +116,6 @@ template shared<ComputePipeline> Resources::get<ComputePipeline>(std::string_vie
 template shared<Image> Resources::get<Image>(std::string_view);
 template shared<Font> Resources::get<Font>(std::string_view);
 
-shared<DescriptorSetLayout> Resources::getDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
-{
-    auto layout = descriptor_set_layouts.find({ bindings });
-    if (layout != descriptor_set_layouts.end())
-        return layout->second;
-
-    shared<DescriptorSetLayout> new_layout = makeShared<DescriptorSetLayout>();
-    for (size_t i = 0; i < bindings.size(); ++i)
-        new_layout->addBinding(bindings[i].binding, bindings[i].descriptorType, bindings[i].stageFlags, bindings[i].descriptorCount);
-    new_layout->build();
-    addDescriptorSetLayout(new_layout);
-
-    return new_layout;
-}
-
 template<typename T>
 void Resources::add(std::string_view name, const shared<T>& t)
 {
@@ -144,11 +128,6 @@ template void Resources::add<GraphicsPipeline>(std::string_view, const shared<Gr
 template void Resources::add<ComputePipeline>(std::string_view, const shared<ComputePipeline>&);
 template void Resources::add<Image>(std::string_view, const shared<Image>&);
 template void Resources::add<Font>(std::string_view, const shared<Font>&);
-
-void Resources::addDescriptorSetLayout(const shared<DescriptorSetLayout>& descriptor_layout)
-{
-    descriptor_set_layouts[DescriptorSetLayoutInfo{descriptor_layout->bindings_vector}] = descriptor_layout;
-}
 
 template<typename T>
 void Resources::remove(std::string_view name)
@@ -171,29 +150,3 @@ template void Resources::remove<GraphicsPipeline>(std::string_view);
 template void Resources::remove<ComputePipeline>(std::string_view);
 template void Resources::remove<Image>(std::string_view);
 template void Resources::remove<Font>(std::string_view);
-
-bool Resources::DescriptorSetLayoutInfo::operator==(const DescriptorSetLayoutInfo& other) const
-{
-    if (other.bindings.size() != bindings.size())
-        return false;
-
-   for (size_t i = 0; i < bindings.size(); i++) 
-   {
-       if (other.bindings[i].binding != bindings[i].binding ||
-           other.bindings[i].descriptorType != bindings[i].descriptorType ||
-           other.bindings[i].descriptorCount != bindings[i].descriptorCount ||
-           other.bindings[i].stageFlags != bindings[i].stageFlags)
-           return false;
-   }
-
-   return true;
-}
-
-size_t Resources::DescriptorSetLayoutInfo::hash() const
-{
-    size_t result = bindings.size();
-    for (const VkDescriptorSetLayoutBinding& b : bindings)
-        result ^= b.binding | (b.descriptorType << 8) | (b.descriptorCount << 16) | (b.stageFlags << 24);
-
-    return result;
-}

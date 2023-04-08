@@ -106,8 +106,8 @@ void Renderer::render(Camera* camera)
 			}
 		});
 
-	CommandBuffer::SubmitInfo submit_info{};
 	VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	CommandBuffer::SubmitInfo submit_info{};
 	submit_info.wait_stages = &wait_stage;
 	submit_info.wait_semaphores = { swap_chain_image_available };
 	submit_info.signal_semaphores = { render_finished };

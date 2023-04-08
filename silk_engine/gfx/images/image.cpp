@@ -437,7 +437,7 @@ void Image::create()
 
 		// TODO: Should cache samplers
 		if (props.create_sampler)
-			sampler = makeUnique<Sampler>(props.sampler_props);
+			sampler = Sampler::get(props.sampler_props);
 
 		transitionLayout(props.layout);
 	}

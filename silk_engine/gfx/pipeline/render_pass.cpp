@@ -97,14 +97,15 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
         //subpass_description.pPreserveAttachments;
         subpass_descriptions[subpass_index] = std::move(subpass_description);
 
-        //TODO:
+        //TODO: Figure out how to do this automatically (I don't think it is possible to do it automatically though, without some performance implication) (good reference: https://www.reddit.com/r/vulkan/comments/s80reu/subpass_dependencies_what_are_those_and_why_do_i/)
+        //NOTE: VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT does not support access mask VK_ACCESS_SHADER_READ_BIT
         VkSubpassDependency subpass_dependency{};
         subpass_dependency.srcSubpass = subpass_index ? (subpass_index - 1) : VK_SUBPASS_EXTERNAL;
         subpass_dependency.dstSubpass = subpass_index;
-        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        subpass_dependency.srcAccessMask = VK_ACCESS_NONE;
-        subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT/* | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT*/;
+        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT/* | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT*/;
+        subpass_dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT/* | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT*/;
+        subpass_dependency.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         subpass_dependencies[subpass_index] = std::move(subpass_dependency);
     }
 

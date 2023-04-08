@@ -3,7 +3,7 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/debug_renderer.h"
 #include "gfx/instance.h"
-#include <shaderc/shaderc.hpp>
+#include "includer.h"
 #include <spirv_cross/spirv_cross.hpp>
 
 shaderc::Compiler Shader::compiler{};
@@ -51,6 +51,7 @@ bool Shader::Stage::compile()
 	options.SetTargetSpirv(shaderc_spirv_version_1_6);
 	options.SetWarningsAsErrors();
 	options.SetGenerateDebugInfo();
+	options.SetIncluder(makeUnique<Includer>());
 
 	std::string source;
 
@@ -79,17 +80,26 @@ bool Shader::Stage::compile()
 	case TESSELATION_CONTROL: shaderc_type = shaderc_tess_control_shader; break;
 	case TESSELATION_EVALUATION: shaderc_type = shaderc_tess_evaluation_shader; break;
 	}
-	DebugTimer t(std::format("Compiling shader stage({})", file.filename()));
-	auto compilation_result = compiler.CompileGlslToSpv(source.data(), shaderc_type, file.string().c_str(), options);
-	t();
-	if (compilation_result.GetCompilationStatus() != shaderc_compilation_status_success)
+
+	DebugTimer t(std::format("Compiling shader({})", file.filename()));
+	auto preprocess_result = compiler.PreprocessGlsl(source, shaderc_type, file.string().c_str(), options);
+	if (preprocess_result.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
-		SK_ERROR("Shader stage({}) failed: {}", file, compilation_result.GetErrorMessage());
+		SK_ERROR("Shader({}) error: {}", file, preprocess_result.GetErrorMessage());
 		return false;
 	}
+	if (preprocess_result.GetNumWarnings())
+		SK_WARN("Shader({}) warning: {}", file, preprocess_result.GetErrorMessage());
 
+	auto compilation_result = compiler.CompileGlslToSpv(preprocess_result.begin(), shaderc_type, file.string().c_str(), options);
+	if (compilation_result.GetCompilationStatus() != shaderc_compilation_status_success)
+	{
+		SK_ERROR("Shader({}) error: {}", file, compilation_result.GetErrorMessage());
+		return false;
+	}
 	if (compilation_result.GetNumWarnings())
-		SK_WARN("Shader stage({}) warning: {}", file, compilation_result.GetErrorMessage());
+		SK_WARN("Shader({}) warning: {}", file, compilation_result.GetErrorMessage());	
+	t();
 
 	binary = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend()); 
 

@@ -12,6 +12,7 @@
 #include "window/swap_chain.h"
 #include "window/surface.h"
 #include "buffers/buffer.h"
+#include "descriptors/descriptor_set_layout.h"
 #include <stb_image_write.h>
 
 void RenderContext::init(std::string_view app_name)
@@ -27,6 +28,8 @@ void RenderContext::init(std::string_view app_name)
 
 void RenderContext::destroy()
 {
+	Sampler::destroy();
+	DescriptorSetLayout::destroy();
 	DescriptorAllocator::destroy();
 	Font::destroy();
 	delete pipeline_cache;

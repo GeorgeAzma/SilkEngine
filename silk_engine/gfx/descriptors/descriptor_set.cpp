@@ -3,7 +3,6 @@
 #include "gfx/render_context.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/descriptors/descriptor_pool.h"
-#include "scene/resources.h"
 #include "gfx/buffers/command_buffer.h"
 
 DescriptorSet::~DescriptorSet()
@@ -51,7 +50,7 @@ DescriptorSet& DescriptorSet::add(uint32_t binding, uint32_t count, VkDescriptor
 	descriptor_layout_binding.descriptorCount = count;
 	descriptor_layout_binding.descriptorType = descriptor_type;
 	descriptor_layout_binding.stageFlags = stage_flags;
-	//descriptor_layout_binding.pImmutableSamplers = ; //TODO: Support immutable samplers
+	//descriptor_layout_binding.pImmutableSamplers = ; // TODO: Support immutable samplers
 	descriptor_set_layout_bindings.emplace_back(std::move(descriptor_layout_binding));
 
 	return *this;
@@ -62,7 +61,7 @@ void DescriptorSet::build()
 	if (descriptor_set_layout_bindings.empty())
 		return;
 
-	layout = Resources::getDescriptorSetLayout(descriptor_set_layout_bindings);
+	layout = DescriptorSetLayout::get(descriptor_set_layout_bindings);
 	pool = DescriptorAllocator::allocate(descriptor_set, *layout);
 	needs_update = true;
 

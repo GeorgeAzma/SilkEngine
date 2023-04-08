@@ -126,7 +126,7 @@ protected:
 
 protected:
 	VkImage image = nullptr;
-	unique<Sampler> sampler = nullptr;
+	shared<Sampler> sampler = nullptr;
 	unique<ImageView> view = nullptr;
 	mutable VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
 	Allocation allocation{};
