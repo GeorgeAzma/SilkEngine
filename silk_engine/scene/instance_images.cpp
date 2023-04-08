@@ -1,10 +1,11 @@
 #include "instance_images.h"
+#include "gfx/images/image.h"
 #include "resources.h"
-#include "gfx/renderer.h"
+#include "gfx/debug_renderer.h"
 
 InstanceImages::InstanceImages(uint32_t max_images)
 {
-	this->max_images = max_images ? max_images : Renderer::MAX_IMAGE_SLOTS;
+	this->max_images = max_images ? max_images : DebugRenderer::MAX_IMAGE_SLOTS;
 }
 
 uint32_t InstanceImages::add(const std::vector<shared<Image>>& new_images)
@@ -66,6 +67,11 @@ void InstanceImages::remove(size_t index, size_t count)
 		SK_VERIFY(image_owners[index + i] > 0, "Couldn't remove image from instance images");
 		--image_owners[index + i];
 	}
+}
+
+const std::vector<shared<Image>>& InstanceImages::getImages() const
+{
+	return images;
 }
 
 std::vector<VkDescriptorImageInfo> InstanceImages::getDescriptorImageInfos() const

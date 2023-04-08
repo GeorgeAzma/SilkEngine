@@ -4,7 +4,7 @@
 #include "scene/camera/camera.h"
 #include "utils/thread_pool.h"
 #include "gfx/buffers/command_buffer.h"
-#include "renderer.h"
+#include "debug_renderer.h"
 #include "scene/meshes/mesh.h"
 
 void ParticleSystem::init()
@@ -115,7 +115,7 @@ void ParticleSystem::render(GraphicsPipeline& graphics_pipeline)
         graphics_pipeline.bind();
         vao->bind();
         instance_vbo->bind(1);
-        graphics_pipeline.getShader()->setIfExists("GlobalUniform", { *Renderer::getGlobalUniformBuffer() }); //TODO: Unsafe, change
+        graphics_pipeline.getShader()->setIfExists("GlobalUniform", { *DebugRenderer::global_uniform_buffer }); //TODO: Unsafe, change
         graphics_pipeline.getShader()->setIfExists("images", instance_images->getDescriptorImageInfos());
         graphics_pipeline.getShader()->bindDescriptorSets();
         RenderContext::submit([&](CommandBuffer& cb) { cb.drawIndexed(vao->getIndexBuffer()->getCount(), particle_data.size(), 0, 0, 0); });

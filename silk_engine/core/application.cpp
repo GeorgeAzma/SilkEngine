@@ -56,7 +56,6 @@ void Application::update()
 {
     Renderer::wait();
 
-    Renderer::reset();
     onUpdate();
     SceneManager::update();
 

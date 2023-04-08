@@ -14,6 +14,3 @@ include(IncludeExternalDependencies)
 # |-----Sub Directories-----|
 add_subdirectory("silk_engine")
 add_subdirectory("src")
-if(${BUILD_TESTS})
-    add_subdirectory("tests")
-endif()

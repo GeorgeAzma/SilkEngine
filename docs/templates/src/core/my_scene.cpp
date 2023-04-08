@@ -5,9 +5,8 @@
 #include "silk_engine/gfx/window/window.h"
 #include "silk_engine/scene/camera/camera_controller.h"
 #include "silk_engine/scene/components.h"
-#include "silk_engine/gfx/debug_renderer.h"
+#include "silk_engine/gfx/renderer.h"
 #include "silk_engine/utils/cooldown.h"
-#include "silk_engine/gfx/render_context.h"
 
 #include "my_scene.h"
 
@@ -32,7 +31,7 @@ void MyScene::onUpdate()
     if (c())
         Window::getActive().setTitle(std::format("Vulkan - {} FPS ({:.4} ms) | {}x{}", int(1.0 / Time::dt), (Time::dt * 1000), Window::getActive().getWidth(), Window::getActive().getHeight()));
     
-    DebugRenderer::color(Colors::WHITE);
+    Renderer::color(Colors::WHITE);
     int n = 500;
     std::vector<vec2> p(n);
     for (int i = 0; i < n; ++i)
@@ -41,7 +40,7 @@ void MyScene::onUpdate()
         p[i].y = cos(pi<float>() * 2.0 * 3.0 * p[i].x + Time::runtime) * 100.0f + 200.0f;
         p[i].x *= Window::getActive().getWidth();
     }
-    DebugRenderer::line(p, 4.0f);
+    Renderer::line(p, 4.0f);
 }
 
 void MyScene::onStop()

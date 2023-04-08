@@ -46,9 +46,7 @@ Checkout the engine files as an example to see our coding style, read this for q
 
 Disclaimer: Following these notes isn't neccessary but would be preferable
 
-- If you write some code that might be dangerous in feature 
-  (mostly for performance reasons), put comment like: 
-  "//WARN: I did something this way for performance, it can be changed to this"
+- Use comments, especially TODO's and NOTE's
 - Prefer verbose variable names
 - Worry about multiplatform support
 - You can follow coding style of the thing you are programming in 

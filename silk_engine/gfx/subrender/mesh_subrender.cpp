@@ -2,9 +2,9 @@
 #include "gfx/devices/physical_device.h"
 #include "gfx/pipeline/graphics_pipeline.h"
 #include "scene/resources.h"
-#include "gfx/renderer.h"
+#include "gfx/debug_renderer.h"
 #include "gfx/buffers/command_buffer.h"
-#include "scene/instance.h"
+#include "gfx/buffers/buffer.h"
 
 MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
 {
@@ -38,18 +38,18 @@ void MeshSubrender::render()
 {
     //Draw instances
     size_t draw_index = 0;
-    for (auto& instance_batch : Renderer::getInstanceBatches())
+    for (auto& instance_batch : DebugRenderer::instance_batches)
     {
         const auto& shader = instance_batch.instance->pipeline->getShader();
         if (auto global_uniform = shader->getIfExists("GlobalUniform"))
-            instance_batch.descriptor_sets[global_uniform->set].setBufferInfo(global_uniform->binding, { *Renderer::getGlobalUniformBuffer() }); //TODO: Global data doesn't have to update for each batch
+            instance_batch.descriptor_sets[global_uniform->set].setBufferInfo(global_uniform->binding, { *DebugRenderer::global_uniform_buffer }); //TODO: Global data doesn't have to update for each batch
 
         if (auto images = shader->getIfExists("images"))
             instance_batch.descriptor_sets[images->set].setImageInfo(images->binding, instance_batch.instance_images.getDescriptorImageInfos());
 
         instance_batch.bind();
 
-        RenderContext::submit([&](CommandBuffer& cb){ cb.drawIndexedIndirect(*Renderer::getIndirectBuffer(), draw_index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand)); });
+        RenderContext::submit([&](CommandBuffer& cb){ cb.drawIndexedIndirect(*DebugRenderer::indirect_buffer, draw_index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand)); });
         ++draw_index;
     }
 }

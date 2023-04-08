@@ -1,2 +1,1 @@
-v1.0.1: Instanced renderer, ecs and vulkan abstractions implemented
-v1.0.0: Renderer implemented
+v1.0.0: Initial release

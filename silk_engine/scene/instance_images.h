@@ -1,7 +1,6 @@
 #pragma once
 
-#include "gfx/images/image.h"
-#include "gfx/descriptors/descriptor_set.h"
+class Image;
 
 class InstanceImages
 {
@@ -12,7 +11,7 @@ public:
 	uint32_t add(const std::vector<shared<Image>>& new_images);
 	void remove(size_t index, size_t count = 1);
 	uint32_t available() const { return max_images - images.size(); }
-	const std::vector<shared<Image>>& getImages() const { return images; }
+	const std::vector<shared<Image>>& getImages() const;
 	std::vector<VkDescriptorImageInfo> getDescriptorImageInfos() const;
 
 private:

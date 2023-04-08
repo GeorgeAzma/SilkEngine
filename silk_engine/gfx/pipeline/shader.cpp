@@ -1,7 +1,7 @@
 #include "shader.h"
 #include "io/file.h"
 #include "gfx/devices/logical_device.h"
-#include "gfx/renderer.h"
+#include "gfx/debug_renderer.h"
 #include "gfx/instance.h"
 #include <shaderc/shaderc.hpp>
 #include <spirv_cross/spirv_cross.hpp>
@@ -55,8 +55,9 @@ bool Shader::Stage::compile()
 	std::string source;
 
 	std::string defines;
-	defines += "#define MAX_IMAGE_SLOTS " + std::to_string(Renderer::MAX_IMAGE_SLOTS) + '\n';
-	defines += "#define MAX_LIGHTS " + std::to_string(Renderer::MAX_LIGHTS) + '\n';
+	// TODO: remove this, make this a parameter, or do something else
+	defines += "#define MAX_IMAGE_SLOTS " + std::to_string(DebugRenderer::MAX_IMAGE_SLOTS) + '\n';
+	defines += "#define MAX_LIGHTS " + std::to_string(DebugRenderer::MAX_LIGHTS) + '\n';
 	defines += "#define DIFFUSE_TEXTURE 0\n";
 	defines += "#define NORMAL_TEXTURE 1\n";
 	defines += "#define AO_TEXTURE 2\n";

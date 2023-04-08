@@ -1,23 +1,5 @@
-- Fix instancing
-- Deffer command buffer submission
-- Use single vertex buffer with mesh data
 - Don't recompile already compiled shaders
-- Multiple render passes
-- Model animations
-- Sprite animations
-- Materials
-- Make engine easier to use
-- Support strokes for all 2D geometry
-- Trails
-- Font MSDF and effects
-- Debug codes that might contain bugs (Framebuffer, Swapchain, Renderpass, Renderer)
-- Faster immidiate drawing
-- Fast Culling
-- Replace user used vulkan enums with engine enums
-- Handle normal/other maps and materials in shader
-- Implement multithreaded secondary command buffer submit system
 - Create system which handles vulkan object creation and update for multiple frames
-- Better Descriptor pool system
-- Fix dirty code
-- Video (mp4 etc.)
-- Seperate dispatchers for related events and create getters for them
+- Replace user used vulkan enums with engine enums
+- Materials
+- Multiple render passes

@@ -11,8 +11,8 @@ Windows Only:
 
 SilkEngine is now built.
 
-Now you need to create new project in "projects" folder,
-set that as a target and run it.
+Now you need to create new project in "src" folder,
+set that as a startup target from visual studio and run it.
 For example to how to do that go to: 
-"templates/sanbox_project" folder
+"templates/src" folder
 

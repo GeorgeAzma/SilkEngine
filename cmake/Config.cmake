@@ -12,10 +12,8 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 if($<CONFIG:RELEASE>)
     set(CONFIG_MODE RELEASE)
-	set(BUILD_TESTS OFF)
 else()
     set(CONFIG_MODE DEBUG)
-	set(BUILD_TESTS ON)
 endif()
 
 # Get rid of console window in release build
