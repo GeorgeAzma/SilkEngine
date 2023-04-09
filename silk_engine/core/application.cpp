@@ -23,16 +23,16 @@ Application::Application(ApplicationCommandLineArgs args)
 {
     window = new Window();
     Renderer::init();
-    Dispatcher::subscribe(this, &Application::onWindowClose);
-    Dispatcher::subscribe(this, &Application::onFramebufferResize);
-    Dispatcher::subscribe(this, &Application::onKeyPress);
+    Dispatcher::subscribe(*this, &Application::onWindowClose);
+    Dispatcher::subscribe(*this, &Application::onFramebufferResize);
+    Dispatcher::subscribe(*this, &Application::onKeyPress);
 }
 
 Application::~Application()
 {
-    Dispatcher::unsubscribe(this, &Application::onWindowClose);
-    Dispatcher::unsubscribe(this, &Application::onFramebufferResize);
-    Dispatcher::unsubscribe(this, &Application::onKeyPress);
+    Dispatcher::unsubscribe(*this, &Application::onWindowClose);
+    Dispatcher::unsubscribe(*this, &Application::onFramebufferResize);
+    Dispatcher::unsubscribe(*this, &Application::onKeyPress);
     SceneManager::destroy();
     delete window;
     Renderer::destroy();

@@ -200,76 +200,39 @@ struct JoystickEvent : Event
     const bool connected;
 };
 
-// Dispatching and such code
 class HandlerFunctionBase
 {
 public:
     virtual void operator()(const Event& event) const = 0;
-
-    virtual bool operator==(const HandlerFunctionBase& other) const = 0;
-};
-
-template <typename T>
-class HandlerFunctionComparator : public HandlerFunctionBase
-{
-public:
-    virtual bool operator==(const HandlerFunctionBase& other) const override
-    {
-        if (const T* self = dynamic_cast<const T*>(&other))
-            return ((T*)this)->operator==(*self);
-        return false;
-    }
+    virtual bool operator==(size_t func) const = 0;
 };
 
 template <class T, class EventType>
-class MemberFunctionHandler : public HandlerFunctionComparator<MemberFunctionHandler<T, EventType>>
+class MemberFunctionHandler : public HandlerFunctionBase
 {
-public:
     typedef void (T::* MemberFunction)(const EventType&);
-
-    MemberFunctionHandler(T* instance, MemberFunction member_function)
+public:
+    MemberFunctionHandler(T& instance, MemberFunction member_function)
         : instance(instance), member_function(member_function) {}
 
-    void operator()(const Event& event) const
+    void operator()(const Event& event) const override
     {
-        SK_VERIFY(instance && member_function, 
-            "Attempted to call \"onEvent(const EventType&)\" when it was nullptr, did you forget to unsubscribe event when class got deleted?");
-        (instance->*member_function)((const EventType&)event);
+        (instance.*member_function)(static_cast<const EventType&>(event));
     }
 
-    bool operator==(const MemberFunctionHandler& other) const
+    bool operator==(size_t func) const override
     {
-        return other.instance == instance && other.member_function == member_function;
+        union {
+            void (T::* member_function)(const EventType&);
+            size_t hash;
+        } converter;
+        converter.member_function = member_function;
+        return func == (size_t(&instance) ^ converter.hash);
     }
 
 private:
-    T* instance;
+    T& instance;
     MemberFunction member_function;
-};
-
-template <class EventType>
-class FunctionHandler : public HandlerFunctionComparator<FunctionHandler<EventType>>
-{
-public:
-    typedef void (*Function)(const EventType&);
-
-    FunctionHandler(Function function)
-        : function(function) {}
-
-    void operator()(const Event& event) const
-    {
-        SK_ASSERT(function,
-            "Attempted to call \"onEvent(const EventType&)\" when it was nullptr, did you forget to unsubscribe event before lambda function got deleted?");
-        (*function)(static_cast<const EventType&>(event));
-    }
-
-    bool operator==(const FunctionHandler& other) const
-    {
-        return other.function == function;
-    }
-
-private:
-    Function function;
 };
 
 class Dispatcher
@@ -279,58 +242,73 @@ public:
     static void post(const EventType& e)
     {
         auto it = subscribers.find(typeid(EventType));
-        if (it != subscribers.cend())
-        {
-            const auto& handlers = it->second;
-            for (const auto& handler : handlers)
-                (*handler)(e);
-        }
+        if (it == subscribers.end())
+            return;
+        for (auto&& func : it->second.functions)
+            func(e);
+        for (auto&& func : it->second.member_functions)
+            (*func)(e);
     }
 
     template <class T, class EventType>
-    static void subscribe(T* instance, void (T::* member_function)(const EventType&))
+    static void subscribe(T& instance, void (T::* member_function)(const EventType&))
     {
-        subscribers[typeid(EventType)].emplace_back(new MemberFunctionHandler<T, EventType>(instance, member_function));
+        subscribers[typeid(EventType)].member_functions.emplace_back(new MemberFunctionHandler<T, EventType>(instance, member_function));
     }
 
     template <class EventType>
     static void subscribe(void (*function)(const EventType&))
     {
-        subscribers[typeid(EventType)].emplace_back(new FunctionHandler<EventType>(function));
+        subscribers[typeid(EventType)].functions.emplace_back((void(*)(const Event&))function);
     }
 
     template <class EventType>
     static void unsubscribe(void (*function)(const EventType&))
     {
-        const FunctionHandler<EventType> comp(function); // tmp for operator==
-        auto& handlers = subscribers.at(typeid(EventType));
-        for (size_t i = 0; i < handlers.size(); ++i)
+        auto it = subscribers.find(typeid(EventType));
+        if (it == subscribers.end())
+            return;
+        auto& functions = it->second.functions;
+        for (auto& func : functions)
         {
-            if (*handlers[i] == comp)
+            if (size_t(func) == size_t(function))
             {
-                std::swap(handlers[i], handlers.back());
-                handlers.pop_back();
+                std::swap(func, functions.back());
+                functions.pop_back();
                 break;
             }
         }
     }
 
     template <class T, class EventType>
-    static void unsubscribe(T* instance, void (T::* member_function)(const EventType&))
+    static void unsubscribe(T& instance, void (T::* member_function)(const EventType&))
     {
-        const MemberFunctionHandler<T, EventType> comp(instance, member_function); // tmp for operator==
-        auto& handlers = subscribers.at(typeid(EventType));
-        for (size_t i = 0; i < handlers.size(); ++i)
+        auto it = subscribers.find(typeid(EventType));
+        if (it == subscribers.end())
+            return;
+        union {
+            void (T::* member_function)(const EventType&);
+            size_t hash;
+        } converter;
+        converter.member_function = member_function;
+        size_t function_hash = size_t(&instance) ^ converter.hash;
+        auto& member_functions = it->second.member_functions;
+        for (auto& member_func : member_functions)
         {
-            if (comp == *handlers[i])
+            if (*member_func == function_hash)
             {
-                std::swap(handlers[i], handlers.back());
-                handlers.pop_back();
+                std::swap(member_func, member_functions.back());
+                member_functions.pop_back();
                 break;
             }
         }
     }
 
 private:
-    static inline std::map<std::type_index, std::vector<shared<HandlerFunctionBase>>> subscribers;
+    struct Subscribers
+    {
+        std::vector<void(*)(const Event&)> functions;
+        std::vector<unique<HandlerFunctionBase>> member_functions;
+    };
+    static inline std::unordered_map<std::type_index, Subscribers> subscribers;
 };
