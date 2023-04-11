@@ -19,7 +19,7 @@ namespace std
 	{
 		size_t operator()(const UUID& uuid) const
 		{
-			return hash<uint64_t>()(uuid);
+			return uuid;
 		}
 	};
 }

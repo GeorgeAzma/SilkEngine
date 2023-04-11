@@ -1,7 +1,7 @@
 #include "entry_point.h"
 #include "core/my_app.h"
 
-Application* createApplication(int argc, char** argv)
+Application* createApplication()
 {
-    return new MyApp({ argc, argv });
+    return new MyApp();
 }

@@ -33,7 +33,7 @@ public:
 	VkDeviceSize getSize() const { return ci.size; }
 
 	Allocation getAllocation() const { return allocation; }
-	operator VkDescriptorBufferInfo () const { return { buffer, 0, ci.size }; }
+	const VkDescriptorBufferInfo& getDescriptorInfo() const { return { buffer, 0, ci.size }; }
 	operator const VkBuffer& () const { return buffer; }
 
 public:

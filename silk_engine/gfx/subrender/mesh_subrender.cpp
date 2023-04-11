@@ -41,11 +41,17 @@ void MeshSubrender::render()
     for (auto& instance_batch : DebugRenderer::instance_batches)
     {
         const auto& shader = instance_batch.instance->pipeline->getShader();
-        if (auto global_uniform = shader->getIfExists("GlobalUniform"))
-            instance_batch.descriptor_sets[global_uniform->set].setBufferInfo(global_uniform->binding, { *DebugRenderer::global_uniform_buffer }); //TODO: Global data doesn't have to update for each batch
+        if (auto global_uniform = shader->getLocation("GlobalUniform"))
+        {
+            auto descriptor_buffer_info = DebugRenderer::global_uniform_buffer->getDescriptorInfo();
+            instance_batch.descriptor_sets.at(global_uniform->set)->update({ { global_uniform->binding, &descriptor_buffer_info } }); //TODO: Global data doesn't have to update for each batch
+        }
 
-        if (auto images = shader->getIfExists("images"))
-            instance_batch.descriptor_sets[images->set].setImageInfo(images->binding, instance_batch.instance_images.getDescriptorImageInfos());
+        if (auto images = shader->getLocation("images"))
+        {
+            auto descriptor_image_infos = instance_batch.instance_images.getDescriptorImageInfos();
+            instance_batch.descriptor_sets.at(images->set)->update({ { images->binding, descriptor_image_infos.data() } });
+        }
 
         instance_batch.bind();
 

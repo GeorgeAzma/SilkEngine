@@ -2,24 +2,7 @@
 #include "gfx/render_context.h"
 #include "gfx/devices/logical_device.h"
 
-DescriptorPool::~DescriptorPool()
-{
-	RenderContext::getLogicalDevice().destroyDescriptorPool(descriptor_pool);
-}
-
-DescriptorPool& DescriptorPool::addSize(VkDescriptorType type, uint32_t count)
-{
-	sizes.emplace_back(type, count);
-	return *this;
-}
-
-DescriptorPool& DescriptorPool::setMaxSets(uint32_t count)
-{
-	max_sets = count;
-	return *this;
-}
-
-void DescriptorPool::build()
+DescriptorPool::DescriptorPool(uint32_t max_sets, const std::vector<VkDescriptorPoolSize>& sizes)
 {
 	VkDescriptorPoolCreateInfo ci{};
 	ci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -29,7 +12,12 @@ void DescriptorPool::build()
 	descriptor_pool = RenderContext::getLogicalDevice().createDescriptorPool(ci);
 }
 
-VkResult DescriptorPool::allocate(VkDescriptorSet& descriptor_set, const VkDescriptorSetLayout& descriptor_set_layout)
+DescriptorPool::~DescriptorPool()
+{
+	RenderContext::getLogicalDevice().destroyDescriptorPool(descriptor_pool);
+}
+
+VkResult DescriptorPool::allocate(VkDescriptorSet& descriptor_set, const VkDescriptorSetLayout& descriptor_set_layout) const
 {
 	++allocated_descriptor_sets;
 	VkDescriptorSetAllocateInfo alloc_info{};
@@ -40,7 +28,7 @@ VkResult DescriptorPool::allocate(VkDescriptorSet& descriptor_set, const VkDescr
 	return RenderContext::getLogicalDevice().allocateDescriptorSets(alloc_info, descriptor_set);
 }
 
-void DescriptorPool::deallocate()
+void DescriptorPool::deallocate() const
 {
 	SK_VERIFY(allocated_descriptor_sets > 0, "Can't deallocate pool's descriptor set when it doesn't have any");
 	--allocated_descriptor_sets;

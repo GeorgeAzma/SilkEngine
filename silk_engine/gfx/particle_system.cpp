@@ -115,9 +115,10 @@ void ParticleSystem::render(GraphicsPipeline& graphics_pipeline)
         graphics_pipeline.bind();
         vao->bind();
         instance_vbo->bind(1);
-        graphics_pipeline.getShader()->setIfExists("GlobalUniform", { *DebugRenderer::global_uniform_buffer }); //TODO: Unsafe, change
-        graphics_pipeline.getShader()->setIfExists("images", instance_images->getDescriptorImageInfos());
-        graphics_pipeline.getShader()->bindDescriptorSets();
+        //TODO:
+        //graphics_pipeline.getShader()->setIfExists("GlobalUniform", { *DebugRenderer::global_uniform_buffer }); //TODO: Unsafe, change
+        //graphics_pipeline.getShader()->setIfExists("images", instance_images->getDescriptorImageInfos());
+        //graphics_pipeline.getShader()->bindDescriptorSets();
         RenderContext::submit([&](CommandBuffer& cb) { cb.drawIndexed(vao->getIndexBuffer()->getCount(), particle_data.size(), 0, 0, 0); });
     }
 }

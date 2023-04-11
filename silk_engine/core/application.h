@@ -2,9 +2,9 @@
 
 #include "event.h"
 
-int main(int argc, char **argv);
+int Main(int argc, char** argv);
 
-struct ApplicationCommandLineArgs
+struct CommandLineArgs
 {
     int count = 0;
     char **args = nullptr;
@@ -18,27 +18,20 @@ struct ApplicationCommandLineArgs
 class Application
 {
 public:
-    Application(ApplicationCommandLineArgs args = {});
-    virtual ~Application();
-
-    virtual std::string getName() const { return "App"; }
-
-    void run();
-
-    ApplicationCommandLineArgs getCommandLineArgs() const { return command_line_args; }
+    static CommandLineArgs getCommandLineArgs() { return command_line_args; }
 
 protected:
+    void update();
+    void stop() { running = false; }
+
     virtual void onUpdate() = 0;
 
 private:
-    void update();
-    void onWindowClose(const WindowCloseEvent &e);
-    void onFramebufferResize(const FramebufferResizeEvent& e);
-    void onKeyPress(const KeyPressEvent &e);
-    
-private:
-    Window* window;
-    ApplicationCommandLineArgs command_line_args;
+    friend int Main(int, char**);
+    void run();
+    static inline CommandLineArgs command_line_args{};
+
+protected:
     bool running = true;
 };
 

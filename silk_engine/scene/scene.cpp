@@ -4,7 +4,6 @@
 #include "scene/resources.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/devices/physical_device.h"
-#include "utils/general_utils.h"
 #include "utils/time.h"
 #include "gfx/window/swap_chain.h"
 #include "core/event.h"

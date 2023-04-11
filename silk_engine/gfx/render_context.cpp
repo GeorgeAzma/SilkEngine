@@ -18,7 +18,7 @@
 void RenderContext::init(std::string_view app_name)
 {
 	instance = new Instance(app_name);
-	physical_device = new PhysicalDevice();
+	physical_device = PhysicalDevice::select();
 	logical_device = new LogicalDevice(*physical_device);
 	command_queue = new CommandQueue();
 	allocator = new Allocator(*physical_device, *logical_device);

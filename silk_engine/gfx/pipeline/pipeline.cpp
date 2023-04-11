@@ -70,11 +70,16 @@ void Pipeline::setShader(const shared<Shader>& shader, const std::vector<Constan
 		shader_stage_infos[i] = std::move(shader_stage_info);
 	}
 
+	std::vector<VkDescriptorSetLayout> descriptor_set_layouts(shader->getDescriptorSetLayouts().size());
+	size_t index = 0;
+	for (auto&& [set, descriptor_set_layout] : shader->getDescriptorSetLayouts())
+		descriptor_set_layouts[index++] = *descriptor_set_layout;
+
 	// Create pipeline layout
 	VkPipelineLayoutCreateInfo pipeline_layout_info{};
 	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipeline_layout_info.setLayoutCount = shader->getDescriptorSetLayouts().size();
-	pipeline_layout_info.pSetLayouts = shader->getDescriptorSetLayouts().data();
+	pipeline_layout_info.setLayoutCount = descriptor_set_layouts.size();
+	pipeline_layout_info.pSetLayouts = descriptor_set_layouts.data();
 	pipeline_layout_info.pushConstantRangeCount = shader->getPushConstants().size();
 	pipeline_layout_info.pPushConstantRanges = shader->getPushConstants().data();
 

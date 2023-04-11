@@ -1,33 +1,17 @@
 #pragma once
 
 #include "core/application.h"
-#include "gfx/window/glfw.h"
-#include "core/input/input.h"
-#include "gfx/render_context.h"
-#include "scene/resources.h"
 
-extern Application* createApplication(int argc, char** argv);
+extern Application* createApplication();
 
 int Main(int argc, char** argv)
 {
-	std::string app_name = "My App";
-
 	Log::init();
-	SK_INFO("Started");
-	GLFW::init();
-	Input::init();
-	RenderContext::init(app_name);
-	Resources::init();
-
-	Application* app = createApplication(argc, argv);
+	Application::command_line_args = { argc, argv };
+	Application* app = createApplication();
 	SK_ASSERT(app, "Client Application is null!");
 	app->run();
 	delete app;
-
-	GLFW::destroy();
-	Resources::destroy();
-	RenderContext::destroy();
-	SK_INFO("Terminated");
 
 	return 0;
 }

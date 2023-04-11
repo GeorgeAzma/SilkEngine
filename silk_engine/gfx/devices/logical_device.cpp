@@ -23,35 +23,35 @@ LogicalDevice::LogicalDevice(const PhysicalDevice& physical_device)
 	}
 
 	// Specifies which device features we want by enabling them
-	VkPhysicalDeviceFeatures device_features{};
-	device_features.samplerAnisotropy = VK_TRUE;
-	device_features.occlusionQueryPrecise = VK_TRUE;
-	device_features.multiDrawIndirect = VK_TRUE;
-	device_features.fragmentStoresAndAtomics = VK_TRUE;
-	device_features.fillModeNonSolid = VK_TRUE;
-	device_features.geometryShader = VK_TRUE;
-	device_features.wideLines = VK_TRUE;
+	VkPhysicalDeviceFeatures physical_device_features{};
+	physical_device_features.samplerAnisotropy = VK_TRUE;
+	physical_device_features.occlusionQueryPrecise = VK_TRUE;
+	physical_device_features.multiDrawIndirect = VK_TRUE;
+	physical_device_features.fragmentStoresAndAtomics = VK_TRUE;
+	physical_device_features.fillModeNonSolid = VK_TRUE;
+	physical_device_features.geometryShader = VK_TRUE;
+	physical_device_features.wideLines = VK_TRUE;
 
-	VkPhysicalDeviceVulkan13Features vulkan_13_device_features{};
-	vulkan_13_device_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-	vulkan_13_device_features.maintenance4 = VK_TRUE;
+	VkPhysicalDeviceVulkan13Features physical_device_features_vulkan_13{};
+	physical_device_features_vulkan_13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+	physical_device_features_vulkan_13.maintenance4 = VK_TRUE;
 
-	VkPhysicalDeviceVulkan12Features vulkan_12_device_features{};
-	vulkan_12_device_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-	vulkan_12_device_features.hostQueryReset = VK_TRUE;
-	vulkan_12_device_features.drawIndirectCount = VK_TRUE;
-	vulkan_12_device_features.pNext = &vulkan_13_device_features;
+	VkPhysicalDeviceVulkan12Features physical_device_features_vulkan_12{};
+	physical_device_features_vulkan_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+	physical_device_features_vulkan_12.hostQueryReset = VK_TRUE;
+	physical_device_features_vulkan_12.drawIndirectCount = VK_TRUE;
+	physical_device_features_vulkan_12.pNext = &physical_device_features_vulkan_13;
 
 	VkDeviceCreateInfo ci{};
 	ci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	ci.queueCreateInfoCount = device_queues.size();
 	ci.pQueueCreateInfos = device_queues.data();
-	ci.pEnabledFeatures = &device_features;
+	ci.pEnabledFeatures = &physical_device_features;
 
 	std::vector<const char*> enabled_extensions;
 
 	for (const auto& required_extension : getRequiredExtensions())
-			enabled_extensions.emplace_back(required_extension);
+		enabled_extensions.emplace_back(required_extension);
 
 	for (const auto& preferred_extension : getPreferredExtensions())
 		if (physical_device.supportsExtension(preferred_extension))
@@ -59,7 +59,7 @@ LogicalDevice::LogicalDevice(const PhysicalDevice& physical_device)
 
 	ci.enabledExtensionCount = enabled_extensions.size();
 	ci.ppEnabledExtensionNames = enabled_extensions.data();
-	ci.pNext = &vulkan_12_device_features;
+	ci.pNext = &physical_device_features_vulkan_12;
 
 	logical_device = physical_device.createLogicalDevice(ci);
 

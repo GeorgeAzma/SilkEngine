@@ -36,8 +36,8 @@ DebugRenderer::InstanceBatch::~InstanceBatch()
 void DebugRenderer::InstanceBatch::bind()
 {
 	instance->pipeline->bind();
-	for (auto& descriptor_set : descriptor_sets)
-		descriptor_set.second.bind(descriptor_set.first);
+	for (auto&& [set, descriptor_set] : descriptor_sets)
+		descriptor_set->bind(set);
 	mesh->getVertexArray()->bind();
 	instance_buffer->bind(1);
 }
@@ -311,8 +311,8 @@ void DebugRenderer::addInstanceBatch(const shared<RenderedInstance>& instance, c
 
 	new_batch.instance_buffer = makeShared<VertexBuffer>(nullptr, sizeof(InstanceData), MAX_INSTANCES, true);
 
-	for (auto&& [set, descriptor_set] : new_batch.instance->pipeline->getShader()->getDescriptorSets())
-		new_batch.descriptor_sets[set] = *descriptor_set;
+	for (auto&& [set, descriptor_set_layout] : new_batch.instance->pipeline->getShader()->getDescriptorSetLayouts())
+		new_batch.descriptor_sets.emplace(set, makeShared<DescriptorSet>(*descriptor_set_layout));
 
 	instance->instance_batch_index = instance_batches.size() - 1;
 	instance->instance_data_index = instance_batches.back().instance_data.size() - 1;

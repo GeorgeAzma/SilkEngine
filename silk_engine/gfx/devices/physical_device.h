@@ -4,8 +4,9 @@ class PhysicalDevice : NonCopyable
 {
 	friend class LogicalDevice;
 public:
+	static PhysicalDevice* select(VkSurfaceKHR surface = nullptr);
+
 	PhysicalDevice(VkPhysicalDevice physical_device);
-	PhysicalDevice();
 
 	bool supportsExtension(const char* extension_name) const;
 
@@ -29,14 +30,6 @@ public:
 	int getComputeQueue() const { return compute_queue; }
 	int getTransferQueue() const { return transfer_queue; }
 	operator const VkPhysicalDevice& () const { return physical_device; }
-
-private:
-	void init(VkPhysicalDevice physical_device);
-
-private:
-	static VkPhysicalDevice chooseMostSuitablePhysicalDevice(const std::vector<VkPhysicalDevice>& physical_devices);
-	static int ratePhysicalDevice(VkPhysicalDevice physical_device);
-	static VkSampleCountFlagBits getMaxSampleCount(VkSampleCountFlags counts);
 
 private:
 	VkPhysicalDevice physical_device = nullptr;

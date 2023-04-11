@@ -15,6 +15,8 @@ shaderc_include_result* Includer::GetInclude(const char* requested_path, shaderc
 	data->source_name_length = (*container)[0].size();
 	data->content = (*container)[1].data();
 	data->content_length = (*container)[1].size();
+
+	return data;
 }
 
 void Includer::ReleaseInclude(shaderc_include_result* data)

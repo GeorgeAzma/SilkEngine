@@ -79,9 +79,8 @@ public:
 
 	struct ReflectionData
 	{
-		uvec3 local_size = vec3(0);
-		std::unordered_map<uint32_t, shared<DescriptorSet>> descriptor_sets;
-		std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
+		uvec3 local_size = uvec3(0);
+		std::unordered_map<uint32_t, shared<DescriptorSetLayout>> descriptor_set_layouts;
 		std::vector<Resource> resources;
 		std::vector<VkPushConstantRange> push_constants;
 		std::unordered_map<std::string_view, VkPushConstantRange> push_constant_map;
@@ -96,17 +95,11 @@ public:
 	void compile();
 	void reflect();
 
-	void set(std::string_view resource_name, const std::vector<VkDescriptorBufferInfo>& buffer_infos);
-	void set(std::string_view resource_name, const std::vector<VkDescriptorImageInfo>& image_infos);
-	void setIfExists(std::string_view resource_name, const std::vector<VkDescriptorBufferInfo>& buffer_infos);
-	void setIfExists(std::string_view resource_name, const std::vector<VkDescriptorImageInfo>& image_infos);
 	const ResourceLocation& get(std::string_view resource_name) const { return reflection_data.resource_locations.at(resource_name); }
-	const ResourceLocation* getIfExists(std::string_view resource_name) const;
-	void bindDescriptorSets();
+	const ResourceLocation* getLocation(std::string_view resource_name) const;
 	void pushConstants(std::string_view name, const void* data) const;
 
-	const std::unordered_map<uint32_t, shared<DescriptorSet>>& getDescriptorSets() const { return reflection_data.descriptor_sets; }
-	const std::vector<VkDescriptorSetLayout>& getDescriptorSetLayouts() const { return reflection_data.descriptor_set_layouts; }
+	const std::unordered_map<uint32_t, shared<DescriptorSetLayout>>& getDescriptorSetLayouts() const { return reflection_data.descriptor_set_layouts; }
 	const std::vector<VkPushConstantRange>& getPushConstants() const { return reflection_data.push_constants; }
 	const std::unordered_map<std::string_view, Constant>& getConstants() const { return reflection_data.constants; }
 	const std::vector<unique<Stage>>& getStages() const { return stages; }
@@ -114,12 +107,6 @@ public:
 	const uvec3& getLocalSize() const { return reflection_data.local_size; }
 
 private:
-	static std::string_view getPreprocessorValue(std::string_view source, std::string_view preprocessor_name, size_t offset = 0);
-	template<typename T>
-	static void updateParameter(std::string_view source, T& parameter_value, const std::function<T(std::string_view)>& update_function, std::string_view parameter_name);
-	template<typename T>
-	static void updateParameter(std::string_view source, T& parameter_value, std::string_view parameter_name, const std::vector<std::pair<std::string_view, T>>& value_pairs);
-
 	//Reflection
 	void loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, Stage::Type stage, VkDescriptorType type);
 	void loadPushConstant(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, Stage::Type stage);

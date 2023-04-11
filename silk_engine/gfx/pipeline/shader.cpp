@@ -305,56 +305,28 @@ void Shader::reflect()
 			reflection_data.local_size = math::max(reflection_data.local_size, uvec3(1));
 	}
 	
+	std::unordered_map<uint32_t, std::vector<VkDescriptorSetLayoutBinding>> descriptor_set_layout_bindings;
 	for (const auto& resource : reflection_data.resources)
 	{
-		reflection_data.descriptor_sets.at(resource.set)->add(resource.binding, resource.count, resource.type, resource.stage);
+		VkDescriptorSetLayoutBinding descriptor_set_layout_binding{};
+		descriptor_set_layout_binding.binding = resource.binding;
+		descriptor_set_layout_binding.descriptorCount = resource.count;
+		descriptor_set_layout_binding.descriptorType = resource.type;
+		descriptor_set_layout_binding.pImmutableSamplers = nullptr;
+		descriptor_set_layout_binding.stageFlags = resource.stage;
+		descriptor_set_layout_bindings[resource.set].emplace_back(std::move(descriptor_set_layout_binding));
 		reflection_data.resource_locations.emplace(resource.name, ResourceLocation{ resource.set, resource.binding });
 	}
 
-	reflection_data.descriptor_set_layouts.reserve(reflection_data.descriptor_sets.size());
-	for (auto&& [set, descriptor_set] : reflection_data.descriptor_sets)
-	{
-		descriptor_set->build();
-		reflection_data.descriptor_set_layouts.emplace_back(descriptor_set->getLayout());
-	}
+	reflection_data.descriptor_set_layouts.reserve(descriptor_set_layout_bindings.size());
+	for (auto&& [set, bindings] : descriptor_set_layout_bindings)
+		reflection_data.descriptor_set_layouts.emplace(set, DescriptorSetLayout::get(bindings));
 }
 
-void Shader::set(std::string_view resource_name, const std::vector<VkDescriptorBufferInfo>& buffer_infos)
-{
-	const auto& resource_location = reflection_data.resource_locations.at(resource_name);
-	reflection_data.descriptor_sets.at(resource_location.set)->setBufferInfo(resource_location.binding, buffer_infos);
-}
-
-void Shader::set(std::string_view resource_name, const std::vector<VkDescriptorImageInfo>& image_infos)
-{
-	const auto& resource_location = reflection_data.resource_locations.at(resource_name);
-	reflection_data.descriptor_sets.at(resource_location.set)->setImageInfo(resource_location.binding, image_infos);
-}
-
-void Shader::setIfExists(std::string_view resource_name, const std::vector<VkDescriptorBufferInfo>& buffer_infos)
-{
-	auto resource_location = reflection_data.resource_locations.find(resource_name);
-	if(resource_location != reflection_data.resource_locations.end())
-		reflection_data.descriptor_sets.at(resource_location->second.set)->setBufferInfo(resource_location->second.binding, buffer_infos);
-}
-
-void Shader::setIfExists(std::string_view resource_name, const std::vector<VkDescriptorImageInfo>& image_infos)
-{
-	auto resource_location = reflection_data.resource_locations.find(resource_name);
-	if (resource_location != reflection_data.resource_locations.end())
-		reflection_data.descriptor_sets.at(resource_location->second.set)->setImageInfo(resource_location->second.binding, image_infos);
-}
-
-const Shader::ResourceLocation* Shader::getIfExists(std::string_view resource_name) const
+const Shader::ResourceLocation* Shader::getLocation(std::string_view resource_name) const
 {
 	auto resource_location = reflection_data.resource_locations.find(resource_name);
 	return (resource_location != reflection_data.resource_locations.end()) ? &resource_location->second : nullptr;
-}
-
-void Shader::bindDescriptorSets()
-{
-	for (auto&& [set, descriptor_set] : reflection_data.descriptor_sets)
-		descriptor_set->bind(set);
 }
 
 void Shader::pushConstants(std::string_view name, const void* data) const
@@ -377,8 +349,6 @@ void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spi
 	const spirv_cross::SPIRType& spir_type = compiler.get_type(spirv_resource.type_id);
 	uint32_t set = compiler.get_decoration(spirv_resource.id, spv::DecorationDescriptorSet);
 	uint32_t binding = compiler.get_decoration(spirv_resource.id, spv::DecorationBinding);
-
-	reflection_data.descriptor_sets.try_emplace(set, makeShared<DescriptorSet>());
 
 	uint32_t count = 0;
 	for (const auto& arr : spir_type.array)

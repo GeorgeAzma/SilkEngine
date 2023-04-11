@@ -25,7 +25,7 @@ class DebugRenderer
 public:
 	static constexpr size_t MAX_INSTANCE_BATCHES = 8192;
 	static constexpr size_t MAX_INSTANCES = 8192;
-	static constexpr size_t MAX_IMAGE_SLOTS = 32; //Can be more, but will be slower
+	static constexpr size_t MAX_IMAGE_SLOTS = 32; // Can be more, but will be slower
 	static constexpr size_t MAX_LIGHTS = 64;
 
 private:
@@ -101,7 +101,7 @@ private:
 		std::vector<shared<RenderedInstance>> instances;
 		shared<VertexBuffer> instance_buffer = nullptr;
 		InstanceImages instance_images{};
-		std::unordered_map<uint32_t, DescriptorSet> descriptor_sets;
+		std::unordered_map<uint32_t, shared<DescriptorSet>> descriptor_sets;
 
 		~InstanceBatch();
 
