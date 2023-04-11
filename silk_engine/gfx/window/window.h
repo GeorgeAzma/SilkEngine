@@ -63,8 +63,8 @@ public:
     int32_t getY() const { return data.y; }
     float getAspectRatio() const { return (float)data.width / data.height; }
     vec2 getMouse() const { return data.mouse; }
-    Surface& getSurface() { return *surface; }
-    SwapChain& getSwapChain() { return *swap_chain; }
+    const Surface& getSurface() const { return *surface; }
+    const SwapChain& getSwapChain() const { return *swap_chain; }
     float getOpacity() const { return opacity; }
     CursorMode getCursorMode() const { return cursor_mode; }
     GLFWmonitor* getMonitor() const;
@@ -85,6 +85,7 @@ public:
     bool isDecorated() const { return decorated; }
     bool isAlwaysOnTop() const { return always_on_top; }
     bool isAutoMinify() const { return auto_minify; }
+    bool isVsync() const { return vsync; }
     bool shouldClose() const;
    
     void setFullscreen(bool fullscreen);
@@ -108,6 +109,7 @@ public:
     void setAutoMinify(bool auto_minify);
     void setFocusOnShow(bool focus_on_show);
 	void setCursorMode(CursorMode mode);
+    void setVsync(bool vsync);
 
     void align(WindowAlignment a = WindowAlignment::CENTER);
     void focus();
@@ -169,6 +171,7 @@ private:
     bool transparent = false;
     bool auto_minify = false;
     bool focus_on_show = false;
+    bool vsync = false;
     CursorMode cursor_mode = CursorMode::NORMAL;
 
     Surface* surface = nullptr;

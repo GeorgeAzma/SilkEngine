@@ -12,7 +12,7 @@ Allocator::Allocator(const PhysicalDevice& physical_device, const LogicalDevice&
 	allocator_info.instance = RenderContext::getInstance();
 	allocator_info.physicalDevice = physical_device;
 	allocator_info.device = logical_device;
-	allocator_info.flags = physical_device.supportsExtension("VK_EXT_memory_priority") * VMA_ALLOCATOR_CREATE_EXT_MEMORY_PRIORITY_BIT;
+	allocator_info.flags = logical_device.hasExtension("VK_EXT_memory_priority") * VMA_ALLOCATOR_CREATE_EXT_MEMORY_PRIORITY_BIT;
 	vmaCreateAllocator(&allocator_info, &allocator);
 }
 

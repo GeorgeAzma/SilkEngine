@@ -11,6 +11,8 @@ public:
 	LogicalDevice(const PhysicalDevice& physical_device);
 	~LogicalDevice();
 
+	bool hasExtension(const char* extension) const;
+
 	void wait() const;
 	VkCommandPool createCommandPool(const VkCommandPoolCreateInfo& ci) const;
 	void resetCommandPool(VkCommandPool command_pool, VkCommandPoolResetFlags reset_flags = 0) const;
@@ -81,7 +83,8 @@ public:
 	static constexpr std::vector<const char*> getPreferredExtensions() { return { "VK_EXT_memory_priority" }; }
 
 private:
-	std::vector<std::vector<Queue>> queues;
 	VkDevice logical_device = nullptr;
+	std::vector<std::vector<Queue>> queues;
+	std::unordered_set<const char*> enabled_extensions;
 	const PhysicalDevice& physical_device;
 };

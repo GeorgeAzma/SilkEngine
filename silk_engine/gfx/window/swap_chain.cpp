@@ -6,13 +6,15 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/queues/queue.h"
 
-SwapChain::SwapChain(const Surface& surface)
+SwapChain::SwapChain(const Surface& surface, bool vsync)
 	: surface(surface)
 {
-	recreate();
+	if (!surface.isSupported())
+		return;
+	recreate(vsync);
 }
 
-bool SwapChain::acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence)
+bool SwapChain::acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence) const
 {
 	VkResult result = RenderContext::getLogicalDevice().acquireNextImage(swap_chain, UINT64_MAX, signal_semaphore, signal_fence, &image_index);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
@@ -25,7 +27,7 @@ bool SwapChain::acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fe
 	return true;
 }
 
-bool SwapChain::present(VkSemaphore wait_semaphore)
+bool SwapChain::present(VkSemaphore wait_semaphore) const
 {
 	VkPresentInfoKHR present_info{};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -45,7 +47,7 @@ bool SwapChain::present(VkSemaphore wait_semaphore)
 	return true;
 }
 
-void SwapChain::recreate()
+void SwapChain::recreate(bool vsync)
 {
 	const auto& caps = surface.getCapabilities();
 	extent = VkExtent2D
@@ -62,7 +64,7 @@ void SwapChain::recreate()
 	VkSwapchainKHR old_swap_chain = swap_chain;
 	swap_chain = nullptr;
 
-	VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
+	VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR; // Gauranteed to be supported
 	if (!vsync)
 	{
 		for (const auto& available_present_mode : surface.getPresentModes())

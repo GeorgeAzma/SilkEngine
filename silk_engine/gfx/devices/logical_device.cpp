@@ -57,6 +57,8 @@ LogicalDevice::LogicalDevice(const PhysicalDevice& physical_device)
 		if (physical_device.supportsExtension(preferred_extension))
 			enabled_extensions.emplace_back(preferred_extension);
 
+	this->enabled_extensions = std::unordered_set<const char*>(enabled_extensions.begin(), enabled_extensions.end());
+
 	ci.enabledExtensionCount = enabled_extensions.size();
 	ci.ppEnabledExtensionNames = enabled_extensions.data();
 	ci.pNext = &physical_device_features_vulkan_12;
@@ -80,6 +82,11 @@ LogicalDevice::~LogicalDevice()
 {
 	wait();
 	vkDestroyDevice(logical_device, nullptr);
+}
+
+bool LogicalDevice::hasExtension(const char* extension) const
+{
+	return enabled_extensions.contains(extension);
 }
 
 #pragma region Commands

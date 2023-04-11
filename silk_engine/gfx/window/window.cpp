@@ -233,8 +233,10 @@ void Window::recreate()
     if (isMinimized())
         return;
 
-    surface->updateCapabilities();
-    swap_chain->recreate();
+    if (surface)
+        surface->updateCapabilities();
+    if (swap_chain)
+        swap_chain->recreate();
 }
 
 GLFWmonitor* Window::getMonitor() const
@@ -491,6 +493,15 @@ void Window::setCursorMode(CursorMode mode)
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
         break;
     }
+}
+
+void Window::setVsync(bool vsync)
+{
+    if (this->vsync == vsync)
+        return;
+    this->vsync = vsync;
+    if (swap_chain)
+        swap_chain->recreate(vsync);
 }
 
 void Window::align(WindowAlignment a)

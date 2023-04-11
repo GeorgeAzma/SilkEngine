@@ -13,16 +13,26 @@ Surface::Surface(const Window& window)
 	formats = RenderContext::getPhysicalDevice().getSurfaceFormats(surface);
 	present_modes = RenderContext::getPhysicalDevice().getSurfacePresentModes(surface);
 
-	std::multimap<int, VkSurfaceFormatKHR> surface_formats;
+	if (!isSupported())
+	{
+		SK_ERROR("Vulkan: Physical device does not support window surface");
+		return;
+	}
+
+	int max_score = -1;
+	VkSurfaceFormatKHR best_surface_format{};
 	for (const auto& available_format : formats)
 	{
-		int score = (available_format.format == VK_FORMAT_B8G8R8A8_UNORM) * 1000 +
-			(available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) * 400;
-		if (score >= 0)
-			surface_formats.insert(std::make_pair(score, available_format));
+		int score = 0;
+		score += (available_format.format == VK_FORMAT_B8G8R8A8_UNORM) * 1000;
+		score += (available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) * 400;
+		if (score > max_score)
+		{
+			max_score = max(max_score, score);
+			best_surface_format = available_format;
+		}
 	}
-	SK_VERIFY(surface_formats.size() > 0, "Vulkan: Couldn't find supported formats to choose from");
-	format = surface_formats.rbegin()->second;
+	format = best_surface_format;
 
 	// Find queue family that supports both present and graphics queue, if there is none, then find queue family with only present queue
 	const auto& queue_family_props = RenderContext::getPhysicalDevice().getQueueFamilyProperties();
