@@ -3,7 +3,6 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/debug_renderer.h"
 #include "gfx/instance.h"
-#include "gfx/gpu_type.h"
 #include "includer.h"
 #include <spirv_cross/spirv_cross.hpp>
 
