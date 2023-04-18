@@ -311,7 +311,7 @@ void DebugRenderer::addInstanceBatch(const shared<RenderedInstance>& instance, c
 
 	new_batch.instance_buffer = makeShared<VertexBuffer>(nullptr, sizeof(InstanceData), MAX_INSTANCES, true);
 
-	for (auto&& [set, descriptor_set_layout] : new_batch.instance->pipeline->getShader()->getDescriptorSetLayouts())
+	for (auto&& [set, descriptor_set_layout] : new_batch.instance->pipeline->getShader()->getReflectionData().descriptor_set_layouts)
 		new_batch.descriptor_sets.emplace(set, makeShared<DescriptorSet>(*descriptor_set_layout));
 
 	instance->instance_batch_index = instance_batches.size() - 1;

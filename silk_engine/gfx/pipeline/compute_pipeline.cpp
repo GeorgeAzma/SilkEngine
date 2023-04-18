@@ -19,7 +19,7 @@ void ComputePipeline::bind()
 void ComputePipeline::dispatch(uint32_t global_invocation_count_x, uint32_t global_invocation_count_y, uint32_t global_invocation_count_z) const
 {
 	uvec3 global_invocation_count(global_invocation_count_x, global_invocation_count_y, global_invocation_count_z);
-	uvec3 local_size = shader->getLocalSize();
+	uvec3 local_size = shader->getReflectionData().local_size;
 	uvec3 group_count = (global_invocation_count + local_size - uvec3(1)) / local_size;
 	RenderContext::submit([&](CommandBuffer& cb) { cb.dispatch(group_count.x, group_count.y, group_count.z); });
 }

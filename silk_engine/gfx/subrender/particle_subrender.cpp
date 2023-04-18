@@ -6,7 +6,6 @@
 ParticleSubrender::ParticleSubrender(const PipelineStage& pipeline_stage)
     : pipeline()
 {    
-    using enum GpuType;
     pipeline.setShader(makeShared<Shader>("particle"))
         .setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
         .setStage(pipeline_stage)

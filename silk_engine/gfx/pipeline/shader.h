@@ -2,7 +2,6 @@
 
 #include "gfx/render_context.h"
 #include "gfx/descriptors/descriptor_set.h"
-#include "gfx/buffers/buffer_layout.h"
 
 namespace spirv_cross
 {
@@ -86,7 +85,8 @@ public:
 		std::unordered_map<std::string_view, VkPushConstantRange> push_constant_map;
 		std::unordered_map<std::string_view, ResourceLocation> resource_locations;
 		std::unordered_map<std::string_view, Constant> constants;
-		BufferLayout buffer_layout{};
+		std::vector<VkVertexInputBindingDescription> vertex_input_binding_descriptions;
+		std::vector<VkVertexInputAttributeDescription> vertex_input_attribute_descriptions;
 	};
 
 public:
@@ -99,12 +99,8 @@ public:
 	const ResourceLocation* getLocation(std::string_view resource_name) const;
 	void pushConstants(std::string_view name, const void* data) const;
 
-	const std::unordered_map<uint32_t, shared<DescriptorSetLayout>>& getDescriptorSetLayouts() const { return reflection_data.descriptor_set_layouts; }
-	const std::vector<VkPushConstantRange>& getPushConstants() const { return reflection_data.push_constants; }
-	const std::unordered_map<std::string_view, Constant>& getConstants() const { return reflection_data.constants; }
 	const std::vector<unique<Stage>>& getStages() const { return stages; }
-	const BufferLayout& getBufferLayout() const { return reflection_data.buffer_layout; }
-	const uvec3& getLocalSize() const { return reflection_data.local_size; }
+	const ReflectionData& getReflectionData() const { return reflection_data; }
 
 private:
 	//Reflection
@@ -114,5 +110,4 @@ private:
 private:
 	std::vector<unique<Stage>> stages;
 	ReflectionData reflection_data{};
-	static shaderc::Compiler compiler;
 };

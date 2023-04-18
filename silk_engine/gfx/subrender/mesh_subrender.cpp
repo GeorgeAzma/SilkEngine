@@ -8,7 +8,6 @@
 
 MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
 {
-    using enum GpuType;
     shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
     graphics_pipeline->setShader(makeShared<Shader>("3D"))
         .setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())

@@ -232,10 +232,10 @@ void GraphicsPipeline::create()
 	ci.pStages = shader_stage_infos.data();
 
 	// TODO: Support per pipeline buffer layout, when you need it (probably almost never)
-	vertex_input_info.vertexBindingDescriptionCount = shader->getBufferLayout().getBindingDescriptions().size();
-	vertex_input_info.pVertexBindingDescriptions = shader->getBufferLayout().getBindingDescriptions().data();
-	vertex_input_info.vertexAttributeDescriptionCount = shader->getBufferLayout().getAttributeDescriptions().size();
-	vertex_input_info.pVertexAttributeDescriptions = shader->getBufferLayout().getAttributeDescriptions().data();
+	vertex_input_info.vertexBindingDescriptionCount = shader->getReflectionData().vertex_input_binding_descriptions.size();
+	vertex_input_info.pVertexBindingDescriptions = shader->getReflectionData().vertex_input_binding_descriptions.data();
+	vertex_input_info.vertexAttributeDescriptionCount = shader->getReflectionData().vertex_input_attribute_descriptions.size();
+	vertex_input_info.pVertexAttributeDescriptions = shader->getReflectionData().vertex_input_attribute_descriptions.data();
 	ci.pViewportState = &viewport_info;
 	
 	pipeline = RenderContext::getLogicalDevice().createGraphicsPipeline(RenderContext::getPipelineCache(), ci);

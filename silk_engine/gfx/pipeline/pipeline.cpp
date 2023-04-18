@@ -40,7 +40,7 @@ void Pipeline::setShader(const shared<Shader>& shader, const std::vector<Constan
 
 			for (const auto& constant : constants)
 			{
-				const auto& shader_constant = shader->getConstants().at(constant.name);
+				const auto& shader_constant = shader->getReflectionData().constants.at(constant.name);
 				if (!(shader_constant.stage & VkShaderStageFlags(stage->type)))
 					continue;
 
@@ -70,9 +70,9 @@ void Pipeline::setShader(const shared<Shader>& shader, const std::vector<Constan
 		shader_stage_infos[i] = std::move(shader_stage_info);
 	}
 
-	std::vector<VkDescriptorSetLayout> descriptor_set_layouts(shader->getDescriptorSetLayouts().size());
+	std::vector<VkDescriptorSetLayout> descriptor_set_layouts(shader->getReflectionData().descriptor_set_layouts.size());
 	size_t index = 0;
-	for (auto&& [set, descriptor_set_layout] : shader->getDescriptorSetLayouts())
+	for (auto&& [set, descriptor_set_layout] : shader->getReflectionData().descriptor_set_layouts)
 		descriptor_set_layouts[index++] = *descriptor_set_layout;
 
 	// Create pipeline layout
@@ -80,8 +80,8 @@ void Pipeline::setShader(const shared<Shader>& shader, const std::vector<Constan
 	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipeline_layout_info.setLayoutCount = descriptor_set_layouts.size();
 	pipeline_layout_info.pSetLayouts = descriptor_set_layouts.data();
-	pipeline_layout_info.pushConstantRangeCount = shader->getPushConstants().size();
-	pipeline_layout_info.pPushConstantRanges = shader->getPushConstants().data();
+	pipeline_layout_info.pushConstantRangeCount = shader->getReflectionData().push_constants.size();
+	pipeline_layout_info.pPushConstantRanges = shader->getReflectionData().push_constants.data();
 
 	layout = RenderContext::getLogicalDevice().createPipelineLayout(pipeline_layout_info);
 }

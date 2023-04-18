@@ -3,10 +3,9 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/debug_renderer.h"
 #include "gfx/instance.h"
+#include "gfx/gpu_type.h"
 #include "includer.h"
 #include <spirv_cross/spirv_cross.hpp>
-
-shaderc::Compiler Shader::compiler{};
 
 Shader::Stage::Stage(const path& file)
 	: file(file)
@@ -30,11 +29,14 @@ Shader::Stage::~Stage()
 
 bool Shader::Stage::compile()
 {
+	static shaderc::Compiler compiler;
+
 	if (module)
 	{
 		RenderContext::getLogicalDevice().destroyShaderModule(module);
 		module = nullptr;
 	}
+
 	shaderc_env_version api_version;
 	switch (RenderContext::getInstance().getVulkanVersion())
 	{
@@ -43,31 +45,27 @@ bool Shader::Stage::compile()
 	case VulkanVersion::VULKAN_1_2: api_version = shaderc_env_version_vulkan_1_2; break;
 	case VulkanVersion::VULKAN_1_3: api_version = shaderc_env_version_vulkan_1_3; break;
 	}
+
 	shaderc::CompileOptions options{};
 	options.SetTargetEnvironment(shaderc_target_env_vulkan, api_version);
 	options.SetForcedVersionProfile(450, shaderc_profile_none);
 	options.SetOptimizationLevel(shaderc_optimization_level_performance);
 	options.SetSourceLanguage(shaderc_source_language_glsl);
-	options.SetTargetSpirv(shaderc_spirv_version_1_6);
 	options.SetWarningsAsErrors();
 	options.SetGenerateDebugInfo();
 	options.SetIncluder(makeUnique<Includer>());
 
-	std::string source;
-
-	std::string defines;
 	// TODO: remove this, make this a parameter, or do something else
-	defines += "#define MAX_IMAGE_SLOTS " + std::to_string(DebugRenderer::MAX_IMAGE_SLOTS) + '\n';
-	defines += "#define MAX_LIGHTS " + std::to_string(DebugRenderer::MAX_LIGHTS) + '\n';
-	defines += "#define DIFFUSE_TEXTURE 0\n";
-	defines += "#define NORMAL_TEXTURE 1\n";
-	defines += "#define AO_TEXTURE 2\n";
-	defines += "#define HEIGHT_TEXTURE 3\n";
-	defines += "#define SPECULAR_TEXTURE 4\n";
-	defines += "#define EMMISIVE_TEXTURE 5\n";
-	source += defines;
+	options.AddMacroDefinition("MAX_IMAGE_SLOTS", std::to_string(DebugRenderer::MAX_IMAGE_SLOTS));
+	options.AddMacroDefinition("MAX_LIGHTS", std::to_string(DebugRenderer::MAX_LIGHTS));
+	options.AddMacroDefinition("DIFFUSE_TEXTURE", "0");
+	options.AddMacroDefinition("NORMAL_TEXTURE", "1");
+	options.AddMacroDefinition("AO_TEXTURE", "2");
+	options.AddMacroDefinition("HEIGHT_TEXTURE", "3");
+	options.AddMacroDefinition("SPECULAR_TEXTURE", "4");
+	options.AddMacroDefinition("EMMISIVE_TEXTURE", "5");
 
-	source += File::read(file, std::ios::binary);
+	std::string source = File::read(file, std::ios::binary);
 
 	shaderc_shader_kind shaderc_type = (shaderc_shader_kind)0;
 	using enum Type;
@@ -81,24 +79,24 @@ bool Shader::Stage::compile()
 	case TESSELATION_EVALUATION: shaderc_type = shaderc_tess_evaluation_shader; break;
 	}
 
-	DebugTimer t(std::format("Compiling shader({})", file.filename()));
+	DebugTimer t(std::format("Compiling {}", file.filename()));
 	auto preprocess_result = compiler.PreprocessGlsl(source, shaderc_type, file.string().c_str(), options);
 	if (preprocess_result.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
-		SK_ERROR("Shader({}) error: {}", file, preprocess_result.GetErrorMessage());
+		SK_ERROR("Error in {}: {}", file, preprocess_result.GetErrorMessage());
 		return false;
 	}
 	if (preprocess_result.GetNumWarnings())
-		SK_WARN("Shader({}) warning: {}", file, preprocess_result.GetErrorMessage());
+		SK_WARN("Warning in {}: {}", file, preprocess_result.GetErrorMessage());
 
 	auto compilation_result = compiler.CompileGlslToSpv(preprocess_result.begin(), shaderc_type, file.string().c_str(), options);
 	if (compilation_result.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
-		SK_ERROR("Shader({}) error: {}", file, compilation_result.GetErrorMessage());
+		SK_ERROR("Error in {}: {}", file, compilation_result.GetErrorMessage());
 		return false;
 	}
 	if (compilation_result.GetNumWarnings())
-		SK_WARN("Shader({}) warning: {}", file, compilation_result.GetErrorMessage());	
+		SK_WARN("Warning in {}: {}", file, compilation_result.GetErrorMessage());	
 	t();
 
 	binary = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend()); 
@@ -163,6 +161,7 @@ void Shader::reflect()
 {
 	using namespace spirv_cross;
 	reflection_data = {};
+
 	for (const auto& stage : stages)
 	{
 		auto type = stage->type;
@@ -197,96 +196,119 @@ void Shader::reflect()
 	
 		if (VkShaderStageFlags(type) & VkShaderStageFlags(Stage::Type::VERTEX))
 		{
-			constexpr GpuType lut[8][4]
+			struct VertexAttribute
 			{
-				{ GpuType::FLOAT, GpuType::VEC2, GpuType::VEC3, GpuType::VEC4 },
-				{ GpuType::INT, GpuType::IVEC2, GpuType::IVEC3, GpuType::IVEC4 },
-				{ GpuType::UINT, GpuType::UVEC2, GpuType::UVEC3, GpuType::UVEC4 },
-				{ GpuType::DOUBLE, GpuType::DVEC2, GpuType::DVEC3, GpuType::DVEC4 },
-				{ GpuType::UBYTE, GpuType::UVEC2, GpuType::UVEC3, GpuType::UVEC4 },
-				{ GpuType::BYTE, GpuType::UVEC2, GpuType::UVEC3, GpuType::UVEC4 },
-				{ GpuType::USHORT, GpuType::UVEC2, GpuType::UVEC3, GpuType::UVEC4 },
-				{ GpuType::SHORT, GpuType::UVEC2, GpuType::UVEC3, GpuType::UVEC4 }
+				uint32_t location = 0;
+				uint32_t size = 0;
+				VkFormat format = VkFormat(0);
+				bool instanced = false;
+				bool operator<(const VertexAttribute& other) const { return location < other.location; }
 			};
-			constexpr GpuType mat_lut[8][4]
-			{
-				{ GpuType::FLOAT, GpuType::MAT2, GpuType::MAT3, GpuType::MAT4 },
-				{ GpuType::INT, GpuType::MAT2, GpuType::MAT3, GpuType::MAT4 },
-				{ GpuType::UINT, GpuType::MAT2, GpuType::MAT3, GpuType::MAT4 },
-				{ GpuType::DOUBLE, GpuType::DMAT2, GpuType::DMAT3, GpuType::DMAT4 },
-				{ GpuType::UBYTE, GpuType::MAT2, GpuType::MAT3, GpuType::MAT4 },
-				{ GpuType::BYTE, GpuType::MAT2, GpuType::MAT3, GpuType::MAT4 },
-				{ GpuType::USHORT, GpuType::MAT2, GpuType::MAT3, GpuType::MAT4 },
-				{ GpuType::SHORT, GpuType::MAT2, GpuType::MAT3, GpuType::MAT4 },
-			};
-	
-			uint32_t max_location = 0;
+			//TODO: Support things like array/struct input vertex attributes
+			std::vector<VertexAttribute> vertex_attributes;
 			for (auto& input : shader_resources.stage_inputs)
 			{
+				
 				uint32_t location = compiler.get_decoration(input.id, spv::Decoration::DecorationLocation);
-				max_location = std::max(max_location, location + 1);
-			}
-	
-			std::vector<std::optional<BufferElement>> buffer_elements;
-			buffer_elements.resize(max_location, std::nullopt);
-	
-			for (auto& input : shader_resources.stage_inputs)
-			{
-				uint32_t location = compiler.get_decoration(input.id, spv::Decoration::DecorationLocation);
-				using Type = spirv_cross::SPIRType::BaseType;
-				auto type = compiler.get_type(input.base_type_id);
-				size_t type_index = 0;
+				const auto& type = compiler.get_type(input.base_type_id);
+				uint32_t size = 0;
+				VkFormat format = VkFormat(0);
 				switch (type.basetype)
 				{
+					using Type = spirv_cross::SPIRType::BaseType;
 				case Type::Float:
-					type_index = 0;
+					size = 4;
+					format = makeArray(VK_FORMAT_R32_SFLOAT, VK_FORMAT_R32G32_SFLOAT, VK_FORMAT_R32G32B32_SFLOAT, VK_FORMAT_R32G32B32A32_SFLOAT)[type.vecsize - 1];
 					break;
 				case Type::Int:
-					type_index = 1;
+					size = 4;
+					format = makeArray(VK_FORMAT_R32_SINT, VK_FORMAT_R32G32_SINT, VK_FORMAT_R32G32B32_SINT, VK_FORMAT_R32G32B32A32_SINT)[type.vecsize - 1];
 					break;
 				case Type::UInt:
-					type_index = 2;
+					size = 4;
+					format = makeArray(VK_FORMAT_R32_UINT, VK_FORMAT_R32G32_UINT, VK_FORMAT_R32G32B32_UINT, VK_FORMAT_R32G32B32A32_UINT)[type.vecsize - 1];
 					break;
 				case Type::Double:
-					type_index = 3;
+					size = 8;
+					format = makeArray(VK_FORMAT_R64_SFLOAT, VK_FORMAT_R64G64_SFLOAT, VK_FORMAT_R64G64B64_SFLOAT, VK_FORMAT_R64G64B64A64_SFLOAT)[type.vecsize - 1];
 					break;
 				case Type::UByte:
-					type_index = 4;
+					size = 1;
+					format = makeArray(VK_FORMAT_R8_UINT, VK_FORMAT_R8G8_UINT, VK_FORMAT_R8G8B8_UINT, VK_FORMAT_R8G8B8A8_UINT)[type.vecsize - 1];
 					break;
 				case Type::SByte:
-					type_index = 5;
+					size = 1;
+					format = makeArray(VK_FORMAT_R8_SINT, VK_FORMAT_R8G8_SINT, VK_FORMAT_R8G8B8_SINT, VK_FORMAT_R8G8B8A8_SINT)[type.vecsize - 1];
 					break;
 				case Type::UShort:
-					type_index = 6;
+					size = 2;
+					format = makeArray(VK_FORMAT_R16_UINT, VK_FORMAT_R16G16_UINT, VK_FORMAT_R16G16B16_UINT, VK_FORMAT_R16G16B16A16_UINT)[type.vecsize - 1];
 					break;
 				case Type::Short:
-					type_index = 7;
+					size = 2;
+					format = makeArray(VK_FORMAT_R16_SINT, VK_FORMAT_R16G16_SINT, VK_FORMAT_R16G16B16_SINT, VK_FORMAT_R16G16B16A16_SINT)[type.vecsize - 1];
 					break;
 				}
-	
-				BufferElement element{};
-				element.type = lut[type_index][type.vecsize - 1];
-	
-				if (type.vecsize > 1 && type.vecsize == type.columns)
-					element.type = mat_lut[type_index][type.columns - 1];
-	
+				size *= type.vecsize;
+				size *= type.columns;
+
+				// TODO: Not the greatest idea, but works in most cases
 				std::string_view token = "instance_";
-				if (input.name.size() >= token.size())
-					element.instanced = std::string_view(input.name.data(), token.size()) == token;
-				else 
-					element.instanced = false;
-	
-				buffer_elements[location] = element;
+				bool is_input_instanced = (input.name.size() >= token.size() && std::string_view(input.name.data(), token.size()) == token);
+				vertex_attributes.emplace_back(location, size, format, is_input_instanced);
 			}
-	
-			std::vector<BufferElement> aligned_buffer_elements;
-			for (const auto& e : buffer_elements)
+			if (vertex_attributes.size())
 			{
-				if (e.has_value())
-					aligned_buffer_elements.emplace_back(*e);
+				std::ranges::sort(vertex_attributes, std::less<VertexAttribute>{});
+
+				uint32_t offset = 0;
+				uint32_t instance_offset = 0;
+
+				bool is_instanced = false;
+
+				for (const VertexAttribute& vertex_attribute : vertex_attributes)
+				{
+					uint32_t actual_rows = (float)vertex_attribute.size / sizeof(vec4);
+					uint32_t remainder = vertex_attribute.size % sizeof(vec4);
+					uint32_t rows = actual_rows + (remainder > 0);
+					for (uint32_t i = 0; i < rows; ++i)
+					{
+						VkVertexInputAttributeDescription attribute_desc{};
+						attribute_desc.format = vertex_attribute.format;
+						attribute_desc.location = vertex_attribute.location + i;
+
+						if (vertex_attribute.instanced)
+						{
+							is_instanced = true;
+							attribute_desc.offset = instance_offset;
+							attribute_desc.binding = 1;
+							instance_offset += i < actual_rows ? sizeof(vec4) : remainder;
+						}
+						else
+						{
+							attribute_desc.offset = offset;
+							attribute_desc.binding = 0;
+							offset += i < actual_rows ? sizeof(vec4) : remainder;
+						}
+
+						reflection_data.vertex_input_attribute_descriptions.emplace_back(std::move(attribute_desc));
+					}
+				}
+
+				reflection_data.vertex_input_binding_descriptions.resize(1 + is_instanced);
+				auto& vertex_binding_desc = reflection_data.vertex_input_binding_descriptions[0];
+				vertex_binding_desc.binding = 0;
+				vertex_binding_desc.stride = offset;
+				vertex_binding_desc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+				if (is_instanced)
+				{
+					auto& instance_binding_desc = reflection_data.vertex_input_binding_descriptions[1];
+					instance_binding_desc.binding = 1;
+					instance_binding_desc.stride = instance_offset;
+					instance_binding_desc.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+				}
 			}
-	
-			reflection_data.buffer_layout = BufferLayout(aligned_buffer_elements);
 		}
 	
 		auto constants = compiler.get_specialization_constants();
