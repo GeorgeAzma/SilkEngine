@@ -2,12 +2,6 @@
 
 #include "meshes/raw_mesh.h"
 #include "gfx/images/raw_image.h"
-#include <assimp/Importer.hpp>
-
-class aiNode;
-class aiMesh;
-class aiMaterial;
-enum aiTextureType;
 
 class RawModel
 {
@@ -25,11 +19,6 @@ class RawModel
 
 public:
 	RawModel(const path& file);
-
-private:
-	void processNode(aiNode* node, const aiScene* scene);
-	void processMesh(aiMesh* mesh, const aiScene* scene);
-	std::vector<RawImage<uint8_t>*> loadMaterialTextures(aiMaterial* mat, aiTextureType type);
 
 private:
 	std::vector<shared<RawMesh3D>> meshes;

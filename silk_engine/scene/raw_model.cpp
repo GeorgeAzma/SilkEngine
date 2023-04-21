@@ -1,23 +1,38 @@
 #include "raw_model.h"
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+#define TINYGLTF_IMPLEMENTATION
+#define TINYGLTF_USE_CPP14
+#include "tiny_gltf.h"
+
+static tinygltf::TinyGLTF loader;
 
 RawModel::RawModel(const path& file)
 {
     path file_path = path("res/models") / file;
     this->file = file_path;
 
-    Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(file_path.string(), aiProcess_Triangulate | aiProcess_ImproveCacheLocality | aiProcess_JoinIdenticalVertices | aiProcess_OptimizeGraph | aiProcess_OptimizeMeshes);
-    SK_VERIFY(scene && (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) != AI_SCENE_FLAGS_INCOMPLETE && scene->mRootNode, "Assimp: Couldn't load model at path: {}", file_path);
+    //Assimp::Importer importer;
+    //const aiScene* scene = importer.ReadFile(file_path.string(), aiProcess_Triangulate | aiProcess_ImproveCacheLocality | aiProcess_JoinIdenticalVertices | aiProcess_OptimizeGraph | aiProcess_OptimizeMeshes);
+    //SK_VERIFY(scene && (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) != AI_SCENE_FLAGS_INCOMPLETE && scene->mRootNode, "Assimp: Couldn't load model at path: {}", file_path);
 
     directory = file.string().substr(0, file.string().find_last_of('/'));
 
-    processNode(scene->mRootNode, scene);
+    tinygltf::Model model;
+    std::string err;
+    std::string warn;
+
+
+    if (file.extension() == ".glb")
+        loader.LoadBinaryFromFile(&model, &err, &warn, file_path.string());
+    else loader.LoadASCIIFromFile(&model, &err, &warn, file_path.string());
+
+    SK_VERIFY(err.empty(), err);
+    SK_VERIFY_WARN(warn.empty(), warn);
+
+    SK_CRITICAL("Unfinished code, can't load a model");
 
     SK_TRACE("Model loaded: {}", file);
 }
-
+/*
 void RawModel::processNode(aiNode* node, const aiScene* scene)
 {
     for (size_t i = 0; i < node->mNumMeshes; ++i)
@@ -123,3 +138,4 @@ std::vector<RawImage<uint8_t>*> RawModel::loadMaterialTextures(aiMaterial* mat, 
 
     return images;
 }
+*/

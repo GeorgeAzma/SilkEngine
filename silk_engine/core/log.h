@@ -52,6 +52,7 @@ private:
     #define SK_ERROR(...) SPDLOG_LOGGER_ERROR(SK_LOGGER, __VA_ARGS__)
     #define SK_CRITICAL(...) do { SPDLOG_LOGGER_CRITICAL(SK_LOGGER, __VA_ARGS__); std::abort(); } while(0)
     #define SK_VERIFY(x, ...) do { if (!(x)) { SPDLOG_LOGGER_ERROR(SK_LOGGER, _sk_assert(#x, __VA_ARGS__)); } } while(0)
+    #define SK_VERIFY_WARN(x, ...) do { if (!(x)) { SPDLOG_LOGGER_WARN(SK_LOGGER, _sk_assert(#x, __VA_ARGS__)); } } while(0)
     #define SK_ASSERT(x, ...) do { if (!(x)) { SPDLOG_LOGGER_CRITICAL(SK_LOGGER, _sk_assert(#x, __VA_ARGS__)); std::abort(); } } while(0)
 #else
     #define SK_PROFILE_FUNCTION(...)
@@ -61,5 +62,6 @@ private:
     #define SK_ERROR(...)
     #define SK_CRITICAL(...)
     #define SK_VERIFY(x, ...)
+    #define SK_VERIFY_WARN(x, ...)
     #define SK_ASSERT(x, ...)
 #endif
