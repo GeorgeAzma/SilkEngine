@@ -8,7 +8,7 @@ void Joystick::init()
         {
             bool connected = event == GLFW_CONNECTED;
             Joystick joystick(id);
-            Dispatcher::post(JoystickEvent(joystick, connected));
+            Dispatcher<JoystickEvent>::post(JoystickEvent(joystick, connected));
             SK_INFO("Joystick {}connected: {}", connected ? "" : "dis", joystick.getName());
         });
 }

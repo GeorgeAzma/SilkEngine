@@ -28,8 +28,8 @@ Window::Window()
     glfwSetWindowUserPointer(window, &data);
     align(WindowAlignment::CENTER);
 
-    Dispatcher::post(WindowResizeEvent(*this, data.width, data.height));
-    Dispatcher::post(WindowMoveEvent(*this, data.x, data.y));
+    Dispatcher<WindowResizeEvent>::post(*this, data.width, data.height);
+    Dispatcher<WindowMoveEvent>::post(*this, data.x, data.y);
 
     glfwSetWindowPosCallback(window,
         [](GLFWwindow* window, int x, int y)
@@ -40,7 +40,7 @@ Window::Window()
             {
                 data.x = x;
                 data.y = y;
-                Dispatcher::post(WindowMoveEvent(*data.window, x, y));
+                Dispatcher<WindowMoveEvent>::post(*data.window, x, y);
             }
         });
 
@@ -51,7 +51,7 @@ Window::Window()
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             data.width = width;
             data.height = height;
-            Dispatcher::post(FramebufferResizeEvent(*data.window, width, height));
+            Dispatcher<FramebufferResizeEvent>::post(*data.window, width, height);
         });
 
     // Event callbacks
@@ -62,7 +62,7 @@ Window::Window()
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             data.width = width;
             data.height = height;
-            Dispatcher::post(WindowResizeEvent(*data.window, width, height));
+            Dispatcher<WindowResizeEvent>::post(*data.window, width, height);
         });
 
     glfwSetWindowMaximizeCallback(window,
@@ -71,7 +71,7 @@ Window::Window()
             SK_INFO("Window {}", maximized == GLFW_TRUE ? "maximized" : "restored");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             data.maximized = maximized;
-            Dispatcher::post(WindowMaximizeEvent(*data.window, maximized));
+            Dispatcher<WindowMaximizeEvent>::post(*data.window, maximized);
         });
 
     glfwSetWindowFocusCallback(window, 
@@ -80,7 +80,7 @@ Window::Window()
             SK_INFO("Window {}focused", focused == GLFW_TRUE ? "" : "un");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             data.focused = focused;
-            Dispatcher::post(WindowFocusEvent(*data.window, focused));
+            Dispatcher<WindowFocusEvent>::post(*data.window, focused);
         });
 
     glfwSetWindowIconifyCallback(window, 
@@ -89,7 +89,7 @@ Window::Window()
             SK_INFO("Window {}", minimized == GLFW_TRUE ? "minimized" : "restored");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             data.minimized = minimized;
-            Dispatcher::post(WindowMinimizeEvent(*data.window, minimized));
+            Dispatcher<WindowMinimizeEvent>::post(*data.window, minimized);
         });
 
     glfwSetWindowRefreshCallback(window, 
@@ -97,7 +97,7 @@ Window::Window()
         {
             SK_INFO("Window refreshed");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
-            Dispatcher::post(WindowRefreshEvent(*data.window));
+            Dispatcher<WindowRefreshEvent>::post(*data.window);
         });
 
     glfwSetWindowContentScaleCallback(window, 
@@ -105,7 +105,7 @@ Window::Window()
         {
             SK_INFO("Window content scaled: ({}, {})", x, y);
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
-            Dispatcher::post(WindowContentScaleEvent(*data.window, x, y));
+            Dispatcher<WindowContentScaleEvent>::post(*data.window, x, y);
             data.dpi = { x, y };
         });
 
@@ -114,7 +114,7 @@ Window::Window()
         {
             SK_INFO("Window closed");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
-            Dispatcher::post(WindowCloseEvent(*data.window));
+            Dispatcher<WindowCloseEvent>::post(*data.window);
         });
 
     glfwSetKeyCallback(window,
@@ -125,18 +125,18 @@ Window::Window()
             {
             case GLFW_PRESS:
             {
-                Dispatcher::post(KeyPressEvent(*data.window, key, 0));
+                Dispatcher<KeyPressEvent>::post(*data.window, key, 0);
                 data.keys[key] = true;
                 break;
             }
             case GLFW_REPEAT:
             {
-                Dispatcher::post(KeyPressEvent(*data.window, key, 1));
+                Dispatcher<KeyPressEvent>::post(*data.window, key, 1);
                 break;
             }
             case GLFW_RELEASE:
             {
-                Dispatcher::post(KeyReleaseEvent(*data.window, key));
+                Dispatcher<KeyReleaseEvent>::post(*data.window, key);
                 data.keys[key] = false;
                 break;
             }
@@ -152,14 +152,14 @@ Window::Window()
             {
             case GLFW_PRESS:
             {
-                Dispatcher::post(MousePressEvent(*data.window, button));
+                Dispatcher<MousePressEvent>::post(*data.window, button);
                 data.mouse_pressed = button;
                 data.mouse_buttons[button] = true;
                 break;
             }
             case GLFW_RELEASE:
             {
-                Dispatcher::post(MouseReleaseEvent(*data.window, button));
+                Dispatcher<MouseReleaseEvent>::post(*data.window, button);
                 data.mouse_buttons[button] = false;
                 break;
             }
@@ -171,10 +171,10 @@ Window::Window()
         {
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             my = data.height - my;
-            Dispatcher::post(MouseMoveEvent(*data.window, mx, my));
+            Dispatcher<MouseMoveEvent>::post(*data.window, mx, my);
             data.mouse = vec2(mx, my);
             if (data.mouse_pressed != -1)
-                Dispatcher::post(MouseDragEvent(*data.window, data.mouse_pressed, mx, my));
+                Dispatcher<MouseDragEvent>::post(*data.window, data.mouse_pressed, mx, my);
         });
 
     glfwSetCursorEnterCallback(window, 
@@ -182,14 +182,14 @@ Window::Window()
         {
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
             data.is_mouse_on = entered;
-            Dispatcher::post(MouseEnterEvent(*data.window, entered));
+            Dispatcher<MouseEnterEvent>::post(*data.window, entered);
         });
 
     glfwSetScrollCallback(window,
         [](GLFWwindow *window, double sx, double sy)
         {
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
-            Dispatcher::post(MouseScrollEvent(*data.window, sx, sy));
+            Dispatcher<MouseScrollEvent>::post(*data.window, sx, sy);
         });
 
     glfwSetDropCallback(window,
@@ -199,14 +199,14 @@ Window::Window()
             std::vector<const char*> paths_vec(path_count);
             for (size_t i = 0; i < paths_vec.size(); ++i)
                 paths_vec[i] = paths[i];
-            Dispatcher::post(DragAndDropEvent(*data.window, paths_vec));
+            Dispatcher<DragAndDropEvent>::post(*data.window, paths_vec);
         });
 
     glfwSetCharModsCallback(window,
         [](GLFWwindow* window, uint codepoint, int mods)
         {
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
-            Dispatcher::post(CharacterWriteEvent(*data.window, codepoint));
+            Dispatcher<CharacterWriteEvent>::post(*data.window, codepoint);
         });
 
     surface = new Surface(*this);
@@ -267,8 +267,8 @@ void Window::setFullscreen(bool fullscreen)
         data.y = 0;
         data.width = video_mode->width;
         data.height = video_mode->height;
-        Dispatcher::post(WindowMoveEvent(*this, data.x, data.y));
-        Dispatcher::post(WindowResizeEvent(*this, data.width, data.height));
+        Dispatcher<WindowMoveEvent>::post(*this, data.x, data.y);
+        Dispatcher<WindowResizeEvent>::post(*this, data.width, data.height);
         
     }
     else
@@ -278,10 +278,10 @@ void Window::setFullscreen(bool fullscreen)
         data.width = windowed.width;
         data.height = windowed.height;
         glfwSetWindowMonitor(window, nullptr, data.x, data.y, data.width, data.height, GLFW_DONT_CARE);
-        Dispatcher::post(WindowMoveEvent(*this, data.x, data.y));
-        Dispatcher::post(WindowResizeEvent(*this, data.width, data.height));
+        Dispatcher<WindowMoveEvent>::post(*this, data.x, data.y);
+        Dispatcher<WindowResizeEvent>::post(*this, data.width, data.height);
     }
-    Dispatcher::post(WindowFullscreenEvent(*this, fullscreen));
+    Dispatcher<WindowFullscreenEvent>::post(*this, fullscreen);
 }
 
 void Window::setX(int32_t x)

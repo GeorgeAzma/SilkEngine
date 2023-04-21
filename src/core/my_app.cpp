@@ -24,16 +24,16 @@ MyApp::MyApp()
     scene = makeShared<MyScene>();
     SceneManager::add(scene);
 
-    Dispatcher::subscribe(*this, &MyApp::onKeyPress);
-    Dispatcher::subscribe(*this, &MyApp::onWindowClose);
-    Dispatcher::subscribe(*this, &MyApp::onFramebufferResize);
+    Dispatcher<KeyPressEvent>::subscribe(*this, &MyApp::onKeyPress);
+    Dispatcher<WindowCloseEvent>::subscribe(*this, &MyApp::onWindowClose);
+    Dispatcher<FramebufferResizeEvent>::subscribe(*this, &MyApp::onFramebufferResize);
 }
 
 MyApp::~MyApp()
 {
-    Dispatcher::unsubscribe(*this, &MyApp::onKeyPress);
-    Dispatcher::unsubscribe(*this, &MyApp::onWindowClose);
-    Dispatcher::unsubscribe(*this, &MyApp::onFramebufferResize);
+    Dispatcher<KeyPressEvent>::unsubscribe(*this, &MyApp::onKeyPress);
+    Dispatcher<WindowCloseEvent>::unsubscribe(*this, &MyApp::onWindowClose);
+    Dispatcher<FramebufferResizeEvent>::unsubscribe(*this, &MyApp::onFramebufferResize);
 
     SceneManager::destroy();
     Renderer::destroy();
@@ -53,7 +53,7 @@ void MyApp::onKeyPress(const KeyPressEvent& e)
     switch (e.key)
     {
     case Keys::ESCAPE:
-        Dispatcher::post(WindowCloseEvent(e.window));
+        Dispatcher<WindowCloseEvent>::post(e.window);
         break;
     case Keys::F11:
         e.window.setFullscreen(!e.window.isFullscreen());

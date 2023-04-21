@@ -7,7 +7,7 @@ void Monitor::init()
 		{
 			bool connected = event == GLFW_CONNECTED;
 			Monitor mon(monitor);
-			Dispatcher::post(MonitorEvent(mon, connected));
+			Dispatcher<MonitorEvent>::post(mon, connected);
 			SK_TRACE("Monitor {}connected: {}", connected ? "" : "dis", mon.getName());
 		});
 }

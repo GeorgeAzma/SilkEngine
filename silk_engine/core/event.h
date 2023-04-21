@@ -6,14 +6,8 @@ class Window;
 class Monitor;
 class Joystick;
 
-//EVENT
-struct Event
-{
-    virtual ~Event() = default;
-};
-
 //WINDOW EVENTS
-struct WindowEvent : Event
+struct WindowEvent
 {
     WindowEvent(Window& window) 
         : window(window) {}
@@ -90,7 +84,7 @@ struct WindowContentScaleEvent : WindowEvent
 };
 
 //MONITOR EVENTS
-struct MonitorEvent : Event
+struct MonitorEvent
 {
     MonitorEvent(Monitor& monitor, bool connected)
         : monitor(monitor), connected(connected) {}
@@ -191,7 +185,7 @@ struct CharacterWriteEvent : WindowEvent
     const char character;
 };
 
-struct JoystickEvent : Event
+struct JoystickEvent
 {
     JoystickEvent(Joystick& joystick, bool connected)
         : joystick(joystick), connected(connected) {}
@@ -200,30 +194,31 @@ struct JoystickEvent : Event
     const bool connected;
 };
 
+template<typename EventType>
 class HandlerFunctionBase
 {
 public:
-    virtual void operator()(const Event& event) const = 0;
+    void operator()(const EventType& event) const {}
     virtual bool operator==(size_t func) const = 0;
 };
 
 template <class T, class EventType>
-class MemberFunctionHandler : public HandlerFunctionBase
+class MemberFunctionHandler : public HandlerFunctionBase<EventType>
 {
     typedef void (T::* MemberFunction)(const EventType&);
 public:
     MemberFunctionHandler(T& instance, MemberFunction member_function)
         : instance(instance), member_function(member_function) {}
 
-    void operator()(const Event& event) const override
+    void operator()(const EventType& event) const
     {
-        (instance.*member_function)(static_cast<const EventType&>(event));
+        (instance.*member_function)(event);
     }
 
     bool operator==(size_t func) const override
     {
         union {
-            void (T::* member_function)(const EventType&);
+            MemberFunction member_function;
             size_t hash;
         } converter;
         converter.member_function = member_function;
@@ -235,80 +230,73 @@ private:
     MemberFunction member_function;
 };
 
+template <typename EventType>
 class Dispatcher
 {
 public:
-    template <typename EventType>
     static void post(const EventType& e)
     {
-        auto it = subscribers.find(typeid(EventType));
-        if (it == subscribers.end())
-            return;
-        for (auto&& func : it->second.functions)
+        for (auto& func : subscribed_functions)
             func(e);
-        for (auto&& func : it->second.member_functions)
+        for (auto& func : subscribed_member_functions)
             (*func)(e);
     }
 
-    template <class T, class EventType>
+    template <typename... Args>
+    static void post(Args&&... args)
+    {
+        EventType e(std::forward<Args>(args)...);
+        for (auto& func : subscribed_functions)
+            func(e);
+        for (auto& func : subscribed_member_functions)
+            (*func)(e);
+    }
+
+    template <class T>
     static void subscribe(T& instance, void (T::* member_function)(const EventType&))
     {
-        subscribers[typeid(EventType)].member_functions.emplace_back(new MemberFunctionHandler<T, EventType>(instance, member_function));
+        subscribed_member_functions.emplace_back(new MemberFunctionHandler<T, EventType>(instance, member_function));
     }
 
-    template <class EventType>
     static void subscribe(void (*function)(const EventType&))
     {
-        subscribers[typeid(EventType)].functions.emplace_back((void(*)(const Event&))function);
+        subscribed_functions.emplace_back(function);
     }
 
-    template <class EventType>
     static void unsubscribe(void (*function)(const EventType&))
     {
-        auto it = subscribers.find(typeid(EventType));
-        if (it == subscribers.end())
-            return;
-        auto& functions = it->second.functions;
-        for (auto& func : functions)
+        for (auto& func : subscribed_functions)
         {
-            if (size_t(func) == size_t(function))
+            if (func == function)
             {
-                std::swap(func, functions.back());
-                functions.pop_back();
+                std::swap(func, subscribed_functions.back());
+                subscribed_functions.pop_back();
                 break;
             }
         }
     }
 
-    template <class T, class EventType>
+    template <class T>
     static void unsubscribe(T& instance, void (T::* member_function)(const EventType&))
     {
-        auto it = subscribers.find(typeid(EventType));
-        if (it == subscribers.end())
-            return;
         union {
             void (T::* member_function)(const EventType&);
             size_t hash;
         } converter;
         converter.member_function = member_function;
         size_t function_hash = size_t(&instance) ^ converter.hash;
-        auto& member_functions = it->second.member_functions;
-        for (auto& member_func : member_functions)
+        for (auto& member_func : subscribed_member_functions)
         {
             if (*member_func == function_hash)
             {
-                std::swap(member_func, member_functions.back());
-                member_functions.pop_back();
+                std::swap(member_func, subscribed_member_functions.back());
+                subscribed_member_functions.pop_back();
                 break;
             }
         }
     }
 
 private:
-    struct Subscribers
-    {
-        std::vector<void(*)(const Event&)> functions;
-        std::vector<unique<HandlerFunctionBase>> member_functions;
-    };
-    static inline std::unordered_map<std::type_index, Subscribers> subscribers;
+    static inline std::vector<void(*)(const EventType&)> subscribed_functions;
+    static inline std::vector<unique<HandlerFunctionBase<EventType>>> subscribed_member_functions;
 };

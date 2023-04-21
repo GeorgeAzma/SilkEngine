@@ -15,14 +15,14 @@
 
 Scene::Scene()
 {
-	Dispatcher::subscribe(*this, &Scene::onWindowResize);
+	Dispatcher<WindowResizeEvent>::subscribe(*this, &Scene::onWindowResize);
 
 	SK_TRACE("Scene created");
 }
 
 Scene::~Scene()
 {
-	Dispatcher::unsubscribe(*this, &Scene::onWindowResize);
+	Dispatcher<WindowResizeEvent>::unsubscribe(*this, &Scene::onWindowResize);
 }
 
 void Scene::init()
