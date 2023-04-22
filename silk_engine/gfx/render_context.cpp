@@ -18,7 +18,7 @@
 void RenderContext::init(std::string_view app_name)
 {
 	instance = new Instance(app_name);
-	physical_device = PhysicalDevice::select();
+	physical_device = instance->selectPhysicalDevice();
 	logical_device = new LogicalDevice(*physical_device);
 	command_queue = new CommandQueue();
 	allocator = new Allocator(*physical_device, *logical_device);
@@ -66,20 +66,8 @@ void RenderContext::screenshot(const path& file)
 	int width = Window::getActive().getWidth();
 	int height = Window::getActive().getHeight();
 	int channels = Image::getFormatChannelCount(Image::Format(Window::getActive().getSurface().getFormat().format));
-	 
-	Image::Props props{};
-	props.width = width;
-	props.height = height;
-	props.create_sampler = false;
-	props.create_view = false;
-	props.layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-	props.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-	props.format = Image::Format(Window::getActive().getSurface().getFormat().format);
-	props.tiling = VK_IMAGE_TILING_OPTIMAL;
-	shared<Image> destination = makeShared<Image>(props);
 	
 	auto& img = Window::getActive().getSwapChain().getImages()[Window::getActive().getSwapChain().getImageIndex()];
-	img->copyImage(*destination);
 
 	void* data;
 	Buffer sb(img->getSize(), Buffer::TRANSFER_DST, { Allocation::RANDOM_ACCESS | Allocation::MAPPED });

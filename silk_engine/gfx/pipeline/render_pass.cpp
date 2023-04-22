@@ -16,10 +16,12 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
     for (size_t subpass_index = 0; subpass_index < subpass_props.size(); ++subpass_index)
     {
         const auto& subpass = subpass_props[subpass_index];
+        bool has_depth_output = false;
         for (const auto& output : subpass.outputs)
         {
             bool multisampled = output.samples != VK_SAMPLE_COUNT_1_BIT;
             bool depth = Image::isDepthFormat(output.format);
+            has_depth_output |= depth;
             bool stencil = Image::isStencilFormat(output.format);
             bool color = !(depth || stencil);
             VkAttachmentDescription attachment_description{};
@@ -102,10 +104,16 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
         VkSubpassDependency subpass_dependency{};
         subpass_dependency.srcSubpass = subpass_index ? (subpass_index - 1) : VK_SUBPASS_EXTERNAL;
         subpass_dependency.dstSubpass = subpass_index;
-        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT/* | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT*/;
-        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT/* | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT*/;
-        subpass_dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT/* | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT*/;
-        subpass_dependency.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependency.srcAccessMask = 0;
+        subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        if (has_depth_output)
+        {
+            subpass_dependency.srcStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+            subpass_dependency.dstStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+            subpass_dependency.dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        }
         subpass_dependencies[subpass_index] = std::move(subpass_dependency);
     }
 

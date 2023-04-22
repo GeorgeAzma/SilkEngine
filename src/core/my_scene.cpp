@@ -11,6 +11,7 @@
 
 #include "my_scene.h"
 #include "scene/meshes/line_mesh.h"
+#include "scene/meshes/circle_mesh.h"
 
 Cooldown c(200ms);
 
@@ -30,12 +31,17 @@ void MyScene::onStart()
         p[i].y = cos(pi<float>() * 2.0 * 3.0 * p[i].x + Time::runtime) * 100.0f + 100.0f;
         p[i].x *= Window::getActive().getWidth();
     }
-    shared<Mesh> line = makeShared<Mesh>(LineMesh(p, 4.0f));
+    shared<Mesh> line = makeShared<Mesh>(CircleMesh(32));
     DebugRenderer::InstanceData data{};
+    data.transform = glm::scale(data.transform, vec3(8));
     for (int i = 0; i < 10000; ++i)
     {
         DebugRenderer::createInstance(line, data, Resources::get<GraphicsPipeline>("2D"));
-        data.transform = glm::translate(data.transform, vec3(1, 1, 0));
+        data.transform = glm::translate(data.transform, vec3(1, i % 100 == 0 ? 1 : 0, 0));
+        if (i % 100 == 0)
+        {
+            data.transform[3][0] = 0.0f;
+        }
         data.color = Color(Colors(i % (1 + int(Colors::TRANSPARENT))));
     }
 }

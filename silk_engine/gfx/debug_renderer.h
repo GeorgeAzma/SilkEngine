@@ -24,8 +24,8 @@ class DebugRenderer
 	friend class ParticleSystem;
 public:
 	static constexpr size_t MAX_INSTANCE_BATCHES = 8192;
-	static constexpr size_t MAX_INSTANCES = 8192;
-	static constexpr size_t MAX_IMAGE_SLOTS = 32; // Can be more, but will be slower
+	static constexpr size_t MAX_INSTANCES = 32684;
+	static constexpr size_t MAX_IMAGE_SLOTS = 32;
 	static constexpr size_t MAX_LIGHTS = 64;
 
 	struct InstanceData

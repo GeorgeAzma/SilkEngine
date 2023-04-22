@@ -1,7 +1,8 @@
 #include "instance.h"
 #include "render_context.h"
 #include "debug_messenger.h"
-
+#include "gfx/devices/physical_device.h"
+#include "gfx/devices/logical_device.h"
 
 Instance::Instance(std::string_view app_name)
 {
@@ -90,4 +91,130 @@ bool Instance::checkVulkanVersionSupport(VulkanVersion minimum_version) const
 void Instance::destroySurface(VkSurfaceKHR surface) const
 { 
     vkDestroySurfaceKHR(instance, surface, nullptr);
+}
+
+PhysicalDevice* Instance::selectPhysicalDevice(VkSurfaceKHR surface) const
+{
+	int max_score = -1;
+	unique<PhysicalDevice> best_physical_device = nullptr;
+	for (const auto& vk_physical_device : getAvailablePhysicalDevices())
+	{
+		int score = -1;
+		unique<PhysicalDevice> physical_device = makeUnique<PhysicalDevice>(*this, vk_physical_device);
+
+		if (physical_device->getGraphicsQueue() == -1)
+			continue;
+
+		bool supports_required_extensions = true;
+		for (const auto& required_extension : LogicalDevice::getRequiredExtensions())
+			if (!physical_device->supportsExtension(required_extension))
+			{
+				supports_required_extensions = false;
+				break;
+			}
+		if (!supports_required_extensions)
+			continue;
+
+		for (const auto& preferred_extension : LogicalDevice::getPreferredExtensions())
+			if (physical_device->supportsExtension(preferred_extension))
+				score += 100;
+
+		// TODO:
+		if (surface)
+		{
+			bool supports_surface = true;
+			if (!supports_surface)
+				continue;
+		}
+
+		score = 0;
+
+		const VkPhysicalDeviceProperties& properties = physical_device->getProperties();
+		const VkPhysicalDeviceFeatures& features = physical_device->getFeatures();
+
+		score += features.multiDrawIndirect * 1200;
+		score += features.samplerAnisotropy * 900;
+		score += (physical_device->getComputeQueue() != -1) * 700;
+		score += (physical_device->getTransferQueue() != -1) * 300;
+		score += (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) * 500;
+		score += features.multiDrawIndirect * 250;
+		score += features.geometryShader * 200;
+		score += features.tessellationShader * 100;
+		score += features.samplerAnisotropy * 80;
+		score += features.fragmentStoresAndAtomics * 50;
+		score += features.vertexPipelineStoresAndAtomics * 30;
+		score += features.shaderSampledImageArrayDynamicIndexing * 25;
+		score += features.shaderStorageBufferArrayDynamicIndexing * 25;
+		score += features.shaderStorageImageArrayDynamicIndexing * 25;
+		score += features.shaderUniformBufferArrayDynamicIndexing * 25;
+		score += features.occlusionQueryPrecise * 25;
+		score += features.multiViewport * 25;
+		score += features.wideLines * 20;
+		score += features.largePoints * 10;
+		score += features.imageCubeArray * 10;
+		score += features.pipelineStatisticsQuery * 5;
+		score += features.shaderFloat64 * 5;
+		score += features.alphaToOne;
+		score += features.depthBiasClamp;
+		score += features.depthBounds;
+		score += features.depthClamp;
+		score += features.drawIndirectFirstInstance;
+		score += features.dualSrcBlend;
+		score += features.fillModeNonSolid;
+		score += features.fullDrawIndexUint32;
+		score += features.independentBlend;
+		score += features.inheritedQueries;
+		score += features.logicOp;
+		score += features.robustBufferAccess;
+		score += features.sampleRateShading;
+		score += features.shaderClipDistance;
+		score += features.shaderCullDistance;
+		score += features.shaderImageGatherExtended;
+		score += features.shaderInt16;
+		score += features.shaderInt64;
+		score += features.shaderResourceMinLod;
+		score += features.shaderResourceResidency;
+		score += features.shaderStorageImageExtendedFormats;
+		score += features.shaderStorageImageMultisample;
+		score += features.shaderStorageImageReadWithoutFormat;
+		score += features.shaderStorageImageWriteWithoutFormat;
+		score += features.shaderTessellationAndGeometryPointSize;
+		score += features.sparseBinding;
+		score += features.sparseResidency16Samples;
+		score += features.sparseResidency2Samples;
+		score += features.sparseResidency4Samples;
+		score += features.sparseResidency8Samples;
+		score += features.sparseResidency16Samples;
+		score += features.sparseResidencyAliased;
+		score += features.sparseResidencyBuffer;
+		score += features.sparseResidencyImage2D;
+		score += features.sparseResidencyImage3D;
+		score += features.textureCompressionASTC_LDR;
+		score += features.textureCompressionBC;
+		score += features.textureCompressionETC2;
+		score += features.variableMultisampleRate;
+
+		if (score > max_score)
+		{
+			max_score = score;
+			best_physical_device = std::move(physical_device);
+		}
+	}
+
+#ifdef SK_ENABLE_DEBUG_OUTPUT
+	if (best_physical_device)
+	{
+		std::string device_type = "Other";
+		switch (best_physical_device->getProperties().deviceType)
+		{
+		case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: device_type = "Integrated GPU"; break;
+		case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU: device_type = "Discrete GPU"; break;
+		case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU: device_type = "Virtual GPU"; break;
+		case VK_PHYSICAL_DEVICE_TYPE_CPU: device_type = "CPU"; break;
+		}
+		SK_INFO("{}: {}", device_type, best_physical_device->getProperties().deviceName);
+	}
+#endif
+
+	return best_physical_device.release();
 }

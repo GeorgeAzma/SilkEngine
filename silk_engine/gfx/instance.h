@@ -9,6 +9,7 @@ enum class VulkanVersion : uint32_t
 };
 
 class DebugMessenger;
+class PhysicalDevice;
 
 class Instance : NonCopyable
 {
@@ -22,6 +23,8 @@ public:
     bool checkVulkanVersionSupport(VulkanVersion minimum_version) const;
 
     void destroySurface(VkSurfaceKHR surface) const;
+
+    PhysicalDevice* selectPhysicalDevice(VkSurfaceKHR surface = nullptr) const;
 
     const std::vector<VkPhysicalDevice>& getAvailablePhysicalDevices() const { return physical_devices; }
     VulkanVersion getVulkanVersion() const { return vulkan_version; }

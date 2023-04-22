@@ -18,6 +18,9 @@ int Main(int argc, char** argv)
 
 
 #if defined(SK_DIST) && defined(SK_PLATFORM_WINDOWS)
+#include <Windows.h>
+#undef min
+#undef max
 int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
 {
 	return Main(__argc, __argv);

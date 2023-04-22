@@ -11,8 +11,8 @@ struct AttachmentProps
 	VkImageLayout final_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 
-	std::optional<VkClearValue> clear_value = {};
 	VkAttachmentLoadOp load_operation = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	std::optional<VkClearValue> clear_value = std::nullopt;
 	VkAttachmentStoreOp store_operation = VK_ATTACHMENT_STORE_OP_STORE;
 	VkAttachmentLoadOp stencil_load_operation = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	VkAttachmentStoreOp stencil_store_operation = VK_ATTACHMENT_STORE_OP_DONT_CARE;

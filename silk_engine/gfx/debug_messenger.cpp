@@ -4,7 +4,6 @@
 #include "gfx/render_context.h"
 #include "gfx/instance.h"
 
-
 VKAPI_ATTR VkBool32 VKAPI_CALL DebugMessenger::debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -13,8 +12,9 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugMessenger::debugCallback(
 {
     std::string message = pCallbackData->pMessage;
     std::string delimiter = std::format("MessageID = 0x{:x} | ", *(const uint32_t*)&pCallbackData->messageIdNumber);
-    if (auto off = message.find(delimiter); off != std::string::npos)
-        message = message.substr(off + delimiter.size());
+    size_t offset = message.find(delimiter);
+    if (offset != std::string::npos)
+        message = message.substr(offset + delimiter.size());
 
     switch (messageSeverity)
     {
@@ -32,6 +32,63 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugMessenger::debugCallback(
         break;
     }
 
+    if (size_t off = message.find("https://", offset != std::string::npos ? offset : 0); off != std::string::npos)
+        message = message.substr(0, off);
+
+    if (pCallbackData->objectCount)
+    {
+        message += " [";
+        for (uint32_t i = 0; i < pCallbackData->objectCount; ++i)
+        {
+            bool has_type = true;
+            switch (pCallbackData->pObjects[i].objectType)
+            {
+            case VK_OBJECT_TYPE_UNKNOWN: message += "Unknown"; break;
+            case VK_OBJECT_TYPE_INSTANCE: message += "Instance"; break;
+            case VK_OBJECT_TYPE_PHYSICAL_DEVICE: message += "Physical Device"; break;
+            case VK_OBJECT_TYPE_DEVICE: message += "Device"; break;
+            case VK_OBJECT_TYPE_QUEUE: message += "Queue"; break;
+            case VK_OBJECT_TYPE_SEMAPHORE: message += "Semaphore"; break;
+            case VK_OBJECT_TYPE_COMMAND_BUFFER: message += "Command Buffer"; break;
+            case VK_OBJECT_TYPE_FENCE: message += "Fence"; break;
+            case VK_OBJECT_TYPE_DEVICE_MEMORY: message += "Memory"; break;
+            case VK_OBJECT_TYPE_BUFFER: message += "Buffer"; break;
+            case VK_OBJECT_TYPE_IMAGE: message += "Image"; break;
+            case VK_OBJECT_TYPE_EVENT: message += "Event"; break;
+            case VK_OBJECT_TYPE_QUERY_POOL: message += "Query Pool"; break;
+            case VK_OBJECT_TYPE_BUFFER_VIEW: message += "Buffer View"; break;
+            case VK_OBJECT_TYPE_IMAGE_VIEW: message += "Image View"; break;
+            case VK_OBJECT_TYPE_SHADER_MODULE: message += "Shader Module"; break;
+            case VK_OBJECT_TYPE_PIPELINE_CACHE: message += "Pipeline Cache"; break;
+            case VK_OBJECT_TYPE_PIPELINE_LAYOUT: message += "Pipeline Layout"; break;
+            case VK_OBJECT_TYPE_RENDER_PASS: message += "Render Pass"; break;
+            case VK_OBJECT_TYPE_PIPELINE: message += "Pipeline"; break;
+            case VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT: message += "Descriptor Set Layout"; break;
+            case VK_OBJECT_TYPE_SAMPLER: message += "Sampler"; break;
+            case VK_OBJECT_TYPE_DESCRIPTOR_POOL: message += "Descriptor Pool"; break;
+            case VK_OBJECT_TYPE_DESCRIPTOR_SET: message += "Descriptor Set"; break;
+            case VK_OBJECT_TYPE_FRAMEBUFFER: message += "Framebuffer"; break;
+            case VK_OBJECT_TYPE_COMMAND_POOL: message += "Command Pool"; break;
+            case VK_OBJECT_TYPE_SAMPLER_YCBCR_CONVERSION: message += "Sampler YCBR Conversion"; break;
+            case VK_OBJECT_TYPE_DESCRIPTOR_UPDATE_TEMPLATE: message += "Descriptor Update Template"; break;
+            case VK_OBJECT_TYPE_PRIVATE_DATA_SLOT: message += "Private Data Slot"; break;
+            case VK_OBJECT_TYPE_SURFACE_KHR: message += "Surface"; break;
+            case VK_OBJECT_TYPE_SWAPCHAIN_KHR: message += "Swapchain"; break;
+            case VK_OBJECT_TYPE_DISPLAY_KHR: message += "Display"; break;
+            case VK_OBJECT_TYPE_DISPLAY_MODE_KHR: message += "Display Mode"; break;
+            case VK_OBJECT_TYPE_DEBUG_REPORT_CALLBACK_EXT: message += "Debug Report Callback"; break;
+            default: has_type = false; break;
+            }
+            if (pCallbackData->pObjects[i].pObjectName)
+            {
+                message += ": ";
+                message += pCallbackData->pObjects[i].pObjectName;
+            }
+            if ((has_type || pCallbackData->pObjects[i].pObjectName) && i < pCallbackData->objectCount - 1)
+                message += ", ";
+        }
+    }
+
     return VK_FALSE;
 }
 
@@ -47,12 +104,8 @@ VkResult DebugMessenger::create(VkInstance instance, const VkDebugUtilsMessenger
 
 void DebugMessenger::destroy(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
 {
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-
-    if (func == nullptr)
-        return;
-
-    func(instance, debugMessenger, pAllocator);
+    if (auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT")) 
+        func(instance, debugMessenger, pAllocator);
 }
 
 DebugMessenger::DebugMessenger()
@@ -77,11 +130,12 @@ DebugMessenger::DebugMessenger()
 
 void DebugMessenger::init(VkInstance instance)
 {
+    this->instance = instance;
     create(instance, &ci, nullptr, &debug_messenger);
 }
 
 DebugMessenger::~DebugMessenger()
 {
-    destroy(RenderContext::getInstance(), debug_messenger, nullptr);
+    destroy(instance, debug_messenger, nullptr);
 }
 #endif

@@ -33,6 +33,7 @@ void CommandBuffer::begin(VkCommandBufferUsageFlags usage)
 	begin_info.flags = usage;
 	vkBeginCommandBuffer(command_buffer, &begin_info);
 	state = State::RECORDING;
+	active = {};
 }
 
 void CommandBuffer::end()
@@ -42,7 +43,6 @@ void CommandBuffer::end()
 
 	vkEndCommandBuffer(command_buffer);
 	state = State::EXECUTABLE;
-	active = {};
 }
 
 void CommandBuffer::beginQuery(VkQueryPool query_pool, uint32_t query, VkQueryControlFlags flags)

@@ -3,6 +3,7 @@
 #include "gfx/render_context.h"
 #include "gfx/queues/queue.h"
 #include "gfx/window/surface.h"
+#include "gfx/instance.h"
 
 LogicalDevice::LogicalDevice(const PhysicalDevice& physical_device)
 	: physical_device(physical_device)
@@ -402,6 +403,23 @@ VkQueue LogicalDevice::getQueue(uint32_t queue_family_index, uint32_t queue_inde
 	VkQueue queue = nullptr;
 	vkGetDeviceQueue(logical_device, queue_family_index, queue_index, &queue);
 	return queue;
+}
+
+VkResult LogicalDevice::setDebugUtilsObjectName(VkObjectType object_type, std::string_view name, const void* handle)
+{
+#ifdef SK_ENABLE_DEBUG_MESSENGER
+	static const auto vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(physical_device.getInstance(), "vkSetDebugUtilsObjectNameEXT");
+
+	VkDebugUtilsObjectNameInfoEXT name_info;
+	name_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+	name_info.objectType = object_type;
+	name_info.pObjectName = name.data();
+	name_info.objectHandle = (uint64_t)handle;
+	name_info.pNext = nullptr;
+	return vkSetDebugUtilsObjectNameEXT(logical_device, &name_info);
+#else
+	return VK_ERROR_EXTENSION_NOT_PRESENT;
+#endif
 }
 
 const Queue& LogicalDevice::getGraphicsQueue() const 

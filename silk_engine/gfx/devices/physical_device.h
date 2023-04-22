@@ -1,12 +1,12 @@
 #pragma once
 
+class Instance;
+
 class PhysicalDevice : NonCopyable
 {
 	friend class LogicalDevice;
 public:
-	static PhysicalDevice* select(VkSurfaceKHR surface = nullptr);
-
-	PhysicalDevice(VkPhysicalDevice physical_device);
+	PhysicalDevice(const Instance& instance, VkPhysicalDevice physical_device);
 
 	bool supportsExtension(const char* extension_name) const;
 
@@ -30,9 +30,11 @@ public:
 	int getComputeQueue() const { return compute_queue; }
 	int getTransferQueue() const { return transfer_queue; }
 	operator const VkPhysicalDevice& () const { return physical_device; }
+	const Instance& getInstance() const { return instance; }
 
 private:
 	VkPhysicalDevice physical_device = nullptr;
+	const Instance& instance;
 	std::vector<VkQueueFamilyProperties> queue_family_properties;
 	std::vector<uint32_t> queue_family_indices; // Sorted
 	std::unordered_map<std::string, uint32_t> supported_extensions; // extension name | extension spec version

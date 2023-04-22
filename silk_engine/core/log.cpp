@@ -3,11 +3,11 @@
     #include <spdlog/sinks/ansicolor_sink.h>
 #endif
 
-using namespace spdlog;
 
 void Log::init()
 {
 #ifdef SK_ENABLE_DEBUG_OUTPUT
+    using namespace spdlog;
     using sink_type = sinks::ansicolor_stdout_sink_mt;
     auto core_sink = makeShared<sink_type>();
     core_sink->set_pattern("%^[%n][%s:%#][%!] %v%$");

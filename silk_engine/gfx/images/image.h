@@ -61,18 +61,13 @@ public:
 		uint32_t depth = 1;
 		uint32_t layers = 1;
 		Format format = Format::BGRA;
-		VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		Allocation::Props allocation_props{};
 		VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 		VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
-		VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		bool mipmap = false;
-		VkFilter mipmap_filter = VK_FILTER_LINEAR;
 		Sampler::Props sampler_props{};
 		VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
 		bool create_view = true;
-		bool create_sampler = true;
-		const void* data = nullptr;
 		Type type = Type::_2D;
 	};
 
@@ -108,9 +103,8 @@ public:
 
 	void setData(const void* data, uint32_t base_layer = 0, uint32_t layers = 1);
 	void getData(void* data, uint32_t base_layer = 0, uint32_t layers = 1);
-	bool copyImage(const Image& destination, uint32_t layer = 0);
+	bool copyImage(Image& destination);
 	void transitionLayout(VkImageLayout new_layout);
-	void insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VkPipelineStageFlags destination_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, uint32_t base_mip_level = 0, uint32_t base_layer = 0) const;
 	bool isFeatureSupported(VkFormatFeatureFlags feature) const;
 	void copyFromBuffer(VkBuffer buffer, uint32_t base_layer = 0, uint32_t layers = 1);
 	void copyToBuffer(VkBuffer buffer, uint32_t base_layer = 0, uint32_t layers = 1);
@@ -122,13 +116,14 @@ protected:
 	void generateMipmaps();
 
 protected:
-	static void insertMemoryBarrier(const VkImage& image, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkImageAspectFlags aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t layers, uint32_t base_layer);
+	static void insertMemoryBarrier(const VkImage& image, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT, uint32_t mip_levels = 1, uint32_t base_mip_level = 0, uint32_t layers = 1, uint32_t base_layer = 0);
+	static void insertMemoryBarrier(const VkImage& image, VkImageLayout old_layout, VkImageLayout new_layout, VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT, uint32_t mip_levels = 1, uint32_t base_mip_level = 0, uint32_t layers = 1, uint32_t base_layer = 0);
 
 protected:
 	VkImage image = nullptr;
 	shared<Sampler> sampler = nullptr;
 	unique<ImageView> view = nullptr;
-	mutable VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
+	VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
 	Allocation allocation{};
 	Props props = {};
 	uint32_t mip_levels = 1;

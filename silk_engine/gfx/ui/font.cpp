@@ -97,9 +97,10 @@ Font::Font(const path& file, uint32_t size)
 	Image::Props texture_atlas_props{};
 	texture_atlas_props.width = width;
 	texture_atlas_props.height = height;
-	texture_atlas_props.data = texture_atlas_bitmap.pixels.data();
 	texture_atlas_props.format = Image::Format::RED;
 	texture_atlas = makeShared<Image>(texture_atlas_props);
+	texture_atlas->setData(texture_atlas_bitmap.pixels.data());
+	texture_atlas->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 	FT_Done_Face(face);
 }

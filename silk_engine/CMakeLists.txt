@@ -11,7 +11,7 @@ if(DEPENDENCIES_TO_ADD)
 endif()
 
 #Defines
-if(${CONFIG_MODE} STREQUAL RELEASE)
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
 	target_compile_definitions(${ENGINE_NAME} PUBLIC "SK_DIST")
 else()
 	target_compile_definitions(${ENGINE_NAME} PUBLIC "SK_DEBUG")

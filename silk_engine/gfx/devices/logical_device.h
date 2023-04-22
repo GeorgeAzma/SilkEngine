@@ -70,6 +70,7 @@ public:
 	VkResult acquireNextImage(VkSwapchainKHR swap_chain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* image_index) const;
 	std::vector<VkImage> getSwapChainImages(VkSwapchainKHR swap_chain) const;
 	VkQueue getQueue(uint32_t queue_family_index, uint32_t queue_index) const;
+	VkResult setDebugUtilsObjectName(VkObjectType object_type, std::string_view name, const void* handle);
 
 	const Queue& getGraphicsQueue() const;
 	const Queue& getTransferQueue() const;

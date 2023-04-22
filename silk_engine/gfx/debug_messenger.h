@@ -21,6 +21,7 @@ public:
 
 private:
     VkDebugUtilsMessengerEXT debug_messenger; 
+    VkInstance instance = nullptr;
     VkDebugUtilsMessengerCreateInfoEXT ci = {};
     std::unordered_map<std::string_view, VkLayerProperties> available_validation_layers; // layer name | layer properties
     std::vector<const char*> required_validation_layers;

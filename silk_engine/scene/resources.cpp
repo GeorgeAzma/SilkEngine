@@ -37,25 +37,28 @@ void Resources::init()
         image_props.height = 1;
         image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
         image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
-        image_props.sampler_props.linear_mipmap = false;
         image_props.sampler_props.anisotropy = 1.0f;
-        image_props.mipmap = false;
         constexpr u8vec4 white(255);
-        image_props.data = &white;
         white_image = makeShared<Image>(image_props);
+        white_image->setData(&white);
+        white_image->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         add<Image>("White", white_image);
         
         constexpr u8vec4 black(0);
-        image_props.data = &black;
-        add<Image>("Black", makeShared<Image>(image_props));
+        auto black_image = makeShared<Image>(image_props);
+        black_image->setData(&black);
+        black_image->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        add<Image>("Black", black_image);
        
         image_props.width = 2;
         image_props.height = 2;
         image_props.sampler_props.u_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         image_props.sampler_props.v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         constexpr u8vec4 null_data[4] = { { 0, 0, 0, 255 }, { 255, 0, 255, 255 }, { 255, 0, 255, 255 }, { 0, 0, 0, 255 } };
-        image_props.data = null_data;
-        add<Image>("Null", makeShared<Image>(image_props));
+        auto null_image = makeShared<Image>(image_props);
+        null_image->setData(null_data);
+        null_image->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        add<Image>("Null", null_image);
     }
 
     //MESHES

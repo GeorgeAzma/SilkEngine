@@ -31,12 +31,10 @@ Framebuffer& Framebuffer::addAttachment(Image::Props image_props)
 Framebuffer& Framebuffer::addAttachment(Image::Format format, VkSampleCountFlagBits samples)
 {
     Image::Props image_props{};
-    image_props.create_sampler = false;
     image_props.format = format;
     image_props.width = width;
     image_props.height = height;
-    image_props.layout = VK_IMAGE_LAYOUT_UNDEFINED;
-    image_props.mipmap = false;
+    image_props.sampler_props.mipmap_mode = Sampler::MipmapMode::NONE;
     image_props.samples = samples;
     image_props.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_props.allocation_props.preferred_device = Allocation::Device::GPU;
