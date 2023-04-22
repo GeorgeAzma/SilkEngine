@@ -43,13 +43,15 @@ void MeshSubrender::render()
         if (auto global_uniform = shader->getLocation("GlobalUniform"))
         {
             auto descriptor_buffer_info = DebugRenderer::global_uniform_buffer->getDescriptorInfo();
-            instance_batch.descriptor_sets.at(global_uniform->set)->update({ { global_uniform->binding, &descriptor_buffer_info } }); //TODO: Global data doesn't have to update for each batch
+            auto& set = *instance_batch.descriptor_sets.at(global_uniform->set);
+            set.write(global_uniform->binding, descriptor_buffer_info); //TODO: Global data doesn't have to update for each batch
         }
 
         if (auto images = shader->getLocation("images"))
         {
             auto descriptor_image_infos = instance_batch.instance_images.getDescriptorImageInfos();
-            instance_batch.descriptor_sets.at(images->set)->update({ { images->binding, descriptor_image_infos.data() } });
+            auto& set = *instance_batch.descriptor_sets.at(images->set);
+            set.write(images->binding, descriptor_image_infos);
         }
 
         instance_batch.bind();

@@ -3,8 +3,10 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/debug_renderer.h"
 #include "gfx/instance.h"
-#include "includer.h"
+#define STB_INCLUDE_IMPLEMENTATION
+#include "stb_include.h"
 #include <spirv_cross/spirv_cross.hpp>
+#include <shaderc/shaderc.hpp>
 
 Shader::Stage::Stage(const path& file)
 	: file(file)
@@ -12,7 +14,7 @@ Shader::Stage::Stage(const path& file)
 	using enum Type;
 
 	path file_extension = file.extension();
-	if		(file_extension == ".vert") type = VERTEX;
+	if (file_extension == ".vert") type = VERTEX;
 	else if (file_extension == ".frag") type = FRAGMENT;
 	else if (file_extension == ".geom") type = GEOMETRY;
 	else if (file_extension == ".comp") type = COMPUTE;
@@ -28,6 +30,7 @@ Shader::Stage::~Stage()
 
 bool Shader::Stage::compile()
 {
+	DebugTimer t(std::format("Compiling {}", file.filename()));
 	static shaderc::Compiler compiler;
 
 	if (module)
@@ -36,7 +39,7 @@ bool Shader::Stage::compile()
 		module = nullptr;
 	}
 
-	shaderc_env_version api_version;
+	shaderc_env_version api_version = shaderc_env_version_vulkan_1_3;
 	switch (RenderContext::getInstance().getVulkanVersion())
 	{
 	case VulkanVersion::VULKAN_1_0: api_version = shaderc_env_version_vulkan_1_0; break;
@@ -52,19 +55,18 @@ bool Shader::Stage::compile()
 	options.SetSourceLanguage(shaderc_source_language_glsl);
 	options.SetWarningsAsErrors();
 	options.SetGenerateDebugInfo();
-	options.SetIncluder(makeUnique<Includer>());
 
 	// TODO: remove this, make this a parameter, or do something else
-	options.AddMacroDefinition("MAX_IMAGE_SLOTS", std::to_string(DebugRenderer::MAX_IMAGE_SLOTS));
-	options.AddMacroDefinition("MAX_LIGHTS", std::to_string(DebugRenderer::MAX_LIGHTS));
-	options.AddMacroDefinition("DIFFUSE_TEXTURE", "0");
-	options.AddMacroDefinition("NORMAL_TEXTURE", "1");
-	options.AddMacroDefinition("AO_TEXTURE", "2");
-	options.AddMacroDefinition("HEIGHT_TEXTURE", "3");
-	options.AddMacroDefinition("SPECULAR_TEXTURE", "4");
-	options.AddMacroDefinition("EMMISIVE_TEXTURE", "5");
-
-	std::string source = File::read(file, std::ios::binary);
+	std::string source; // I am not using shaderc's pre processing because it's 30% slower
+	source += "#define MAX_IMAGE_SLOTS " + std::to_string(DebugRenderer::MAX_IMAGE_SLOTS) + '\n';
+	source += "#define MAX_LIGHTS " + std::to_string(DebugRenderer::MAX_LIGHTS) + '\n';
+	source += "#define DIFFUSE_TEXTURE 0\n";
+	source += "#define NORMAL_TEXTURE 1\n";
+	source += "#define AO_TEXTURE 2\n";
+	source += "#define HEIGHT_TEXTURE 3\n";
+	source += "#define SPECULAR_TEXTURE 4\n";
+	source += "#define EMMISIVE_TEXTURE 5\n";
+	source += stb_include_file((char*)file.string().c_str(), nullptr, nullptr, nullptr);
 
 	shaderc_shader_kind shaderc_type = (shaderc_shader_kind)0;
 	using enum Type;
@@ -78,29 +80,18 @@ bool Shader::Stage::compile()
 	case TESSELATION_EVALUATION: shaderc_type = shaderc_tess_evaluation_shader; break;
 	}
 
-	DebugTimer t(std::format("Compiling {}", file.filename()));
-	auto preprocess_result = compiler.PreprocessGlsl(source, shaderc_type, file.string().c_str(), options);
-	if (preprocess_result.GetCompilationStatus() != shaderc_compilation_status_success)
-	{
-		SK_ERROR("Error in {}: {}", file, preprocess_result.GetErrorMessage());
-		return false;
-	}
-	if (preprocess_result.GetNumWarnings())
-		SK_WARN("Warning in {}: {}", file, preprocess_result.GetErrorMessage());
-
-	auto compilation_result = compiler.CompileGlslToSpv(preprocess_result.begin(), shaderc_type, file.string().c_str(), options);
+	auto compilation_result = compiler.CompileGlslToSpv(source.data(), shaderc_type, file.string().c_str(), options);
 	if (compilation_result.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
 		SK_ERROR("Error in {}: {}", file, compilation_result.GetErrorMessage());
 		return false;
 	}
 	if (compilation_result.GetNumWarnings())
-		SK_WARN("Warning in {}: {}", file, compilation_result.GetErrorMessage());	
-	t();
+		SK_WARN("Warning in {}: {}", file, compilation_result.GetErrorMessage());
 
-	binary = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend()); 
+	binary = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend());
 
-	createModule(); 
+	createModule();
 
 	return true;
 }
@@ -139,7 +130,7 @@ Shader::Shader(std::string_view name)
 	stages.reserve(source_files.size());
 	for (const auto& file : source_files)
 		stages.emplace_back(makeUnique<Stage>(file));
-	std::sort(stages.begin(), stages.end(), [](const unique<Stage>& l, const unique<Stage>& r)  { return l->type < r->type; });
+	std::sort(stages.begin(), stages.end(), [](const unique<Stage>& l, const unique<Stage>& r) { return l->type < r->type; });
 	compile();
 }
 
@@ -168,31 +159,31 @@ void Shader::reflect()
 		spirv_cross::ShaderResources shader_resources;
 		try { shader_resources = compiler.get_shader_resources(); }
 		catch (const spirv_cross::CompilerError& e) { SK_ERROR(e.what()); }
-	
+
 		for (const spirv_cross::Resource& sampled_image : shader_resources.sampled_images)
 			loadResource(sampled_image, compiler, shader_resources, type, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-	
+
 		for (const spirv_cross::Resource& seperate_image : shader_resources.separate_images)
 			loadResource(seperate_image, compiler, shader_resources, type, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
 
 		for (const spirv_cross::Resource& seperate_sampler : shader_resources.separate_samplers)
 			loadResource(seperate_sampler, compiler, shader_resources, type, VK_DESCRIPTOR_TYPE_SAMPLER);
-	
+
 		for (const spirv_cross::Resource& storage_buffer : shader_resources.storage_buffers)
 			loadResource(storage_buffer, compiler, shader_resources, type, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-	
+
 		for (const spirv_cross::Resource& storage_image : shader_resources.storage_images)
 			loadResource(storage_image, compiler, shader_resources, type, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-	
+
 		for (const spirv_cross::Resource& subpass_input : shader_resources.subpass_inputs)
 			loadResource(subpass_input, compiler, shader_resources, type, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT);
-	
+
 		for (const spirv_cross::Resource& uniform_buffer : shader_resources.uniform_buffers)
 			loadResource(uniform_buffer, compiler, shader_resources, type, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-	
+
 		for (const spirv_cross::Resource& push_constant : shader_resources.push_constant_buffers)
 			loadPushConstant(push_constant, compiler, shader_resources, type);
-	
+
 		if (VkShaderStageFlags(type) & VkShaderStageFlags(Stage::Type::VERTEX))
 		{
 			struct VertexAttribute
@@ -207,7 +198,7 @@ void Shader::reflect()
 			std::vector<VertexAttribute> vertex_attributes;
 			for (auto& input : shader_resources.stage_inputs)
 			{
-				
+
 				uint32_t location = compiler.get_decoration(input.id, spv::Decoration::DecorationLocation);
 				const auto& type = compiler.get_type(input.base_type_id);
 				uint32_t size = 0;
@@ -309,14 +300,14 @@ void Shader::reflect()
 				}
 			}
 		}
-	
+
 		auto constants = compiler.get_specialization_constants();
 		for (auto& constant : constants)
 		{
 			auto& shader_constant = reflection_data.constants[compiler.get_name(constant.id)];
 			shader_constant = { constant.constant_id, shader_constant.stage | (VkShaderStageFlags)type };
 		}
-	
+
 		//Local size reflection
 		reflection_data.local_size = uvec3(0);
 		reflection_data.local_size[0] = compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 0);
@@ -325,7 +316,7 @@ void Shader::reflect()
 		if (reflection_data.local_size != uvec3(0))
 			reflection_data.local_size = math::max(reflection_data.local_size, uvec3(1));
 	}
-	
+
 	std::unordered_map<uint32_t, std::vector<VkDescriptorSetLayoutBinding>> descriptor_set_layout_bindings;
 	for (const auto& resource : reflection_data.resources)
 	{

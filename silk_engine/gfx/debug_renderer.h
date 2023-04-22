@@ -28,6 +28,25 @@ public:
 	static constexpr size_t MAX_IMAGE_SLOTS = 32; // Can be more, but will be slower
 	static constexpr size_t MAX_LIGHTS = 64;
 
+	struct InstanceData
+	{
+		mat4 transform = mat4(1);
+		uint32_t image_index = 0;
+		vec4 color = vec4(1);
+
+		bool operator==(const InstanceData& other) const;
+	};
+
+	struct RenderedInstance
+	{
+		shared<GraphicsPipeline> pipeline = nullptr;
+		std::vector<shared<Image>> images;
+		size_t instance_data_index = std::numeric_limits<size_t>::max();
+		size_t instance_batch_index = std::numeric_limits<size_t>::max();
+
+		bool operator==(const RenderedInstance& other) const;
+	};
+
 private:
 	static inline struct Active
 	{
@@ -71,25 +90,6 @@ private:
 		vec3 max;
 		uint32_t count;
 		std::array<vec4, 6> planes;
-	};
-
-	struct InstanceData
-	{
-		mat4 transform = mat4(1);
-		uint32_t image_index = 0;
-		vec4 color = vec4(1);
-
-		bool operator==(const InstanceData& other) const;
-	};
-
-	struct RenderedInstance
-	{
-		shared<GraphicsPipeline> pipeline = nullptr;
-		std::vector<shared<Image>> images;
-		size_t instance_data_index = std::numeric_limits<size_t>::max();
-		size_t instance_batch_index = std::numeric_limits<size_t>::max();
-
-		bool operator==(const RenderedInstance& other) const;
 	};
 
 	struct InstanceBatch
@@ -160,7 +160,7 @@ public:
 	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float width, float height, const std::vector<shared<Image>>& images = {});
 
 	static Light* addLight(const Light& light);
-	static void createInstance(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data);
+	static void createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, std::vector<shared<Image>> images = {});
 	static void updateInstance(RenderedInstance& instance, const InstanceData& instance_data);
 	static void addInstanceBatch(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data);
 	static void destroyInstance(const RenderedInstance& instance);

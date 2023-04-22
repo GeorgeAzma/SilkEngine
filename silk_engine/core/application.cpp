@@ -17,8 +17,11 @@ void Application::run()
     {
         glfwPollEvents();
 
-        while (Window::getActive().isMinimized())
+        while (Window::getActive().isMinimized() && running)
             glfwWaitEvents();
+
+        if (!running)
+            break;
 
         update();
     }

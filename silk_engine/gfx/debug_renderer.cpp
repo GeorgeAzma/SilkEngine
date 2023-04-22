@@ -222,7 +222,7 @@ void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, cons
 	data.color = active.color;
 	if (active.transformed)
 		data.transform *= active.transform;
-	createInstance(instances.back(), mesh, std::move(data));
+	createInstance(mesh, std::move(data), graphics_pipeline, images);
 }
 
 void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, const std::vector<shared<Image>>& images)
@@ -262,8 +262,9 @@ Light* DebugRenderer::addLight(const Light& light)
 	return &lights.back();
 }
 
-void DebugRenderer::createInstance(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data)
+void DebugRenderer::createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline, std::vector<shared<Image>> images)
 {
+	shared<RenderedInstance> instance = makeShared<RenderedInstance>(pipeline, images);
 	bool need_new_instance_batch = true;
 	for (size_t i = 0; i < instance_batches.size(); ++i)
 	{

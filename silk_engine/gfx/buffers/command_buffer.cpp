@@ -58,7 +58,7 @@ void CommandBuffer::endQuery(VkQueryPool query_pool, uint32_t query)
 	if (active.query_pool != query_pool)
 		return;
 	vkCmdEndQuery(command_buffer, query_pool, query);
-	active.query_pool = {};
+	active.query_pool = nullptr;
 }
 
 void CommandBuffer::beginRenderPass(const VkRenderPassBeginInfo& render_pass_begin_info, VkSubpassContents contents)
@@ -84,9 +84,9 @@ void CommandBuffer::endRenderPass()
 	if (active.render_pass == VkRenderPass(nullptr))
 		return;
 	vkCmdEndRenderPass(command_buffer);
-	active.render_pass = {};
-	active.framebuffer = {};
-	active.render_area = {};
+	active.render_pass = nullptr;
+	active.framebuffer = nullptr;
+	active.render_area = { { None<int32_t>(), None<int32_t>() }, { None<uint32_t>(), None<uint32_t>() } };
 }
 #pragma endregion
 
@@ -103,7 +103,6 @@ void CommandBuffer::bindPipeline(VkPipelineBindPoint bind_point, VkPipeline pipe
 
 void CommandBuffer::bindDescriptorSets(uint32_t first, const std::vector<VkDescriptorSet>& sets, const std::vector<uint32_t>& dynamic_offsets)
 {
-	//UNTESTED:
 	if (active.descriptor_sets.size() < (sets.size() + first))
 		goto down;
 	for (size_t i = 0; i < sets.size(); ++i)
@@ -118,9 +117,8 @@ void CommandBuffer::bindDescriptorSets(uint32_t first, const std::vector<VkDescr
 				goto down;
 	}
 	return;
-
-	down:
-	vkCmdBindDescriptorSets(command_buffer, *active.pipeline_bind_point, *active.pipeline_layout, first, sets.size(), sets.data(), dynamic_offsets.size(), dynamic_offsets.data());
+down:
+	vkCmdBindDescriptorSets(command_buffer, active.pipeline_bind_point, active.pipeline_layout, first, sets.size(), sets.data(), dynamic_offsets.size(), dynamic_offsets.data());
 	active.descriptor_sets.resize(std::max(first + sets.size(), active.descriptor_sets.size()));
 	for (size_t i = 0; i < sets.size(); ++i)
 	{
@@ -131,7 +129,7 @@ void CommandBuffer::bindDescriptorSets(uint32_t first, const std::vector<VkDescr
 
 void CommandBuffer::bindIndexBuffer(VkBuffer buffer, VkDeviceSize offset, VkIndexType index_type)
 {
-	//NOTE: We are not checking if index_type changed, since there is never a circumstance when that's useful
+	// NOTE: We are not checking if index_type changed, since there is never a circumstance when that's useful
 	if (active.index_buffer == buffer && active.index_buffer_offset == offset)
 		return;
 	vkCmdBindIndexBuffer(command_buffer, buffer, offset, index_type);
@@ -141,7 +139,6 @@ void CommandBuffer::bindIndexBuffer(VkBuffer buffer, VkDeviceSize offset, VkInde
 
 void CommandBuffer::bindVertexBuffers(uint32_t first, const std::vector<VkBuffer>& buffers, const std::vector<VkDeviceSize>& offsets)
 {
-	//UNTESTED:
 	if (active.vertex_buffers.size() < (buffers.size() + first))
 		goto down;
 	for (size_t i = 0; i < buffers.size(); ++i)
@@ -150,7 +147,7 @@ void CommandBuffer::bindVertexBuffers(uint32_t first, const std::vector<VkBuffer
 			goto down;
 	return;
 
-	down:
+down:
 	if (offsets.empty())
 	{
 		std::vector<VkDeviceSize> default_offsets(buffers.size());
@@ -173,13 +170,12 @@ void CommandBuffer::bindVertexBuffers(uint32_t first, const std::vector<VkBuffer
 #pragma region Setters
 void CommandBuffer::setViewport(VkViewport viewport)
 {
-	if (active.viewport && 
-		active.viewport->width == viewport.width &&
-		active.viewport->height == viewport.height &&
-		active.viewport->x == viewport.x &&
-		active.viewport->y == viewport.y &&
-		active.viewport->minDepth == viewport.minDepth &&
-		active.viewport->maxDepth == viewport.maxDepth)
+	if (active.viewport.width == viewport.width &&
+		active.viewport.height == viewport.height &&
+		active.viewport.x == viewport.x &&
+		active.viewport.y == viewport.y &&
+		active.viewport.minDepth == viewport.minDepth &&
+		active.viewport.maxDepth == viewport.maxDepth)
 		return;
 	vkCmdSetViewport(command_buffer, 0, 1, &viewport);
 	active.viewport = viewport;
@@ -187,11 +183,10 @@ void CommandBuffer::setViewport(VkViewport viewport)
 
 void CommandBuffer::setScissor(VkRect2D scissor)
 {
-	if (active.scissor &&
-		active.scissor->extent.width == scissor.extent.width &&
-		active.scissor->extent.height == scissor.extent.height &&
-		active.scissor->offset.x == scissor.offset.x &&
-		active.scissor->offset.y == scissor.offset.y)
+	if (active.scissor.extent.width == scissor.extent.width &&
+		active.scissor.extent.height == scissor.extent.height &&
+		active.scissor.offset.x == scissor.offset.x &&
+		active.scissor.offset.y == scissor.offset.y)
 		return;
 	vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 	active.scissor = scissor;
@@ -219,11 +214,10 @@ void CommandBuffer::setDepthBias(float constant, float clamp, float slope)
 
 void CommandBuffer::setBlendConstants(const float blend_constants[4])
 {
-	if (active.blend_constants &&
-		active.blend_constants->at(0) == blend_constants[0] &&
-		active.blend_constants->at(1) == blend_constants[1] &&
-		active.blend_constants->at(2) == blend_constants[2] &&
-		active.blend_constants->at(3) == blend_constants[3])
+	if (active.blend_constants[0] == blend_constants[0] &&
+		active.blend_constants[1] == blend_constants[1] &&
+		active.blend_constants[2] == blend_constants[2] &&
+		active.blend_constants[3] == blend_constants[3])
 		return;
 	vkCmdSetBlendConstants(command_buffer, blend_constants);
 	active.blend_constants = { blend_constants[0], blend_constants[1], blend_constants[2], blend_constants[3] };
@@ -283,13 +277,12 @@ void CommandBuffer::setPrimitiveTopology(VkPrimitiveTopology primitive_topology)
 
 void CommandBuffer::setViewportWithCount(VkViewport viewport)
 {
-	if (active.viewport &&
-		active.viewport->width == viewport.width &&
-		active.viewport->height == viewport.height &&
-		active.viewport->x == viewport.x &&
-		active.viewport->y == viewport.y &&
-		active.viewport->minDepth == viewport.minDepth &&
-		active.viewport->maxDepth == viewport.maxDepth)
+	if (active.viewport.width == viewport.width &&
+		active.viewport.height == viewport.height &&
+		active.viewport.x == viewport.x &&
+		active.viewport.y == viewport.y &&
+		active.viewport.minDepth == viewport.minDepth &&
+		active.viewport.maxDepth == viewport.maxDepth)
 		return;
 	vkCmdSetViewportWithCount(command_buffer, 1, &viewport);
 	active.viewport = viewport;
@@ -297,11 +290,10 @@ void CommandBuffer::setViewportWithCount(VkViewport viewport)
 
 void CommandBuffer::setScissorWithCount(VkRect2D scissor)
 {
-	if (active.scissor &&
-		active.scissor->extent.width == scissor.extent.width &&
-		active.scissor->extent.height == scissor.extent.height &&
-		active.scissor->offset.x == scissor.offset.x &&
-		active.scissor->offset.y == scissor.offset.y)
+	if (active.scissor.extent.width == scissor.extent.width &&
+		active.scissor.extent.height == scissor.extent.height &&
+		active.scissor.offset.x == scissor.offset.x &&
+		active.scissor.offset.y == scissor.offset.y)
 		return;
 	vkCmdSetScissorWithCount(command_buffer, 1, &scissor);
 	active.scissor = scissor;
@@ -440,7 +432,7 @@ void CommandBuffer::dispatch(uint32_t global_invocation_count_x, uint32_t global
 
 void CommandBuffer::pushConstants(VkPipelineStageFlags stages, uint32_t offset, uint32_t size, const void* data) const
 {
-	vkCmdPushConstants(command_buffer, *active.pipeline_layout, stages, offset, size, data);
+	vkCmdPushConstants(command_buffer, active.pipeline_layout, stages, offset, size, data);
 }
 
 void CommandBuffer::draw(uint32_t vertices, uint32_t instances, uint32_t first_vertex, uint32_t first_instance) const
@@ -474,7 +466,7 @@ void CommandBuffer::submit(const SubmitInfo& info, VkQueueFlagBits queue_type)
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &command_buffer;
-	
+
 	submit_info.pWaitDstStageMask = info.wait_stages;
 	submit_info.waitSemaphoreCount = info.wait_semaphores.size();
 	submit_info.pWaitSemaphores = info.wait_semaphores.data();
@@ -498,7 +490,7 @@ void CommandBuffer::submitImmidiatly(VkQueueFlagBits queue_type)
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &command_buffer;
-	
+
 	RenderContext::getLogicalDevice().getQueue(queue_type).submitImmidiatly(submit_info);
 	state = State::INVALID;
 }

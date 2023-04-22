@@ -198,11 +198,11 @@ template<typename EventType>
 class HandlerFunctionBase
 {
 public:
-    void operator()(const EventType& event) const {}
+    virtual void operator()(const EventType& event) const = 0;
     virtual bool operator==(size_t func) const = 0;
 };
 
-template <class T, class EventType>
+template <typename T, typename EventType>
 class MemberFunctionHandler : public HandlerFunctionBase<EventType>
 {
     typedef void (T::* MemberFunction)(const EventType&);
@@ -252,7 +252,7 @@ public:
             (*func)(e);
     }
 
-    template <class T>
+    template <typename T>
     static void subscribe(T& instance, void (T::* member_function)(const EventType&))
     {
         subscribed_member_functions.emplace_back(new MemberFunctionHandler<T, EventType>(instance, member_function));
@@ -276,7 +276,7 @@ public:
         }
     }
 
-    template <class T>
+    template <typename T>
     static void unsubscribe(T& instance, void (T::* member_function)(const EventType&))
     {
         union {

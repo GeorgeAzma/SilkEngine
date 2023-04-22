@@ -10,6 +10,7 @@
 #include "silk_engine/gfx/render_context.h"
 
 #include "my_scene.h"
+#include "scene/meshes/line_mesh.h"
 
 Cooldown c(200ms);
 
@@ -20,6 +21,23 @@ void MyScene::onStart()
     camera->add<CameraComponent>();
     camera->add<ScriptComponent>().bind<CameraController>();
     camera->get<CameraComponent>().camera.position = vec3(0.0f, 0.0f, -5.0f);
+
+    int n = 500;
+    std::vector<vec2> p(n);
+    for (int i = 0; i < n; ++i)
+    {
+        p[i].x = i / float(n - 1);
+        p[i].y = cos(pi<float>() * 2.0 * 3.0 * p[i].x + Time::runtime) * 100.0f + 100.0f;
+        p[i].x *= Window::getActive().getWidth();
+    }
+    shared<Mesh> line = makeShared<Mesh>(LineMesh(p, 4.0f));
+    DebugRenderer::InstanceData data{};
+    for (int i = 0; i < 10000; ++i)
+    {
+        DebugRenderer::createInstance(line, data, Resources::get<GraphicsPipeline>("2D"));
+        data.transform = glm::translate(data.transform, vec3(1, 1, 0));
+        data.color = Color(Colors(i % (1 + int(Colors::TRANSPARENT))));
+    }
 }
 
 void MyScene::onUpdate()
@@ -32,16 +50,6 @@ void MyScene::onUpdate()
     if (c())
         Window::getActive().setTitle(std::format("Vulkan - {} FPS ({:.4} ms) | {}x{}", int(1.0 / Time::dt), (Time::dt * 1000), Window::getActive().getWidth(), Window::getActive().getHeight()));
     
-    DebugRenderer::color(Colors::WHITE);
-    int n = 500;
-    std::vector<vec2> p(n);
-    for (int i = 0; i < n; ++i)
-    {
-        p[i].x = i / float(n - 1);
-        p[i].y = cos(pi<float>() * 2.0 * 3.0 * p[i].x + Time::runtime) * 100.0f + 200.0f;
-        p[i].x *= Window::getActive().getWidth();
-    }
-    DebugRenderer::line(p, 4.0f);
 }
 
 void MyScene::onStop()

@@ -6,6 +6,18 @@ class CommandPool;
 
 class CommandBuffer : NonCopyable
 {
+	template<std::unsigned_integral T>
+	static constexpr T None() 
+	{ 
+		return std::numeric_limits<T>::max(); 
+	}
+
+	template<typename T>
+	static constexpr T None()
+	{
+		return std::numeric_limits<T>::lowest();
+	}
+
 public:
 	struct SubmitInfo
 	{
@@ -110,46 +122,46 @@ private:
 
 	struct Active
 	{
-		uint32_t subpass = 0;
+		uint32_t subpass = None<uint32_t>();
 		std::vector<BoundDescriptorSet> descriptor_sets{};
-		VkDeviceSize index_buffer_offset = 0;
+		VkDeviceSize index_buffer_offset = None<VkDeviceSize>();
 		std::vector<OffsetVertexBuffer> vertex_buffers{};
-		std::optional<VkPipelineBindPoint> pipeline_bind_point = VkPipelineBindPoint(VK_PIPELINE_BIND_POINT_MAX_ENUM);
-		std::optional<VkPipeline> pipeline = {};
-		std::optional<VkPipelineLayout> pipeline_layout = {};
-		std::optional<VkRenderPass> render_pass = {};
-		std::optional<VkQueryPool> query_pool = {};
-		std::optional<VkFramebuffer> framebuffer = {};
-		std::optional<VkBuffer> index_buffer = {};
-		std::optional<VkViewport> viewport = {};
-		std::optional<VkRect2D> scissor = {};
-		std::optional<float> line_width = {};
-		std::optional<float> depth_bias_constant = {};
-		std::optional<float> depth_bias_clamp = {};
-		std::optional<float> depth_bias_slope = {};
-		std::optional<std::array<float, 4>> blend_constants = {};
-		std::optional<float> min_depth_bound = {};
-		std::optional<float> max_depth_bound = {};
-		std::optional<VkStencilFaceFlags> stencil_compare_mask_face_mask = {};
-		std::optional<uint32_t> stencil_compare_mask_compare_mask = {};
-		std::optional<uint32_t> device_mask = {};
-		std::optional<VkCullModeFlags> cull_mode = {};
-		std::optional<VkFrontFace> front_face = {};
-		std::optional<VkPrimitiveTopology> primitive_topology = {};
-		std::optional<VkBool32> depth_test_enable = {};
-		std::optional<VkBool32> depth_write_enable = {};
-		std::optional<VkCompareOp> depth_compare_op = {};
-		std::optional<VkBool32> depth_bound_test_enable = {};
-		std::optional<VkBool32> stencil_test_enable = {};
-		std::optional<VkStencilFaceFlags> stencil_op_face_mask = {};
-		std::optional<VkStencilOp> stencil_op_fail_op = {};
-		std::optional<VkStencilOp> stencil_op_pass_op = {};
-		std::optional<VkStencilOp> stencil_op_depth_fail_op = {};
-		std::optional<VkCompareOp> stencil_op_compare_op = {};
-		std::optional<VkBool32> rasterizer_discard_enable = {};
-		std::optional<VkBool32> depth_bias_enable = {};
-		std::optional<VkBool32> primitive_restart_enable = {};
-		std::optional<VkRect2D> render_area = {};
+		VkPipelineBindPoint pipeline_bind_point = None<VkPipelineBindPoint>();
+		VkPipeline pipeline = nullptr;
+		VkPipelineLayout pipeline_layout = nullptr;
+		VkRenderPass render_pass = nullptr;
+		VkQueryPool query_pool = nullptr;
+		VkFramebuffer framebuffer = nullptr;
+		VkBuffer index_buffer = nullptr;
+		VkViewport viewport = { None<float>(), None<float>(), None<float>(), None<float>(), None<float>(), None<float>() };
+		VkRect2D scissor = { { None<int32_t>(), None<int32_t>() }, { None<uint32_t>(), None<uint32_t>() } };
+		float line_width = None<float>();
+		float depth_bias_constant = None<float>();
+		float depth_bias_clamp = None<float>();
+		float depth_bias_slope = None<float>();
+		std::array<float, 4> blend_constants = { None<float>(), None<float>(), None<float>(), None<float>() };
+		float min_depth_bound = None<float>();
+		float max_depth_bound = None<float>();
+		VkStencilFaceFlags stencil_compare_mask_face_mask = None<VkStencilFaceFlags>();
+		uint32_t stencil_compare_mask_compare_mask = None<uint32_t>();
+		uint32_t device_mask = None<uint32_t>();
+		VkCullModeFlags cull_mode = None<VkCullModeFlags>();
+		VkFrontFace front_face = None<VkFrontFace>();
+		VkPrimitiveTopology primitive_topology = None<VkPrimitiveTopology>();
+		VkBool32 depth_test_enable = None<VkBool32>();
+		VkBool32 depth_write_enable = None<VkBool32>();
+		VkCompareOp depth_compare_op = None<VkCompareOp>();
+		VkBool32 depth_bound_test_enable = None<VkBool32>();
+		VkBool32 stencil_test_enable = None<VkBool32>();
+		VkStencilFaceFlags stencil_op_face_mask = {};
+		VkStencilOp stencil_op_fail_op = None<VkStencilOp>();
+		VkStencilOp stencil_op_pass_op = None<VkStencilOp>();
+		VkStencilOp stencil_op_depth_fail_op = None<VkStencilOp>();
+		VkCompareOp stencil_op_compare_op = None<VkCompareOp>();
+		VkBool32 rasterizer_discard_enable = None<VkBool32>();
+		VkBool32 depth_bias_enable = None<VkBool32>();
+		VkBool32 primitive_restart_enable = None<VkBool32>();
+		VkRect2D render_area = { { None<int32_t>(), None<int32_t>() }, { None<uint32_t>(), None<uint32_t>() } };
 	} active;
 
 public:
