@@ -9,7 +9,8 @@ void Font::init()
 
 void Font::destroy()
 {
-	FT_Done_FreeType(free_type_library);
+	FT_Done_FreeType(free_type_library); 
+	fonts.clear();
 }
 
 Font::Font(const path& file, uint32_t size)

@@ -15,6 +15,7 @@ std::vector<shared<DebugRenderer::RenderedInstance>> DebugRenderer::instances{};
 unique<Buffer> DebugRenderer::indirect_buffer = nullptr;
 unique<Buffer> DebugRenderer::global_uniform_buffer = nullptr;
 std::array<Light, DebugRenderer::MAX_LIGHTS> DebugRenderer::lights{};
+shared<Image> DebugRenderer::white_image = nullptr;
 
 bool DebugRenderer::InstanceData::operator==(const InstanceData& other) const
 {
@@ -53,6 +54,7 @@ void DebugRenderer::init()
 	instance_batches.reserve(MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
 	indirect_buffer = makeUnique<Buffer>(MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand), Buffer::INDIRECT | Buffer::TRANSFER_DST, Allocation::Props{ Allocation::MAPPED | Allocation::RANDOM_ACCESS, Allocation::Device::CPU });
 	global_uniform_buffer = makeUnique<Buffer>(sizeof(GlobalUniformData), Buffer::UNIFORM | Buffer::TRANSFER_DST, Allocation::Props{ Allocation::MAPPED | Allocation::SEQUENTIAL_WRITE });
+	white_image = Image::get("White");
 
 	reset();
 }
@@ -72,8 +74,8 @@ void DebugRenderer::reset()
 		destroyInstance(*instance);
 	instances.clear();
 	active = {};
-	active.image = Resources::white_image;
-	active.font = Resources::get<Font>("Arial");
+	active.image = white_image;
+	active.font = Font::get("Arial");
 }
 
 void DebugRenderer::update(Camera* camera)
@@ -85,7 +87,7 @@ void DebugRenderer::update(Camera* camera)
 
 void DebugRenderer::triangle(float x, float y, float width, float height)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Triangle"), x, y, width, height);
+	draw(GraphicsPipeline::get("2D"), Mesh::get("Triangle"), x, y, width, height);
 }
 
 void DebugRenderer::triangle(float x, float y, float size)
@@ -95,17 +97,17 @@ void DebugRenderer::triangle(float x, float y, float size)
 
 void DebugRenderer::triangle(float x1, float y1, float x2, float y2, float x3, float y3)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(TriangleMesh(x1, y1, x2, y2, x3, y3)), 0, 0, 1, 1);
+	draw(GraphicsPipeline::get("2D"), makeShared<Mesh>(TriangleMesh(x1, y1, x2, y2, x3, y3)), 0, 0, 1, 1);
 }
 
 void DebugRenderer::rectangle(float x, float y, float width, float height)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rectangle"), x, y, width, height);
+	draw(GraphicsPipeline::get("2D"), Mesh::get("Rectangle"), x, y, width, height);
 }
 
 void DebugRenderer::roundedRectangle(float x, float y, float width, float height)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rounded Rectangle"), x, y, width, height);
+	draw(GraphicsPipeline::get("2D"), Mesh::get("Rounded Rectangle"), x, y, width, height);
 }
 
 void DebugRenderer::square(float x, float y, float size)
@@ -115,17 +117,17 @@ void DebugRenderer::square(float x, float y, float size)
 
 void DebugRenderer::roundedSquare(float x, float y, float size)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rounded Rectangle"), x, y, size, size);
+	draw(GraphicsPipeline::get("2D"), Mesh::get("Rounded Rectangle"), x, y, size, size);
 }
 
 void DebugRenderer::ellipse(float x, float y, float width, float height)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Circle"), x, y, width, height);
+	draw(GraphicsPipeline::get("2D"), Mesh::get("Circle"), x, y, width, height);
 }
 
 void DebugRenderer::ellipseOutline(float x, float y, float width, float height)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Circle Outline"), x, y, width, height);
+	draw(GraphicsPipeline::get("2D"), Mesh::get("Circle Outline"), x, y, width, height);
 }
 
 void DebugRenderer::circle(float x, float y, float radius)
@@ -140,7 +142,7 @@ void DebugRenderer::circleOutline(float x, float y, float radius)
 
 void DebugRenderer::line(const std::vector<vec2>& points, float width)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(LineMesh(points, width)), 0, 0, 1, 1);
+	draw(GraphicsPipeline::get("2D"), makeShared<Mesh>(LineMesh(points, width)), 0, 0, 1, 1);
 }
 
 void DebugRenderer::line(float x1, float y1, float x2, float y2, float width)
@@ -148,7 +150,7 @@ void DebugRenderer::line(float x1, float y1, float x2, float y2, float width)
 	float l = sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 	float dx = (x2 - x1) / l;
 	float dy = (y2 - y1) / l;
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rectangle"), {
+	draw(GraphicsPipeline::get("2D"), Mesh::get("Rectangle"), {
 			dx * l, dy * l, 0, 0,
 			-dy * width, dx * width, 0, 0,
 			0, 0, 1, 0,
@@ -158,59 +160,59 @@ void DebugRenderer::line(float x1, float y1, float x2, float y2, float width)
 
 void DebugRenderer::bezier(float x1, float y1, float px, float py, float x2, float y2, float width)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px, py, x2, y2, 64u, width)), 0, 0, 1, 1);
+	draw(GraphicsPipeline::get("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px, py, x2, y2, 64u, width)), 0, 0, 1, 1);
 }
 
 void DebugRenderer::bezier(float x1, float y1, float px1, float py1, float px2, float py2, float x2, float y2, float width)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px1, py1, px2, py2, x2, y2, 64u, width)), 0, 0, 1, 1);
+	draw(GraphicsPipeline::get("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px1, py1, px2, py2, x2, y2, 64u, width)), 0, 0, 1, 1);
 }
 
 void DebugRenderer::text(const std::string& text, float x, float y, float width, float height)
 {
-	draw(Resources::get<GraphicsPipeline>("Font"), makeShared<Mesh>(TextMesh(text, 64, active.font)), x, y, width, height, { active.font->getAtlas() });
+	draw(GraphicsPipeline::get("Font"), makeShared<Mesh>(TextMesh(text, 64, active.font)), x, y, width, height, { active.font->getAtlas() });
 }
 
 void DebugRenderer::text(const std::string& text, float x, float y, float size)
 {
 	if (text.empty())
 		return;
-	draw(Resources::get<GraphicsPipeline>("Font"), makeShared<Mesh>(TextMesh(text, 32, active.font)), x, y, size, size, { active.font->getAtlas() });
+	draw(GraphicsPipeline::get("Font"), makeShared<Mesh>(TextMesh(text, 32, active.font)), x, y, size, size, { active.font->getAtlas() });
 }
 
 void DebugRenderer::tetrahedron(float x, float y, float z, float size)
 {
-	draw(Resources::get<GraphicsPipeline>("3D"), Resources::get<Mesh>("Tetrahedron"), x, y, z, size, size, size);
+	draw(GraphicsPipeline::get("3D"), Mesh::get("Tetrahedron"), x, y, z, size, size, size);
 }
 
 void DebugRenderer::cube(float x, float y, float z, float size)
 {
-	draw(Resources::get<GraphicsPipeline>("3D"), Resources::get<Mesh>("Cube"), x, y, z, size, size, size);
+	draw(GraphicsPipeline::get("3D"), Mesh::get("Cube"), x, y, z, size, size, size);
 }
 
 void DebugRenderer::cuboid(float x, float y, float z, float width, float height, float depth)
 {
-	draw(Resources::get<GraphicsPipeline>("3D"), Resources::get<Mesh>("Cube"), x, y, z, width, height, depth);
+	draw(GraphicsPipeline::get("3D"), Mesh::get("Cube"), x, y, z, width, height, depth);
 }
 
 void DebugRenderer::sphere(float x, float y, float z, float radius)
 {
-	draw(Resources::get<GraphicsPipeline>("3D"), Resources::get<Mesh>("Sphere"), x, y, z, radius, radius, radius);
+	draw(GraphicsPipeline::get("3D"), Mesh::get("Sphere"), x, y, z, radius, radius, radius);
 }
 
 void DebugRenderer::ellipsoid(float x, float y, float z, float width, float height, float depth)
 {
-	draw(Resources::get<GraphicsPipeline>("3D"), Resources::get<Mesh>("Sphere"), x, y, z, width, height, depth);
+	draw(GraphicsPipeline::get("3D"), Mesh::get("Sphere"), x, y, z, width, height, depth);
 }
 
 void DebugRenderer::image(const shared<Image>& image, float x, float y, float width, float height)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rectangle"), x, y, width, height, { image });
+	draw(GraphicsPipeline::get("2D"), Mesh::get("Rectangle"), x, y, width, height, { image });
 }
 
 void DebugRenderer::image(const shared<Image>& image, float x, float y, float size)
 {
-	draw(Resources::get<GraphicsPipeline>("2D"), Resources::get<Mesh>("Rectangle"), x, y, size, size, { image });
+	draw(GraphicsPipeline::get("2D"), Mesh::get("Rectangle"), x, y, size, size, { image });
 }
 
 void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const mat4& transform, const std::vector<shared<Image>>& images)
@@ -305,7 +307,7 @@ void DebugRenderer::addInstanceBatch(const shared<RenderedInstance>& instance, c
 	instance_batches.emplace_back(mesh, instance);
 	auto& new_batch = instance_batches.back();
 
-	new_batch.instance_images.add({ Resources::white_image });
+	new_batch.instance_images.add({ white_image });
 
 	new_batch.instance_data.emplace_back(instance_data);
 	new_batch.instances.emplace_back(instance);

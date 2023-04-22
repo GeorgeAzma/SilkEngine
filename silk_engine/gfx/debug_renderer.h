@@ -22,6 +22,7 @@ class DebugRenderer
 	// TODO: Fix this
 	friend class MeshSubrender;
 	friend class ParticleSystem;
+	friend class InstanceImages;
 public:
 	static constexpr size_t MAX_INSTANCE_BATCHES = 8192;
 	static constexpr size_t MAX_INSTANCES = 32684;
@@ -123,7 +124,7 @@ public:
 	//States
 	static void transform(const mat4& transform = mat4(1)) { active.transformed = transform != mat4(1); active.transform = transform; }
 	static void color(const Color& color = Colors::WHITE) { active.color = color; }
-	static void image(const shared<Image>& image = Resources::white_image) { active.image = image; }
+	static void image(const shared<Image>& image = white_image) { active.image = image; }
 	static void depth(float depth) { active.depth = depth; }
 
 	//2D
@@ -175,4 +176,5 @@ private:
 	static unique<Buffer> indirect_buffer;
 	static unique<Buffer> global_uniform_buffer;
 	static std::array<Light, MAX_LIGHTS> lights;
+	static shared<Image> white_image;
 };

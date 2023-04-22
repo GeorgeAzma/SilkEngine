@@ -4,6 +4,8 @@
 #include "scene/instance_images.h"
 #include "gfx/pipeline/graphics_pipeline.h"
 
+class ThreadPool;
+
 struct ParticleProps
 {
 	vec3 position = vec3(0);
@@ -86,4 +88,5 @@ private:
 	static inline shared<VertexArray> vao;
 	static inline shared<VertexBuffer> instance_vbo;
 	static inline shared<InstanceImages> instance_images;
+	static unique<ThreadPool> thread_pool;
 };

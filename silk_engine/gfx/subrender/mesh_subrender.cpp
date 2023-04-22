@@ -14,7 +14,7 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
         .setStage(pipeline_stage)
         .setDepthCompareOp(GraphicsPipeline::CompareOp::LESS)
         .build();
-    Resources::add<GraphicsPipeline>("3D", graphics_pipeline);
+    GraphicsPipeline::add("3D", graphics_pipeline);
 
     graphics_pipeline = makeShared<GraphicsPipeline>();
     graphics_pipeline->setShader(makeShared<Shader>("2D"))
@@ -22,7 +22,7 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
         .setStage(pipeline_stage)
         .setDepthCompareOp(GraphicsPipeline::CompareOp::LESS_OR_EQUAL)
         .build();
-    Resources::add<GraphicsPipeline>("2D", graphics_pipeline);
+    GraphicsPipeline::add("2D", graphics_pipeline);
 
     graphics_pipeline = makeShared<GraphicsPipeline>();
     graphics_pipeline->setShader(makeShared<Shader>("font"))
@@ -30,7 +30,7 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
         .setStage(pipeline_stage)
         .setDepthCompareOp(GraphicsPipeline::CompareOp::ALWAYS)
         .build();
-    Resources::add<GraphicsPipeline>("Font", graphics_pipeline);
+    GraphicsPipeline::add("Font", graphics_pipeline);
 }
 
 void MeshSubrender::render()

@@ -19,4 +19,12 @@ private:
 	std::vector<shared<Mesh>> meshes;
 	std::vector<std::vector<shared<Image>>> images;
 	path file;
+
+public:
+	static shared<Model> get(std::string_view name) { return models.at(name); }
+	static void add(std::string_view name, const shared<Model> model) { models.insert_or_assign(name, model); }
+	static void destroy() { models.clear(); }
+
+private:
+	static inline std::unordered_map<std::string_view, shared<Model>> models{};
 };

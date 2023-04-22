@@ -124,7 +124,6 @@ public:
 	const VkGraphicsPipelineCreateInfo& getCreateInfo() const { return ci; }
 
 private:
-
 	VkGraphicsPipelineCreateInfo ci{};
 	std::vector<VkDynamicState> dynamic_states{ VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 	VkPipelineVertexInputStateCreateInfo vertex_input_info{};
@@ -138,4 +137,12 @@ private:
 	VkPipelineDynamicStateCreateInfo dynamic_state{};
 	VkRenderPass render_pass = nullptr;
 	uint32_t subpass = 0;
+
+public:
+	static shared<GraphicsPipeline> get(std::string_view name) { return graphics_pipelines.at(name); }
+	static void add(std::string_view name, const shared<GraphicsPipeline> graphics_pipeline) { graphics_pipelines.insert_or_assign(name, graphics_pipeline); }
+	static void destroy() { graphics_pipelines.clear(); }
+
+private:
+	static inline std::unordered_map<std::string_view, shared<GraphicsPipeline>> graphics_pipelines{};
 };

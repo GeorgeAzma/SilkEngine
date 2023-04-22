@@ -127,4 +127,12 @@ protected:
 	Allocation allocation{};
 	Props props = {};
 	uint32_t mip_levels = 1;
+
+public:
+	static shared<Image> get(std::string_view name) { return images.at(name); }
+	static void add(std::string_view name, const shared<Image> image) { images.insert_or_assign(name, image); }
+	static void destroy() { images.clear(); }
+
+private:
+	static inline std::unordered_map<std::string_view, shared<Image>> images{};
 };

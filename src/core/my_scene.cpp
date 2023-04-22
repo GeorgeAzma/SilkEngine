@@ -8,6 +8,7 @@
 #include "silk_engine/gfx/debug_renderer.h"
 #include "silk_engine/utils/cooldown.h"
 #include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/pipeline/graphics_pipeline.h"
 
 #include "my_scene.h"
 #include "scene/meshes/line_mesh.h"
@@ -36,7 +37,7 @@ void MyScene::onStart()
     data.transform = glm::scale(data.transform, vec3(8));
     for (int i = 0; i < 10000; ++i)
     {
-        DebugRenderer::createInstance(line, data, Resources::get<GraphicsPipeline>("2D"));
+        DebugRenderer::createInstance(line, data, GraphicsPipeline::get("2D"));
         data.transform = glm::translate(data.transform, vec3(1, i % 100 == 0 ? 1 : 0, 0));
         if (i % 100 == 0)
         {
@@ -50,8 +51,6 @@ void MyScene::onUpdate()
 {
     if (Window::getActive().isKeyPressed(Keys::F2))
         RenderContext::screenshot(path(std::format("res/images/screenshots/screenshot.png")));
-    if (Window::getActive().isKeyPressed(Keys::R))
-        Resources::reloadShaders();
 
     if (c())
         Window::getActive().setTitle(std::format("Vulkan - {} FPS ({:.4} ms) | {}x{}", int(1.0 / Time::dt), (Time::dt * 1000), Window::getActive().getWidth(), Window::getActive().getHeight()));

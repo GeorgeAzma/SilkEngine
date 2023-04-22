@@ -7,11 +7,14 @@
 #include "debug_renderer.h"
 #include "scene/meshes/mesh.h"
 
+unique<ThreadPool> ParticleSystem::thread_pool = nullptr;
+
 void ParticleSystem::init()
 {
-    vao = Resources::get<Mesh>("Quad")->getVertexArray();
+    vao = Mesh::get("Quad")->getVertexArray();
 	instance_vbo = makeShared<VertexBuffer>(nullptr, sizeof(ParticleData), MAX_PARTICLES, true);
     instance_images = makeShared<InstanceImages>();
+    thread_pool = makeUnique<ThreadPool>();
 }
 
 void ParticleSystem::addSpout(const ParticleSpoutProps& props)
@@ -43,7 +46,7 @@ void ParticleSystem::emit(const ParticleProps& props)
         props.size_end,
         props.life_time,
         props.life_time,
-        instance_images->add({ props.image.get() ? props.image : Resources::white_image })
+        instance_images->add({ props.image.get() ? props.image : DebugRenderer::white_image })
     );
 }
 
@@ -84,7 +87,7 @@ void ParticleSystem::update()
     auto camera = SceneManager::getActive()->getMainCamera();
     if (camera)
     {
-        Resources::pool.forEach(particles.size(), [&](size_t i)
+        thread_pool->forEach(particles.size(), [&](size_t i)
             {
                 auto& p = particles[i];
                 float life = 1.0f - p.life_remaining / p.life_time;

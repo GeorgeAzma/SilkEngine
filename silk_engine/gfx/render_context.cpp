@@ -13,6 +13,9 @@
 #include "window/surface.h"
 #include "buffers/buffer.h"
 #include "descriptors/descriptor_set_layout.h"
+#include "gfx/pipeline/shader.h"
+#include "gfx/pipeline/graphics_pipeline.h"
+#include "gfx/pipeline/compute_pipeline.h"
 #include <stb_image_write.h>
 
 void RenderContext::init(std::string_view app_name)
@@ -28,6 +31,11 @@ void RenderContext::init(std::string_view app_name)
 
 void RenderContext::destroy()
 {
+	Image::destroy();
+	Font::destroy();
+	ComputePipeline::destroy();
+	GraphicsPipeline::destroy();
+	Shader::destroy();
 	Sampler::destroy();
 	DescriptorSetLayout::destroy();
 	DescriptorAllocator::destroy();

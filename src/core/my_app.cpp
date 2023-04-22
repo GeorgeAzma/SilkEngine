@@ -27,6 +27,7 @@ MyApp::MyApp()
     Dispatcher<KeyPressEvent>::subscribe(*this, &MyApp::onKeyPress);
     Dispatcher<WindowCloseEvent>::subscribe(*this, &MyApp::onWindowClose);
     Dispatcher<FramebufferResizeEvent>::subscribe(*this, &MyApp::onFramebufferResize);
+
 }
 
 MyApp::~MyApp()
@@ -37,7 +38,6 @@ MyApp::~MyApp()
 
     SceneManager::destroy();
     Renderer::destroy();
-    Resources::destroy();
     delete window;
     RenderContext::destroy();
     GLFW::destroy();

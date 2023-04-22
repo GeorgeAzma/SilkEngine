@@ -23,8 +23,8 @@ Model::Model(const RawModel& raw_model)
     file = raw_model.file;
 
     Image::Props image_props{};
-    auto white = Resources::white_image;
-    auto black = Resources::get<Image>("Black");
+    auto white = Image::get("White");
+    auto black = Image::get("Black");
     
     std::unordered_map<size_t, shared<Image>> bitmap_images;
 

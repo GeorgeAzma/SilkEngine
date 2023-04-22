@@ -22,4 +22,12 @@ private:
 	size_t vertex_type_size = 0;
 	size_t index_type_size = 0;
 	shared<VertexArray> vertex_array = nullptr;
+
+public:
+	static shared<Mesh> get(std::string_view name) { return meshes.at(name); }
+	static void add(std::string_view name, const shared<Mesh> mesh) { meshes.insert_or_assign(name, mesh); }
+	static void destroy() { meshes.clear(); }
+
+private:
+	static inline std::unordered_map<std::string_view, shared<Mesh>> meshes{};
 };

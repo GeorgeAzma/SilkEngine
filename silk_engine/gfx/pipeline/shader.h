@@ -95,7 +95,6 @@ public:
 	void compile();
 	void reflect();
 
-	const ResourceLocation& get(std::string_view resource_name) const { return reflection_data.resource_locations.at(resource_name); }
 	const ResourceLocation* getLocation(std::string_view resource_name) const;
 	void pushConstants(std::string_view name, const void* data) const;
 
@@ -110,4 +109,12 @@ private:
 private:
 	std::vector<unique<Stage>> stages;
 	ReflectionData reflection_data{};
+
+public:
+	static shared<Shader> get(std::string_view name) { return shaders.at(name); }
+	static void add(std::string_view name, const shared<Shader> shader) { shaders.insert_or_assign(name, shader); }
+	static void destroy() { shaders.clear(); }
+
+private:
+	static inline std::unordered_map<std::string_view, shared<Shader>> shaders{};
 };

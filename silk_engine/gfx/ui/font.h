@@ -45,4 +45,11 @@ private:
 	size_t size;
 
 	shared<Image> texture_atlas;
+
+public:
+	static shared<Font> get(std::string_view name) { return fonts.at(name); }
+	static void add(std::string_view name, const shared<Font> font) { fonts.insert_or_assign(name, font); }
+
+private:
+	static inline std::unordered_map<std::string_view, shared<Font>> fonts{};
 };
