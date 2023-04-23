@@ -12,8 +12,7 @@ DefaultRenderPipeline::DefaultRenderPipeline()
 			   {
 				   { Image::Format(RenderContext::getPhysicalDevice().getDepthFormat()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() },
 				   { Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, RenderContext::getPhysicalDevice().getMaxSampleCount() }
-			   },
-			   {}
+			   }, {}
 		   }
 		}));
 	addRenderPass(render_pass);

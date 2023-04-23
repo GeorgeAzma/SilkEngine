@@ -1,8 +1,8 @@
 #pragma once
 
 #include "pipeline.h"
-#include "pipeline_stage.h"
 
+struct PipelineStage;
 
 class GraphicsPipeline : public Pipeline
 {

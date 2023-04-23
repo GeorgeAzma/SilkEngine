@@ -96,6 +96,7 @@ void DescriptorSet::update()
 
 	for (auto& write : writes)
 	{
+		DescriptorAllocator::trackUpdate(write.descriptorType, write.descriptorCount);
 		if (auto it = buffer_infos.find(write.dstBinding); it != buffer_infos.end())
 			write.pBufferInfo = it->second.data();
 		if (auto it = image_infos.find(write.dstBinding); it != image_infos.end())

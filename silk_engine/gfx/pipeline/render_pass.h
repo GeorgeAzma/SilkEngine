@@ -28,8 +28,8 @@ struct RenderTargetInfo
 
 struct SubpassProps
 {
-	std::vector<AttachmentProps> outputs;
-	std::vector<uint32_t> inputs;
+	std::vector<AttachmentProps> outputs{};
+	std::vector<uint32_t> inputs{};
 };
 
 class RenderPass : NonCopyable

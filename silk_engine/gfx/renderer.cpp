@@ -9,7 +9,6 @@
 #include "scene/meshes/text_mesh.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/pipeline/default_render_pipeline.h"
-#include "pipeline/pipeline_stage.h"
 #include "scene/camera/camera.h"
 #include "buffers/command_buffer.h"
 #include "gfx/fence.h"

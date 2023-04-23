@@ -4,6 +4,8 @@
 
 void DescriptorAllocator::reset()
 {
+	allocated_descriptor_sets = 0;
+	descriptor_sizes.clear();
 	for (const auto& p : used_pools)
 	{
 		if (!p->allocatedDescriptorSetCount())
@@ -11,6 +13,7 @@ void DescriptorAllocator::reset()
 			RenderContext::getLogicalDevice().resetDescriptorPool(*p);
 			free_pools.emplace_back(p);
 		}
+		else allocated_descriptor_sets += p->allocatedDescriptorSetCount();
 	}
 	used_pools.clear();
 	current_pool = nullptr;
@@ -34,18 +37,25 @@ shared<DescriptorPool> DescriptorAllocator::allocate(VkDescriptorSet& descriptor
 
 void DescriptorAllocator::destroy()
 {
-	current_pool = nullptr;
+	descriptor_sizes.clear();
 	free_pools.clear();
 	used_pools.clear();
+	allocated_descriptor_sets = 0;
+	current_pool = nullptr;
+}
+
+void DescriptorAllocator::trackUpdate(VkDescriptorType descriptor_type, uint32_t descriptor_count)
+{
+	descriptor_sizes[descriptor_type] += descriptor_count;
 }
 
 shared<DescriptorPool> DescriptorAllocator::createPool()
 {
 	std::vector<VkDescriptorPoolSize> sizes;
-	sizes.reserve(descriptor_sizes.sizes.size());
-	for (auto&& [type, size] : descriptor_sizes.sizes)
-		sizes.emplace_back(type, uint32_t(size * 32.0f));
-	shared<DescriptorPool> pool = makeShared<DescriptorPool>(64, sizes);
+	sizes.reserve(descriptor_sizes.size());
+	for (auto&& [type, size] : descriptor_sizes)
+		sizes.emplace_back(type, size * 2 + 4);
+	shared<DescriptorPool> pool = makeShared<DescriptorPool>(allocated_descriptor_sets * 2 + 4, sizes);
 	used_pools.push_back(pool);
 	return pool;
 }

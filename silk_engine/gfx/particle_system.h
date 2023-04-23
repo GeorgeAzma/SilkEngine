@@ -5,6 +5,7 @@
 #include "gfx/pipeline/graphics_pipeline.h"
 
 class ThreadPool;
+class Material;
 
 struct ParticleProps
 {
@@ -77,7 +78,7 @@ public:
 	static void emit(const ParticleProps& props);
 	
 	static void update();
-	static void render(GraphicsPipeline& graphics_pipeline);
+	static void render(Material& material);
 
 	static void destroy();
 

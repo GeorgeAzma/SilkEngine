@@ -2,8 +2,14 @@
 
 #include "gfx/subrender/subrender.h"
 #include "utils/type_info.h"
-#include "pipeline_stage.h"
 #include "gfx/pipeline/render_pass.h"
+
+struct PipelineStage
+{
+	uint32_t render_pass;
+	uint32_t subpass;
+	bool operator==(const PipelineStage& other) const { return render_pass == other.render_pass && subpass == other.subpass; }
+};
 
 class RenderPipeline
 {

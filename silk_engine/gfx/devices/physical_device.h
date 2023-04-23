@@ -9,6 +9,11 @@ public:
 	PhysicalDevice(const Instance& instance, VkPhysicalDevice physical_device);
 
 	bool supportsExtension(const char* extension_name) const;
+	uint32_t alignSize(uint32_t original_size) const
+	{
+		size_t min_ubo_alignment = properties.limits.minUniformBufferOffsetAlignment;
+		return (min_ubo_alignment > 0) ? ((original_size + min_ubo_alignment - 1) & ~(min_ubo_alignment - 1)) : original_size;
+	}
 
 	VkDevice createLogicalDevice(const VkDeviceCreateInfo& create_info) const;
 	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const;

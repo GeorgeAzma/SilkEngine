@@ -45,8 +45,8 @@ void ParticleSystem::emit(const ParticleProps& props)
         props.size_begin,
         props.size_end,
         props.life_time,
-        props.life_time,
-        instance_images->add({ props.image.get() ? props.image : DebugRenderer::white_image })
+        props.life_time, 
+        instance_images->add({ props.image ? props.image : DebugRenderer::white_image })
     );
 }
 
@@ -111,17 +111,15 @@ void ParticleSystem::update()
     instance_vbo->setData(particle_data.data(), particle_data.size() * sizeof(ParticleData));
 }
 
-void ParticleSystem::render(GraphicsPipeline& graphics_pipeline)
+void ParticleSystem::render(Material& material)
 {
     if (particle_data.size())
     {
-        graphics_pipeline.bind();
+        material.set("GlobalUniform", *DebugRenderer::global_uniform_buffer);
+        material.set("images", instance_images->getDescriptorImageInfos());
+        material.bind();
         vao->bind();
         instance_vbo->bind(1);
-        //TODO:
-        //graphics_pipeline.getShader()->setIfExists("GlobalUniform", { *DebugRenderer::global_uniform_buffer }); //TODO: Unsafe, change
-        //graphics_pipeline.getShader()->setIfExists("images", instance_images->getDescriptorImageInfos());
-        //graphics_pipeline.getShader()->bindDescriptorSets();
         RenderContext::submit([&](CommandBuffer& cb) { cb.drawIndexed(vao->getIndexBuffer()->getCount(), particle_data.size(), 0, 0, 0); });
     }
 }
