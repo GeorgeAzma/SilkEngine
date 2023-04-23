@@ -31,8 +31,16 @@ private:
 	VkSampler sampler = nullptr;
 
 public:
-	static shared<Sampler> get(const Props& props);
-	static shared<Sampler> add(const Props& props);
+	static shared<Sampler> get(const Props& props)
+	{
+		if (auto layout = samplers.find(props); layout != samplers.end())
+			return layout->second;
+		return add(props);
+	}
+	static shared<Sampler> add(const Props& props)
+	{
+		return samplers.insert_or_assign(props, makeShared<Sampler>(props)).first->second;
+	}
 	static void destroy() { samplers.clear(); }
 
 private:

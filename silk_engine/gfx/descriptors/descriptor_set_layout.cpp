@@ -19,18 +19,3 @@ DescriptorSetLayout::~DescriptorSetLayout()
 {
 	RenderContext::getLogicalDevice().destroyDescriptorSetLayout(layout);
 }
-
-shared<DescriptorSetLayout> DescriptorSetLayout::get(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
-{
-	auto layout = descriptor_set_layouts.find(bindings);
-	if (layout != descriptor_set_layouts.end())
-		return layout->second;
-	return add(bindings);
-}
-
-shared<DescriptorSetLayout> DescriptorSetLayout::add(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
-{
-	shared<DescriptorSetLayout> new_layout = makeShared<DescriptorSetLayout>(bindings);
-	descriptor_set_layouts[bindings] = new_layout;
-	return new_layout;
-}

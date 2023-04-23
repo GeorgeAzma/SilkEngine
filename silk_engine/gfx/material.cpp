@@ -9,8 +9,15 @@ void Material::bind()
 		descriptor->bind(set);
 }
 
-Material::Material(const shared<GraphicsPipeline>& pipeline)
-	: pipeline(pipeline)
+Material::Material(const shared<GraphicsPipeline>& graphics_pipeline)
+	: pipeline(graphics_pipeline)
+{
+	for (auto&& [set, descriptor_set_layout] : pipeline->getShader()->getReflectionData().descriptor_set_layouts)
+		descriptor_sets.emplace(set, makeShared<DescriptorSet>(*descriptor_set_layout));
+}
+
+Material::Material(const shared<ComputePipeline>& compute_pipeline)
+	: pipeline(compute_pipeline)
 {
 	for (auto&& [set, descriptor_set_layout] : pipeline->getShader()->getReflectionData().descriptor_set_layouts)
 		descriptor_sets.emplace(set, makeShared<DescriptorSet>(*descriptor_set_layout));
@@ -19,8 +26,7 @@ Material::Material(const shared<GraphicsPipeline>& pipeline)
 
 void Material::set(std::string_view name, const Buffer& buffer)
 {
-	if (auto global_uniform = pipeline->getShader()->getLocation(name))
-		descriptor_sets.at(global_uniform.set)->write(global_uniform.binding, buffer.getDescriptorInfo());
+	set(name, buffer.getDescriptorInfo());
 }
 
 void Material::set(std::string_view name, const std::vector<shared<Buffer>>& buffers)
@@ -45,8 +51,7 @@ void Material::set(std::string_view name, const std::vector<VkDescriptorBufferIn
 
 void Material::set(std::string_view name, const Image& image)
 {
-	if (const Shader::ResourceLocation& location = pipeline->getShader()->getLocation(name))
-		descriptor_sets.at(location.set)->write(location.binding, image.getDescriptorInfo());
+	set(name, image.getDescriptorInfo());
 }
 
 void Material::set(std::string_view name, const std::vector<shared<Image>>& images)

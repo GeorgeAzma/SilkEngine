@@ -17,8 +17,16 @@ private:
 	std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings;
 
 public:
-	static shared<DescriptorSetLayout> get(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
-	static shared<DescriptorSetLayout> add(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
+	static shared<DescriptorSetLayout> get(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+	{
+		if (auto layout = descriptor_set_layouts.find(bindings); layout != descriptor_set_layouts.end())
+			return layout->second;
+		return add(bindings);
+	}
+	static shared<DescriptorSetLayout> add(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+	{
+		return descriptor_set_layouts.insert_or_assign(bindings, makeShared<DescriptorSetLayout>(bindings)).first->second;
+	}
 	static void destroy() { descriptor_set_layouts.clear(); }
 
 private:

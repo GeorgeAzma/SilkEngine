@@ -41,7 +41,7 @@ void Buffer::setData(const void* data, size_t size, size_t offset)
 {
 	if (!data)
 		return;
-	if (allocation.isHostVisible())
+	if (VmaAllocation(allocation) && allocation.isHostVisible())
 		allocation.setData(data, size ? size : ci.size, offset);
 	else
 	{
@@ -54,7 +54,7 @@ void Buffer::setData(const void* data, size_t size, size_t offset)
 
 void Buffer::getData(void* data, size_t size) const
 {
-	if (allocation.isHostVisible())
+	if (VmaAllocation(allocation) && allocation.isHostVisible())
 		allocation.getData(data, size ? size : ci.size);
 	else
 	{

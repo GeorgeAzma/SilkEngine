@@ -489,7 +489,7 @@ void Image::setData(const void* data, uint32_t base_layer, uint32_t layers)
 	if (!data)
 		return;
 
-	if (allocation.isHostVisible())
+	if (VmaAllocation(allocation) && allocation.isHostVisible())
 	{
 		uint32_t row_pitch = props.width * getFormatSize(props.format);
 		uint32_t layer_size = row_pitch * props.height * props.depth;
@@ -525,7 +525,7 @@ void Image::setData(const void* data, uint32_t base_layer, uint32_t layers)
 void Image::getData(void* data, uint32_t base_layer, uint32_t layers)
 {
 	size_t layer_size = props.width * props.height * props.depth * getFormatSize(props.format);
-	if (allocation.isHostVisible())
+	if (VmaAllocation(allocation) && allocation.isHostVisible())
 	{
 		void* buffer_data;
 		allocation.getData(data, layer_size * layers, layer_size * base_layer);
@@ -535,6 +535,7 @@ void Image::getData(void* data, uint32_t base_layer, uint32_t layers)
 		Buffer sb(layer_size * layers, Buffer::TRANSFER_DST, { Allocation::RANDOM_ACCESS | Allocation::MAPPED });
 		copyToBuffer(sb, base_layer, layers);
 		sb.getData(data);
+		RenderContext::execute();
 	}
 }
 

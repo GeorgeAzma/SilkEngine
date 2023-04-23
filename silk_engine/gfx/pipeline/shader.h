@@ -112,8 +112,8 @@ private:
 	ReflectionData reflection_data{};
 
 public:
-	static shared<Shader> get(std::string_view name) { return shaders.at(name); }
-	static void add(std::string_view name, const shared<Shader> shader) { shaders.insert_or_assign(name, shader); }
+	static shared<Shader> get(std::string_view name) { if (auto it = shaders.find(name); it != shaders.end()) return it->second; else return nullptr; }
+	static shared<Shader> add(std::string_view name, const shared<Shader> shader) { return shaders.insert_or_assign(name, shader).first->second; }
 	static void destroy() { shaders.clear(); }
 
 private:

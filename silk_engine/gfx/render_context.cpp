@@ -16,6 +16,8 @@
 #include "gfx/pipeline/graphics_pipeline.h"
 #include "gfx/pipeline/compute_pipeline.h"
 #include "gfx/buffers/command_buffer.h"
+#include "scene/meshes/mesh.h"
+#include "scene/model.h"
 #include <stb_image_write.h>
 
 void RenderContext::init(std::string_view app_name)
@@ -38,6 +40,8 @@ void RenderContext::init(std::string_view app_name)
 
 void RenderContext::destroy()
 {
+	Model::destroy();
+	Mesh::destroy();
 	Image::destroy();
 	Font::destroy();
 	ComputePipeline::destroy();
@@ -46,7 +50,6 @@ void RenderContext::destroy()
 	Sampler::destroy();
 	DescriptorSetLayout::destroy();
 	DescriptorAllocator::destroy();
-	Font::destroy();
 	delete pipeline_cache;
 	delete allocator;
 	command_queues.clear();
@@ -128,23 +131,43 @@ void RenderContext::executeTransfer(const CommandBuffer::SubmitInfo& submit_info
 	else
 		command_queues[frame]->execute(submit_info);
 }
-
+#include "gfx/material.h"
 void RenderContext::screenshot(const path& file)
 {
+	logical_device->wait();
+
 	// TODO: fix
-	int width = Window::getActive().getWidth();
-	int height = Window::getActive().getHeight();
-	int channels = Image::getFormatChannelCount(Image::Format(Window::getActive().getSurface().getFormat().format));
-	
 	auto& img = Window::getActive().getSwapChain().getImages()[Window::getActive().getSwapChain().getImageIndex()];
 
-	void* data;
-	Buffer sb(img->getSize(), Buffer::TRANSFER_DST, { Allocation::RANDOM_ACCESS | Allocation::MAPPED });
-	img->copyToBuffer(sb);
-	sb.getAllocation().map(&data);
-	stbi_write_png(file.string().c_str(), width, height, channels, data, 0);
+	Image::Props props{};
+	props.width = Window::getActive().getWidth();
+	props.height = Window::getActive().getHeight();
+	props.format = Image::Format::BGRA;
+	props.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+	props.tiling = VK_IMAGE_TILING_OPTIMAL;
+	props.sampler_props.mipmap_mode = Sampler::MipmapMode::NONE;
+	props.create_view = false;
+	auto image = makeShared<Image>(props);
+	img->copyImage(*image);
+	execute();
+
+	shared<ComputePipeline> cp = ComputePipeline::get("BGRA To RGBA");
+	if (!cp) cp = ComputePipeline::add("BGRA To RGBA", makeShared<ComputePipeline>(makeShared<Shader>("bgra_to_rgba")));
+	Material mat(cp);
+	Buffer ssbo(img->getSize(), Buffer::UsageBits::STORAGE | Buffer::UsageBits::TRANSFER_DST, Allocation::Props{ .flags = Allocation::RANDOM_ACCESS | Allocation::MAPPED });
+	image->copyToBuffer(ssbo);
+	execute();
+	mat.set("Image", ssbo);
+	mat.bind();
+	cp->dispatch(img->getSize());
+	execute();
+
+	std::vector<byte> data(img->getSize());
+	ssbo.getData(data.data(), img->getSize());
+	stbi_write_png(file.string().c_str(), Window::getActive().getWidth(), Window::getActive().getHeight(), Image::getFormatChannelCount(Image::Format(Window::getActive().getSurface().getFormat().format)), data.data(), 0);
 	
 	SK_TRACE("Screenshot saved at {}", file);
+	logical_device->wait();
 }
 
 void RenderContext::vulkanAssert(VkResult result)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gfx/pipeline/graphics_pipeline.h"
+#include "gfx/pipeline/compute_pipeline.h"
 #include "gfx/descriptors/descriptor_set.h"
 
 class Image;
@@ -10,7 +11,8 @@ class Buffer;
 class Material : NonCopyable
 {
 public:
-	Material(const shared<GraphicsPipeline>& pipeline);
+	Material(const shared<GraphicsPipeline>& graphics_pipeline);
+	Material(const shared<ComputePipeline>& compute_pipeline);
 
 	void set(std::string_view name, const Buffer& buffer);
 	void set(std::string_view name, const shared<Buffer>& buffer) { set(name, *buffer); }
@@ -31,6 +33,6 @@ public:
 	void bind();
 
 private:
-	shared<GraphicsPipeline> pipeline;
+	shared<Pipeline> pipeline;
 	std::unordered_map<uint32_t, shared<DescriptorSet>> descriptor_sets;
 };

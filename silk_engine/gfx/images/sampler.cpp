@@ -37,19 +37,3 @@ Sampler::~Sampler()
 {
 	RenderContext::getLogicalDevice().destroySampler(sampler);
 }
-
-shared<Sampler> Sampler::get(const Sampler::Props& props)
-{
-	auto layout = samplers.find(props);
-	if (layout != samplers.end())
-		return layout->second;
-	
-	return add(props);
-}
-
-shared<Sampler> Sampler::add(const Sampler::Props& props)
-{
-	shared<Sampler> new_sampler = makeShared<Sampler>(props);
-	samplers[props] = new_sampler;
-	return new_sampler;
-}

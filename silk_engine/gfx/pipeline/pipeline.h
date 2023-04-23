@@ -32,6 +32,8 @@ public:
 
 	void recreate(const std::vector<Constant>& constants = {});
 
+	virtual void bind() = 0;
+
 	void pushConstant(std::string_view name, const void* data) const;
 
 	const shared<Shader>& getShader() const { return shader; }

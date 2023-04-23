@@ -97,7 +97,7 @@ public:
 public:
 	GraphicsPipeline();
 
-	void bind();
+	void bind() override;
 
 	GraphicsPipeline& setSamples(VkSampleCountFlagBits sample_count);
 	GraphicsPipeline& setRenderPass(VkRenderPass render_pass);
@@ -139,8 +139,8 @@ private:
 	uint32_t subpass = 0;
 
 public:
-	static shared<GraphicsPipeline> get(std::string_view name) { return graphics_pipelines.at(name); }
-	static void add(std::string_view name, const shared<GraphicsPipeline> graphics_pipeline) { graphics_pipelines.insert_or_assign(name, graphics_pipeline); }
+	static shared<GraphicsPipeline> get(std::string_view name) { if (auto it = graphics_pipelines.find(name); it != graphics_pipelines.end()) return it->second; else return nullptr; }
+	static shared<GraphicsPipeline> add(std::string_view name, const shared<GraphicsPipeline> graphics_pipeline) { return graphics_pipelines.insert_or_assign(name, graphics_pipeline).first->second; }
 	static void destroy() { graphics_pipelines.clear(); }
 
 private:

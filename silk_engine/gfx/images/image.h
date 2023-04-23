@@ -100,6 +100,7 @@ public:
 	VkSampleCountFlagBits getSamples() const { return props.samples; }
 	VkImageAspectFlags getAspectFlags() const { return getFormatVulkanAspectFlags(props.format); }
 	Allocation getAllocation() const { return allocation; }
+	void setLayout(VkImageLayout layout) { this->layout = layout; } // Use sparingly
 
 	void setData(const void* data, uint32_t base_layer = 0, uint32_t layers = 1);
 	void getData(void* data, uint32_t base_layer = 0, uint32_t layers = 1);
@@ -129,8 +130,8 @@ protected:
 	uint32_t mip_levels = 1;
 
 public:
-	static shared<Image> get(std::string_view name) { return images.at(name); }
-	static void add(std::string_view name, const shared<Image> image) { images.insert_or_assign(name, image); }
+	static shared<Image> get(std::string_view name) { if (auto it = images.find(name); it != images.end()) return it->second; else return nullptr; }
+	static shared<Image> add(std::string_view name, const shared<Image> image) { return images.insert_or_assign(name, image).first->second; }
 	static void destroy() { images.clear(); }
 
 private:

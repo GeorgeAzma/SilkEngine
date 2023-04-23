@@ -37,6 +37,7 @@ bool SwapChain::present(VkSemaphore wait_semaphore) const
 	present_info.pWaitSemaphores = &wait_semaphore;
 	present_info.waitSemaphoreCount = wait_semaphore ? 1 : 0;
 	VkResult result = RenderContext::getLogicalDevice().getPresentQueue(surface).present(present_info);
+	images[image_index]->setLayout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 		return false;
 	else if (result != VK_SUCCESS)
@@ -59,7 +60,6 @@ void SwapChain::recreate(bool vsync)
 		return;
 
 	RenderContext::getLogicalDevice().wait();
-	this->images.clear();
 
 	VkSwapchainKHR old_swap_chain = swap_chain;
 	swap_chain = nullptr;
@@ -143,17 +143,15 @@ void SwapChain::recreate(bool vsync)
 
 	swap_chain = RenderContext::getLogicalDevice().createSwapChain(ci);
 
+	if (old_swap_chain)
+		RenderContext::getLogicalDevice().destroySwapChain(old_swap_chain);
+
 	std::vector<VkImage> images = RenderContext::getLogicalDevice().getSwapChainImages(swap_chain);
+	this->images.clear();
 	this->images.resize(image_count);
 
 	for (size_t i = 0; i < images.size(); ++i)
 		this->images[i] = makeShared<Image>(getWidth(), getHeight(), Image::Format(surface.getFormat().format), images[i]);
-
-	if (old_swap_chain)
-	{
-		RenderContext::getLogicalDevice().destroySwapChain(old_swap_chain);
-		old_swap_chain = nullptr;
-	}
 }
 
 SwapChain::~SwapChain()

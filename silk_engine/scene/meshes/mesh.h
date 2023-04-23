@@ -24,8 +24,8 @@ private:
 	shared<VertexArray> vertex_array = nullptr;
 
 public:
-	static shared<Mesh> get(std::string_view name) { return meshes.at(name); }
-	static void add(std::string_view name, const shared<Mesh> mesh) { meshes.insert_or_assign(name, mesh); }
+	static shared<Mesh> get(std::string_view name) { if (auto it = meshes.find(name); it != meshes.end()) return it->second; else return nullptr; }
+	static shared<Mesh> add(std::string_view name, const shared<Mesh> mesh) { return meshes.insert_or_assign(name, mesh).first->second; }
 	static void destroy() { meshes.clear(); }
 
 private:
