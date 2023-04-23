@@ -2,6 +2,7 @@
 #include "gfx/render_context.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/buffers/framebuffer.h"
+#include "gfx/window/swap_chain.h"
 
 RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
     : subpass_count(subpass_props.size())
@@ -132,7 +133,7 @@ RenderPass::~RenderPass()
     RenderContext::getLogicalDevice().destroyRenderPass(render_pass);
 }
 
-void RenderPass::begin(const Framebuffer& framebuffer, VkSubpassContents subpass_contents)
+void RenderPass::begin(VkSubpassContents subpass_contents)
 {
     current_subpass = 0;
     RenderContext::submit(
@@ -141,11 +142,11 @@ void RenderPass::begin(const Framebuffer& framebuffer, VkSubpassContents subpass
             VkRenderPassBeginInfo begin_info{};
             begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
             begin_info.renderPass = render_pass;
-            begin_info.framebuffer = framebuffer;
+            begin_info.framebuffer = *framebuffer;
 
             begin_info.renderArea.offset = { 0, 0 };
-            begin_info.renderArea.extent.width = framebuffer.getWidth();
-            begin_info.renderArea.extent.height = framebuffer.getHeight();
+            begin_info.renderArea.extent.width = framebuffer->getWidth();
+            begin_info.renderArea.extent.height = framebuffer->getHeight();
 
             std::vector<VkClearValue> clear_values = this->clear_values;
 
@@ -172,4 +173,9 @@ void RenderPass::nextSubpass(VkSubpassContents subpass_contents)
 void RenderPass::end()
 {
     RenderContext::submit([&](CommandBuffer& cb) { cb.endRenderPass(); });
+}
+
+void RenderPass::onResize(const SwapChain& swap_chain)
+{
+    framebuffer = makeShared<Framebuffer>(swap_chain, *this, viewport.x ? viewport.x : swap_chain.getWidth(), viewport.y ? viewport.y : swap_chain.getHeight());
 }

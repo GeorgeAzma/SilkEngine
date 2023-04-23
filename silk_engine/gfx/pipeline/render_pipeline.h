@@ -1,9 +1,9 @@
 #pragma once
 
-#include "render_stage.h"
 #include "gfx/subrender/subrender.h"
 #include "utils/type_info.h"
 #include "pipeline_stage.h"
+#include "gfx/pipeline/render_pass.h"
 
 class RenderPipeline
 {
@@ -14,12 +14,12 @@ public:
 	virtual void init() = 0;
 	virtual void update() = 0;
 
-	const std::vector<RenderStage>& getRenderStages() const { return render_stages; }
-	std::vector<RenderStage>& getRenderStages() { return render_stages; }
+	const std::vector<shared<RenderPass>>& getRenderPasses() const { return render_passes; }
+	std::vector<shared<RenderPass>>& getRenderPasses() { return render_passes; }
 
-	void addRenderStage(const RenderStage& render_stage)
+	void addRenderPass(const shared<RenderPass>& render_pass)
 	{
-		render_stages.emplace_back(render_stage);
+		render_passes.emplace_back(render_pass);
 	}
 
 	template<typename T>
@@ -59,6 +59,6 @@ public:
 	void renderStage(const PipelineStage& pipeline_stage);
 
 private:
-	std::vector<RenderStage> render_stages;
+	std::vector<shared<RenderPass>> render_passes;
 	std::vector<std::tuple<TypeID, PipelineStage, unique<Subrender>>> subrenders;
 };

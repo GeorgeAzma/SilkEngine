@@ -13,6 +13,8 @@
 #include "scene/camera/camera.h"
 #include "buffers/command_buffer.h"
 #include "gfx/fence.h"
+#include "gfx/pipeline/render_pass.h"
+#include "gfx/buffers/framebuffer.h"
 
 unique<RenderPipeline> Renderer::render_pipeline = nullptr;
 Fence* Renderer::previous_frame_finished = nullptr;
@@ -28,8 +30,8 @@ void Renderer::init()
 	setRenderPipeline<DefaultRenderPipeline>();
 	render_pipeline->init();
 
-	for (auto& render_stage : render_pipeline->getRenderStages())
-		render_stage.onResize(Window::getActive().getSwapChain()); 
+	for (auto& render_pass : render_pipeline->getRenderPasses())
+		render_pass->onResize(Window::getActive().getSwapChain());
 	
 	DebugRenderer::init();
 }
@@ -52,7 +54,7 @@ void Renderer::wait()
 
 const RenderPass& Renderer::getRenderPass(uint32_t index)
 {
-	return render_pipeline->getRenderStages()[index].getRenderPass();
+	return *render_pipeline->getRenderPasses()[index];
 }
 
 void Renderer::render(Camera* camera)
@@ -63,8 +65,8 @@ void Renderer::render(Camera* camera)
 	{
 		SK_ERROR("Unexpected, window should already be updated");
 		Window::getActive().recreate();
-		for (auto& render_stage : render_pipeline->getRenderStages())
-			render_stage.onResize(Window::getActive().getSwapChain());
+		for (auto& render_pass : render_pipeline->getRenderPasses())
+			render_pass->onResize(Window::getActive().getSwapChain());
 	}
 
 	render_pipeline->update(); 
@@ -72,10 +74,10 @@ void Renderer::render(Camera* camera)
 	RenderContext::submit([&](CommandBuffer& cb)
 		{
 			PipelineStage stage{};
-			for (auto& render_stage : render_pipeline->getRenderStages())
+			for (auto& render_pass : render_pipeline->getRenderPasses())
 			{
-				float width = render_stage.getFramebuffer()->getWidth();
-				float height = render_stage.getFramebuffer()->getHeight();
+				float width = render_pass->getFramebuffer()->getWidth();
+				float height = render_pass->getFramebuffer()->getHeight();
 				
 				VkViewport viewport = {};
 				viewport.x = 0.0f;
@@ -91,16 +93,15 @@ void Renderer::render(Camera* camera)
 				scissor.extent = { (uint32_t)width, (uint32_t)height };
 				cb.setScissor({ scissor });
 				
-				auto& render_pass = render_stage.getRenderPass();
-				render_pass.begin(*render_stage.getFramebuffer());
-				for (size_t i = 0; i < render_pass.getSubpassCount(); ++i)
+				render_pass->begin();
+				for (size_t i = 0; i < render_pass->getSubpassCount(); ++i)
 				{
 					stage.subpass = i;
 					render_pipeline->renderStage(stage);
-					if (i < render_pass.getSubpassCount() - 1)
-						render_pass.nextSubpass();
+					if (i < render_pass->getSubpassCount() - 1)
+						render_pass->nextSubpass();
 				}
-				render_pass.end();
+				render_pass->end();
 				++stage.render_pass;
 			}
 		});
@@ -115,8 +116,8 @@ void Renderer::render(Camera* camera)
 	if (!Window::getActive().getSwapChain().present(render_finished))
 	{
 		Window::getActive().recreate();
-		for (auto& render_stage : render_pipeline->getRenderStages())
-			render_stage.onResize(Window::getActive().getSwapChain());
+		for (auto& render_pass : render_pipeline->getRenderPasses())
+			render_pass->onResize(Window::getActive().getSwapChain());
 	}
 
 	RenderContext::update();

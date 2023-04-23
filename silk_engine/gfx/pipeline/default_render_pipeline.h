@@ -2,8 +2,6 @@
 
 #include "render_pipeline.h"
 
-class RenderPass;
-
 class DefaultRenderPipeline : public RenderPipeline
 {
 public:
@@ -11,7 +9,4 @@ public:
 
 	void init() override;
 	void update() override;
-
-private:
-	RenderPass render_pass;
 };

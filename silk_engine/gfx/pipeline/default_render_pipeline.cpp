@@ -6,17 +6,17 @@
 #include "gfx/subrender/particle_subrender.h"
 
 DefaultRenderPipeline::DefaultRenderPipeline()
-	: render_pass(RenderPass({
-		{
-			{
-				{ Image::Format(RenderContext::getPhysicalDevice().getDepthFormat()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() },
-				{ Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, RenderContext::getPhysicalDevice().getMaxSampleCount() }
-			},
-			{}
-		}
-}))
 {
-	addRenderStage(RenderStage(render_pass));
+	shared<RenderPass> render_pass = shared<RenderPass>(new RenderPass({
+		   {
+			   {
+				   { Image::Format(RenderContext::getPhysicalDevice().getDepthFormat()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() },
+				   { Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, RenderContext::getPhysicalDevice().getMaxSampleCount() }
+			   },
+			   {}
+		   }
+		}));
+	addRenderPass(render_pass);
 }
 
 void DefaultRenderPipeline::init()

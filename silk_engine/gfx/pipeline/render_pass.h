@@ -38,13 +38,17 @@ public:
 	RenderPass(const std::vector<SubpassProps>& subpass_props);
 	~RenderPass();
 
-	void begin(const Framebuffer&, VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
+	void begin(VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
 	void nextSubpass(VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
 	void end();
+
+	void setViewport(const ivec2& viewport) { this->viewport = viewport; }
+	void onResize(const SwapChain& swap_chain);
 
 	size_t getSubpassCount() const { return subpass_count; }
 	const std::vector<VkAttachmentDescription>& getAttachmentDescriptions() const { return attachment_descriptions; }
 	operator const VkRenderPass& () const { return render_pass; }
+	const shared<Framebuffer>& getFramebuffer() const { return framebuffer; }
 
 private:
 	VkRenderPass render_pass = nullptr;
@@ -52,4 +56,6 @@ private:
 	size_t current_subpass = 0;
 	std::vector<VkAttachmentDescription> attachment_descriptions{};
 	std::vector<VkClearValue> clear_values{};
+	ivec2 viewport = ivec2(0);
+	shared<Framebuffer> framebuffer = nullptr;
 };
