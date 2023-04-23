@@ -2,7 +2,7 @@
 #include "gfx/render_context.h"
 #include "utils/math.h"
 #include "gfx/devices/logical_device.h"
-#include "gfx/queues/command_queue.h"
+#include "gfx/command_queue.h"
 
 QueryPool::QueryPool(VkQueryType query_type, uint32_t query_count, VkQueryPipelineStatisticFlags pipeline_statistic_flags)
 	: query_type(query_type), pipeline_statistic_flags(pipeline_statistic_flags), queries(query_count, VK_FALSE)

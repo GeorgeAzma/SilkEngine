@@ -4,6 +4,7 @@
 #include "gfx/devices/logical_device.h"
 
 CommandPool::CommandPool(VkCommandPoolCreateFlags flags, std::optional<uint32_t> queue_family_index)
+	: flags(flags)
 {
 	VkCommandPoolCreateInfo ci{};
 	ci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -34,7 +35,9 @@ void CommandPool::deallocate(const VkCommandBuffer& command_buffer)
 	--allocated_command_buffer_count;
 }
 
-void CommandPool::reset()
+void CommandPool::reset(bool free)
 {
-	RenderContext::getLogicalDevice().resetCommandPool(command_pool);
+	if (!allocated_command_buffer_count)
+		return;
+	RenderContext::getLogicalDevice().resetCommandPool(command_pool, free * VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT);
 }

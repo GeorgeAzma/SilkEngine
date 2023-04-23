@@ -7,7 +7,6 @@
 #include "pipeline/pipeline_cache.h"
 #include "ui/font.h"
 #include "descriptors/descriptor_allocator.h"
-#include "queues/command_queue.h"
 #include "window/window.h"
 #include "window/swap_chain.h"
 #include "window/surface.h"
@@ -16,6 +15,7 @@
 #include "gfx/pipeline/shader.h"
 #include "gfx/pipeline/graphics_pipeline.h"
 #include "gfx/pipeline/compute_pipeline.h"
+#include "gfx/buffers/command_buffer.h"
 #include <stb_image_write.h>
 
 void RenderContext::init(std::string_view app_name)
@@ -23,7 +23,14 @@ void RenderContext::init(std::string_view app_name)
 	instance = new Instance(app_name);
 	physical_device = instance->selectPhysicalDevice();
 	logical_device = new LogicalDevice(*physical_device);
-	command_queue = new CommandQueue();
+	for (size_t i = 0; i < 3; ++i)
+		command_queues.emplace_back(makeShared<CommandQueue>(physical_device->getGraphicsQueue(), VK_QUEUE_GRAPHICS_BIT));
+	if (physical_device->getComputeQueue() != -1)
+		for (size_t i = 0; i < 3; ++i)
+			compute_command_queues.emplace_back(makeShared<CommandQueue>(physical_device->getComputeQueue(), VK_QUEUE_COMPUTE_BIT));
+	if (physical_device->getTransferQueue() != -1)
+		for (size_t i = 0; i < 3; ++i)
+			transfer_command_queues.emplace_back(makeShared<CommandQueue>(physical_device->getTransferQueue(), VK_QUEUE_TRANSFER_BIT));
 	allocator = new Allocator(*physical_device, *logical_device);
 	pipeline_cache = new PipelineCache();
 	Font::init();
@@ -42,7 +49,7 @@ void RenderContext::destroy()
 	Font::destroy();
 	delete pipeline_cache;
 	delete allocator;
-	delete command_queue;
+	command_queues.clear();
 	delete logical_device;
 	delete physical_device;
 	delete instance;
@@ -50,22 +57,76 @@ void RenderContext::destroy()
 
 void RenderContext::update()
 {
+	command_queues[(int64_t(frame) - 1) >= 0 ? (frame - 1) : 2]->reset();
+	if (physical_device->getComputeQueue() != -1)
+	compute_command_queues[(int64_t(frame) - 1) >= 0 ? (frame - 1) : 2]->reset(); 
+	if (physical_device->getTransferQueue() != -1)
+		transfer_command_queues[(int64_t(frame) - 1) >= 0 ? (frame - 1) : 2]->reset();
 	DescriptorAllocator::reset();
+	frame = (frame + 1) % 3;
 }
 
 void RenderContext::submit(std::function<void(CommandBuffer&)>&& command)
 {
-	command_queue->submit(std::forward<std::function<void(CommandBuffer&)>>(command));
+	command_queues[frame]->submit(std::forward<std::function<void(CommandBuffer&)>>(command));
 }
 
 void RenderContext::execute()
 {
-	command_queue->execute();
+	command_queues[frame]->execute();
 }
 
 void RenderContext::execute(const CommandBuffer::SubmitInfo& submit_info)
 {
-	command_queue->execute(submit_info);
+	command_queues[frame]->execute(submit_info);
+}
+
+void RenderContext::submitCompute(std::function<void(CommandBuffer&)>&& command)
+{
+	if (physical_device->getComputeQueue() != -1)
+		compute_command_queues[frame]->submit(std::forward<std::function<void(CommandBuffer&)>>(command));
+	else 
+		command_queues[frame]->submit(std::forward<std::function<void(CommandBuffer&)>>(command));
+}
+
+void RenderContext::executeCompute()
+{
+	if (physical_device->getComputeQueue() != -1)
+		compute_command_queues[frame]->execute();
+	else
+		command_queues[frame]->execute();
+}
+
+void RenderContext::executeCompute(const CommandBuffer::SubmitInfo& submit_info)
+{
+	if (physical_device->getComputeQueue() != -1)
+		compute_command_queues[frame]->execute(submit_info);
+	else
+		command_queues[frame]->execute(submit_info);
+}
+
+void RenderContext::submitTransfer(std::function<void(CommandBuffer&)>&& command)
+{
+	if (physical_device->getTransferQueue() != -1)
+		transfer_command_queues[frame]->submit(std::forward<std::function<void(CommandBuffer&)>>(command));
+	else
+		command_queues[frame]->submit(std::forward<std::function<void(CommandBuffer&)>>(command));
+}
+
+void RenderContext::executeTransfer()
+{
+	if (physical_device->getTransferQueue() != -1)
+		transfer_command_queues[frame]->execute();
+	else
+		command_queues[frame]->execute();
+}
+
+void RenderContext::executeTransfer(const CommandBuffer::SubmitInfo& submit_info)
+{
+	if (physical_device->getTransferQueue() != -1)
+		transfer_command_queues[frame]->execute(submit_info);
+	else
+		command_queues[frame]->execute(submit_info);
 }
 
 void RenderContext::screenshot(const path& file)

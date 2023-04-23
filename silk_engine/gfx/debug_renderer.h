@@ -2,8 +2,8 @@
 
 #include "utils/color.h"
 #include "scene/instance_images.h"
-#include "scene/resources.h"
 #include "scene/light.h"
+#include "material.h"
 
 class Image;
 class Font;
@@ -102,7 +102,7 @@ private:
 		std::vector<shared<RenderedInstance>> instances;
 		shared<VertexBuffer> instance_buffer = nullptr;
 		InstanceImages instance_images{};
-		std::unordered_map<uint32_t, shared<DescriptorSet>> descriptor_sets;
+		shared<Material> material = nullptr;
 
 		~InstanceBatch();
 
@@ -165,10 +165,6 @@ public:
 	static void updateInstance(RenderedInstance& instance, const InstanceData& instance_data);
 	static void addInstanceBatch(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data);
 	static void destroyInstance(const RenderedInstance& instance);
-
-private:
-	static void updateUniformData(Camera* camera);
-	static void updateDrawCommands();
 
 private:
 	static std::vector<InstanceBatch> instance_batches;

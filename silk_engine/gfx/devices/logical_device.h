@@ -15,7 +15,7 @@ public:
 
 	void wait() const;
 	VkCommandPool createCommandPool(const VkCommandPoolCreateInfo& ci) const;
-	void resetCommandPool(VkCommandPool command_pool, VkCommandPoolResetFlags reset_flags = 0) const;
+	VkResult resetCommandPool(VkCommandPool command_pool, VkCommandPoolResetFlags reset_flags = 0) const;
 	void destroyCommandPool(VkCommandPool command_pool) const;
 	VkQueryPool createQueryPool(const VkQueryPoolCreateInfo& ci) const;
 	void destroyQueryPool(VkQueryPool query_pool) const;

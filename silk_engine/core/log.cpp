@@ -10,7 +10,7 @@ void Log::init()
     using namespace spdlog;
     using sink_type = sinks::ansicolor_stdout_sink_mt;
     auto core_sink = makeShared<sink_type>();
-    core_sink->set_pattern("%^[%n][%s:%#][%!] %v%$");
+    core_sink->set_pattern("%^[%n] %v%$"); // %^[%n][%s:%#][%!] %v%$
     core_sink->set_color(level::trace, "\033[37m\033[2m");
     core_sink->set_color(level::debug, "\033[37m\033[2m");
     core_sink->set_color(level::info, "\033[36m");

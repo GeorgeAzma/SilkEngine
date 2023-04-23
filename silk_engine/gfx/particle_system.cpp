@@ -1,6 +1,6 @@
 #include "particle_system.h"
 #include "scene/resources.h"
-#include "scene/scene_manager.h"
+#include "scene/scene.h"
 #include "scene/camera/camera.h"
 #include "utils/thread_pool.h"
 #include "gfx/buffers/command_buffer.h"
@@ -84,7 +84,7 @@ void ParticleSystem::update()
     }
 
     particle_data.resize(particles.size());
-    auto camera = SceneManager::getActive()->getMainCamera();
+    auto camera = Scene::getActive()->getMainCamera();
     if (camera)
     {
         thread_pool->forEach(particles.size(), [&](size_t i)

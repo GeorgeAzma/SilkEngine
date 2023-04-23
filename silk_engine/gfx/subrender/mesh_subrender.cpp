@@ -35,25 +35,12 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
 
 void MeshSubrender::render()
 {
-    //Draw instances
+    // Draw instances
     size_t draw_index = 0;
     for (auto& instance_batch : DebugRenderer::instance_batches)
     {
-        const auto& shader = instance_batch.instance->pipeline->getShader();
-        if (auto global_uniform = shader->getLocation("GlobalUniform"))
-        {
-            auto descriptor_buffer_info = DebugRenderer::global_uniform_buffer->getDescriptorInfo();
-            auto& set = *instance_batch.descriptor_sets.at(global_uniform->set);
-            set.write(global_uniform->binding, descriptor_buffer_info); //TODO: Global data doesn't have to update for each batch
-        }
-
-        if (auto images = shader->getLocation("images"))
-        {
-            auto descriptor_image_infos = instance_batch.instance_images.getDescriptorImageInfos();
-            auto& set = *instance_batch.descriptor_sets.at(images->set);
-            set.write(images->binding, descriptor_image_infos);
-        }
-
+        instance_batch.material->set("GlobalUniform", *DebugRenderer::global_uniform_buffer);
+        instance_batch.material->set("images", instance_batch.instance_images.getDescriptorImageInfos());
         instance_batch.bind();
 
         RenderContext::submit([&](CommandBuffer& cb){ cb.drawIndexedIndirect(*DebugRenderer::indirect_buffer, draw_index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand)); });

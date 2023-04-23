@@ -1,8 +1,7 @@
 #pragma once
 
-#include "buffers/command_buffer.h"
+#include "command_queue.h"
 
-class CommandQueue;
 class WindowResizeEvent;
 class DebugMessenger;
 class Instance;
@@ -25,6 +24,14 @@ public:
 	static void execute(); 
 	static void execute(const CommandBuffer::SubmitInfo& submit_info);
 
+	static void submitCompute(std::function<void(CommandBuffer&)>&& command);
+	static void executeCompute();
+	static void executeCompute(const CommandBuffer::SubmitInfo& submit_info);
+
+	static void submitTransfer(std::function<void(CommandBuffer&)>&& command);
+	static void executeTransfer();
+	static void executeTransfer(const CommandBuffer::SubmitInfo& submit_info);
+
 	static void screenshot(const path& file);
 	static void vulkanAssert(VkResult result);
 	static std::string stringifyResult(VkResult result);
@@ -40,6 +47,9 @@ private:
 	static inline PhysicalDevice* physical_device = nullptr;
 	static inline LogicalDevice* logical_device = nullptr;
 	static inline Allocator* allocator = nullptr;
-	static inline CommandQueue* command_queue = nullptr;
+	static inline std::vector<shared<CommandQueue>> command_queues{};
+	static inline std::vector<shared<CommandQueue>> compute_command_queues{};
+	static inline std::vector<shared<CommandQueue>> transfer_command_queues{};
 	static inline PipelineCache* pipeline_cache = nullptr;
+	static inline size_t frame = 0;
 };

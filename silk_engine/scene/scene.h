@@ -1,6 +1,5 @@
 #pragma once
 
-#include "system.h"
 #include "utils/type_info.h"
 #include "core/event.h"
 #include <entt/entt.hpp>
@@ -21,33 +20,6 @@ public:
 	virtual void onUpdate() {}
 	virtual void onStop() {}
 
-	template<typename T>
-	T* getSystem() const
-	{
-		auto it = systems.find(TypeInfo::getTypeID<T>());
-		if (it == systems.end() || !it->second)
-			return nullptr;
-		return (T*)it->second.get();
-	}
-
-	template<typename T>
-	void addSystem()
-	{
-		remove<T>();
-		systems.emplace(TypeInfo<System>::getTypeID<T>(), makeUnique<T>());
-	}
-
-	template<typename T>
-	void removeSystem()
-	{
-		systems.erase(TypeInfo<System>::getTypeID<T>());
-	}
-
-	void clearSystems()
-	{
-		systems.clear();
-	}
-
 	shared<Entity> createEntity();
 	void removeEntity(const entt::entity& entity);
 
@@ -63,6 +35,19 @@ private:
 private:
 	std::vector<shared<Entity>> entities;
 	Camera* main_camera = nullptr;
-	std::unordered_map<TypeID, unique<System>> systems;
 	entt::registry registry;
+
+public:
+	static void addScene(const shared<Scene>& scene);
+	static void removeScene(const shared<Scene>& scene);
+
+	static void updateScenes();
+	static void destroyScenes();
+
+	static void switchTo(const shared<Scene>& scene);
+	static shared<Scene>& getActive() { return active_scene; }
+
+private:
+	static inline shared<Scene> active_scene = nullptr;
+	static inline std::unordered_map<size_t, shared<Scene>> scenes;
 };

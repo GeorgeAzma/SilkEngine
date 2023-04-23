@@ -32,8 +32,9 @@ public:
 
 	struct ResourceLocation
 	{
-		uint32_t set;
-		uint32_t binding;
+		uint32_t set = std::numeric_limits<uint32_t>::max();
+		uint32_t binding = std::numeric_limits<uint32_t>::max();
+		operator bool() const { return set != std::numeric_limits<uint32_t>::max(); }
 	};
 
 	struct Stage : NonCopyable
@@ -95,7 +96,7 @@ public:
 	void compile();
 	void reflect();
 
-	const ResourceLocation* getLocation(std::string_view resource_name) const;
+	ResourceLocation getLocation(std::string_view resource_name) const;
 	void pushConstants(std::string_view name, const void* data) const;
 
 	const std::vector<unique<Stage>>& getStages() const { return stages; }

@@ -1,6 +1,6 @@
 #include "command_buffer.h"
 #include "gfx/render_context.h"
-#include "gfx/queues/queue.h"
+#include "gfx/queue.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/allocators/command_pool.h"
 #include "gfx/fence.h"
@@ -8,16 +8,16 @@
 //TODO: Doesn't account for: "Any primary command buffer that is in the recording or executable state and has resetting command buffer recorded into it, becomes invalid."
 
 CommandBuffer::CommandBuffer(CommandPool& command_pool, VkCommandBufferLevel level)
-	: level(level), pool(command_pool),
+	: level(level), command_pool(command_pool),
 	is_primary(level == VK_COMMAND_BUFFER_LEVEL_PRIMARY)
 {
-	command_buffer = pool.allocate(level);
+	command_buffer = command_pool.allocate(level);
 	state = State::INITIAL;
 }
 
 CommandBuffer::~CommandBuffer()
 {
-	pool.deallocate(command_buffer);
+	command_pool.deallocate(command_buffer);
 }
 
 #pragma region Begin/End
@@ -473,9 +473,7 @@ void CommandBuffer::submit(const SubmitInfo& info, VkQueueFlagBits queue_type)
 
 	submit_info.signalSemaphoreCount = info.signal_semaphores.size();
 	submit_info.pSignalSemaphores = info.signal_semaphores.data();
-
-	if (info.fence)
-		info.fence->reset();
+	
 	RenderContext::getLogicalDevice().getQueue(queue_type).submit(submit_info, info.fence ? *info.fence : nullptr);
 	state = State::PENDING;
 }
@@ -499,7 +497,7 @@ void CommandBuffer::reset(bool free)
 {
 	if (state == State::INITIAL)
 		return;
-	vkResetCommandBuffer(command_buffer, free * VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+	if (command_pool.getFlags() & VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
+		vkResetCommandBuffer(command_buffer, free * VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 	state = State::INITIAL;
-	active = {};
 }

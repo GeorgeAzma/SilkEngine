@@ -1,7 +1,7 @@
 #include "logical_device.h"
 #include "physical_device.h"
 #include "gfx/render_context.h"
-#include "gfx/queues/queue.h"
+#include "gfx/queue.h"
 #include "gfx/window/surface.h"
 #include "gfx/instance.h"
 
@@ -98,9 +98,9 @@ VkCommandPool LogicalDevice::createCommandPool(const VkCommandPoolCreateInfo& ci
 	return command_pool;
 }
 
-void LogicalDevice::resetCommandPool(VkCommandPool command_pool, VkCommandPoolResetFlags reset_flags) const
+VkResult LogicalDevice::resetCommandPool(VkCommandPool command_pool, VkCommandPoolResetFlags reset_flags) const
 {
-	vkResetCommandPool(logical_device, command_pool, reset_flags);
+	return vkResetCommandPool(logical_device, command_pool, reset_flags);
 }
 
 void LogicalDevice::destroyCommandPool(VkCommandPool command_pool) const

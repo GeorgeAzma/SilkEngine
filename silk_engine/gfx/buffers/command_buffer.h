@@ -116,7 +116,7 @@ public:
 private:
 	VkCommandBuffer command_buffer;
 	VkCommandBufferLevel level;
-	CommandPool& pool;
+	CommandPool& command_pool;
 	State state = State::INITIAL;
 	bool is_primary = false;
 

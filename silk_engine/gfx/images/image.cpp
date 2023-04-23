@@ -216,7 +216,6 @@ void Image::transitionLayout(VkImageLayout new_layout)
 	if (layout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
 		return;
 	insertMemoryBarrier(image, layout, new_layout, getFormatVulkanAspectFlags(props.format), mip_levels, 0, props.layers, 0);
-	RenderContext::execute();
 	layout = new_layout;
 }
 
@@ -247,7 +246,6 @@ void Image::copyFromBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers
 			region.imageExtent = VkExtent3D(props.width, props.height, props.depth);
 			cb.copyBufferToImage(buffer, image, layout, { region });
 		});
-	RenderContext::execute();
 
 	transitionLayout(old_layout);
 }
@@ -272,7 +270,6 @@ void Image::copyToBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers)
 			region.imageSubresource.mipLevel = 0;
 			cb.copyImageToBuffer(image, layout, buffer, { region });
 		});
-	RenderContext::execute();
 
 	transitionLayout(old_layout);
 }
@@ -521,6 +518,7 @@ void Image::setData(const void* data, uint32_t base_layer, uint32_t layers)
 		Buffer sb(props.width * props.height * props.depth * getFormatSize(props.format) * layers, Buffer::TRANSFER_SRC, { Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
 		sb.setData(data);
 		copyFromBuffer(sb, base_layer, layers);
+		RenderContext::execute();
 	}
 }
 

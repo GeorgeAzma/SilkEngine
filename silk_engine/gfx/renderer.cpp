@@ -58,7 +58,6 @@ shared<RenderPass>& Renderer::getRenderPass(uint32_t index)
 void Renderer::render(Camera* camera)
 {
 	DebugRenderer::update(camera);
-	RenderContext::update();
 
 	if (!Window::getActive().getSwapChain().acquireNextImage(Renderer::swap_chain_image_available))
 	{
@@ -119,4 +118,6 @@ void Renderer::render(Camera* camera)
 		for (auto& render_stage : render_pipeline->getRenderStages())
 			render_stage.onResize(Window::getActive().getSwapChain());
 	}
+
+	RenderContext::update();
 }

@@ -4,7 +4,7 @@
 #include "gfx/window/window.h"
 #include "gfx/window/surface.h"
 #include "gfx/devices/logical_device.h"
-#include "gfx/queues/queue.h"
+#include "gfx/queue.h"
 
 SwapChain::SwapChain(const Surface& surface, bool vsync)
 	: surface(surface)

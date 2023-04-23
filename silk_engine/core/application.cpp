@@ -2,7 +2,7 @@
 #include "time.h"
 #include "gfx/render_context.h"
 #include "gfx/window/window.h"
-#include "scene/scene_manager.h"
+#include "scene/scene.h"
 #include "gfx/renderer.h"
 #include "gfx/devices/logical_device.h"
 #include "scene/camera/camera.h"
@@ -33,9 +33,9 @@ void Application::update()
     Renderer::wait();
 
     onUpdate();
-    SceneManager::update();
+    Scene::updateScenes();
 
-    Renderer::render(SceneManager::getActive().get() ? SceneManager::getActive()->getMainCamera() : nullptr);
+    Renderer::render(Scene::getActive().get() ? Scene::getActive()->getMainCamera() : nullptr);
 
     Window::getActive().update();
     Time::update();

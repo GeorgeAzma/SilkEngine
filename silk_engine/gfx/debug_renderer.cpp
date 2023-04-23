@@ -36,9 +36,7 @@ DebugRenderer::InstanceBatch::~InstanceBatch()
 
 void DebugRenderer::InstanceBatch::bind()
 {
-	instance->pipeline->bind();
-	for (auto&& [set, descriptor_set] : descriptor_sets)
-		descriptor_set->bind(set);
+	material->bind();
 	mesh->getVertexArray()->bind();
 	instance_buffer->bind(1);
 }
@@ -81,8 +79,44 @@ void DebugRenderer::reset()
 void DebugRenderer::update(Camera* camera)
 {
 	stats = {};
-	updateUniformData(camera);
-	updateDrawCommands();
+
+	// Update uniforms
+	GlobalUniformData global_uniform_data{};
+	if (camera)
+	{
+		global_uniform_data.projection_view = camera->projection_view;
+		global_uniform_data.projection = camera->projection;
+		global_uniform_data.view = camera->view;
+		global_uniform_data.camera_position = camera->position;
+		global_uniform_data.camera_direction = camera->direction;
+	}
+	global_uniform_data.projection_view2D = math::ortho(0.0f, (float)Window::getActive().getWidth(), 0.0f, (float)Window::getActive().getHeight(), 0.0f, 1.0f);
+	global_uniform_data.delta_time = Time::dt;
+	global_uniform_data.time = Time::runtime;
+	global_uniform_data.frame = Time::frame;
+	global_uniform_data.resolution = uvec2(Window::getActive().getWidth(), Window::getActive().getHeight());
+	global_uniform_data.lights = lights;
+	global_uniform_buffer->setData(&global_uniform_data, sizeof(GlobalUniformData));
+
+	// Update draw commands
+	bool any_needs_update = false;
+	static std::vector<VkDrawIndexedIndirectCommand> draw_commands;
+	draw_commands.resize(instance_batches.size());
+	for (size_t i = 0; i < instance_batches.size(); ++i)
+	{
+		if (instance_batches[i].needs_update)
+		{
+			instance_batches[i].instance_buffer->setData(instance_batches[i].instance_data.data(), instance_batches[i].instance_data.size() * sizeof(InstanceData));
+			instance_batches[i].needs_update = false;
+			VkDrawIndexedIndirectCommand draw_command{};
+			draw_command.instanceCount = instance_batches[i].instance_data.size();
+			draw_command.indexCount = instance_batches[i].mesh->getIndexCount();
+			draw_commands[i] = std::move(draw_command);
+			any_needs_update = true;
+		}
+	}
+	if (any_needs_update)
+		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand));
 }
 
 void DebugRenderer::triangle(float x, float y, float width, float height)
@@ -306,17 +340,12 @@ void DebugRenderer::addInstanceBatch(const shared<RenderedInstance>& instance, c
 {
 	instance_batches.emplace_back(mesh, instance);
 	auto& new_batch = instance_batches.back();
-
 	new_batch.instance_images.add({ white_image });
-
 	new_batch.instance_data.emplace_back(instance_data);
 	new_batch.instances.emplace_back(instance);
-
 	new_batch.instance_buffer = makeShared<VertexBuffer>(nullptr, sizeof(InstanceData), MAX_INSTANCES, true);
-
-	for (auto&& [set, descriptor_set_layout] : new_batch.instance->pipeline->getShader()->getReflectionData().descriptor_set_layouts)
-		new_batch.descriptor_sets.emplace(set, makeShared<DescriptorSet>(*descriptor_set_layout));
-
+	new_batch.material = makeShared<Material>(instance->pipeline);
+	
 	instance->instance_batch_index = instance_batches.size() - 1;
 	instance->instance_data_index = instance_batches.back().instance_data.size() - 1;
 }
@@ -350,46 +379,4 @@ void DebugRenderer::destroyInstance(const RenderedInstance& instance)
 
 	std::swap(instance_batch.instances[instance.instance_data_index], instance_batch.instances.back());
 	instance_batch.instances.pop_back();
-}
-
-void DebugRenderer::updateUniformData(Camera* camera)
-{
-	GlobalUniformData global_uniform_data{};
-	if (camera)
-	{
-		global_uniform_data.projection_view = camera->projection_view;
-		global_uniform_data.projection = camera->projection;
-		global_uniform_data.view = camera->view;
-		global_uniform_data.camera_position = camera->position;
-		global_uniform_data.camera_direction = camera->direction;
-	}
-	global_uniform_data.projection_view2D = math::ortho(0.0f, (float)Window::getActive().getWidth(), 0.0f, (float)Window::getActive().getHeight(), 0.0f, 1.0f);
-	global_uniform_data.delta_time = Time::dt;
-	global_uniform_data.time = Time::runtime;
-	global_uniform_data.frame = Time::frame;
-	global_uniform_data.resolution = uvec2(Window::getActive().getWidth(), Window::getActive().getHeight());
-	global_uniform_data.lights = lights;
-	global_uniform_buffer->setData(&global_uniform_data, sizeof(GlobalUniformData));
-}
-
-void DebugRenderer::updateDrawCommands()
-{
-	bool any_needs_update = false;
-	static std::vector<VkDrawIndexedIndirectCommand> draw_commands;
-	draw_commands.resize(instance_batches.size());
-	for (size_t i = 0; i < instance_batches.size(); ++i)
-	{
-		if (instance_batches[i].needs_update)
-		{
-			instance_batches[i].instance_buffer->setData(instance_batches[i].instance_data.data(), instance_batches[i].instance_data.size() * sizeof(InstanceData));
-			instance_batches[i].needs_update = false;
-			VkDrawIndexedIndirectCommand draw_command{};
-			draw_command.instanceCount = instance_batches[i].instance_data.size();
-			draw_command.indexCount = instance_batches[i].mesh->getIndexCount();
-			draw_commands[i] = std::move(draw_command);
-			any_needs_update = true;
-		}
-	}
-	if (any_needs_update)
-		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand));
 }

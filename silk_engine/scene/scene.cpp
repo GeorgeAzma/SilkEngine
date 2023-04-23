@@ -27,18 +27,11 @@ Scene::~Scene()
 
 void Scene::init()
 {
-	for (auto& [type_id, system] : systems)
-		if (system->enabled)
-			system->init();
 	onStart();
 }
 
 void Scene::update()
 {
-	for (auto& [type_id, system] : systems)
-		if (system->enabled)
-			system->update();
-
 	registry.view<ScriptComponent>().each(
 		[&](auto entity, auto& script_component)
 		{
@@ -59,9 +52,6 @@ void Scene::destroy()
 		{
 			script_component.instance->onDestroy();
 		});
-	for (auto& [type_id, system] : systems)
-		if (system->enabled)
-			system->destroy();
 
 	for (auto& e : entities)
 		removeEntity(*e);
@@ -98,4 +88,40 @@ Camera* Scene::getMainCamera()
 		main_camera = &registry.get<CameraComponent>(registry.view<CameraComponent>().front()).camera;
 
 	return main_camera;
+}
+
+void Scene::addScene(const shared<Scene>& scene)
+{
+	scenes.emplace((size_t)scene.get(), scene);
+	if (!active_scene.get())
+		switchTo(scene);
+}
+
+void Scene::removeScene(const shared<Scene>& scene)
+{
+	if (scene == active_scene)
+		active_scene = nullptr;
+	scenes.erase((size_t)scene.get());
+}
+
+void Scene::updateScenes()
+{
+	if (!active_scene.get())
+		return;
+	active_scene->update();
+}
+
+void Scene::destroyScenes()
+{
+	if (active_scene.get())
+		active_scene->destroy();
+	scenes.clear();
+}
+
+void Scene::switchTo(const shared<Scene>& scene)
+{
+	if (active_scene.get())
+		active_scene->destroy();
+	active_scene = scenes.at((size_t)scene.get());
+	active_scene->init();
 }

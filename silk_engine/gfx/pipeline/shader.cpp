@@ -335,10 +335,11 @@ void Shader::reflect()
 		reflection_data.descriptor_set_layouts.emplace(set, DescriptorSetLayout::get(bindings));
 }
 
-const Shader::ResourceLocation* Shader::getLocation(std::string_view resource_name) const
+Shader::ResourceLocation Shader::getLocation(std::string_view resource_name) const
 {
-	auto resource_location = reflection_data.resource_locations.find(resource_name);
-	return (resource_location != reflection_data.resource_locations.end()) ? &resource_location->second : nullptr;
+	if (auto resource_location = reflection_data.resource_locations.find(resource_name); resource_location != reflection_data.resource_locations.end())
+		return resource_location->second;
+	return ResourceLocation{};
 }
 
 void Shader::pushConstants(std::string_view name, const void* data) const

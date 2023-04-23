@@ -4,7 +4,6 @@
 #include "silk_engine/scene/resources.h"
 #include "silk_engine/gfx/window/window.h"
 #include "silk_engine/gfx/renderer.h"
-#include "silk_engine/scene/scene_manager.h"
 #include "silk_engine/core/event.h"
 #include "silk_engine/core/input/keys.h"
 
@@ -22,7 +21,7 @@ MyApp::MyApp()
     Renderer::init();
 
     scene = makeShared<MyScene>();
-    SceneManager::add(scene);
+    Scene::addScene(scene);
 
     Dispatcher<KeyPressEvent>::subscribe(*this, &MyApp::onKeyPress);
     Dispatcher<WindowCloseEvent>::subscribe(*this, &MyApp::onWindowClose);
@@ -36,7 +35,7 @@ MyApp::~MyApp()
     Dispatcher<WindowCloseEvent>::unsubscribe(*this, &MyApp::onWindowClose);
     Dispatcher<FramebufferResizeEvent>::unsubscribe(*this, &MyApp::onFramebufferResize);
 
-    SceneManager::destroy();
+    Scene::destroyScenes();
     Renderer::destroy();
     delete window;
     RenderContext::destroy();

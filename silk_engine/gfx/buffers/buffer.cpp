@@ -1,7 +1,6 @@
 #include "buffer.h"
 #include "gfx/allocators/allocator.h"
 #include "gfx/render_context.h"
-#include "gfx/queues/command_queue.h"
 #include "command_buffer.h"
 
 Buffer::Buffer(VkDeviceSize size, Usage usage, const Allocation::Props& allocation_props)
@@ -49,6 +48,7 @@ void Buffer::setData(const void* data, size_t size, size_t offset)
 		Buffer sb(size ? size : ci.size, Buffer::TRANSFER_SRC, { Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
 		sb.setData(data);
 		sb.copy(buffer, size ? size : ci.size, offset);
+		RenderContext::executeTransfer();
 	}
 }
 
@@ -78,7 +78,7 @@ void Buffer::insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_ac
 
 void Buffer::copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDeviceSize dst_offset, VkDeviceSize src_offset)
 {
-	RenderContext::submit([&] (CommandBuffer& cb)
+	RenderContext::submitTransfer([&] (CommandBuffer& cb)
 		{
 			VkBufferCopy copy_region{};
 			copy_region.srcOffset = src_offset;
@@ -86,5 +86,4 @@ void Buffer::copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDe
 			copy_region.size = size;
 			cb.copyBuffer(source, destination, { copy_region });
 		});
-	RenderContext::execute();
 }
