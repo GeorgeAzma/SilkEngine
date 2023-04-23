@@ -26,26 +26,11 @@ bool DebugRenderer::InstanceData::operator==(const InstanceData& other) const
 		&& color == color;
 }
 
-bool DebugRenderer::RenderedInstance::operator==(const RenderedInstance& other) const
-{
-	return pipeline == other.pipeline;
-}
-
-DebugRenderer::InstanceBatch::~InstanceBatch()
-{
-	// Wait idle?
-}
-
 void DebugRenderer::InstanceBatch::bind()
 {
 	material->bind();
 	mesh->getVertexArray()->bind();
 	instance_buffer->bind(1);
-}
-
-bool DebugRenderer::InstanceBatch::operator==(const RenderedInstance& instance) const
-{
-	return *this->instance == instance;
 }
 
 void DebugRenderer::init()
@@ -74,8 +59,9 @@ void DebugRenderer::reset()
 	for (const auto& instance : instances)
 		destroyInstance(*instance);
 	instances.clear();
+	instances.reserve(MAX_INSTANCES);
 	active = {};
-	active.image = white_image;
+	active.images = { white_image };
 	active.font = Font::get("Arial");
 }
 
@@ -207,14 +193,14 @@ void DebugRenderer::bezier(float x1, float y1, float px1, float py1, float px2, 
 
 void DebugRenderer::text(const std::string& text, float x, float y, float width, float height)
 {
-	draw(GraphicsPipeline::get("Font"), makeShared<Mesh>(TextMesh(text, 64, active.font)), x, y, width, height, { active.font->getAtlas() });
+	active.images = { active.font->getAtlas() };
+	draw(GraphicsPipeline::get("Font"), makeShared<Mesh>(TextMesh(text, 64, active.font)), x, y, width, height);
 }
 
 void DebugRenderer::text(const std::string& text, float x, float y, float size)
 {
-	if (text.empty())
-		return;
-	draw(GraphicsPipeline::get("Font"), makeShared<Mesh>(TextMesh(text, 32, active.font)), x, y, size, size, { active.font->getAtlas() });
+	active.images = { active.font->getAtlas() };
+	draw(GraphicsPipeline::get("Font"), makeShared<Mesh>(TextMesh(text, 32, active.font)), x, y, size, size);
 }
 
 void DebugRenderer::tetrahedron(float x, float y, float z, float size)
@@ -244,12 +230,14 @@ void DebugRenderer::ellipsoid(float x, float y, float z, float width, float heig
 
 void DebugRenderer::image(const shared<Image>& image, float x, float y, float width, float height)
 {
-	draw(pipeline_2D, Mesh::get("Rectangle"), x, y, width, height, { image });
+	active.images = { image };
+	draw(pipeline_2D, Mesh::get("Rectangle"), x, y, width, height);
 }
 
 void DebugRenderer::image(const shared<Image>& image, float x, float y, float size)
 {
-	draw(pipeline_2D, Mesh::get("Rectangle"), x, y, size, size, { image });
+	active.images = { image };
+	draw(pipeline_2D, Mesh::get("Rectangle"), x, y, size, size);
 }
 
 void DebugRenderer::mesh(const shared<Mesh>& mesh, float x, float y, float width, float height)
@@ -257,34 +245,44 @@ void DebugRenderer::mesh(const shared<Mesh>& mesh, float x, float y, float width
 	draw(pipeline_2D, mesh, x, y, width, height);
 }
 
-void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const mat4& transform, const std::vector<shared<Image>>& images)
+void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const mat4& transform)
 {
 	InstanceData data;
 	data.transform = transform;
 	data.color = active.color;
 	if (active.transformed)
 		data.transform *= active.transform;
-	instances.emplace_back(std::move(createInstance(mesh, std::move(data), graphics_pipeline, images)));
+	instances.emplace_back(std::move(createInstance(mesh, std::move(data), graphics_pipeline, active.images)));
 }
 
-void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, const std::vector<shared<Image>>& images)
+void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
 {
-	draw(graphics_pipeline, mesh, {
+	InstanceData data;
+	data.transform = {
 		width, 0, 0, 0,
 		0, height, 0, 0,
 		0, 0, depth, 0,
 		x, y, z, 1
-		}, images.size() ? images : (active.image.get() ? std::vector<shared<Image>>{ active.image } : std::vector<shared<Image>>{}));
+	};
+	data.color = active.color;
+	if (active.transformed)
+		data.transform *= active.transform;
+	instances.emplace_back(std::move(createInstance(mesh, std::move(data), graphics_pipeline, active.images)));
 }
 
-void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float width, float height, const std::vector<shared<Image>>& images)
+void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float width, float height)
 {
-	draw(graphics_pipeline, mesh, {
+	InstanceData data;
+	data.transform = {
 		width, 0, 0, 0,
 		0, height, 0, 0,
 		0, 0, 1, 0,
 		x, y, active.depth, 1
-		}, images.size() ? images : (active.image.get() ? std::vector<shared<Image>>{ active.image } : std::vector<shared<Image>>{}));
+	};
+	data.color = active.color;
+	if (active.transformed)
+		data.transform *= active.transform;
+	instances.emplace_back(std::move(createInstance(mesh, std::move(data), graphics_pipeline, active.images)));
 	active.depth -= 1e-10;
 }
 
@@ -311,20 +309,20 @@ shared<DebugRenderer::RenderedInstance> DebugRenderer::createInstance(const shar
 	for (size_t i = 0; i < instance_batches.size(); ++i)
 	{
 		auto& instance_batch = instance_batches[i];
-		if (instance_batch.instance->pipeline == pipeline && instance_batch.mesh == mesh && instance_batch.instance_data.size() < MAX_INSTANCES && instance_batch.instance_images.available() >= images.size())
+		if (instance_batch.material->getPipeline() == pipeline && instance_batch.mesh == mesh && instance_batch.instance_data.size() < MAX_INSTANCES && instance_batch.instance_images.available() >= images.size())
 		{
 			instance_batch.needs_update = true;
+			instance = makeShared<RenderedInstance>(images.size(), instance_batch.instance_data.size(), i);
 			instance_batch.instance_data.emplace_back(instance_data);
-			instance_batch.instances.emplace_back(makeShared<RenderedInstance>(pipeline, images, instance_batch.instance_data.size() - 1, i));
-			instance = instance_batch.instances.back();
+			instance_batch.instances.emplace_back(instance);
 			break;
 		}
 	}
 
 	if (!instance)
 	{
-		instance = makeShared<RenderedInstance>(pipeline, images, 0, instance_batches.size());
-		addInstanceBatch(instance, mesh, instance_data);
+		instance = makeShared<RenderedInstance>(images.size(), 0, instance_batches.size());
+		addInstanceBatch(instance, pipeline, mesh, instance_data);
 	}
 
 	if (images.size())
@@ -333,18 +331,19 @@ shared<DebugRenderer::RenderedInstance> DebugRenderer::createInstance(const shar
 		SK_VERIFY(image_index != UINT32_MAX, "Instance has too much images");
 		instance_batches[instance->instance_batch_index].instance_data[instance->instance_data_index].image_index = image_index;
 	}
+
 	return instance;
 }
 
-void DebugRenderer::updateInstance(RenderedInstance& instance, const InstanceData& instance_data)
+void DebugRenderer::updateInstance(const RenderedInstance& instance, const InstanceData& instance_data)
 {
 	instance_batches[instance.instance_batch_index].needs_update = true;
 	instance_batches[instance.instance_batch_index].instance_data[instance.instance_data_index] = instance_data;
 }
 
-void DebugRenderer::addInstanceBatch(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data)
+void DebugRenderer::addInstanceBatch(const shared<RenderedInstance>& instance, const shared<GraphicsPipeline>& pipeline, const shared<Mesh>& mesh, const InstanceData& instance_data)
 {
-	instance_batches.emplace_back(mesh, instance);
+	instance_batches.emplace_back(mesh);
 	auto& new_batch = instance_batches.back();
 	new_batch.instance_images.add({ white_image });
 	new_batch.instance_data.reserve(MAX_INSTANCES);
@@ -352,7 +351,7 @@ void DebugRenderer::addInstanceBatch(const shared<RenderedInstance>& instance, c
 	new_batch.instances.reserve(MAX_INSTANCES);
 	new_batch.instances.emplace_back(instance);
 	new_batch.instance_buffer = makeShared<VertexBuffer>(nullptr, sizeof(InstanceData), MAX_INSTANCES, true);
-	new_batch.material = makeShared<Material>(instance->pipeline);
+	new_batch.material = makeShared<Material>(pipeline);
 }
 
 void DebugRenderer::destroyInstance(const RenderedInstance& instance)
@@ -361,21 +360,20 @@ void DebugRenderer::destroyInstance(const RenderedInstance& instance)
 
 	instance_batch.instances.back()->instance_data_index = instance.instance_data_index;
 
-	if (instance_batch.instance_data.size() - 1 == 0)
+	if (instance_batch.instance_data.size() == 1)
 	{
 		if (instance.instance_batch_index != instance_batches.size() - 1)
 		{
 			InstanceBatch* last_batch = &instance_batch;
-			//instance_batches.back().needs_update = true; //Instance batches data got swapped around so this forces to also update instance_batch draw commands buffer
 			std::swap(instance_batch, instance_batches.back());
-			for (size_t j = 0; j < last_batch->instances.size(); ++j)
-				last_batch->instances[j]->instance_batch_index = instance_batches.back().instance->instance_batch_index;
+			for (auto& i : last_batch->instances)
+				i->instance_batch_index = instance.instance_batch_index;
 		}
 		instance_batches.pop_back();
 		return;
 	}
 
-	instance_batch.instance_images.remove(instance_batch.instance_data[instance.instance_data_index].image_index, instance.images.size());
+	instance_batch.instance_images.remove(instance_batch.instance_data[instance.instance_data_index].image_index, instance.image_count);
 
 	instance_batch.needs_update = true;
 

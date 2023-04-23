@@ -16,7 +16,7 @@
 #include "scene/meshes/rounded_rectangle_mesh.h"
 #include "gfx/particle_system.h"
 
-Cooldown c(200ms);
+Cooldown c(100ms);
 
 void MyScene::onStart()
 {
@@ -27,12 +27,8 @@ void MyScene::onStart()
     camera->get<CameraComponent>().camera.position = vec3(0.0f, 0.0f, -3.0f);
 
     Image::add("Cursor", makeShared<Image>("cursors/cursor.png"));
-    Image::add("Screenshot", makeShared<Image>("screenshots/screenshot.png"));
     Image::get("Cursor")->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    Image::get("Screenshot")->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     RenderContext::execute();
-
-    ParticleSystem::init();
 }
 
 void MyScene::onUpdate()
@@ -52,20 +48,10 @@ void MyScene::onUpdate()
         //DebugRenderer::color(Colors(i % (1 + int(Colors::TRANSPARENT))));
         DebugRenderer::image(Image::get("Cursor"));
         DebugRenderer::mesh(mesh, (i % j) * r * 2 + 30.0f, i / j * r * 4 + 30.0f, r, r);
-        DebugRenderer::image(Image::get("Screenshot"));
         DebugRenderer::mesh(mesh, (i % j) * r * 2 + 30.0f, i / j * r * 4 + r * 2 + 30.0f, r, r);
     }
-    ParticleProps props = Particles::flame;
-    props.size_begin = 8.0f;
-    props.size_end = 32.0f;
-    props.position = vec3(100, 100, 0);
-    props.velocity = vec3(0, 100, 0);
-    props.velocity_variation = vec3(20);
-    ParticleSystem::emit(props);
-    ParticleSystem::update();
 }
 
 void MyScene::onStop()
 {
-    ParticleSystem::destroy();
 }

@@ -32,6 +32,8 @@ public:
 
 	void bind();
 
+	const shared<Pipeline>& getPipeline() const { return pipeline; }
+
 private:
 	shared<Pipeline> pipeline;
 	std::unordered_map<uint32_t, shared<DescriptorSet>> descriptor_sets;

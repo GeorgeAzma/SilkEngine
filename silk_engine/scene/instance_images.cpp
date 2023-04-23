@@ -10,7 +10,38 @@ InstanceImages::InstanceImages(uint32_t max_images)
 
 uint32_t InstanceImages::add(const std::vector<shared<Image>>& new_images)
 {
-	SK_VERIFY(new_images.size(), "You should specify more than 0 images to add");
+	if (new_images.size() == 1)
+	{
+		for (size_t i = 0; i < images.size(); ++i)
+		{
+			if (images[i] == new_images[0])
+			{
+				++image_owners[i];
+				return i;
+			}
+		}
+		for (size_t i = 0; i < images.size(); ++i)
+		{
+			if (!image_owners[i])
+			{
+				images[i] = new_images[0];
+				++image_owners[i];
+				need_update = true;
+				return i;
+			}
+		}
+		if (images.size() < max_images)
+		{
+			images.emplace_back(new_images[0]);
+			image_owners.emplace_back(1);
+			need_update = true;
+			return images.size() - 1;
+		}
+		else
+		{
+			return std::numeric_limits<uint32_t>::max();
+		}
+	}
 
 	enum Action : uint8_t { Add, Replace, Use };
 

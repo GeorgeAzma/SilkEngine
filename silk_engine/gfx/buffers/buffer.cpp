@@ -49,8 +49,6 @@ void Buffer::drawIndexedIndirect(uint32_t index)
 
 void Buffer::setData(const void* data, size_t size, size_t offset)
 {
-	if (!data)
-		return;
 	if (VmaAllocation(allocation) && allocation.isHostVisible())
 		allocation.setData(data, size ? size : ci.size, offset);
 	else

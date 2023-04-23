@@ -21,9 +21,9 @@ class DebugRenderer
 	friend class InstanceImages;
 public:
 	static constexpr size_t MAX_INSTANCE_BATCHES = 8192;
-	static constexpr size_t MAX_INSTANCES = 32684;
+	static constexpr size_t MAX_INSTANCES = 8192;
 	static constexpr size_t MAX_IMAGE_SLOTS = 32;
-	static constexpr size_t MAX_LIGHTS = 64;
+	static constexpr size_t MAX_LIGHTS = 32;
 
 	struct InstanceData
 	{
@@ -34,21 +34,11 @@ public:
 		bool operator==(const InstanceData& other) const;
 	};
 
-	struct RenderedInstance
-	{
-		shared<GraphicsPipeline> pipeline = nullptr;
-		std::vector<shared<Image>> images;
-		size_t instance_data_index = std::numeric_limits<size_t>::max();
-		size_t instance_batch_index = std::numeric_limits<size_t>::max();
-
-		bool operator==(const RenderedInstance& other) const;
-	};
-
 private:
 	static inline struct Active
 	{
 		vec4 color = vec4(1);
-		shared<Image> image = nullptr;
+		std::vector<shared<Image>> images{};
 		shared<Font> font = nullptr;
 		mat4 transform = mat4(1);
 		bool transformed = false;
@@ -89,10 +79,16 @@ private:
 		std::array<vec4, 6> planes;
 	};
 
+	struct RenderedInstance
+	{
+		size_t image_count = 0;
+		size_t instance_data_index = std::numeric_limits<size_t>::max();
+		size_t instance_batch_index = std::numeric_limits<size_t>::max();
+	};
+
 	struct InstanceBatch
 	{
 		shared<Mesh> mesh = nullptr;
-		shared<RenderedInstance> instance = nullptr;
 
 		std::vector<InstanceData> instance_data;
 		std::vector<shared<RenderedInstance>> instances;
@@ -100,13 +96,9 @@ private:
 		InstanceImages instance_images{};
 		shared<Material> material = nullptr;
 
-		~InstanceBatch();
-
 		void bind();
 
 		bool needs_update = true;
-
-		bool operator==(const RenderedInstance& instance) const;
 	};
 
 public:
@@ -114,13 +106,13 @@ public:
 	static void destroy();
 	static void reset();
 	static void update(Camera* camera);
-	
+
 	static const Active& getActive() { return active; }
 
 	//States
 	static void transform(const mat4& transform = mat4(1)) { active.transformed = transform != mat4(1); active.transform = transform; }
 	static void color(const Color& color = Colors::WHITE) { active.color = color; }
-	static void image(const shared<Image>& image = white_image) { active.image = image; }
+	static void image(const shared<Image>& image = white_image) { active.images[0] = image; }
 	static void depth(float depth) { active.depth = depth; }
 
 	//2D
@@ -153,14 +145,14 @@ public:
 	static void ellipsoid(float x, float y, float z, float width, float height, float depth);
 
 	//Slow function for quickly drawing stuff
-	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const mat4& transform, const std::vector<shared<Image>>& images = {});
-	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth = 1.0f, const std::vector<shared<Image>>& images = {});
-	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float width, float height, const std::vector<shared<Image>>& images = {});
+	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const mat4& transform);
+	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth = 1.0f);
+	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float width, float height);
 
 	static Light* addLight(const Light& light);
 	static shared<RenderedInstance> createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
-	static void updateInstance(RenderedInstance& instance, const InstanceData& instance_data);
-	static void addInstanceBatch(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data);
+	static void updateInstance(const RenderedInstance& instance, const InstanceData& instance_data);
+	static void addInstanceBatch(const shared<RenderedInstance>& instance, const shared<GraphicsPipeline>& pipeline, const shared<Mesh>& mesh, const InstanceData& instance_data);
 	static void destroyInstance(const RenderedInstance& instance);
 
 private:

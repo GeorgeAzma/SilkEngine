@@ -54,8 +54,8 @@ shared<DescriptorPool> DescriptorAllocator::createPool()
 	std::vector<VkDescriptorPoolSize> sizes;
 	sizes.reserve(descriptor_sizes.size());
 	for (auto&& [type, size] : descriptor_sizes)
-		sizes.emplace_back(type, size * 2 + 4);
-	shared<DescriptorPool> pool = makeShared<DescriptorPool>(allocated_descriptor_sets * 2 + 4, sizes);
+		sizes.emplace_back(type, size * 2 + 40);
+	shared<DescriptorPool> pool = makeShared<DescriptorPool>(allocated_descriptor_sets * 2 + 40, sizes);
 	used_pools.push_back(pool);
 	return pool;
 }
