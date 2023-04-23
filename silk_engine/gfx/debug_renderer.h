@@ -10,12 +10,8 @@ class Font;
 class GraphicsPipeline;
 class Buffer;
 class VertexBuffer;
-class InstanceImages;
 class Mesh;
-class DescriptorSet;
 class Camera;
-class RenderedInstance;
-class InstanceBatch;
 
 class DebugRenderer
 {
@@ -147,6 +143,7 @@ public:
 	static void text(const std::string& text, float x, float y, float size);
 	static void image(const shared<Image>& image, float x, float y, float width, float height);
 	static void image(const shared<Image>& image, float x, float y, float size);
+	static void mesh(const shared<Mesh>& mesh, float x, float y, float width, float height);
 
 	//3D
 	static void tetrahedron(float x, float y, float z, float size);
@@ -161,7 +158,7 @@ public:
 	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float width, float height, const std::vector<shared<Image>>& images = {});
 
 	static Light* addLight(const Light& light);
-	static void createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, std::vector<shared<Image>> images = {});
+	static shared<RenderedInstance> createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
 	static void updateInstance(RenderedInstance& instance, const InstanceData& instance_data);
 	static void addInstanceBatch(const shared<RenderedInstance>& instance, const shared<Mesh>& mesh, const InstanceData& instance_data);
 	static void destroyInstance(const RenderedInstance& instance);
@@ -173,4 +170,6 @@ private:
 	static unique<Buffer> global_uniform_buffer;
 	static std::array<Light, MAX_LIGHTS> lights;
 	static shared<Image> white_image;
+	static shared<GraphicsPipeline> pipeline_2D;
+	static shared<GraphicsPipeline> pipeline_3D;
 };

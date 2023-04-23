@@ -14,7 +14,7 @@ uint32_t InstanceImages::add(const std::vector<shared<Image>>& new_images)
 
 	enum Action : uint8_t { Add, Replace, Use };
 
-	Action* actions = new Action[new_images.size()]{};
+	std::array<Action, 64> actions;
 
 	size_t j = 0;
 up:
@@ -28,8 +28,7 @@ up:
 			actions[i] = Replace;
 		else
 		{
-			++j;
-			if (j > (max_images - new_images.size()))
+			if (++j > (max_images - new_images.size()))
 				return UINT32_MAX;
 			goto up;
 		}
@@ -56,7 +55,6 @@ up:
 		}
 	}
 
-	delete[] actions;
 	return j;
 }
 

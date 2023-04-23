@@ -13,6 +13,7 @@
 #include "my_scene.h"
 #include "scene/meshes/line_mesh.h"
 #include "scene/meshes/circle_mesh.h"
+#include "scene/meshes/rounded_rectangle_mesh.h"
 
 Cooldown c(200ms);
 
@@ -24,27 +25,11 @@ void MyScene::onStart()
     camera->add<ScriptComponent>().bind<CameraController>();
     camera->get<CameraComponent>().camera.position = vec3(0.0f, 0.0f, -5.0f);
 
-    int n = 500;
-    std::vector<vec2> p(n);
-    for (int i = 0; i < n; ++i)
-    {
-        p[i].x = i / float(n - 1);
-        p[i].y = cos(pi<float>() * 2.0 * 3.0 * p[i].x + Time::runtime) * 100.0f + 100.0f;
-        p[i].x *= Window::getActive().getWidth();
-    }
-    shared<Mesh> line = makeShared<Mesh>(CircleMesh(32));
-    DebugRenderer::InstanceData data{};
-    data.transform = glm::scale(data.transform, vec3(8));
-    for (int i = 0; i < 10000; ++i)
-    {
-        DebugRenderer::createInstance(line, data, GraphicsPipeline::get("2D"));
-        data.transform = glm::translate(data.transform, vec3(1, i % 100 == 0 ? 1 : 0, 0));
-        if (i % 100 == 0)
-        {
-            data.transform[3][0] = 0.0f;
-        }
-        data.color = Color(Colors(i % (1 + int(Colors::TRANSPARENT))));
-    }
+    Image::add("Cursor", makeShared<Image>("cursors/cursor.png"));
+    Image::add("Screenshot", makeShared<Image>("screenshots/screenshot.png"));
+    Image::get("Cursor")->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    Image::get("Screenshot")->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    RenderContext::execute();
 }
 
 void MyScene::onUpdate()
@@ -54,7 +39,19 @@ void MyScene::onUpdate()
 
     if (c())
         Window::getActive().setTitle(std::format("Vulkan - {} FPS ({:.4} ms) | {}x{}", int(1.0 / Time::dt), (Time::dt * 1000), Window::getActive().getWidth(), Window::getActive().getHeight()));
-    
+
+    shared<Mesh> mesh = makeShared<Mesh>(CircleMesh(32));
+    shared<Mesh> mesh2 = makeShared<Mesh>(RoundedRectangleMesh(8));
+    size_t j = 100;
+    float r = 12;
+    for (int i = 0; i < 10000; ++i)
+    {
+        //DebugRenderer::color(Colors(i % (1 + int(Colors::TRANSPARENT))));
+        DebugRenderer::image(Image::get("Cursor"));
+        DebugRenderer::mesh(mesh, (i % j) * r * 2 + 30.0f, i / j * r * 4 + 30.0f, r, r);
+        DebugRenderer::image(Image::get("Screenshot"));
+        DebugRenderer::mesh(mesh, (i % j) * r * 2 + 30.0f, i / j * r * 4 + r * 2 + 30.0f, r, r);
+    }
 }
 
 void MyScene::onStop()

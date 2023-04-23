@@ -16,6 +16,8 @@ unique<Buffer> DebugRenderer::indirect_buffer = nullptr;
 unique<Buffer> DebugRenderer::global_uniform_buffer = nullptr;
 std::array<Light, DebugRenderer::MAX_LIGHTS> DebugRenderer::lights{};
 shared<Image> DebugRenderer::white_image = nullptr;
+shared<GraphicsPipeline> DebugRenderer::pipeline_2D = nullptr;
+shared<GraphicsPipeline> DebugRenderer::pipeline_3D = nullptr;
 
 bool DebugRenderer::InstanceData::operator==(const InstanceData& other) const
 {
@@ -46,13 +48,14 @@ bool DebugRenderer::InstanceBatch::operator==(const RenderedInstance& instance) 
 	return *this->instance == instance;
 }
 
-
 void DebugRenderer::init()
 {
 	instance_batches.reserve(MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
 	indirect_buffer = makeUnique<Buffer>(MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand), Buffer::INDIRECT | Buffer::TRANSFER_DST, Allocation::Props{ Allocation::MAPPED | Allocation::RANDOM_ACCESS, Allocation::Device::CPU });
 	global_uniform_buffer = makeUnique<Buffer>(sizeof(GlobalUniformData), Buffer::UNIFORM | Buffer::TRANSFER_DST, Allocation::Props{ Allocation::MAPPED | Allocation::SEQUENTIAL_WRITE });
 	white_image = Image::get("White");
+	pipeline_2D = GraphicsPipeline::get("2D");
+	pipeline_3D = GraphicsPipeline::get("3D");
 
 	reset();
 }
@@ -121,7 +124,7 @@ void DebugRenderer::update(Camera* camera)
 
 void DebugRenderer::triangle(float x, float y, float width, float height)
 {
-	draw(GraphicsPipeline::get("2D"), Mesh::get("Triangle"), x, y, width, height);
+	draw(pipeline_2D, Mesh::get("Triangle"), x, y, width, height);
 }
 
 void DebugRenderer::triangle(float x, float y, float size)
@@ -131,17 +134,17 @@ void DebugRenderer::triangle(float x, float y, float size)
 
 void DebugRenderer::triangle(float x1, float y1, float x2, float y2, float x3, float y3)
 {
-	draw(GraphicsPipeline::get("2D"), makeShared<Mesh>(TriangleMesh(x1, y1, x2, y2, x3, y3)), 0, 0, 1, 1);
+	draw(pipeline_2D, makeShared<Mesh>(TriangleMesh(x1, y1, x2, y2, x3, y3)), 0, 0, 1, 1);
 }
 
 void DebugRenderer::rectangle(float x, float y, float width, float height)
 {
-	draw(GraphicsPipeline::get("2D"), Mesh::get("Rectangle"), x, y, width, height);
+	draw(pipeline_2D, Mesh::get("Rectangle"), x, y, width, height);
 }
 
 void DebugRenderer::roundedRectangle(float x, float y, float width, float height)
 {
-	draw(GraphicsPipeline::get("2D"), Mesh::get("Rounded Rectangle"), x, y, width, height);
+	draw(pipeline_2D, Mesh::get("Rounded Rectangle"), x, y, width, height);
 }
 
 void DebugRenderer::square(float x, float y, float size)
@@ -151,17 +154,17 @@ void DebugRenderer::square(float x, float y, float size)
 
 void DebugRenderer::roundedSquare(float x, float y, float size)
 {
-	draw(GraphicsPipeline::get("2D"), Mesh::get("Rounded Rectangle"), x, y, size, size);
+	draw(pipeline_2D, Mesh::get("Rounded Rectangle"), x, y, size, size);
 }
 
 void DebugRenderer::ellipse(float x, float y, float width, float height)
 {
-	draw(GraphicsPipeline::get("2D"), Mesh::get("Circle"), x, y, width, height);
+	draw(pipeline_2D, Mesh::get("Circle"), x, y, width, height);
 }
 
 void DebugRenderer::ellipseOutline(float x, float y, float width, float height)
 {
-	draw(GraphicsPipeline::get("2D"), Mesh::get("Circle Outline"), x, y, width, height);
+	draw(pipeline_2D, Mesh::get("Circle Outline"), x, y, width, height);
 }
 
 void DebugRenderer::circle(float x, float y, float radius)
@@ -176,7 +179,7 @@ void DebugRenderer::circleOutline(float x, float y, float radius)
 
 void DebugRenderer::line(const std::vector<vec2>& points, float width)
 {
-	draw(GraphicsPipeline::get("2D"), makeShared<Mesh>(LineMesh(points, width)), 0, 0, 1, 1);
+	draw(pipeline_2D, makeShared<Mesh>(LineMesh(points, width)), 0, 0, 1, 1);
 }
 
 void DebugRenderer::line(float x1, float y1, float x2, float y2, float width)
@@ -184,7 +187,7 @@ void DebugRenderer::line(float x1, float y1, float x2, float y2, float width)
 	float l = sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 	float dx = (x2 - x1) / l;
 	float dy = (y2 - y1) / l;
-	draw(GraphicsPipeline::get("2D"), Mesh::get("Rectangle"), {
+	draw(pipeline_2D, Mesh::get("Rectangle"), {
 			dx * l, dy * l, 0, 0,
 			-dy * width, dx * width, 0, 0,
 			0, 0, 1, 0,
@@ -194,12 +197,12 @@ void DebugRenderer::line(float x1, float y1, float x2, float y2, float width)
 
 void DebugRenderer::bezier(float x1, float y1, float px, float py, float x2, float y2, float width)
 {
-	draw(GraphicsPipeline::get("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px, py, x2, y2, 64u, width)), 0, 0, 1, 1);
+	draw(pipeline_2D, makeShared<Mesh>(BezierMesh(x1, y1, px, py, x2, y2, 64u, width)), 0, 0, 1, 1);
 }
 
 void DebugRenderer::bezier(float x1, float y1, float px1, float py1, float px2, float py2, float x2, float y2, float width)
 {
-	draw(GraphicsPipeline::get("2D"), makeShared<Mesh>(BezierMesh(x1, y1, px1, py1, px2, py2, x2, y2, 64u, width)), 0, 0, 1, 1);
+	draw(pipeline_2D, makeShared<Mesh>(BezierMesh(x1, y1, px1, py1, px2, py2, x2, y2, 64u, width)), 0, 0, 1, 1);
 }
 
 void DebugRenderer::text(const std::string& text, float x, float y, float width, float height)
@@ -216,49 +219,52 @@ void DebugRenderer::text(const std::string& text, float x, float y, float size)
 
 void DebugRenderer::tetrahedron(float x, float y, float z, float size)
 {
-	draw(GraphicsPipeline::get("3D"), Mesh::get("Tetrahedron"), x, y, z, size, size, size);
+	draw(pipeline_3D, Mesh::get("Tetrahedron"), x, y, z, size, size, size);
 }
 
 void DebugRenderer::cube(float x, float y, float z, float size)
 {
-	draw(GraphicsPipeline::get("3D"), Mesh::get("Cube"), x, y, z, size, size, size);
+	draw(pipeline_3D, Mesh::get("Cube"), x, y, z, size, size, size);
 }
 
 void DebugRenderer::cuboid(float x, float y, float z, float width, float height, float depth)
 {
-	draw(GraphicsPipeline::get("3D"), Mesh::get("Cube"), x, y, z, width, height, depth);
+	draw(pipeline_3D, Mesh::get("Cube"), x, y, z, width, height, depth);
 }
 
 void DebugRenderer::sphere(float x, float y, float z, float radius)
 {
-	draw(GraphicsPipeline::get("3D"), Mesh::get("Sphere"), x, y, z, radius, radius, radius);
+	draw(pipeline_3D, Mesh::get("Sphere"), x, y, z, radius, radius, radius);
 }
 
 void DebugRenderer::ellipsoid(float x, float y, float z, float width, float height, float depth)
 {
-	draw(GraphicsPipeline::get("3D"), Mesh::get("Sphere"), x, y, z, width, height, depth);
+	draw(pipeline_3D, Mesh::get("Sphere"), x, y, z, width, height, depth);
 }
 
 void DebugRenderer::image(const shared<Image>& image, float x, float y, float width, float height)
 {
-	draw(GraphicsPipeline::get("2D"), Mesh::get("Rectangle"), x, y, width, height, { image });
+	draw(pipeline_2D, Mesh::get("Rectangle"), x, y, width, height, { image });
 }
 
 void DebugRenderer::image(const shared<Image>& image, float x, float y, float size)
 {
-	draw(GraphicsPipeline::get("2D"), Mesh::get("Rectangle"), x, y, size, size, { image });
+	draw(pipeline_2D, Mesh::get("Rectangle"), x, y, size, size, { image });
+}
+
+void DebugRenderer::mesh(const shared<Mesh>& mesh, float x, float y, float width, float height)
+{
+	draw(pipeline_2D, mesh, x, y, width, height);
 }
 
 void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const mat4& transform, const std::vector<shared<Image>>& images)
 {
-	instances.emplace_back(makeShared<RenderedInstance>(graphics_pipeline, images));
-
 	InstanceData data;
 	data.transform = transform;
 	data.color = active.color;
 	if (active.transformed)
 		data.transform *= active.transform;
-	createInstance(mesh, std::move(data), graphics_pipeline, images);
+	instances.emplace_back(std::move(createInstance(mesh, std::move(data), graphics_pipeline, images)));
 }
 
 void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth, const std::vector<shared<Image>>& images)
@@ -298,36 +304,36 @@ Light* DebugRenderer::addLight(const Light& light)
 	return &lights.back();
 }
 
-void DebugRenderer::createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline, std::vector<shared<Image>> images)
+shared<DebugRenderer::RenderedInstance> DebugRenderer::createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
 {
-	shared<RenderedInstance> instance = makeShared<RenderedInstance>(pipeline, images);
+	shared<RenderedInstance> instance = nullptr;
 	bool need_new_instance_batch = true;
 	for (size_t i = 0; i < instance_batches.size(); ++i)
 	{
 		auto& instance_batch = instance_batches[i];
-		if (instance_batch == *instance && instance_batch.mesh == mesh && instance_batch.instance_data.size() < MAX_INSTANCES && instance_batch.instance_images.available() >= instance->images.size())
+		if (instance_batch.instance->pipeline == pipeline && instance_batch.mesh == mesh && instance_batch.instance_data.size() < MAX_INSTANCES && instance_batch.instance_images.available() >= images.size())
 		{
 			instance_batch.needs_update = true;
 			instance_batch.instance_data.emplace_back(instance_data);
-			instance_batch.instances.push_back(instance);
-
-			instance->instance_batch_index = i;
-			instance->instance_data_index = instance_batch.instance_data.size() - 1;
-
-			need_new_instance_batch = false;
+			instance_batch.instances.emplace_back(makeShared<RenderedInstance>(pipeline, images, instance_batch.instance_data.size() - 1, i));
+			instance = instance_batch.instances.back();
 			break;
 		}
 	}
 
-	if (need_new_instance_batch)
-		addInstanceBatch(instance, mesh, instance_data);
-
-	if (instance->images.size())
+	if (!instance)
 	{
-		uint32_t image_index = instance_batches[instance->instance_batch_index].instance_images.add(instance->images);
+		instance = makeShared<RenderedInstance>(pipeline, images, 0, instance_batches.size());
+		addInstanceBatch(instance, mesh, instance_data);
+	}
+
+	if (images.size())
+	{
+		uint32_t image_index = instance_batches[instance->instance_batch_index].instance_images.add(images);
 		SK_VERIFY(image_index != UINT32_MAX, "Instance has too much images");
 		instance_batches[instance->instance_batch_index].instance_data[instance->instance_data_index].image_index = image_index;
 	}
+	return instance;
 }
 
 void DebugRenderer::updateInstance(RenderedInstance& instance, const InstanceData& instance_data)
@@ -347,7 +353,7 @@ void DebugRenderer::addInstanceBatch(const shared<RenderedInstance>& instance, c
 	new_batch.material = makeShared<Material>(instance->pipeline);
 	
 	instance->instance_batch_index = instance_batches.size() - 1;
-	instance->instance_data_index = instance_batches.back().instance_data.size() - 1;
+	instance->instance_data_index = new_batch.instance_data.size() - 1;
 }
 
 void DebugRenderer::destroyInstance(const RenderedInstance& instance)
