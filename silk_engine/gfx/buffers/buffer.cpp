@@ -37,6 +37,16 @@ void Buffer::copy(VkBuffer destination, VkDeviceSize size, VkDeviceSize offset, 
 	copy(destination, buffer, size, dst_offset, offset);
 }
 
+void Buffer::drawIndirect(uint32_t index)
+{
+	RenderContext::submit([&](CommandBuffer& cb) { cb.drawIndirect(buffer, index * sizeof(VkDrawIndirectCommand), 1, sizeof(VkDrawIndirectCommand)); });
+}
+
+void Buffer::drawIndexedIndirect(uint32_t index)
+{
+	RenderContext::submit([&](CommandBuffer& cb) { cb.drawIndexedIndirect(buffer, index * sizeof(VkDrawIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand)); });
+}
+
 void Buffer::setData(const void* data, size_t size, size_t offset)
 {
 	if (!data)

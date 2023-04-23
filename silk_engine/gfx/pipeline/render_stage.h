@@ -13,16 +13,16 @@ struct Attachment
 class RenderStage
 {
 public:
-	RenderStage(const shared<RenderPass>& render_pass, const ivec2& viewport = ivec2(0));
+	RenderStage(RenderPass& render_pass, const ivec2& viewport = ivec2(0));
 
 	void onResize(const SwapChain& swap_chain);
 
-	const shared<RenderPass>& getRenderPass() const { return render_pass; }
-	shared<RenderPass>& getRenderPass() { return render_pass; }
+	const RenderPass& getRenderPass() const { return render_pass; }
+	RenderPass& getRenderPass() { return render_pass; }
 	const shared<Framebuffer>& getFramebuffer() const { return framebuffer; }
 
 private:
-	shared<RenderPass> render_pass = nullptr;
+	RenderPass& render_pass;
 	shared<Framebuffer> framebuffer = nullptr;
 	ivec2 viewport = ivec2(0);
 };

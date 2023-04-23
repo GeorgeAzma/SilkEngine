@@ -4,36 +4,22 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
-template<typename T>
-void IRawImage<T>::align4() //NOTE: This can be done in compute shader
+RawImage<uint8_t>::RawImage(const path& file, int align_channels)
 {
-	int old_channels = channels;
-	channels = 4;
-	std::vector<uint8_t> aligned_image(width * height * 4, 0);
-	for (size_t i = 0; i < width * height; ++i)
-	{
-		memcpy(aligned_image.data() + i * 4, pixels.data() + i * old_channels, old_channels * sizeof(uint8_t));
-		aligned_image[i * 4 + 3] = 255;
-	}
-	pixels = std::move(aligned_image);
+	load(file, align_channels);
 }
 
-RawImage<uint8_t>::RawImage(const path& file)
+RawImage<uint8_t>::RawImage(std::span<const path> files, int align_channels)
 {
-	load(file);
+	load(files, align_channels);
 }
 
-RawImage<uint8_t>::RawImage(std::span<const path> files)
-{
-	load(files);
-}
-
-void RawImage<uint8_t>::load(const path& file)
+void RawImage<uint8_t>::load(const path& file, int align_channels)
 {
 	path file_path = path("res/images") / file;
 
 	stbi_set_flip_vertically_on_load(true);
-	stbi_uc* pixel_data = stbi_load(file_path.string().c_str(), (int*)&width, (int*)&height, (int*)&channels, 0);
+	stbi_uc* pixel_data = stbi_load(file_path.string().c_str(), (int*)&width, (int*)&height, (int*)&channels, align_channels);
 	SK_VERIFY(pixel_data, "Failed to load image: {}", file_path);
 
 	allocate();
@@ -44,24 +30,16 @@ void RawImage<uint8_t>::load(const path& file)
 	SK_TRACE("Image Loaded: {}", file_path);
 }
 
-void RawImage<uint8_t>::load(std::span<const path> files)
+void RawImage<uint8_t>::load(std::span<const path> files, int align_channels)
 {
 	SK_VERIFY(files.size(), "You have to specify at least one filepath for loading images");
-
-	if (files.size() == 1)
-	{
-		load(files[0]);
-		return;
-	}
 
 	std::vector<path> paths(files.begin(), files.end());
 	for (auto& file_path : paths)
 		file_path = path("res/images") / file_path;
 
 	RawImage<uint8_t> image_data{};
-	image_data.load(paths[0]);
-	if (image_data.channels == 3)
-		image_data.align4();
+	image_data.load(paths[0], align_channels);
 
 	size_t size = image_data.size();
 	width = image_data.width;
@@ -72,9 +50,7 @@ void RawImage<uint8_t>::load(std::span<const path> files)
 
 	for (size_t i = 1; i < paths.size(); ++i)
 	{
-		image_data.load(paths[i]);
-		if (image_data.channels == 3)
-			image_data.align4();
+		image_data.load(paths[i], align_channels);
 
 		SK_VERIFY(image_data.width == width
 				  && image_data.height == height

@@ -3,8 +3,9 @@
 #include "gfx/window/window.h"
 #include "gfx/window/swap_chain.h"
 #include "gfx/devices/logical_device.h"
+#include "gfx/pipeline/render_pass.h"
 
-Framebuffer::Framebuffer(const SwapChain& swap_chain, VkRenderPass render_pass, uint32_t width, uint32_t height) : 
+Framebuffer::Framebuffer(const SwapChain& swap_chain, const RenderPass& render_pass, uint32_t width, uint32_t height, bool imageless) :
     swap_chain(swap_chain),
     render_pass(render_pass),
     framebuffers(swap_chain.getImageCount()),
@@ -12,50 +13,33 @@ Framebuffer::Framebuffer(const SwapChain& swap_chain, VkRenderPass render_pass, 
     width(width),
     height(height)
 {
-}
+    for (const auto& attachment_desc : render_pass.getAttachmentDescriptions())
+    {
+        if (attachment_desc.finalLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+        {
+            for (size_t i = 0; i < swap_chain.getImages().size(); ++i)
+                attachments[i].emplace_back(swap_chain.getImages()[i]);
+        }
+        else
+        {
+            Image::Props image_props{};
+            image_props.format = Image::Format(attachment_desc.format);
+            image_props.width = width;
+            image_props.height = height;
+            image_props.sampler_props.mipmap_mode = Sampler::MipmapMode::NONE;
+            image_props.samples = attachment_desc.samples;
+            image_props.tiling = VK_IMAGE_TILING_OPTIMAL;
+            image_props.allocation_props.preferred_device = Allocation::Device::GPU;
+            image_props.allocation_props.priority = 1.0f;
+            image_props.usage = Image::isDepthStencilFormat(Image::Format(attachment_desc.format)) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+            if (attachment_desc.samples != VK_SAMPLE_COUNT_1_BIT)
+                image_props.usage |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
+            shared<Image> image = makeShared<Image>(image_props);
+            for (size_t i = 0; i < framebuffers.size(); ++i)
+                attachments[i].emplace_back(image);
+        }
+    }
 
-Framebuffer::~Framebuffer()
-{
-    for (size_t i = 0; i < framebuffers.size(); ++i)
-        RenderContext::getLogicalDevice().destroyFramebuffer(framebuffers[i]);
-}
-
-Framebuffer& Framebuffer::addAttachment(Image::Props image_props)
-{
-    shared<Image> image = makeShared<Image>(image_props);
-    for (size_t i = 0; i < framebuffers.size(); ++i)
-        attachments[i].emplace_back(image);
-    return *this;
-}
-
-Framebuffer& Framebuffer::addAttachment(Image::Format format, VkSampleCountFlagBits samples)
-{
-    Image::Props image_props{};
-    image_props.format = format;
-    image_props.width = width;
-    image_props.height = height;
-    image_props.sampler_props.mipmap_mode = Sampler::MipmapMode::NONE;
-    image_props.samples = samples;
-    image_props.tiling = VK_IMAGE_TILING_OPTIMAL;
-    image_props.allocation_props.preferred_device = Allocation::Device::GPU;
-    image_props.allocation_props.priority = 1.0f;
-    image_props.usage = Image::isDepthStencilFormat(format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    if (samples != VK_SAMPLE_COUNT_1_BIT)
-        image_props.usage |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
-    addAttachment(image_props);
-    return *this;
-}
-
-Framebuffer& Framebuffer::addSwapchainAttachments()
-{
-    const auto& images = swap_chain.getImages();
-    for (size_t i = 0; i < images.size(); ++i)
-        attachments[i].emplace_back(images[i]);
-    return *this;
-}
-
-void Framebuffer::build(bool imageless)
-{
     for (size_t i = 0; i < framebuffers.size(); ++i)
     {
         std::vector<VkImageView> attachment_views(attachments[i].size());
@@ -73,6 +57,12 @@ void Framebuffer::build(bool imageless)
         ci.flags = imageless * VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT;
         framebuffers[i] = RenderContext::getLogicalDevice().createFramebuffer(ci);
     }
+}
+
+Framebuffer::~Framebuffer()
+{
+    for (size_t i = 0; i < framebuffers.size(); ++i)
+        RenderContext::getLogicalDevice().destroyFramebuffer(framebuffers[i]);
 }
 
 const std::vector<shared<Image>>& Framebuffer::getAttachments() const

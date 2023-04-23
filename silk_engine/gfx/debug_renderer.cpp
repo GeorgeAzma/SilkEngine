@@ -347,13 +347,12 @@ void DebugRenderer::addInstanceBatch(const shared<RenderedInstance>& instance, c
 	instance_batches.emplace_back(mesh, instance);
 	auto& new_batch = instance_batches.back();
 	new_batch.instance_images.add({ white_image });
+	new_batch.instance_data.reserve(MAX_INSTANCES);
 	new_batch.instance_data.emplace_back(instance_data);
+	new_batch.instances.reserve(MAX_INSTANCES);
 	new_batch.instances.emplace_back(instance);
 	new_batch.instance_buffer = makeShared<VertexBuffer>(nullptr, sizeof(InstanceData), MAX_INSTANCES, true);
 	new_batch.material = makeShared<Material>(instance->pipeline);
-	
-	instance->instance_batch_index = instance_batches.size() - 1;
-	instance->instance_data_index = new_batch.instance_data.size() - 1;
 }
 
 void DebugRenderer::destroyInstance(const RenderedInstance& instance)

@@ -1,4 +1,5 @@
 #include "mesh.h"
+#include "gfx/render_context.h"
 
 RawMesh::RawMesh(const void* vertices, size_t vertices_size, size_t vertex_type_size, const void* indices, size_t indices_size, size_t index_type_size)
 	: vertices(vertices_size), vertex_type_size(vertex_type_size), indices(indices_size), index_type_size(index_type_size)
@@ -30,4 +31,16 @@ Mesh& Mesh::operator=(const RawMesh& raw_mesh)
 	vertex_array->setIndexBuffer(ibo).addVertexBuffer(vbo);
 
 	return *this;
+}
+
+void Mesh::draw(uint32_t first_vertex)
+{
+	vertex_array->bind();
+	RenderContext::submit([&](CommandBuffer& cb) { cb.draw(getVertexCount(), 1, first_vertex, 0); });
+}
+
+void Mesh::drawIndexed(uint32_t first_index, uint32_t vertex_offset)
+{
+	vertex_array->bind();
+	RenderContext::submit([&](CommandBuffer& cb) { cb.drawIndexed(getIndexCount(), 1, first_index, vertex_offset, 0); });
 }

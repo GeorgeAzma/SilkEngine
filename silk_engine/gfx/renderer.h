@@ -1,17 +1,14 @@
 #pragma once
 
 class RenderPipeline;
-class VertexArray;
-class Camera;
 class RenderPass;
 class Fence;
-class Light;
 class Mesh;
+class Material;
+class Camera;
 
 class Renderer
 {
-public:
-
 public:
 	static void init();
 	static void render(Camera* camera = nullptr);
@@ -21,7 +18,7 @@ public:
 	template<typename T>
 	static void setRenderPipeline() { render_pipeline = makeUnique<T>(); }
 	static RenderPipeline& getRenderPipeline() { return *render_pipeline; }
-	static shared<RenderPass>& getRenderPass(uint32_t index);
+	static const RenderPass& getRenderPass(uint32_t index);
 
 private:
 	static unique<RenderPipeline> render_pipeline;

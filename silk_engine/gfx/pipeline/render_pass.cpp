@@ -6,7 +6,6 @@
 RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
     : subpass_count(subpass_props.size())
 {
-    std::vector<VkAttachmentDescription> attachment_descriptions{};
     std::vector<VkSubpassDescription> subpass_descriptions(subpass_props.size());
     std::vector<VkSubpassDependency> subpass_dependencies(subpass_props.size());
     std::vector<std::vector<VkAttachmentReference>> resolve_attachment_references(subpass_props.size());
@@ -116,9 +115,6 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
         }
         subpass_dependencies[subpass_index] = std::move(subpass_dependency);
     }
-
-    for (const auto& attachment_description : attachment_descriptions)
-        render_targets.emplace_back(Image::Format(attachment_description.format), attachment_description.samples, attachment_description.finalLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
     VkRenderPassCreateInfo ci{};
     ci.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;

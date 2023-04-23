@@ -6,8 +6,7 @@
 #include "gfx/subrender/particle_subrender.h"
 
 DefaultRenderPipeline::DefaultRenderPipeline()
-{
-	shared<RenderPass> render_pass = shared<RenderPass>(new RenderPass({
+	: render_pass(RenderPass({
 		{
 			{
 				{ Image::Format(RenderContext::getPhysicalDevice().getDepthFormat()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() },
@@ -15,7 +14,8 @@ DefaultRenderPipeline::DefaultRenderPipeline()
 			},
 			{}
 		}
-	}));
+}))
+{
 	addRenderStage(RenderStage(render_pass));
 }
 

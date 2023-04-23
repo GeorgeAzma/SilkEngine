@@ -125,8 +125,6 @@ Image::Image(const path& file, const Props& p)
 	: props(p)
 {
 	RawImage<> raw(file);
-	if (raw.channels == 3)
-		raw.align4();
 	props.width = raw.width;
 	props.height = raw.height;
 	props.format = getFormatFromChannelCount(raw.channels);
@@ -150,8 +148,6 @@ Image::Image(const std::array<path, 6>& files, const Props& p)
 	: props(p)
 {
 	RawImage<> raw(files);
-	if (raw.channels == 3)
-		raw.align4();
 	props.width = raw.width;
 	props.height = raw.height;
 	props.format = getFormatFromChannelCount(raw.channels);
@@ -164,8 +160,6 @@ Image::Image(std::span<const path> files, const Props& p)
 	: props(p)
 {
 	RawImage<> raw(files);
-	if (raw.channels == 3)
-		raw.align4();
 	props.width = raw.width;
 	props.height = raw.height;
 	props.layers = files.size();
@@ -181,8 +175,6 @@ Image::Image(std::span<const std::array<path, 6>> files, const Props& p)
 	std::vector<path> continous_files(files.size() * 6);
 	std::copy(files.front().begin(), files.back().end(), continous_files.begin());
 	RawImage<> raw(continous_files);
-	if (raw.channels == 3)
-		raw.align4();
 	props.width = raw.width;
 	props.height = raw.height;
 	props.layers = files.size();

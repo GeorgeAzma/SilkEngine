@@ -16,6 +16,9 @@ public:
 	operator const shared<VertexArray>&() const { return vertex_array; }
 	bool operator==(const Mesh& other) const { return vertex_array == other.vertex_array; }
 
+	void draw(uint32_t first_vertex = 0);
+	void drawIndexed(uint32_t first_index = 0, uint32_t vertex_offset = 0);
+
 private:
 	size_t vertex_count = 0;
 	size_t index_count = 0;

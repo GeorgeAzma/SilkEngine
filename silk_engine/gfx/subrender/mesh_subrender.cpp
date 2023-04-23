@@ -36,14 +36,13 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
 void MeshSubrender::render()
 {
     // Draw instances
-    size_t draw_index = 0;
+    uint32_t draw_index = 0;
     for (auto& instance_batch : DebugRenderer::instance_batches)
     {
         instance_batch.material->set("GlobalUniform", *DebugRenderer::global_uniform_buffer);
         instance_batch.material->set("images", instance_batch.instance_images.getDescriptorImageInfos());
         instance_batch.bind();
-
-        RenderContext::submit([&](CommandBuffer& cb){ cb.drawIndexedIndirect(*DebugRenderer::indirect_buffer, draw_index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand)); });
+        DebugRenderer::indirect_buffer->drawIndexedIndirect(draw_index);
         ++draw_index;
     }
 }

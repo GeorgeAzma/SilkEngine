@@ -43,13 +43,13 @@ public:
 	void end();
 
 	size_t getSubpassCount() const { return subpass_count; }
-	const std::vector<RenderTargetInfo>& getRenderTargetInfo() const { return render_targets; }
+	const std::vector<VkAttachmentDescription>& getAttachmentDescriptions() const { return attachment_descriptions; }
 	operator const VkRenderPass& () const { return render_pass; }
 
 private:
 	VkRenderPass render_pass = nullptr;
 	size_t subpass_count = 0;
 	size_t current_subpass = 0;
-	std::vector<RenderTargetInfo> render_targets{};
+	std::vector<VkAttachmentDescription> attachment_descriptions{};
 	std::vector<VkClearValue> clear_values{};
 };

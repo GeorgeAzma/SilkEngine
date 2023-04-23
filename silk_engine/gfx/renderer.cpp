@@ -50,7 +50,7 @@ void Renderer::wait()
 	DebugRenderer::reset();
 }
 
-shared<RenderPass>& Renderer::getRenderPass(uint32_t index)
+const RenderPass& Renderer::getRenderPass(uint32_t index)
 {
 	return render_pipeline->getRenderStages()[index].getRenderPass();
 }
@@ -92,15 +92,15 @@ void Renderer::render(Camera* camera)
 				cb.setScissor({ scissor });
 				
 				auto& render_pass = render_stage.getRenderPass();
-				render_pass->begin(*render_stage.getFramebuffer());
-				for (size_t i = 0; i < render_pass->getSubpassCount(); ++i)
+				render_pass.begin(*render_stage.getFramebuffer());
+				for (size_t i = 0; i < render_pass.getSubpassCount(); ++i)
 				{
 					stage.subpass = i;
 					render_pipeline->renderStage(stage);
-					if (i < render_pass->getSubpassCount() - 1)
-						render_pass->nextSubpass();
+					if (i < render_pass.getSubpassCount() - 1)
+						render_pass.nextSubpass();
 				}
-				render_pass->end();
+				render_pass.end();
 				++stage.render_pass;
 			}
 		});
