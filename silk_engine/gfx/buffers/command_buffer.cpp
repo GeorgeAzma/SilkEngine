@@ -467,7 +467,7 @@ void CommandBuffer::submit(const SubmitInfo& info, VkQueueFlagBits queue_type)
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &command_buffer;
 
-	submit_info.pWaitDstStageMask = info.wait_stages;
+	submit_info.pWaitDstStageMask = info.wait_stages.data();
 	submit_info.waitSemaphoreCount = info.wait_semaphores.size();
 	submit_info.pWaitSemaphores = info.wait_semaphores.data();
 

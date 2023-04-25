@@ -8,16 +8,16 @@
 Surface::Surface(const Window& window)
 {
 	RenderContext::vulkanAssert(glfwCreateWindowSurface(RenderContext::getInstance(), window, nullptr, &surface));
-
-	updateCapabilities();
 	formats = RenderContext::getPhysicalDevice().getSurfaceFormats(surface);
-	present_modes = RenderContext::getPhysicalDevice().getSurfacePresentModes(surface);
 
 	if (!isSupported())
 	{
 		SK_ERROR("Vulkan: Physical device does not support window surface");
 		return;
 	}
+
+	updateCapabilities();
+	present_modes = RenderContext::getPhysicalDevice().getSurfacePresentModes(surface);
 
 	int max_score = -1;
 	VkSurfaceFormatKHR best_surface_format{};

@@ -1,7 +1,6 @@
 #include "mesh_subrender.h"
 #include "gfx/devices/physical_device.h"
 #include "gfx/pipeline/graphics_pipeline.h"
-#include "scene/resources.h"
 #include "gfx/debug_renderer.h"
 #include "gfx/buffers/command_buffer.h"
 #include "gfx/buffers/buffer.h"
@@ -35,14 +34,5 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
 
 void MeshSubrender::render()
 {
-    // Draw instances
-    uint32_t draw_index = 0;
-    for (auto& instance_batch : DebugRenderer::instance_batches)
-    {
-        instance_batch.material->set("GlobalUniform", *DebugRenderer::global_uniform_buffer);
-        instance_batch.material->set("images", instance_batch.instance_images.getDescriptorImageInfos());
-        instance_batch.bind();
-        DebugRenderer::indirect_buffer->drawIndexedIndirect(draw_index);
-        ++draw_index;
-    }
+    DebugRenderer::render();
 }

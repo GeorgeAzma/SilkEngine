@@ -113,6 +113,8 @@ void Shader::Stage::loadCache()
 
 void Shader::Stage::saveCache() const
 {
+	if (!std::filesystem::exists("res/cache/shaders"))
+		std::filesystem::create_directories("res/cache/shaders");
 	File::write(getCachePath(), binary.data(), binary.size() * sizeof(uint32_t));
 }
 

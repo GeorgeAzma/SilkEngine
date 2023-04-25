@@ -7,6 +7,7 @@ public:
 	~Semaphore();
 
 	void signal(uint64_t value) const;
+	void wait();
 
 	operator const VkSemaphore& () const { return semaphore; }
 

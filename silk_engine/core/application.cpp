@@ -8,21 +8,20 @@
 #include "scene/camera/camera.h"
 
 //TODO: Subpass attachment references/descriptions. Not all previous subpass outputs are inputs of the next subpass etc.
-//FIXME: App slowing down every time when window is resized and update is called right after
-//FIXME/TODO: Command queue
+
+Application::Application()
+{
+}
 
 void Application::run()
 {
     while (running)
     {
-        glfwPollEvents();
-
-        while (Window::getActive().isMinimized() && running)
+        if (Window::getActive().isMinimized())
             glfwWaitEvents();
-
-        if (!running)
-            break;
-
+        else
+            glfwPollEvents();
+            
         update();
     }
     RenderContext::getLogicalDevice().wait();
@@ -30,12 +29,15 @@ void Application::run()
 
 void Application::update()
 {
+    if (!running || Window::getActive().isMinimized())
+        return;
+
     Renderer::wait();
 
     onUpdate();
     Scene::updateScenes();
 
-    Renderer::render(Scene::getActive().get() ? Scene::getActive()->getMainCamera() : nullptr);
+    Renderer::render();
 
     Window::getActive().update();
     Time::update();

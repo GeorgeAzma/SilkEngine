@@ -1,5 +1,4 @@
 #include "model.h"
-#include "resources.h"
 #include "raw_model.h"
 #include "meshes/mesh.h"
 #include "gfx/images/image.h"

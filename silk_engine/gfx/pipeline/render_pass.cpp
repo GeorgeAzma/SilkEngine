@@ -162,11 +162,7 @@ void RenderPass::nextSubpass(VkSubpassContents subpass_contents)
     if (current_subpass >= (subpass_count - 1))
         return;
 
-    RenderContext::submit(
-        [&](CommandBuffer& cb)
-        {
-            cb.nextSubpass(subpass_contents);
-        });
+    RenderContext::submit([&](CommandBuffer& cb) { cb.nextSubpass(subpass_contents); });
     ++current_subpass;
 }
 

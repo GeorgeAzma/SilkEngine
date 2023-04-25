@@ -7,7 +7,6 @@
 class Image;
 class Buffer;
 
-// TODO:
 class Material : NonCopyable
 {
 public:
@@ -28,7 +27,7 @@ public:
 
 	void set(std::string_view name, VkBufferView buffer_view);
 
-	void set(std::string_view name, std::vector<VkBufferView> buffer_views);
+	void set(std::string_view name, const std::vector<VkBufferView>& buffer_views);
 
 	void bind();
 

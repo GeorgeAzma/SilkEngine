@@ -5,7 +5,7 @@ class IRawImage
 {
 public:
 	IRawImage() = default;
-	void allocate() { pixels.resize(width * height * channels); }
+	void allocate() { pixels.resize(size_t(width) * height * channels); }
 	size_t size() const { return width * height * channels; }
 	const T& operator()(uint32_t x, uint32_t y) const { return pixels[width * y + x]; }
 	const T& operator()(uint32_t index) const { return pixels[index]; }

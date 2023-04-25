@@ -1,7 +1,5 @@
 #pragma once
 
-#include "event.h"
-
 int Main(int argc, char** argv);
 
 struct CommandLineArgs
@@ -18,9 +16,12 @@ struct CommandLineArgs
 class Application
 {
 public:
+    Application();
+
     static CommandLineArgs getCommandLineArgs() { return command_line_args; }
 
 protected:
+
     void update();
     void stop() { running = false; }
 

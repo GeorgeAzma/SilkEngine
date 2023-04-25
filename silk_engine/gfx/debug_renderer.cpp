@@ -2,18 +2,24 @@
 #include "gfx/pipeline/graphics_pipeline.h"
 #include "gfx/descriptors/descriptor_set.h"
 #include "scene/meshes/mesh.h"
-#include "scene/instance_images.h"
 #include "scene/meshes/bezier_mesh.h"
 #include "scene/meshes/line_mesh.h"
 #include "scene/meshes/text_mesh.h"
 #include "scene/meshes/triangle_mesh.h"
-#include "scene/camera/camera.h"
+#include "scene/meshes/circle_mesh.h"
+#include "scene/meshes/circle_outline_mesh.h"
+#include "scene/meshes/rectangle_mesh.h"
+#include "scene/meshes/rounded_rectangle_mesh.h"
+#include "scene/meshes/quad_mesh.h"
+#include "scene/meshes/cube_mesh.h"
+#include "scene/meshes/sphere_mesh.h"
 #include "window/window.h"
+#include "material.h"
 
 std::vector<DebugRenderer::InstanceBatch> DebugRenderer::instance_batches{};
 std::vector<shared<DebugRenderer::RenderedInstance>> DebugRenderer::instances{};
-unique<Buffer> DebugRenderer::indirect_buffer = nullptr;
-unique<Buffer> DebugRenderer::global_uniform_buffer = nullptr;
+shared<Buffer> DebugRenderer::indirect_buffer = nullptr;
+shared<Buffer> DebugRenderer::global_uniform_buffer = nullptr;
 std::array<Light, DebugRenderer::MAX_LIGHTS> DebugRenderer::lights{};
 shared<Image> DebugRenderer::white_image = nullptr;
 shared<GraphicsPipeline> DebugRenderer::pipeline_2D = nullptr;
@@ -36,12 +42,50 @@ void DebugRenderer::InstanceBatch::bind()
 void DebugRenderer::init()
 {
 	instance_batches.reserve(MAX_INSTANCE_BATCHES); //TODO: remove this limitation some time
-	indirect_buffer = makeUnique<Buffer>(MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand), Buffer::INDIRECT | Buffer::TRANSFER_DST, Allocation::Props{ Allocation::MAPPED | Allocation::RANDOM_ACCESS, Allocation::Device::CPU });
-	global_uniform_buffer = makeUnique<Buffer>(sizeof(GlobalUniformData), Buffer::UNIFORM | Buffer::TRANSFER_DST, Allocation::Props{ Allocation::MAPPED | Allocation::SEQUENTIAL_WRITE });
-	white_image = Image::get("White");
+	indirect_buffer = makeShared<Buffer>(MAX_INSTANCE_BATCHES * sizeof(VkDrawIndexedIndirectCommand), Buffer::INDIRECT | Buffer::TRANSFER_DST, Allocation::Props{ Allocation::MAPPED | Allocation::RANDOM_ACCESS, Allocation::Device::CPU });
+	global_uniform_buffer = makeShared<Buffer>(sizeof(GlobalUniformData), Buffer::UNIFORM | Buffer::TRANSFER_DST, Allocation::Props{ Allocation::MAPPED | Allocation::SEQUENTIAL_WRITE });
 	pipeline_2D = GraphicsPipeline::get("2D");
 	pipeline_3D = GraphicsPipeline::get("3D");
 
+	Image::Props image_props{};
+	image_props.width = 1;
+	image_props.height = 1;
+	image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
+	image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
+	image_props.sampler_props.anisotropy = 1.0f;
+	constexpr u8vec4 white(255);
+	white_image = makeShared<Image>(image_props);
+	white_image->setData(&white);
+	white_image->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	Image::add("White", white_image);
+
+	constexpr u8vec4 black(0);
+	auto black_image = makeShared<Image>(image_props);
+	black_image->setData(&black);
+	black_image->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	Image::add("Black", black_image);
+
+	image_props.width = 2;
+	image_props.height = 2;
+	image_props.sampler_props.u_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+	image_props.sampler_props.v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+	constexpr u8vec4 null_data[4] = { { 0, 0, 0, 255 }, { 255, 0, 255, 255 }, { 255, 0, 255, 255 }, { 0, 0, 0, 255 } };
+	auto null_image = makeShared<Image>(image_props);
+	null_image->setData(null_data);
+	null_image->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	Image::add("Null", null_image);
+	
+	Mesh::add("Triangle", makeShared<Mesh>(TriangleMesh()));
+	Mesh::add("Circle", makeShared<Mesh>(CircleMesh()));
+	Mesh::add("Circle Outline", makeShared<Mesh>(CircleOutlineMesh()));
+	Mesh::add("Rectangle", makeShared<Mesh>(RectangleMesh()));
+	Mesh::add("Rounded Rectangle", makeShared<Mesh>(RoundedRectangleMesh()));
+	Mesh::add("Quad", makeShared<Mesh>(QuadMesh()));
+	Mesh::add("Cube", makeShared<Mesh>(CubeMesh()));
+	Mesh::add("Sphere", makeShared<Mesh>(SphereMesh()));
+	
+	Font::add("Arial", makeShared<Font>("arial.ttf"));
+	
 	reset();
 }
 
@@ -106,6 +150,19 @@ void DebugRenderer::update(Camera* camera)
 	}
 	if (any_needs_update)
 		indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand));
+}
+
+void DebugRenderer::render()
+{
+	uint32_t draw_index = 0;
+	for (auto& instance_batch : instance_batches)
+	{
+		instance_batch.material->set("GlobalUniform", *global_uniform_buffer);
+		instance_batch.material->set("images", instance_batch.instance_images.getDescriptorImageInfos());
+		instance_batch.bind();
+		indirect_buffer->drawIndexedIndirect(draw_index);
+		++draw_index;
+	}
 }
 
 void DebugRenderer::triangle(float x, float y, float width, float height)

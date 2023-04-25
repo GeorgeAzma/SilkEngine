@@ -18,7 +18,8 @@ public:
 	virtual ~RenderPipeline() = default;
 
 	virtual void init() = 0;
-	virtual void update() = 0;
+
+	void render();
 
 	const std::vector<shared<RenderPass>>& getRenderPasses() const { return render_passes; }
 	std::vector<shared<RenderPass>>& getRenderPasses() { return render_passes; }
@@ -61,8 +62,6 @@ public:
 	{
 		subrenders.clear();
 	}
-
-	void renderStage(const PipelineStage& pipeline_stage);
 
 private:
 	std::vector<shared<RenderPass>> render_passes;

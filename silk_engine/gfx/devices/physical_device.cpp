@@ -53,7 +53,7 @@ PhysicalDevice::PhysicalDevice(const Instance& instance, VkPhysicalDevice physic
 		if (queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
 		{
 			graphics_queue = i;
-			queue_family_indices.emplace_back(i);
+			queue_family_indices.emplace_back((uint32_t) i);
 			break;
 		}
 	}

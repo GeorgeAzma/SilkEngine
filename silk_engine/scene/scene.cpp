@@ -1,7 +1,6 @@
 #include "scene.h"
 #include "entity.h"
 #include "components.h"
-#include "scene/resources.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/devices/physical_device.h"
 #include "utils/time.h"

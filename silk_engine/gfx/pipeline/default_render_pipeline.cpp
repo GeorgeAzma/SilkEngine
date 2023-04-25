@@ -23,7 +23,3 @@ void DefaultRenderPipeline::init()
 	addSubrender<ParticleSubrender>({ 0, 0 });
 	addSubrender<MeshSubrender>({ 0, 0 });
 }
-
-void DefaultRenderPipeline::update()
-{
-}

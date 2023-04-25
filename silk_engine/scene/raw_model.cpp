@@ -3,8 +3,6 @@
 #define TINYGLTF_USE_CPP14
 #include "tiny_gltf.h"
 
-static tinygltf::TinyGLTF loader;
-
 RawModel::RawModel(const path& file)
 {
     path file_path = path("res/models") / file;
@@ -20,7 +18,7 @@ RawModel::RawModel(const path& file)
     std::string err;
     std::string warn;
 
-
+    static tinygltf::TinyGLTF loader;
     if (file.extension() == ".glb")
         loader.LoadBinaryFromFile(&model, &err, &warn, file_path.string());
     else loader.LoadASCIIFromFile(&model, &err, &warn, file_path.string());

@@ -6,8 +6,7 @@ struct Light
     float linear = 0.0;
     vec3 direction = vec3(0);
     float quadratic = 0.0;
-    vec3 color = vec3(0);
-    float padding;
+    alignas(16) vec3 color = vec3(0);
 
     bool operator==(const Light& other) const
     {

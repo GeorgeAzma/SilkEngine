@@ -80,7 +80,7 @@ void Material::set(std::string_view name, VkBufferView buffer_view)
 		descriptor_sets.at(location.set)->write(location.binding, buffer_view);
 }
 
-void Material::set(std::string_view name, std::vector<VkBufferView> buffer_views)
+void Material::set(std::string_view name, const std::vector<VkBufferView>& buffer_views)
 {
 	if (const Shader::ResourceLocation& location = pipeline->getShader()->getLocation(name))
 		descriptor_sets.at(location.set)->write(location.binding, buffer_views);

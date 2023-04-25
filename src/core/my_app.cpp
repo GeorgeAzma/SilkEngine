@@ -1,7 +1,6 @@
 #include "silk_engine/gfx/window/glfw.h"
 #include "silk_engine/core/input/input.h"
 #include "silk_engine/gfx/render_context.h"
-#include "silk_engine/scene/resources.h"
 #include "silk_engine/gfx/window/window.h"
 #include "silk_engine/gfx/renderer.h"
 #include "silk_engine/core/event.h"
@@ -15,7 +14,6 @@ MyApp::MyApp()
     Input::init();
     GLFW::init();
     RenderContext::init("MyApp");
-    Resources::init();
 
     window = new Window();
     Renderer::init();
@@ -26,7 +24,6 @@ MyApp::MyApp()
     Dispatcher<KeyPressEvent>::subscribe(*this, &MyApp::onKeyPress);
     Dispatcher<WindowCloseEvent>::subscribe(*this, &MyApp::onWindowClose);
     Dispatcher<FramebufferResizeEvent>::subscribe(*this, &MyApp::onFramebufferResize);
-
 }
 
 MyApp::~MyApp()
@@ -62,13 +59,11 @@ void MyApp::onKeyPress(const KeyPressEvent& e)
 
 void MyApp::onWindowClose(const WindowCloseEvent& e)
 {
-    running = false;
+    stop();
 }
 
 void MyApp::onFramebufferResize(const FramebufferResizeEvent& e)
 {
-    if (Window::getActive().isMinimized())
-        return;
     update();
     update();
 }

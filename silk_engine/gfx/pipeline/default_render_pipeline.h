@@ -8,5 +8,4 @@ public:
 	DefaultRenderPipeline();
 
 	void init() override;
-	void update() override;
 };

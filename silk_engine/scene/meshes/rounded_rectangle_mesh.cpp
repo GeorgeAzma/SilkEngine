@@ -29,9 +29,9 @@ RoundedRectangleMesh::RoundedRectangleMesh(uint resolution, float roundness_x, f
 
 	id = 0;
 	bool reverse_indices[4] = { false, true, true, false };
-	for (uint i = 0; i < resolution - 1; ++i)
+	for (uint32_t i = 0; i < resolution - 1; ++i)
 	{
-		for (size_t j = 0; j < 4; ++j)
+		for (uint32_t j = 0; j < 4; ++j)
 		{
 			uint32_t indices[2] = { i * 4 + j + 1, i * 4 + 4 + j + 1 };
 			getIndex(id++) = indices[!reverse_indices[j] ? 0 : 1];

@@ -9,8 +9,6 @@
 SwapChain::SwapChain(const Surface& surface, bool vsync)
 	: surface(surface)
 {
-	if (!surface.isSupported())
-		return;
 	recreate(vsync);
 }
 
@@ -87,8 +85,6 @@ void SwapChain::recreate(bool vsync)
 	VkSurfaceTransformFlagsKHR transform = caps.currentTransform;
 	if (caps.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
 		transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-	else
-		transform = caps.currentTransform;
 
 	VkCompositeAlphaFlagBitsKHR composite_alpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; // Choose non opaque composite alpha for transparent windows
 	VkCompositeAlphaFlagBitsKHR composite_alpha_flags[] = 

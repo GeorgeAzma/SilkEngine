@@ -353,14 +353,9 @@ void Window::setIcon(const path& file)
     glfwSetWindowIcon(window, icons.size(), icons.data());
 }
 
-void Window::setMinSize(uint32_t min_width, uint32_t min_height)
+void Window::setSizeLimit(uint32_t min_width, uint32_t min_height, uint32_t max_width, uint32_t max_height)
 {
-    glfwSetWindowSizeLimits(window, min_width, min_height, GLFW_DONT_CARE, GLFW_DONT_CARE);
-}
-
-void Window::setMaxSize(uint32_t max_width, uint32_t max_height)
-{
-    glfwSetWindowSizeLimits(window, GLFW_DONT_CARE, GLFW_DONT_CARE, max_width, max_height);
+    glfwSetWindowSizeLimits(window, min_width, min_height, max_width, max_height);
 }
 
 void Window::setAspectRatioLimit(uint32_t numerator, uint32_t denominator)

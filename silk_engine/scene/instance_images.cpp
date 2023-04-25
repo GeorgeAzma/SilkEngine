@@ -1,6 +1,5 @@
 #include "instance_images.h"
 #include "gfx/images/image.h"
-#include "resources.h"
 #include "gfx/debug_renderer.h"
 
 InstanceImages::InstanceImages(uint32_t max_images)

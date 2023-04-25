@@ -98,8 +98,7 @@ public:
     void setSize(const uvec2 &size);
     void setTitle(std::string_view title);
     void setIcon(const path& file);
-    void setMinSize(uint32_t min_width, uint32_t min_height);
-    void setMaxSize(uint32_t max_width, uint32_t max_height);
+    void setSizeLimit(uint32_t min_width, uint32_t min_height, uint32_t max_width, uint32_t max_height);
     void setAspectRatioLimit(uint32_t numerator, uint32_t denominator);
 	void setCursor(const path& file, CursorHotSpot hot_spot = CursorHotSpot::TOP_RIGHT);
     void setOpacity(float opacity);

@@ -24,7 +24,7 @@ public:
 		Fence* fence = nullptr;
 		std::vector<VkSemaphore> wait_semaphores = {};
 		std::vector<VkSemaphore> signal_semaphores = {};
-		VkPipelineStageFlags* wait_stages = nullptr;
+		std::vector<VkPipelineStageFlags> wait_stages = {};
 	};
 
 	enum class State

@@ -1,11 +1,11 @@
 #include "particle_system.h"
-#include "scene/resources.h"
 #include "scene/scene.h"
 #include "scene/camera/camera.h"
 #include "utils/thread_pool.h"
 #include "gfx/buffers/command_buffer.h"
 #include "debug_renderer.h"
 #include "scene/meshes/mesh.h"
+#include "material.h"
 
 unique<ThreadPool> ParticleSystem::thread_pool = nullptr;
 
@@ -46,7 +46,7 @@ void ParticleSystem::emit(const ParticleProps& props)
         props.size_end,
         props.life_time,
         props.life_time, 
-        instance_images->add({ props.image ? props.image : DebugRenderer::white_image })
+        instance_images->add({ props.image ? props.image : DebugRenderer::getWhiteImage()})
     );
 }
 
@@ -115,7 +115,7 @@ void ParticleSystem::render(Material& material)
 {
     if (particle_data.size())
     {
-        material.set("GlobalUniform", *DebugRenderer::global_uniform_buffer);
+        material.set("GlobalUniform", *DebugRenderer::getGlobalUniformBuffer());
         material.set("images", instance_images->getDescriptorImageInfos());
         material.bind();
         vao->bind();

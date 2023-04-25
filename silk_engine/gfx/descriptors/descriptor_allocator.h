@@ -32,5 +32,5 @@ private:
 	};
 	static inline std::vector<shared<DescriptorPool>> used_pools;
 	static inline std::vector<shared<DescriptorPool>> free_pools;
-	static inline size_t allocated_descriptor_sets = 0;
+	static inline uint32_t allocated_descriptor_sets = 0;
 };

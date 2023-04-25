@@ -18,6 +18,7 @@
 #include "gfx/buffers/command_buffer.h"
 #include "scene/meshes/mesh.h"
 #include "scene/model.h"
+#include "gfx/material.h"
 #include <stb_image_write.h>
 
 void RenderContext::init(std::string_view app_name)
@@ -131,12 +132,14 @@ void RenderContext::executeTransfer(const CommandBuffer::SubmitInfo& submit_info
 	else
 		command_queues[frame]->execute(submit_info);
 }
-#include "gfx/material.h"
+
 void RenderContext::screenshot(const path& file)
 {
+	if (!std::filesystem::exists("res/images/screenshots"))
+		std::filesystem::create_directories("res/images/screenshots");
+	
 	logical_device->wait();
 
-	// TODO: fix
 	auto& img = Window::getActive().getSwapChain().getImages()[Window::getActive().getSwapChain().getImageIndex()];
 
 	Image::Props props{};
@@ -164,10 +167,10 @@ void RenderContext::screenshot(const path& file)
 
 	std::vector<byte> data(img->getSize());
 	ssbo.getData(data.data(), img->getSize());
-	stbi_write_png(file.string().c_str(), Window::getActive().getWidth(), Window::getActive().getHeight(), Image::getFormatChannelCount(Image::Format(Window::getActive().getSurface().getFormat().format)), data.data(), 0);
-	
-	SK_TRACE("Screenshot saved at {}", file);
-	logical_device->wait();
+	const path folder = "res/images/screenshots";
+	path file_path = folder / file;
+	stbi_write_png(file_path.string().c_str(), Window::getActive().getWidth(), Window::getActive().getHeight(), Image::getFormatChannelCount(Image::Format(Window::getActive().getSurface().getFormat().format)), data.data(), 0);
+	SK_TRACE("Screenshot saved at {}", file_path);
 }
 
 void RenderContext::vulkanAssert(VkResult result)

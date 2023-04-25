@@ -14,8 +14,8 @@ struct ScriptComponent
 {
 	ScriptableEntity* instance = nullptr;
 
-	ScriptableEntity*(*instantiate_script)();
-	void(*destroy_script)(ScriptComponent*);
+	ScriptableEntity*(*instantiate_script)() = nullptr;
+	void(*destroy_script)(ScriptComponent*) = nullptr;
 
 	template<typename T>
 	void bind()

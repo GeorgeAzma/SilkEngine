@@ -1,9 +1,9 @@
 #pragma once
 
 #include "utils/color.h"
-#include "scene/instance_images.h"
 #include "scene/light.h"
-#include "material.h"
+#include "scene/instance_images.h"
+#include "scene/camera/camera.h"
 
 class Image;
 class Font;
@@ -11,19 +11,17 @@ class GraphicsPipeline;
 class Buffer;
 class VertexBuffer;
 class Mesh;
-class Camera;
+class Material;
 
 class DebugRenderer
 {
 	// TODO: Fix this
-	friend class MeshSubrender;
-	friend class ParticleSystem;
 	friend class InstanceImages;
 public:
-	static constexpr size_t MAX_INSTANCE_BATCHES = 8192;
-	static constexpr size_t MAX_INSTANCES = 8192;
-	static constexpr size_t MAX_IMAGE_SLOTS = 32;
-	static constexpr size_t MAX_LIGHTS = 32;
+	static constexpr uint32_t MAX_INSTANCE_BATCHES = 8192;
+	static constexpr uint32_t MAX_INSTANCES = 8192;
+	static constexpr uint32_t MAX_IMAGE_SLOTS = 16;
+	static constexpr uint32_t MAX_LIGHTS = 16;
 
 	struct InstanceData
 	{
@@ -106,8 +104,11 @@ public:
 	static void destroy();
 	static void reset();
 	static void update(Camera* camera);
+	static void render();
 
 	static const Active& getActive() { return active; }
+	static const shared<Image>& getWhiteImage() { return white_image; }
+	static const shared<Buffer>& getGlobalUniformBuffer() { return global_uniform_buffer; }
 
 	//States
 	static void transform(const mat4& transform = mat4(1)) { active.transformed = transform != mat4(1); active.transform = transform; }
@@ -158,8 +159,8 @@ public:
 private:
 	static std::vector<InstanceBatch> instance_batches;
 	static std::vector<shared<RenderedInstance>> instances;
-	static unique<Buffer> indirect_buffer;
-	static unique<Buffer> global_uniform_buffer;
+	static shared<Buffer> indirect_buffer;
+	static shared<Buffer> global_uniform_buffer;
 	static std::array<Light, MAX_LIGHTS> lights;
 	static shared<Image> white_image;
 	static shared<GraphicsPipeline> pipeline_2D;

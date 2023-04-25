@@ -1,4 +1,3 @@
-#include "silk_engine/scene/resources.h"
 #include "silk_engine/gfx/window/window.h"
 #include "silk_engine/core/input/keys.h"
 #include "silk_engine/core/input/mouse_buttons.h"
@@ -34,7 +33,7 @@ void MyScene::onStart()
 void MyScene::onUpdate()
 {
     if (Window::getActive().isKeyPressed(Keys::F2))
-        RenderContext::screenshot(path(std::format("res/images/screenshots/screenshot.png")));
+        RenderContext::screenshot("screenshot.png");
 
     if (c())
         Window::getActive().setTitle(std::format("Vulkan - {} FPS ({:.4} ms) | {}x{}", int(1.0 / Time::dt), (Time::dt * 1000), Window::getActive().getWidth(), Window::getActive().getHeight()));

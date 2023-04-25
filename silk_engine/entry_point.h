@@ -9,10 +9,11 @@ int Main(int argc, char** argv)
 	Log::init();
 	Application::command_line_args = { argc, argv };
 	Application* app = createApplication();
-	SK_ASSERT(app, "Client Application is null!");
-	app->run();
-	delete app;
-
+	if (app)
+	{
+		app->run();
+		delete app;
+	}
 	return 0;
 }
 
