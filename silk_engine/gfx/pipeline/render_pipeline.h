@@ -20,6 +20,7 @@ public:
 	virtual void init() = 0;
 
 	void render();
+	void resize();
 
 	const std::vector<shared<RenderPass>>& getRenderPasses() const { return render_passes; }
 	std::vector<shared<RenderPass>>& getRenderPasses() { return render_passes; }

@@ -223,7 +223,7 @@ void Image::copyFromBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers
 	VkImageLayout old_layout = layout;
 	transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-	RenderContext::submit(
+	RenderContext::record(
 		[&](CommandBuffer& cb)
 		{
 			VkBufferImageCopy region{};
@@ -247,7 +247,7 @@ void Image::copyToBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers)
 	VkImageLayout old_layout = layout;
 	transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
-	RenderContext::submit(
+	RenderContext::record(
 		[&](CommandBuffer& cb)
 		{
 			VkBufferImageCopy region{};
@@ -270,7 +270,7 @@ void Image::insertMemoryBarrier(const VkImage& image, VkAccessFlags source_acces
 {
 	if (old_layout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
 		return;
-	RenderContext::submit(
+	RenderContext::record(
 		[&](CommandBuffer& cb)
 		{
 			VkImageMemoryBarrier barrier{};
@@ -411,7 +411,7 @@ void Image::generateMipmaps()
 	if (mip_levels <= 1 || props.sampler_props.mipmap_mode == Sampler::MipmapMode::NONE)
 		return;
 
-	RenderContext::submit(
+	RenderContext::record(
 		[&](CommandBuffer& cb)
 		{
 			VkImageMemoryBarrier barrier{};
@@ -548,7 +548,7 @@ bool Image::copyImage(Image& destination)
 	}
 
 	//Do the actual blit from the swapchain image to our host visible destination image.
-	RenderContext::submit(
+	RenderContext::record(
 		[&](CommandBuffer& cb)
 		{
 			VkImageLayout last_destination_layout = destination.getLayout();

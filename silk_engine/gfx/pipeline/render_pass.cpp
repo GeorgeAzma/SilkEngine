@@ -136,7 +136,7 @@ RenderPass::~RenderPass()
 void RenderPass::begin(VkSubpassContents subpass_contents)
 {
     current_subpass = 0;
-    RenderContext::submit(
+    RenderContext::record(
         [&](CommandBuffer& cb)
         {
             VkRenderPassBeginInfo begin_info{};
@@ -162,16 +162,16 @@ void RenderPass::nextSubpass(VkSubpassContents subpass_contents)
     if (current_subpass >= (subpass_count - 1))
         return;
 
-    RenderContext::submit([&](CommandBuffer& cb) { cb.nextSubpass(subpass_contents); });
+    RenderContext::record([&](CommandBuffer& cb) { cb.nextSubpass(subpass_contents); });
     ++current_subpass;
 }
 
 void RenderPass::end()
 {
-    RenderContext::submit([&](CommandBuffer& cb) { cb.endRenderPass(); });
+    RenderContext::record([&](CommandBuffer& cb) { cb.endRenderPass(); });
 }
 
-void RenderPass::onResize(const SwapChain& swap_chain)
+void RenderPass::resize(const SwapChain& swap_chain)
 {
     framebuffer = makeShared<Framebuffer>(swap_chain, *this, viewport.x ? viewport.x : swap_chain.getWidth(), viewport.y ? viewport.y : swap_chain.getHeight());
 }

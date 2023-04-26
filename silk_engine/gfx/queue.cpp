@@ -16,13 +16,6 @@ void Queue::submit(const VkSubmitInfo& submit_info, VkFence fence) const
 	vkQueueSubmit(queue, 1, &submit_info, fence);
 }
 
-void Queue::submitImmidiatly(const VkSubmitInfo& submit_info) const
-{
-	Fence fence;
-	vkQueueSubmit(queue, 1, &submit_info, fence);
-	fence.wait();
-}
-
 void Queue::wait() const
 {
 	vkQueueWaitIdle(queue);

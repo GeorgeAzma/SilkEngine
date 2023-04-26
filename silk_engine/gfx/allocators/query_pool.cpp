@@ -25,14 +25,14 @@ void QueryPool::begin(uint32_t index, VkQueryControlFlags flags)
 	if (queries[index])
 		return;
 	RenderContext::getLogicalDevice().resetQueryPool(query_pool, index, 1);
-	RenderContext::submit([&](CommandBuffer& cb) { cb.beginQuery(query_pool, index, flags); });
+	RenderContext::record([&](CommandBuffer& cb) { cb.beginQuery(query_pool, index, flags); });
 }
 
 void QueryPool::end(uint32_t index)
 {
 	if (!queries[index])
 		return;
-	RenderContext::submit([&](CommandBuffer& cb) { cb.endQuery(query_pool, index); });
+	RenderContext::record([&](CommandBuffer& cb) { cb.endQuery(query_pool, index); });
 }
 
 uint64_t QueryPool::getResult(uint32_t index, bool wait)

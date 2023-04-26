@@ -20,17 +20,17 @@ public:
 	static void destroy();
 	static void update();
 
-	static void submit(std::function<void(CommandBuffer&)>&& command);
+	static void record(std::function<void(CommandBuffer&)>&& command);
+	static void submit(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
 	static void execute(); 
-	static void execute(const CommandBuffer::SubmitInfo& submit_info);
 
-	static void submitCompute(std::function<void(CommandBuffer&)>&& command);
+	static void recordCompute(std::function<void(CommandBuffer&)>&& command);
+	static void submitCompute(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
 	static void executeCompute();
-	static void executeCompute(const CommandBuffer::SubmitInfo& submit_info);
 
-	static void submitTransfer(std::function<void(CommandBuffer&)>&& command);
+	static void recordTransfer(std::function<void(CommandBuffer&)>&& command);
+	static void submitTransfer(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
 	static void executeTransfer();
-	static void executeTransfer(const CommandBuffer::SubmitInfo& submit_info);
 
 	static void screenshot(const path& file);
 	static void vulkanAssert(VkResult result);

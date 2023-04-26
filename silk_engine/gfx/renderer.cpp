@@ -17,9 +17,7 @@ void Renderer::init()
 
 	setRenderPipeline<DefaultRenderPipeline>();
 	render_pipeline->init();
-
-	for (auto& render_pass : render_pipeline->getRenderPasses())
-		render_pass->onResize(Window::getActive().getSwapChain());
+	render_pipeline->resize();
 	
 	DebugRenderer::init();
 }
@@ -51,26 +49,18 @@ void Renderer::render()
 
 	if (!Window::getActive().getSwapChain().acquireNextImage(*Renderer::swap_chain_image_available))
 	{
-		SK_ERROR("Unexpected, window should already be updated");
 		Window::getActive().recreate();
-		for (auto& render_pass : render_pipeline->getRenderPasses())
-			render_pass->onResize(Window::getActive().getSwapChain());
+		render_pipeline->resize();
 	}
 
 	render_pipeline->render();
 
-	CommandBuffer::SubmitInfo submit_info;
-	submit_info.wait_stages = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-	submit_info.wait_semaphores = { *swap_chain_image_available };
-	submit_info.signal_semaphores = { *render_finished };
-	submit_info.fence = previous_frame_finished;
-	RenderContext::execute(submit_info);
+	RenderContext::submit(previous_frame_finished, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { *swap_chain_image_available }, { *render_finished });
 
 	if (!Window::getActive().getSwapChain().present(*render_finished))
 	{
 		Window::getActive().recreate();
-		for (auto& render_pass : render_pipeline->getRenderPasses())
-			render_pass->onResize(Window::getActive().getSwapChain());
+		render_pipeline->resize();
 	}
 
 	RenderContext::update();

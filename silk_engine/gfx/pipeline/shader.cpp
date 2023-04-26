@@ -347,7 +347,7 @@ Shader::ResourceLocation Shader::getLocation(std::string_view resource_name) con
 void Shader::pushConstants(std::string_view name, const void* data) const
 {
 	const auto& push_constant = reflection_data.push_constant_map.at(name);
-	RenderContext::submit([&](CommandBuffer& cb) { cb.pushConstants(push_constant.stageFlags, push_constant.offset, push_constant.size, data); });
+	RenderContext::record([&](CommandBuffer& cb) { cb.pushConstants(push_constant.stageFlags, push_constant.offset, push_constant.size, data); });
 }
 
 void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, Stage::Type stage, VkDescriptorType type)

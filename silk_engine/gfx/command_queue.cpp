@@ -9,21 +9,21 @@ CommandQueue::CommandQueue(std::optional<uint32_t> queue_family_index, VkQueueFl
 {
 }
 
-void CommandQueue::submit(std::function<void(CommandBuffer&)>&& command)
+void CommandQueue::record(std::function<void(CommandBuffer&)>&& command)
 {
 	auto& command_buffer = getCommandBuffer();
 	command_buffer.begin();
 	std::forward<std::function<void(CommandBuffer&)>>(command)(command_buffer);
 }
 
-void CommandQueue::execute()
+void CommandQueue::submit(const Fence* fence, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
 {
-	command_buffers[index]->submitImmidiatly(queue_type);
+	command_buffers[index]->submit(fence, wait_stages, wait_semaphores, signal_semaphores, queue_type);
 }
 
-void CommandQueue::execute(const CommandBuffer::SubmitInfo& submit_info)
+void CommandQueue::execute()
 {
-	command_buffers[index]->submit(submit_info, queue_type);
+	command_buffers[index]->execute(queue_type);
 }
 
 void CommandQueue::reset()

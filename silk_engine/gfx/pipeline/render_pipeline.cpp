@@ -2,10 +2,11 @@
 #include "gfx/render_context.h"
 #include "render_pass.h"
 #include "gfx/buffers/framebuffer.h"
+#include "gfx/window/window.h"
 
 void RenderPipeline::render()
 {
-	RenderContext::submit([&](CommandBuffer& cb)
+	RenderContext::record([&](CommandBuffer& cb)
 		{
 			PipelineStage pipeline_stage{};
 			for (auto& render_pass : getRenderPasses())
@@ -43,4 +44,10 @@ void RenderPipeline::render()
 				++pipeline_stage.render_pass;
 			}
 		});
+}
+
+void RenderPipeline::resize()
+{
+	for (auto& render_pass : render_passes)
+		render_pass->resize(Window::getActive().getSwapChain());
 }

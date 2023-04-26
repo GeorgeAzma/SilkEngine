@@ -43,7 +43,7 @@ public:
 	void end();
 
 	void setViewport(const ivec2& viewport) { this->viewport = viewport; }
-	void onResize(const SwapChain& swap_chain);
+	void resize(const SwapChain& swap_chain);
 
 	size_t getSubpassCount() const { return subpass_count; }
 	const std::vector<VkAttachmentDescription>& getAttachmentDescriptions() const { return attachment_descriptions; }

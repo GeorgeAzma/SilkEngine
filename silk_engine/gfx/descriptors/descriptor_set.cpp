@@ -122,7 +122,7 @@ void DescriptorSet::update()
 void DescriptorSet::bind(size_t first_set)
 {
 	update();
-	RenderContext::submit([&](CommandBuffer& cb) { cb.bindDescriptorSets(first_set, { descriptor_set }); });
+	RenderContext::record([&](CommandBuffer& cb) { cb.bindDescriptorSets(first_set, { descriptor_set }); });
 }
 
 void DescriptorSet::write(uint32_t binding, uint32_t array_index, uint32_t descriptor_count)

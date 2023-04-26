@@ -456,7 +456,7 @@ void CommandBuffer::drawIndexedIndirect(VkBuffer indirect_buffer, uint32_t offse
 }
 #pragma endregion
 
-void CommandBuffer::submit(const SubmitInfo& info, VkQueueFlagBits queue_type)
+void CommandBuffer::submit(const Fence* fence, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores, VkQueueFlagBits queue_type)
 {
 	end();
 	if (state != State::EXECUTABLE)
@@ -467,18 +467,18 @@ void CommandBuffer::submit(const SubmitInfo& info, VkQueueFlagBits queue_type)
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &command_buffer;
 
-	submit_info.pWaitDstStageMask = info.wait_stages.data();
-	submit_info.waitSemaphoreCount = info.wait_semaphores.size();
-	submit_info.pWaitSemaphores = info.wait_semaphores.data();
+	submit_info.pWaitDstStageMask = wait_stages.data();
+	submit_info.waitSemaphoreCount = wait_semaphores.size();
+	submit_info.pWaitSemaphores = wait_semaphores.data();
 
-	submit_info.signalSemaphoreCount = info.signal_semaphores.size();
-	submit_info.pSignalSemaphores = info.signal_semaphores.data();
+	submit_info.signalSemaphoreCount = signal_semaphores.size();
+	submit_info.pSignalSemaphores = signal_semaphores.data();
 	
-	RenderContext::getLogicalDevice().getQueue(queue_type).submit(submit_info, info.fence ? *info.fence : nullptr);
+	RenderContext::getLogicalDevice().getQueue(queue_type).submit(submit_info, fence ? *fence : nullptr);
 	state = State::PENDING;
 }
 
-void CommandBuffer::submitImmidiatly(VkQueueFlagBits queue_type)
+void CommandBuffer::execute(VkQueueFlagBits queue_type)
 {
 	end();
 	if (state != State::EXECUTABLE)
@@ -489,7 +489,9 @@ void CommandBuffer::submitImmidiatly(VkQueueFlagBits queue_type)
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &command_buffer;
 
-	RenderContext::getLogicalDevice().getQueue(queue_type).submitImmidiatly(submit_info);
+	Fence fence;
+	RenderContext::getLogicalDevice().getQueue(queue_type).submit(submit_info, fence);
+	fence.wait();
 	state = State::INVALID;
 }
 

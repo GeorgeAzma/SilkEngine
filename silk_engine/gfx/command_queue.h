@@ -9,9 +9,9 @@ class CommandQueue : NonCopyable
 public:
 	CommandQueue(std::optional<uint32_t> queue_family_index, VkQueueFlagBits queue_type);
 
-	void submit(std::function<void(CommandBuffer&)>&& command);
+	void record(std::function<void(CommandBuffer&)>&& command);
+	void submit(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
 	void execute();
-	void execute(const CommandBuffer::SubmitInfo& submit_info);
 	void reset();
 
 private:

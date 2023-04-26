@@ -13,7 +13,7 @@ ComputePipeline::ComputePipeline(const shared<Shader>& shader, const std::vector
 
 void ComputePipeline::bind()
 {
-	RenderContext::submit([&](CommandBuffer& cb) { cb.bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, pipeline, layout); });
+	RenderContext::record([&](CommandBuffer& cb) { cb.bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, pipeline, layout); });
 }
 
 void ComputePipeline::dispatch(uint32_t global_invocation_count_x, uint32_t global_invocation_count_y, uint32_t global_invocation_count_z) const
@@ -21,7 +21,7 @@ void ComputePipeline::dispatch(uint32_t global_invocation_count_x, uint32_t glob
 	uvec3 global_invocation_count(global_invocation_count_x, global_invocation_count_y, global_invocation_count_z);
 	uvec3 local_size = shader->getReflectionData().local_size;
 	uvec3 group_count = (global_invocation_count + local_size - uvec3(1)) / local_size;
-	RenderContext::submit([&](CommandBuffer& cb) { cb.dispatch(group_count.x, group_count.y, group_count.z); });
+	RenderContext::record([&](CommandBuffer& cb) { cb.dispatch(group_count.x, group_count.y, group_count.z); });
 }
 
 void ComputePipeline::create()

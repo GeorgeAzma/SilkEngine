@@ -39,12 +39,12 @@ void Buffer::copy(VkBuffer destination, VkDeviceSize size, VkDeviceSize offset, 
 
 void Buffer::drawIndirect(uint32_t index)
 {
-	RenderContext::submit([&](CommandBuffer& cb) { cb.drawIndirect(buffer, index * sizeof(VkDrawIndirectCommand), 1, sizeof(VkDrawIndirectCommand)); });
+	RenderContext::record([&](CommandBuffer& cb) { cb.drawIndirect(buffer, index * sizeof(VkDrawIndirectCommand), 1, sizeof(VkDrawIndirectCommand)); });
 }
 
 void Buffer::drawIndexedIndirect(uint32_t index)
 {
-	RenderContext::submit([&](CommandBuffer& cb) { cb.drawIndexedIndirect(buffer, index * sizeof(VkDrawIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand)); });
+	RenderContext::record([&](CommandBuffer& cb) { cb.drawIndexedIndirect(buffer, index * sizeof(VkDrawIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand)); });
 }
 
 void Buffer::setData(const void* data, size_t size, size_t offset)
@@ -81,12 +81,12 @@ void Buffer::insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_ac
 	barrier.buffer = buffer;
 	barrier.offset = offset;
 	barrier.size = size;
-	RenderContext::submit([&] (CommandBuffer& cb) { cb.pipelineBarrier(source_stage_mask, destination_stage_mask, VkDependencyFlags(0), {}, { barrier }, {}); });
+	RenderContext::record([&] (CommandBuffer& cb) { cb.pipelineBarrier(source_stage_mask, destination_stage_mask, VkDependencyFlags(0), {}, { barrier }, {}); });
 }
 
 void Buffer::copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDeviceSize dst_offset, VkDeviceSize src_offset)
 {
-	RenderContext::submitTransfer([&] (CommandBuffer& cb)
+	RenderContext::recordTransfer([&] (CommandBuffer& cb)
 		{
 			VkBufferCopy copy_region{};
 			copy_region.srcOffset = src_offset;

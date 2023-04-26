@@ -10,7 +10,7 @@ IndexBuffer::IndexBuffer(const void* data, VkDeviceSize count, IndexType index_t
 
 void IndexBuffer::bind(VkDeviceSize offset) const
 {
-	RenderContext::submit([&](CommandBuffer& cb) { cb.bindIndexBuffer(buffer, offset, indexType(index_type)); });
+	RenderContext::record([&](CommandBuffer& cb) { cb.bindIndexBuffer(buffer, offset, indexType(index_type)); });
 }
 
 VkIndexType IndexBuffer::indexType(IndexType index_type)

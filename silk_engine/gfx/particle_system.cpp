@@ -120,7 +120,7 @@ void ParticleSystem::render(Material& material)
         material.bind();
         vao->bind();
         instance_vbo->bind(1);
-        RenderContext::submit([&](CommandBuffer& cb) { cb.drawIndexed(vao->getIndexBuffer()->getCount(), particle_data.size(), 0, 0, 0); });
+        RenderContext::record([&](CommandBuffer& cb) { cb.drawIndexed(vao->getIndexBuffer()->getCount(), particle_data.size(), 0, 0, 0); });
     }
 }
 

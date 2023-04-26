@@ -11,5 +11,5 @@ VertexBuffer::VertexBuffer(const void* data, VkDeviceSize vertex_size, VkDeviceS
 
 void VertexBuffer::bind(size_t binding)
 {
-	RenderContext::submit([&](CommandBuffer& cb) { cb.bindVertexBuffers(binding, { buffer }); });
+	RenderContext::record([&](CommandBuffer& cb) { cb.bindVertexBuffers(binding, { buffer }); });
 }

@@ -19,14 +19,6 @@ class CommandBuffer : NonCopyable
 	}
 
 public:
-	struct SubmitInfo
-	{
-		Fence* fence = nullptr;
-		std::vector<VkSemaphore> wait_semaphores = {};
-		std::vector<VkSemaphore> signal_semaphores = {};
-		std::vector<VkPipelineStageFlags> wait_stages = {};
-	};
-
 	enum class State
 	{
 		INITIAL,
@@ -104,8 +96,8 @@ public:
 	void drawIndirect(VkBuffer indirect_buffer, uint32_t offset, uint32_t draw_count, uint32_t stride) const;
 	void drawIndexedIndirect(VkBuffer indirect_buffer, uint32_t offset, uint32_t draw_count, uint32_t stride) const;
 
-	void submit(const SubmitInfo& info = {}, VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT);
-	void submitImmidiatly(VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT);
+	void submit(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {}, VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT);
+	void execute(VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT);
 	void reset(bool free = false);
 
 	bool isPrimary() const { return is_primary; }
