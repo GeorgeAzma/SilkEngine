@@ -25,12 +25,12 @@ public:
 	virtual ~Buffer();
 
 	void resize(VkDeviceSize size);
-	void copy(VkBuffer destination, VkDeviceSize size, VkDeviceSize offset = 0, VkDeviceSize dst_offset = 0) const;
+	bool copy(VkBuffer destination, VkDeviceSize size, VkDeviceSize offset = 0, VkDeviceSize dst_offset = 0) const;
 
 	void drawIndirect(uint32_t index);
 	void drawIndexedIndirect(uint32_t index);
 
-	void setData(const void* data, size_t size = 0, size_t offset = 0);
+	bool setData(const void* data, size_t size = 0, size_t offset = 0);
 
 	void getData(void* data, size_t size = 0) const;
 	VkDeviceSize getSize() const { return ci.size; }

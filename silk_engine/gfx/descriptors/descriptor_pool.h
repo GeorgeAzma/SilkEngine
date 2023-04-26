@@ -9,6 +9,8 @@ public:
 	VkResult allocate(VkDescriptorSet& descriptor_set, const VkDescriptorSetLayout& descriptor_set_layout) const;
 	void deallocate() const;
 
+	void reset() const;
+
 	operator const VkDescriptorPool& () const { return descriptor_pool; }
 	uint32_t allocatedDescriptorSetCount() const { return allocated_descriptor_sets; }
 

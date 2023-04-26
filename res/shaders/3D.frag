@@ -7,11 +7,11 @@
 
 layout(location = 0) in VertexOutput 
 {
+    vec3 world_position;
     vec2 texture_coordinate;
     vec3 normal;
-    flat uint instance_image_index;
-    vec3 world_position;
     vec4 color;
+    flat uint instance_image_index;
 } fragment_input;
 
 struct Light

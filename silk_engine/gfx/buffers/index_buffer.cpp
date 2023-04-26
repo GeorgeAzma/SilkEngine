@@ -10,27 +10,5 @@ IndexBuffer::IndexBuffer(const void* data, VkDeviceSize count, IndexType index_t
 
 void IndexBuffer::bind(VkDeviceSize offset) const
 {
-	RenderContext::record([&](CommandBuffer& cb) { cb.bindIndexBuffer(buffer, offset, indexType(index_type)); });
-}
-
-VkIndexType IndexBuffer::indexType(IndexType index_type)
-{
-	switch (index_type)
-	{
-		case IndexType::UINT16: return VK_INDEX_TYPE_UINT16;
-		case IndexType::UINT32: return VK_INDEX_TYPE_UINT32;
-	}
-
-	return VkIndexType(0);
-}
-
-size_t IndexBuffer::indexTypeSize(IndexType index_type)
-{
-	switch (index_type)
-	{
-		case IndexType::UINT16: return 2;
-		case IndexType::UINT32: return 4;
-	}
-
-	return 0;
+	RenderContext::record([&](CommandBuffer& cb) { cb.bindIndexBuffer(buffer, offset, VkIndexType(index_type)); });
 }

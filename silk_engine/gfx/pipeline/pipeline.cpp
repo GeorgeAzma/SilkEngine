@@ -16,9 +16,9 @@ void Pipeline::recreate(const std::vector<Constant>& constants)
 	create();
 }
 
-void Pipeline::pushConstant(std::string_view name, const void* data) const
+void Pipeline::pushConstant(const void* data, Shader::Stage::Type stages, uint32_t size, uint32_t offset) const
 {
-	shader->pushConstants(name, data);
+	shader->pushConstant(data, stages, size, offset);
 }
 
 void Pipeline::setShader(const shared<Shader>& shader, const std::vector<Constant>& constants)
@@ -82,7 +82,6 @@ void Pipeline::setShader(const shared<Shader>& shader, const std::vector<Constan
 	pipeline_layout_info.pSetLayouts = descriptor_set_layouts.data();
 	pipeline_layout_info.pushConstantRangeCount = shader->getReflectionData().push_constants.size();
 	pipeline_layout_info.pPushConstantRanges = shader->getReflectionData().push_constants.data();
-
 	layout = RenderContext::getLogicalDevice().createPipelineLayout(pipeline_layout_info);
 }
 

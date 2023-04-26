@@ -11,8 +11,7 @@ public:
 	static void trackUpdate(VkDescriptorType descriptor_type, uint32_t descriptor_count);
 
 private:
-	static shared<DescriptorPool> createPool();
-	static shared<DescriptorPool> grabPool();
+	static shared<DescriptorPool> getPool();
 
 private:
 	static inline shared<DescriptorPool> current_pool = nullptr;

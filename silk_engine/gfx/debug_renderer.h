@@ -7,29 +7,32 @@
 
 class Image;
 class Font;
-class GraphicsPipeline;
 class Buffer;
 class VertexBuffer;
 class Mesh;
+class GraphicsPipeline;
 class Material;
 
 class DebugRenderer
 {
-	// TODO: Fix this
-	friend class InstanceImages;
 public:
-	static constexpr uint32_t MAX_INSTANCE_BATCHES = 8192;
-	static constexpr uint32_t MAX_INSTANCES = 8192;
+	static constexpr uint32_t MAX_INSTANCE_BATCHES = 256;
+	static constexpr uint32_t MAX_INSTANCES = 16384;
 	static constexpr uint32_t MAX_IMAGE_SLOTS = 16;
 	static constexpr uint32_t MAX_LIGHTS = 16;
 
 	struct InstanceData
 	{
 		mat4 transform = mat4(1);
-		uint32_t image_index = 0;
 		vec4 color = vec4(1);
+		uint32_t image_index = 0;
 
 		bool operator==(const InstanceData& other) const;
+	};
+
+	struct ImmidiateData
+	{
+		mat4 transform = mat4(1);
 	};
 
 private:
@@ -87,15 +90,10 @@ private:
 	struct InstanceBatch
 	{
 		shared<Mesh> mesh = nullptr;
-
-		std::vector<InstanceData> instance_data;
-		std::vector<shared<RenderedInstance>> instances;
-		shared<VertexBuffer> instance_buffer = nullptr;
+		std::vector<InstanceData> instance_data; 
+		std::vector<shared<RenderedInstance>> instances; 
 		InstanceImages instance_images{};
 		shared<Material> material = nullptr;
-
-		void bind();
-
 		bool needs_update = true;
 	};
 
@@ -110,13 +108,13 @@ public:
 	static const shared<Image>& getWhiteImage() { return white_image; }
 	static const shared<Buffer>& getGlobalUniformBuffer() { return global_uniform_buffer; }
 
-	//States
+	// States
 	static void transform(const mat4& transform = mat4(1)) { active.transformed = transform != mat4(1); active.transform = transform; }
 	static void color(const Color& color = Colors::WHITE) { active.color = color; }
 	static void image(const shared<Image>& image = white_image) { active.images[0] = image; }
 	static void depth(float depth) { active.depth = depth; }
 
-	//2D
+	// 2D
 	static void triangle(float x, float y, float width, float height);
 	static void triangle(float x, float y, float size);
 	static void triangle(float x1, float y1, float x2, float y2, float x3, float y3);
@@ -138,31 +136,40 @@ public:
 	static void image(const shared<Image>& image, float x, float y, float size);
 	static void mesh(const shared<Mesh>& mesh, float x, float y, float width, float height);
 
-	//3D
+	// 3D
 	static void tetrahedron(float x, float y, float z, float size);
 	static void cube(float x, float y, float z, float size);
 	static void cuboid(float x, float y, float z, float width, float height, float depth);
 	static void sphere(float x, float y, float z, float radius);
 	static void ellipsoid(float x, float y, float z, float width, float height, float depth);
 
-	//Slow function for quickly drawing stuff
+	// Slow function for quickly drawing stuff
 	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const mat4& transform);
 	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth = 1.0f);
 	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float width, float height);
 
 	static Light* addLight(const Light& light);
+	
 	static shared<RenderedInstance> createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
 	static void updateInstance(const RenderedInstance& instance, const InstanceData& instance_data);
-	static void addInstanceBatch(const shared<RenderedInstance>& instance, const shared<GraphicsPipeline>& pipeline, const shared<Mesh>& mesh, const InstanceData& instance_data);
 	static void destroyInstance(const RenderedInstance& instance);
 
 private:
-	static std::vector<InstanceBatch> instance_batches;
-	static std::vector<shared<RenderedInstance>> instances;
+	static inline std::vector<InstanceBatch> instance_batches;
+	struct Hash
+	{
+		size_t operator()(const shared<Material>& material) const
+		{
+			return size_t(material.get());
+		}
+	};
 	static shared<Buffer> indirect_buffer;
 	static shared<Buffer> global_uniform_buffer;
 	static std::array<Light, MAX_LIGHTS> lights;
 	static shared<Image> white_image;
-	static shared<GraphicsPipeline> pipeline_2D;
-	static shared<GraphicsPipeline> pipeline_3D;
+	static inline std::vector<shared<RenderedInstance>> instances; 
+	static shared<VertexBuffer> instance_buffer;
+	static shared<VertexBuffer> vertex_buffer;
+	static shared<GraphicsPipeline> graphics_pipeline_2D;
+	static shared<GraphicsPipeline> graphics_pipeline_3D;
 };

@@ -24,10 +24,10 @@ void DescriptorSet::write(uint32_t binding, const std::vector<VkDescriptorBuffer
 		size_t i;
 		for (i = 0; i < it.first->second.size(); ++i)
 		{
-			const auto& bi = it.first->second[i];
-			if (bi.buffer != buffer_infos[i].buffer ||
-				bi.offset != buffer_infos[i].offset ||
-				bi.range != buffer_infos[i].range)
+			const auto& dbi = it.first->second[i];
+			if (dbi.buffer != buffer_infos[i].buffer ||
+				dbi.offset != buffer_infos[i].offset ||
+				dbi.range != buffer_infos[i].range)
 				break;
 		}
 		if (i >= it.first->second.size())
@@ -45,10 +45,10 @@ void DescriptorSet::write(uint32_t binding, const std::vector<VkDescriptorImageI
 		size_t i;
 		for (i = 0; i < it.first->second.size(); ++i)
 		{
-			const auto& bi = it.first->second[i];
-			if (bi.imageLayout != image_infos[i].imageLayout ||
-				bi.imageView != image_infos[i].imageView ||
-				bi.sampler != image_infos[i].sampler)
+			const auto& dii = it.first->second[i];
+			if (dii.imageLayout != image_infos[i].imageLayout ||
+				dii.imageView != image_infos[i].imageView ||
+				dii.sampler != image_infos[i].sampler)
 				break;
 		}
 		if (i >= it.first->second.size())

@@ -4,12 +4,21 @@
 
 class CommandPool;
 
+template <typename Func>
+concept Command = requires (Func && val, CommandBuffer & cb) { { val(cb) } -> std::same_as<void>; };
+
 class CommandQueue : NonCopyable
 {
 public:
 	CommandQueue(std::optional<uint32_t> queue_family_index, VkQueueFlagBits queue_type);
 
-	void record(std::function<void(CommandBuffer&)>&& command);
+	template <Command Func>
+	void record(Func&& command)
+	{
+		auto& command_buffer = getCommandBuffer();
+		command_buffer.begin();
+		std::forward<Func>(command)(command_buffer);
+	}
 	void submit(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
 	void execute();
 	void reset();

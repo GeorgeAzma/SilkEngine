@@ -129,6 +129,7 @@ Shader::Shader(std::string_view name)
 	for (const auto& file : std::filesystem::directory_iterator("res/shaders"))
 		if (file.path().stem() == name)
 			source_files.push_back(file);
+	SK_VERIFY(source_files.size(), "Shader {} does not exist", name);
 	stages.reserve(source_files.size());
 	for (const auto& file : source_files)
 		stages.emplace_back(makeUnique<Stage>(file));
@@ -183,8 +184,32 @@ void Shader::reflect()
 		for (const spirv_cross::Resource& uniform_buffer : shader_resources.uniform_buffers)
 			loadResource(uniform_buffer, compiler, shader_resources, type, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
-		for (const spirv_cross::Resource& push_constant : shader_resources.push_constant_buffers)
-			loadPushConstant(push_constant, compiler, shader_resources, type);
+		for (const spirv_cross::Resource& push_constant_buffer : shader_resources.push_constant_buffers)
+		{
+			auto active_ranges = compiler.get_active_buffer_ranges(push_constant_buffer.id);
+			for (auto& active_range : active_ranges)
+			{
+				bool found_push_constant = false;
+				for (size_t i = 0; i < reflection_data.push_constants.size(); ++i)
+				{
+					auto& existing_push_constant = reflection_data.push_constants[i];
+					if (existing_push_constant.offset + existing_push_constant.size >= active_range.offset && existing_push_constant.offset < active_range.offset + active_range.range)
+					{
+						existing_push_constant.stageFlags |= (VkShaderStageFlags)type;
+						found_push_constant = true;
+						break;
+					}
+				}
+				if (!found_push_constant)
+				{
+					VkPushConstantRange push_constant_range{};
+					push_constant_range.offset = active_range.offset;
+					push_constant_range.size = active_range.range;
+					push_constant_range.stageFlags = (VkShaderStageFlags)type;
+					reflection_data.push_constants.emplace_back(push_constant_range);
+				}
+			}
+		}
 
 		if (VkShaderStageFlags(type) & VkShaderStageFlags(Stage::Type::VERTEX))
 		{
@@ -327,7 +352,7 @@ void Shader::reflect()
 		descriptor_set_layout_binding.descriptorCount = resource.count;
 		descriptor_set_layout_binding.descriptorType = resource.type;
 		descriptor_set_layout_binding.pImmutableSamplers = nullptr;
-		descriptor_set_layout_binding.stageFlags = resource.stage;
+		descriptor_set_layout_binding.stageFlags = (VkShaderStageFlags) resource.stage;
 		descriptor_set_layout_bindings[resource.set].emplace_back(std::move(descriptor_set_layout_binding));
 		reflection_data.resource_locations.emplace(resource.name, ResourceLocation{ resource.set, resource.binding });
 	}
@@ -344,10 +369,9 @@ Shader::ResourceLocation Shader::getLocation(std::string_view resource_name) con
 	return ResourceLocation{};
 }
 
-void Shader::pushConstants(std::string_view name, const void* data) const
+void Shader::pushConstant(const void* data, Stage::Type stages, uint32_t size, uint32_t offset) const
 {
-	const auto& push_constant = reflection_data.push_constant_map.at(name);
-	RenderContext::record([&](CommandBuffer& cb) { cb.pushConstants(push_constant.stageFlags, push_constant.offset, push_constant.size, data); });
+	RenderContext::record([&](CommandBuffer& cb) { cb.pushConstants((VkPipelineStageFlags)stages, offset, size, data); });
 }
 
 void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, Stage::Type stage, VkDescriptorType type)
@@ -356,11 +380,11 @@ void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spi
 	{
 		if (resource.name == spirv_resource.name)
 		{
-			resource.stage |= (VkShaderStageFlags)stage;
+			resource.stage |= stage;
 			return;
 		}
 	}
-
+	
 	const spirv_cross::SPIRType& spir_type = compiler.get_type(spirv_resource.type_id);
 	uint32_t set = compiler.get_decoration(spirv_resource.id, spv::DecorationDescriptorSet);
 	uint32_t binding = compiler.get_decoration(spirv_resource.id, spv::DecorationBinding);
@@ -376,30 +400,8 @@ void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spi
 	resource.count = count;
 	resource.set = set;
 	resource.binding = binding;
-	resource.stage = (VkShaderStageFlags)stage;
+	resource.stage = stage;
 	resource.type = type;
 	resource.name = spirv_resource.name;
 	reflection_data.resources.emplace_back(std::move(resource));
-}
-
-void Shader::loadPushConstant(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, Stage::Type stage)
-{
-	auto ranges = compiler.get_active_buffer_ranges(resources.push_constant_buffers.front().id);
-	for (auto& range : ranges)
-	{
-		for (auto& push_constant : reflection_data.push_constants)
-		{
-			if (push_constant.size == range.range && push_constant.offset == range.offset)
-			{
-				push_constant.stageFlags |= (VkShaderStageFlags)stage;
-				return;
-			}
-		}
-		VkPushConstantRange push_constant_range{};
-		push_constant_range.offset = range.offset;
-		push_constant_range.size = range.range;
-		push_constant_range.stageFlags = (VkShaderStageFlags)stage;
-		reflection_data.push_constants.emplace_back(push_constant_range);
-		reflection_data.push_constant_map.emplace(spirv_resource.name, push_constant_range);
-	}
 }

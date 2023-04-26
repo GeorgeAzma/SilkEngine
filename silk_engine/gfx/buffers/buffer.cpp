@@ -27,14 +27,45 @@ void Buffer::resize(VkDeviceSize size)
 {
 	if (size == ci.size)
 		return;
+
+	VkDeviceSize copy_size = std::min(size, ci.size);
 	ci.size = size;
-	RenderContext::getAllocator().destroyBuffer(buffer, allocation);
-	allocation = RenderContext::getAllocator().allocateBuffer(ci, alloc_ci, buffer);
+
+	if (VmaAllocation(allocation) && allocation.isHostVisible())
+	{
+		VkBuffer new_buffer = nullptr;
+		Allocation new_allocation = RenderContext::getAllocator().allocateBuffer(ci, alloc_ci, new_buffer);
+		if (VmaAllocation(new_allocation) && allocation.isHostVisible())
+		{
+			std::vector<byte> data(copy_size);
+			allocation.getData(data.data(), copy_size);
+			new_allocation.setData(data.data(), copy_size);
+			RenderContext::getAllocator().destroyBuffer(buffer, allocation);
+			buffer = new_buffer;
+			allocation = new_allocation;
+			return;
+		}
+		RenderContext::getAllocator().destroyBuffer(new_buffer, new_allocation);
+	}
+
+	if ((ci.usage & TRANSFER_SRC) && (ci.usage & TRANSFER_DST))
+	{
+		VkBuffer new_buffer = nullptr;
+		Allocation new_allocation = RenderContext::getAllocator().allocateBuffer(ci, alloc_ci, new_buffer);
+		copy(new_buffer, copy_size);
+		RenderContext::executeTransfer();
+		RenderContext::getAllocator().destroyBuffer(buffer, allocation);
+		buffer = new_buffer;
+		allocation = new_allocation;
+	}
 }
 
-void Buffer::copy(VkBuffer destination, VkDeviceSize size, VkDeviceSize offset, VkDeviceSize dst_offset) const
+bool Buffer::copy(VkBuffer destination, VkDeviceSize size, VkDeviceSize offset, VkDeviceSize dst_offset) const
 {
+	if (!(ci.usage & UsageBits::TRANSFER_SRC))
+		return false;
 	copy(destination, buffer, size, dst_offset, offset);
+	return true;
 }
 
 void Buffer::drawIndirect(uint32_t index)
@@ -44,20 +75,24 @@ void Buffer::drawIndirect(uint32_t index)
 
 void Buffer::drawIndexedIndirect(uint32_t index)
 {
-	RenderContext::record([&](CommandBuffer& cb) { cb.drawIndexedIndirect(buffer, index * sizeof(VkDrawIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand)); });
+	RenderContext::record([&](CommandBuffer& cb) { cb.drawIndexedIndirect(buffer, index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand)); });
 }
 
-void Buffer::setData(const void* data, size_t size, size_t offset)
+bool Buffer::setData(const void* data, size_t size, size_t offset)
 {
+	if (size + offset > ci.size)
+		return false;
 	if (VmaAllocation(allocation) && allocation.isHostVisible())
-		allocation.setData(data, size ? size : ci.size, offset);
-	else
 	{
-		Buffer sb(size ? size : ci.size, Buffer::TRANSFER_SRC, { Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
-		sb.setData(data);
-		sb.copy(buffer, size ? size : ci.size, offset);
-		RenderContext::executeTransfer();
+		allocation.setData(data, size ? size : ci.size, offset);
+		return true;
 	}
+	
+	Buffer sb(size ? size : ci.size, Buffer::TRANSFER_SRC, { Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
+	sb.setData(data);
+	sb.copy(buffer, size ? size : ci.size, offset);
+	RenderContext::executeTransfer();
+	return true;
 }
 
 void Buffer::getData(void* data, size_t size) const
@@ -67,6 +102,7 @@ void Buffer::getData(void* data, size_t size) const
 	else
 	{
 		Buffer sb(size ? size : ci.size, Buffer::TRANSFER_DST, { Allocation::RANDOM_ACCESS | Allocation::MAPPED });
+		copy(sb, sb.getSize());
 		sb.getData(data);
 	}
 }

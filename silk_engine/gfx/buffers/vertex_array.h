@@ -16,10 +16,11 @@ public:
 
 	bool hasIndexBuffer() const { return index_buffer != nullptr; }
 
-	void bind() const;
+	void bind(const std::vector<VkDeviceSize>& offsets = {}, VkDeviceSize index_offset = 0) const;
 	void draw() const;
 
 private:
 	std::vector<shared<VertexBuffer>> vertex_buffers = {};
+	std::vector<VkBuffer> vk_vertex_buffers = {};
 	shared<IndexBuffer> index_buffer = nullptr;
 };

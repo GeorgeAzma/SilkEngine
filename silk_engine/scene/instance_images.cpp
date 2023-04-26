@@ -36,10 +36,7 @@ uint32_t InstanceImages::add(const std::vector<shared<Image>>& new_images)
 			need_update = true;
 			return images.size() - 1;
 		}
-		else
-		{
-			return std::numeric_limits<uint32_t>::max();
-		}
+		return std::numeric_limits<uint32_t>::max();
 	}
 
 	enum Action : uint8_t { Add, Replace, Use };
@@ -108,6 +105,6 @@ std::vector<VkDescriptorImageInfo> InstanceImages::getDescriptorImageInfos() con
 	for (size_t i = 0; i < images.size(); ++i)
 		image_descriptor_infos[i] = images[i]->getDescriptorInfo();
 	for (size_t i = images.size(); i < image_descriptor_infos.size(); ++i)
-		image_descriptor_infos[i] = DebugRenderer::white_image->getDescriptorInfo();
+		image_descriptor_infos[i] = DebugRenderer::getWhiteImage()->getDescriptorInfo();
 	return image_descriptor_infos;
 }

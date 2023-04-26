@@ -42,12 +42,12 @@ void MyScene::onUpdate()
     shared<Mesh> mesh2 = makeShared<Mesh>(RoundedRectangleMesh(8));
     size_t j = 100;
     float r = 12;
+    //DebugRenderer::image(Image::get("Cursor"));
     for (int i = 0; i < 10000; ++i)
     {
         //DebugRenderer::color(Colors(i % (1 + int(Colors::TRANSPARENT))));
-        DebugRenderer::image(Image::get("Cursor"));
         DebugRenderer::mesh(mesh, (i % j) * r * 2 + 30.0f, i / j * r * 4 + 30.0f, r, r);
-        DebugRenderer::mesh(mesh, (i % j) * r * 2 + 30.0f, i / j * r * 4 + r * 2 + 30.0f, r, r);
+        DebugRenderer::mesh(mesh2, (i % j) * r * 2 + 30.0f, i / j * r * 4 + r * 2 + 30.0f, r, r);
     }
 }
 

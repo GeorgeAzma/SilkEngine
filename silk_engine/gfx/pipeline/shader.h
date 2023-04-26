@@ -19,24 +19,6 @@ namespace shaderc
 class Shader : NonCopyable
 {
 public:
-	struct Resource
-	{
-		size_t id;
-		uint32_t count;
-		uint32_t set;
-		uint32_t binding;
-		VkShaderStageFlags stage;
-		VkDescriptorType type;
-		std::string name;
-	};
-
-	struct ResourceLocation
-	{
-		uint32_t set = std::numeric_limits<uint32_t>::max();
-		uint32_t binding = std::numeric_limits<uint32_t>::max();
-		operator bool() const { return set != std::numeric_limits<uint32_t>::max(); }
-	};
-
 	struct Stage : NonCopyable
 	{
 	public:
@@ -77,13 +59,30 @@ public:
 		VkShaderStageFlags stage = VkShaderStageFlags(0);
 	};
 
+	struct Resource
+	{
+		size_t id;
+		uint32_t count;
+		uint32_t set;
+		uint32_t binding;
+		Stage::Type stage;
+		VkDescriptorType type;
+		std::string name;
+	};
+
+	struct ResourceLocation
+	{
+		uint32_t set = std::numeric_limits<uint32_t>::max();
+		uint32_t binding = std::numeric_limits<uint32_t>::max();
+		operator bool() const { return set != std::numeric_limits<uint32_t>::max(); }
+	};
+
 	struct ReflectionData
 	{
 		uvec3 local_size = uvec3(0);
 		std::unordered_map<uint32_t, shared<DescriptorSetLayout>> descriptor_set_layouts;
 		std::vector<Resource> resources;
 		std::vector<VkPushConstantRange> push_constants;
-		std::unordered_map<std::string_view, VkPushConstantRange> push_constant_map;
 		std::unordered_map<std::string_view, ResourceLocation> resource_locations;
 		std::unordered_map<std::string_view, Constant> constants;
 		std::vector<VkVertexInputBindingDescription> vertex_input_binding_descriptions;
@@ -97,16 +96,14 @@ public:
 	void reflect();
 
 	ResourceLocation getLocation(std::string_view resource_name) const;
-	void pushConstants(std::string_view name, const void* data) const;
+	void pushConstant(const void* data, Stage::Type stages, uint32_t size, uint32_t offset = 0) const;
 
 	const std::vector<unique<Stage>>& getStages() const { return stages; }
 	const ReflectionData& getReflectionData() const { return reflection_data; }
 
 private:
-	//Reflection
 	void loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, Stage::Type stage, VkDescriptorType type);
-	void loadPushConstant(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, Stage::Type stage);
-
+	
 private:
 	std::vector<unique<Stage>> stages;
 	ReflectionData reflection_data{};
@@ -119,3 +116,25 @@ public:
 private:
 	static inline std::unordered_map<std::string_view, shared<Shader>> shaders{};
 };
+
+static Shader::Stage::Type operator|(Shader::Stage::Type lhs, Shader::Stage::Type rhs)
+{
+	using T = std::underlying_type_t<Shader::Stage::Type>;
+	return static_cast<Shader::Stage::Type>(static_cast<T>(lhs) | static_cast<T>(rhs));
+}
+
+static Shader::Stage::Type& operator|=(Shader::Stage::Type& lhs, Shader::Stage::Type rhs)
+{
+	return (lhs = lhs | rhs);
+}
+
+static Shader::Stage::Type operator&(Shader::Stage::Type lhs, Shader::Stage::Type rhs)
+{
+	using T = std::underlying_type_t<Shader::Stage::Type>;
+	return static_cast<Shader::Stage::Type>(static_cast<T>(lhs) & static_cast<T>(rhs));
+}
+
+static Shader::Stage::Type& operator&=(Shader::Stage::Type& lhs, Shader::Stage::Type rhs)
+{
+	return (lhs = lhs & rhs);
+}

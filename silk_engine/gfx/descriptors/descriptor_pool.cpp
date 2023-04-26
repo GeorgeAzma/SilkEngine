@@ -33,3 +33,8 @@ void DescriptorPool::deallocate() const
 	SK_VERIFY(allocated_descriptor_sets > 0, "Can't deallocate pool's descriptor set when it doesn't have any");
 	--allocated_descriptor_sets;
 }
+
+void DescriptorPool::reset() const
+{
+	RenderContext::getLogicalDevice().resetDescriptorPool(descriptor_pool);
+}

@@ -1,11 +1,11 @@
 #pragma once
 
 #include "command_queue.h"
+#include "devices/physical_device.h"
 
 class WindowResizeEvent;
 class DebugMessenger;
 class Instance;
-class PhysicalDevice;
 class LogicalDevice;
 class Allocator;
 class PipelineCache;
@@ -20,17 +20,47 @@ public:
 	static void destroy();
 	static void update();
 
-	static void record(std::function<void(CommandBuffer&)>&& command);
-	static void submit(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
-	static void execute(); 
+	template <Command Func>
+	static void record(Func&& command)
+	{
+		command_queues[frame]->record(std::forward<Func>(command));
+	}
+	static void submit(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {}) 
+	{
+		command_queues[frame]->submit(fence, wait_stages, wait_semaphores, signal_semaphores);
+	}
+	static void execute()
+	{
+		command_queues[frame]->execute();
+	}
 
-	static void recordCompute(std::function<void(CommandBuffer&)>&& command);
-	static void submitCompute(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
-	static void executeCompute();
+	template <Command Func>
+	static void recordCompute(Func&& command)
+	{
+		((physical_device->getComputeQueue() > -1) ? compute_command_queues : command_queues)[frame]->record(std::forward<Func>(command));
+	}
+	static void submitCompute(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {}) 
+	{
+		((physical_device->getComputeQueue() > -1) ? compute_command_queues : command_queues)[frame]->submit(fence, wait_stages, wait_semaphores, signal_semaphores);
+	}
+	static void executeCompute()
+	{
+		((physical_device->getComputeQueue() > -1) ? compute_command_queues : command_queues)[frame]->execute();
+	}
 
-	static void recordTransfer(std::function<void(CommandBuffer&)>&& command);
-	static void submitTransfer(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
-	static void executeTransfer();
+	template <Command Func>
+	static void recordTransfer(Func&& command)
+	{
+		((physical_device->getTransferQueue() > -1) ? transfer_command_queues : command_queues)[frame]->record(std::forward<Func>(command));
+	}
+	static void submitTransfer(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {}) 
+	{
+		((physical_device->getTransferQueue() > -1) ? transfer_command_queues : command_queues)[frame]->submit(fence, wait_stages, wait_semaphores, signal_semaphores);
+	}
+	static void executeTransfer()
+	{
+		((physical_device->getTransferQueue() > -1) ? transfer_command_queues : command_queues)[frame]->execute();
+	}
 
 	static void screenshot(const path& file);
 	static void vulkanAssert(VkResult result);

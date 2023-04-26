@@ -12,6 +12,7 @@ VertexArray::~VertexArray()
 VertexArray& VertexArray::addVertexBuffer(const shared<VertexBuffer>& vertex_buffer)
 {
 	vertex_buffers.emplace_back(vertex_buffer);
+	vk_vertex_buffers.emplace_back(*vertex_buffer);
 	return *this;
 }
 
@@ -21,14 +22,11 @@ VertexArray& VertexArray::setIndexBuffer(const shared<IndexBuffer>& index_buffer
 	return *this;
 }
 
-void VertexArray::bind() const
+void VertexArray::bind(const std::vector<VkDeviceSize>& offsets, VkDeviceSize index_offset) const
 {
-	std::vector<VkBuffer> buffers(vertex_buffers.size());
-	for (size_t i = 0; i < vertex_buffers.size(); ++i)
-		buffers[i] = *vertex_buffers[i];
-	RenderContext::record([&](CommandBuffer& cb) { cb.bindVertexBuffers(0, buffers); });
+	RenderContext::record([&](CommandBuffer& cb) { cb.bindVertexBuffers(0, vk_vertex_buffers, offsets); });
 	if (index_buffer)
-		index_buffer->bind();
+		index_buffer->bind(index_offset);
 }
 
 void VertexArray::draw() const

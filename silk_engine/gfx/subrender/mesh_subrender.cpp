@@ -24,6 +24,14 @@ MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
     GraphicsPipeline::add("2D", graphics_pipeline);
 
     graphics_pipeline = makeShared<GraphicsPipeline>();
+    graphics_pipeline->setShader(makeShared<Shader>("immediate_2D"))
+        .setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
+        .setStage(pipeline_stage)
+        .setDepthCompareOp(GraphicsPipeline::CompareOp::LESS_OR_EQUAL)
+        .build();
+    GraphicsPipeline::add("Immediate 2D", graphics_pipeline);
+
+    graphics_pipeline = makeShared<GraphicsPipeline>();
     graphics_pipeline->setShader(makeShared<Shader>("font"))
         .setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
         .setStage(pipeline_stage)

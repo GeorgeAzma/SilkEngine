@@ -70,68 +70,6 @@ void RenderContext::update()
 	frame = (frame + 1) % 3;
 }
 
-void RenderContext::record(std::function<void(CommandBuffer&)>&& command)
-{
-	command_queues[frame]->record(std::forward<std::function<void(CommandBuffer&)>>(command));
-}
-
-void RenderContext::submit(const Fence* fence, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
-{
-	command_queues[frame]->submit(fence, wait_stages, wait_semaphores, signal_semaphores);
-}
-
-void RenderContext::execute()
-{
-	command_queues[frame]->execute();
-}
-
-void RenderContext::recordCompute(std::function<void(CommandBuffer&)>&& command)
-{
-	if (physical_device->getComputeQueue() != -1)
-		compute_command_queues[frame]->record(std::forward<std::function<void(CommandBuffer&)>>(command));
-	else 
-		command_queues[frame]->record(std::forward<std::function<void(CommandBuffer&)>>(command));
-}
-
-void RenderContext::submitCompute(const Fence* fence, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
-{
-	if (physical_device->getComputeQueue() != -1)
-		compute_command_queues[frame]->submit(fence, wait_stages, wait_semaphores, signal_semaphores);
-	else
-		command_queues[frame]->submit(fence, wait_stages, wait_semaphores, signal_semaphores);
-}
-
-void RenderContext::executeCompute()
-{
-	if (physical_device->getComputeQueue() != -1)
-		compute_command_queues[frame]->execute();
-	else
-		command_queues[frame]->execute();
-}
-
-void RenderContext::recordTransfer(std::function<void(CommandBuffer&)>&& command)
-{
-	if (physical_device->getTransferQueue() != -1)
-		transfer_command_queues[frame]->record(std::forward<std::function<void(CommandBuffer&)>>(command));
-	else
-		command_queues[frame]->record(std::forward<std::function<void(CommandBuffer&)>>(command));
-}
-
-void RenderContext::submitTransfer(const Fence* fence, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
-{
-	if (physical_device->getTransferQueue() != -1)
-		transfer_command_queues[frame]->submit(fence, wait_stages, wait_semaphores, signal_semaphores);
-	else
-		command_queues[frame]->submit(fence, wait_stages, wait_semaphores, signal_semaphores);
-}
-
-void RenderContext::executeTransfer()
-{
-	if (physical_device->getTransferQueue() != -1)
-		transfer_command_queues[frame]->execute();
-	else
-		command_queues[frame]->execute();
-}
 
 void RenderContext::screenshot(const path& file)
 {

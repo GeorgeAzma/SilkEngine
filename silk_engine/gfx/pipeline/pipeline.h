@@ -34,7 +34,7 @@ public:
 
 	virtual void bind() = 0;
 
-	void pushConstant(std::string_view name, const void* data) const;
+	void pushConstant(const void* data, Shader::Stage::Type stages, uint32_t size, uint32_t offset = 0) const;
 
 	const shared<Shader>& getShader() const { return shader; }
 	const VkPipelineLayout& getLayout() const { return layout; }
