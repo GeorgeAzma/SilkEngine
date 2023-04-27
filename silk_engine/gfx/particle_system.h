@@ -4,7 +4,7 @@
 
 class ThreadPool;
 class Material;
-class VertexBuffer;
+class Buffer;
 
 struct ParticleProps
 {
@@ -85,7 +85,7 @@ private:
 	static inline std::vector<Particle> particles;
 	static inline std::vector<ParticleSpout> particle_spouts;
 	static inline std::vector<ParticleData> particle_data;
-	static inline shared<VertexBuffer> instance_vbo;
+	static inline shared<Buffer> instance_vbo;
 	static inline shared<InstanceImages> instance_images;
 	static unique<ThreadPool> thread_pool;
 };

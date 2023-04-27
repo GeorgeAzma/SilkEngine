@@ -10,34 +10,7 @@ InstanceImages::InstanceImages(uint32_t max_images)
 uint32_t InstanceImages::add(const std::vector<shared<Image>>& new_images)
 {
 	if (new_images.size() == 1)
-	{
-		for (size_t i = 0; i < images.size(); ++i)
-		{
-			if (images[i] == new_images[0])
-			{
-				++image_owners[i];
-				return i;
-			}
-		}
-		for (size_t i = 0; i < images.size(); ++i)
-		{
-			if (!image_owners[i])
-			{
-				images[i] = new_images[0];
-				++image_owners[i];
-				need_update = true;
-				return i;
-			}
-		}
-		if (images.size() < max_images)
-		{
-			images.emplace_back(new_images[0]);
-			image_owners.emplace_back(1);
-			need_update = true;
-			return images.size() - 1;
-		}
-		return std::numeric_limits<uint32_t>::max();
-	}
+		return add(new_images[0]);
 
 	enum Action : uint8_t { Add, Replace, Use };
 
@@ -61,7 +34,6 @@ up:
 		}
 	}
 
-	bool need_update = false;
 	for (size_t i = 0; i < new_images.size(); ++i)
 	{
 		switch (actions[i])
@@ -69,7 +41,6 @@ up:
 		case Add:
 			images.emplace_back(new_images[i]);
 			image_owners.emplace_back(1);
-			need_update = true;
 			break;
 		case Use:
 			++image_owners[i + j];
@@ -77,12 +48,39 @@ up:
 		case Replace:
 			images[i + j] = new_images[i];
 			++image_owners[i + j];
-			need_update = true;
 			break;
 		}
 	}
 
 	return j;
+}
+
+uint32_t InstanceImages::add(const shared<Image>& new_image)
+{
+	for (size_t i = 0; i < images.size(); ++i)
+	{
+		if (images[i] == new_image)
+		{
+			++image_owners[i];
+			return i;
+		}
+	}
+	for (size_t i = 0; i < images.size(); ++i)
+	{
+		if (!image_owners[i])
+		{
+			images[i] = new_image;
+			++image_owners[i];
+			return i;
+		}
+	}
+	if (images.size() < max_images)
+	{
+		images.emplace_back(new_image);
+		image_owners.emplace_back(1);
+		return images.size() - 1;
+	}
+	return std::numeric_limits<uint32_t>::max();
 }
 
 void InstanceImages::remove(size_t index, size_t count)

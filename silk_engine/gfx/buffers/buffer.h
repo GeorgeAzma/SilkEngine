@@ -25,16 +25,18 @@ public:
 	virtual ~Buffer();
 
 	void resize(VkDeviceSize size);
-	bool copy(VkBuffer destination, VkDeviceSize size, VkDeviceSize offset = 0, VkDeviceSize dst_offset = 0) const;
+	void reallocate(VkDeviceSize size);
+	bool copy(VkBuffer destination, VkDeviceSize size = 0, VkDeviceSize offset = 0, VkDeviceSize dst_offset = 0) const;
 
+	void bindVertex(uint32_t first = 0, VkDeviceSize offset = 0);
+	void bindIndex(VkIndexType index_type = VK_INDEX_TYPE_UINT32, VkDeviceSize offset = 0);
 	void drawIndirect(uint32_t index);
 	void drawIndexedIndirect(uint32_t index);
 
 	bool setData(const void* data, VkDeviceSize size = 0, VkDeviceSize offset = 0);
-
 	void getData(void* data, VkDeviceSize size = 0) const;
-	VkDeviceSize getSize() const { return ci.size; }
 
+	VkDeviceSize getSize() const { return ci.size; }
 	Allocation getAllocation() const { return allocation; }
 	VkDescriptorBufferInfo getDescriptorInfo() const { return { buffer, 0, ci.size }; }
 	operator const VkBuffer& () const { return buffer; }

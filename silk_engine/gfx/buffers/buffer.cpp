@@ -27,45 +27,37 @@ void Buffer::resize(VkDeviceSize size)
 {
 	if (size == ci.size)
 		return;
-
-	VkDeviceSize copy_size = std::min(size, ci.size);
 	ci.size = size;
+	RenderContext::getAllocator().destroyBuffer(buffer, allocation);
+	allocation = RenderContext::getAllocator().allocateBuffer(ci, alloc_ci, buffer);
+}
 
-	if (VmaAllocation(allocation) && allocation.isHostVisible())
-	{
-		VkBuffer new_buffer = nullptr;
-		Allocation new_allocation = RenderContext::getAllocator().allocateBuffer(ci, alloc_ci, new_buffer);
-		if (VmaAllocation(new_allocation) && allocation.isHostVisible())
-		{
-			std::vector<byte> data(copy_size);
-			allocation.getData(data.data(), copy_size);
-			new_allocation.setData(data.data(), copy_size);
-			RenderContext::getAllocator().destroyBuffer(buffer, allocation);
-			buffer = new_buffer;
-			allocation = new_allocation;
-			return;
-		}
-		RenderContext::getAllocator().destroyBuffer(new_buffer, new_allocation);
-	}
-
-	if ((ci.usage & TRANSFER_SRC) && (ci.usage & TRANSFER_DST))
-	{
-		VkBuffer new_buffer = nullptr;
-		Allocation new_allocation = RenderContext::getAllocator().allocateBuffer(ci, alloc_ci, new_buffer);
-		copy(new_buffer, copy_size);
-		RenderContext::executeTransfer();
-		RenderContext::getAllocator().destroyBuffer(buffer, allocation);
-		buffer = new_buffer;
-		allocation = new_allocation;
-	}
+void Buffer::reallocate(VkDeviceSize size)
+{
+	if (size == ci.size)
+		return;
+	std::vector<byte> data(std::min(size, ci.size));
+	getData(data.data(), data.size());
+	resize(size);
+	setData(data.data(), data.size());
 }
 
 bool Buffer::copy(VkBuffer destination, VkDeviceSize size, VkDeviceSize offset, VkDeviceSize dst_offset) const
 {
-	if (!(ci.usage & UsageBits::TRANSFER_SRC))
+	if (size + offset > ci.size)
 		return false;
-	copy(destination, buffer, size, dst_offset, offset);
+	copy(destination, buffer, size ? size : ci.size, dst_offset, offset);
 	return true;
+}
+
+void Buffer::bindVertex(uint32_t first, VkDeviceSize offset)
+{
+	RenderContext::record([&](CommandBuffer& cb) { cb.bindVertexBuffers(first, { buffer }, { offset }); });
+}
+
+void Buffer::bindIndex(VkIndexType index_type, VkDeviceSize offset)
+{
+	RenderContext::record([&](CommandBuffer& cb) { cb.bindIndexBuffer(buffer, offset, index_type); });
 }
 
 void Buffer::drawIndirect(uint32_t index)

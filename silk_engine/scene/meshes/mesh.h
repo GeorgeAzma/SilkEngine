@@ -4,23 +4,10 @@
 
 struct RawMesh;
 
-class Mesh : NonCopyable
+class Mesh : public VertexArray
 {
 public:
-	Mesh(const RawMesh& raw_mesh);
-
-	uint32_t getVertexCount() const { return vertex_array->getVertexCount(); }
-	uint32_t getIndexCount() const { return vertex_array->getIndexCount(); }
-	const shared<VertexArray>& getVertexArray() const { return vertex_array; }
-
-	operator const shared<VertexArray>&() const { return vertex_array; }
-	bool operator==(const Mesh& other) const { return vertex_array == other.vertex_array; }
-
-	void draw(uint32_t first_vertex = 0);
-	void drawIndexed(uint32_t first_index = 0, uint32_t vertex_offset = 0);
-
-private:
-	shared<VertexArray> vertex_array = nullptr;
+	using VertexArray::VertexArray;
 
 public:
 	static shared<Mesh> get(std::string_view name) { if (auto it = meshes.find(name); it != meshes.end()) return it->second; else return nullptr; }

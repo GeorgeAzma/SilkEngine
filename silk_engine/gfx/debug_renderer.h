@@ -8,7 +8,6 @@
 class Image;
 class Font;
 class Buffer;
-class VertexBuffer;
 class Mesh;
 class GraphicsPipeline;
 class Material;
@@ -16,8 +15,8 @@ class Material;
 class DebugRenderer
 {
 public:
-	static constexpr uint32_t MAX_IMAGE_SLOTS = 16;
-	static constexpr uint32_t MAX_LIGHTS = 16;
+	static constexpr uint32_t MAX_IMAGE_SLOTS = 32;
+	static constexpr uint32_t MAX_LIGHTS = 32;
 
 	struct InstanceData
 	{
@@ -31,6 +30,13 @@ public:
 				&& image_index == other.image_index
 				&& color == color;
 		}
+	};
+
+	struct RenderedInstance
+	{
+		size_t image_count = 0;
+		size_t data_index = std::numeric_limits<size_t>::max();
+		size_t batch_index = std::numeric_limits<size_t>::max();
 	};
 
 private:
@@ -78,28 +84,24 @@ private:
 		std::array<vec4, 6> planes;
 	};
 
-	struct RenderedInstance
-	{
-		size_t image_count = 0;
-		size_t instance_data_index = std::numeric_limits<size_t>::max();
-		size_t instance_batch_index = std::numeric_limits<size_t>::max();
-	};
-
-	class RenderContextBase
+	class InstancedRenderContextBase
 	{
 		struct InstanceBatch
 		{
 			shared<Mesh> mesh = nullptr;
-			std::vector<InstanceData> instance_data;
+			std::vector<InstanceData> instance_data{};
 			InstanceImages instance_images{};
 			shared<Material> material = nullptr;
+			shared<Buffer> instance_buffer = nullptr;
+			shared<Buffer> old_instance_buffer = nullptr;
 			bool needs_update = true;
 		};
 	public:
 		void init();
 		void destroy()
 		{
-			instance_buffer = nullptr;
+			instance_batches.clear();
+			draw_commands.clear();
 			indirect_buffer = nullptr;
 		}
 
@@ -110,19 +112,18 @@ private:
 		RenderedInstance createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
 		void updateInstance(const RenderedInstance& instance, const InstanceData& instance_data)
 		{
-			instance_batches[instance.instance_batch_index].needs_update = true;
-			instance_batches[instance.instance_batch_index].instance_data[instance.instance_data_index] = instance_data;
+			auto& instance_batch = instance_batches[instance.batch_index];
+			instance_batch.instance_data[instance.data_index] = instance_data;
+			instance_batch.needs_update = true;
 		}
 
 	public:
-		shared<VertexBuffer> instance_buffer;
-		shared<VertexBuffer> vertex_buffer;
 		shared<Buffer> indirect_buffer;
 		std::vector<VkDrawIndexedIndirectCommand> draw_commands;
 		std::vector<InstanceBatch> instance_batches;
 	};
 
-	class RenderContext : public RenderContextBase
+	class InstancedRenderContext : public InstancedRenderContextBase
 	{
 	public:
 		shared<RenderedInstance> createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
@@ -132,7 +133,7 @@ private:
 		std::vector<std::vector<shared<RenderedInstance>>> instances;
 	};
 
-	class ImmediateRenderContext : public RenderContextBase
+	class ImmediateInstancedRenderContext : public InstancedRenderContextBase
 	{
 	public:
 		void clear()
@@ -205,13 +206,13 @@ public:
 
 	static Light* addLight(const Light& light);
 
-	shared<RenderedInstance> createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {}) { render_context.createInstance(mesh, instance_data, pipeline, images); }
-	void updateInstance(const RenderedInstance& instance, const InstanceData& instance_data) { render_context.updateInstance(instance, instance_data); }
-	void destroyInstance(const RenderedInstance& instance) { render_context.destroyInstance(instance); }
+	static shared<RenderedInstance> createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {}) { return render_context.createInstance(mesh, instance_data, pipeline, images); }
+	static void updateInstance(const RenderedInstance& instance, const InstanceData& instance_data) { render_context.updateInstance(instance, instance_data); }
+	static void destroyInstance(const RenderedInstance& instance) { render_context.destroyInstance(instance); }
 
 private:
-	static inline RenderContext render_context;
-	static inline ImmediateRenderContext immediate_render_context;
+	static inline InstancedRenderContext render_context;
+	static inline ImmediateInstancedRenderContext immediate_render_context;
 	static shared<Buffer> global_uniform_buffer;
 	static std::array<Light, MAX_LIGHTS> lights;
 	static shared<Image> white_image;

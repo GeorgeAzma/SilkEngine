@@ -6,14 +6,14 @@
 #include "debug_renderer.h"
 #include "scene/meshes/mesh.h"
 #include "material.h"
-#include "gfx/render_context.h"
-#include "buffers/vertex_buffer.h"
+#include "render_context.h"
+#include "buffers/buffer.h"
 
 unique<ThreadPool> ParticleSystem::thread_pool = nullptr;
 
 void ParticleSystem::init()
 {
-	instance_vbo = makeShared<VertexBuffer>(nullptr, sizeof(ParticleData), MAX_PARTICLES, true);
+	instance_vbo = makeShared<Buffer>(sizeof(ParticleData) * MAX_PARTICLES, Buffer::VERTEX, Allocation::Props{ Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED, Allocation::Device::CPU });
     instance_images = makeShared<InstanceImages>();
     thread_pool = makeUnique<ThreadPool>();
 }
@@ -119,8 +119,8 @@ void ParticleSystem::render(Material& material)
         material.set("GlobalUniform", *DebugRenderer::getGlobalUniformBuffer());
         material.set("images", instance_images->getDescriptorImageInfos());
         material.bind();
-        Mesh::get("Quad")->getVertexArray()->bind();
-        instance_vbo->bind(1);
+        Mesh::get("Quad")->bind();
+        instance_vbo->bindVertex(1);
         RenderContext::record([&](CommandBuffer& cb) { cb.drawIndexed(Mesh::get("Quad")->getIndexCount(), particle_data.size(), 0, 0, 0); });
     }
 }
