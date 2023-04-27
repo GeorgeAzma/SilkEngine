@@ -2,8 +2,7 @@
 
 TetrahedronMesh::TetrahedronMesh()
 {
-	resizeVertices(12);
-	resizeIndices(12);
+	resize(12, 12);
 
 	getVertex(0).position = { 0.815363f, -0.33287f, -0.47075f }; //A
 	getVertex(1).position = { 0.0f, -0.3328f, 0.9415f }; //B

@@ -8,14 +8,17 @@
 #include "silk_engine/utils/cooldown.h"
 #include "silk_engine/gfx/render_context.h"
 #include "silk_engine/gfx/pipeline/graphics_pipeline.h"
+#include "silk_engine/gfx/particle_system.h"
 
 #include "my_scene.h"
+#include "scene/meshes/mesh.h"
 #include "scene/meshes/line_mesh.h"
 #include "scene/meshes/circle_mesh.h"
 #include "scene/meshes/rounded_rectangle_mesh.h"
-#include "gfx/particle_system.h"
 
 Cooldown c(100ms);
+shared<Mesh> mesh;
+shared<Mesh> mesh2;
 
 void MyScene::onStart()
 {
@@ -28,6 +31,8 @@ void MyScene::onStart()
     Image::add("Cursor", makeShared<Image>("cursors/cursor.png"));
     Image::get("Cursor")->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     RenderContext::execute();
+    mesh = makeShared<Mesh>(CircleMesh(32));
+    mesh2 = makeShared<Mesh>(RoundedRectangleMesh(8));
 }
 
 void MyScene::onUpdate()
@@ -38,12 +43,10 @@ void MyScene::onUpdate()
     if (c())
         Window::getActive().setTitle(std::format("Vulkan - {} FPS ({:.4} ms) | {}x{}", int(1.0 / Time::dt), (Time::dt * 1000), Window::getActive().getWidth(), Window::getActive().getHeight()));
 
-    shared<Mesh> mesh = makeShared<Mesh>(CircleMesh(32));
-    shared<Mesh> mesh2 = makeShared<Mesh>(RoundedRectangleMesh(8));
     size_t j = 100;
     float r = 12;
     //DebugRenderer::image(Image::get("Cursor"));
-    for (int i = 0; i < 10000; ++i)
+    for (int i = 0; i < 100000; ++i)
     {
         //DebugRenderer::color(Colors(i % (1 + int(Colors::TRANSPARENT))));
         DebugRenderer::mesh(mesh, (i % j) * r * 2 + 30.0f, i / j * r * 4 + 30.0f, r, r);

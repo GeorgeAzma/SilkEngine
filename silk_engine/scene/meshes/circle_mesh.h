@@ -1,10 +1,9 @@
 #pragma once
 
-#include "mesh.h"
+#include "raw_mesh.h"
 
-class CircleMesh : public RawMesh2D
+struct CircleMesh : public RawMesh2D
 {
-public:
 	CircleMesh(uint resolution = 64);
 };
 

@@ -6,8 +6,7 @@ TriangleMesh::TriangleMesh() : TriangleMesh(-0.5f, -sqrt(3.0f) * 0.25f, 0.0f, sq
 
 TriangleMesh::TriangleMesh(float x1, float y1, float x2, float y2, float x3, float y3)
 {
-	resizeVertices(3);
-	resizeIndices(3);
+	resize(3, 3);
 
 	getVertex(0).position = { x1, y1 };
 	getVertex(0).texture_coordinate = { 0, 0 };

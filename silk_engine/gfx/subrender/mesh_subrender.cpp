@@ -4,6 +4,7 @@
 #include "gfx/debug_renderer.h"
 #include "gfx/buffers/command_buffer.h"
 #include "gfx/buffers/buffer.h"
+#include "gfx/render_context.h"
 
 MeshSubrender::MeshSubrender(const PipelineStage& pipeline_stage)
 {

@@ -13,6 +13,7 @@ public:
 	uint32_t available() const { return max_images - images.size(); }
 	const std::vector<shared<Image>>& getImages() const;
 	std::vector<VkDescriptorImageInfo> getDescriptorImageInfos() const;
+	void clear() { images.clear(); image_owners.clear(); need_update = true; }
 
 private:
 	uint32_t max_images = 0;

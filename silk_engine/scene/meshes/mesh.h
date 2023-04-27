@@ -1,16 +1,16 @@
 #pragma once
 
-#include "raw_mesh.h"
 #include "gfx/buffers/vertex_array.h"
+
+struct RawMesh;
 
 class Mesh : NonCopyable
 {
 public:
 	Mesh(const RawMesh& raw_mesh);
-	Mesh& operator=(const RawMesh& raw_mesh);
 
-	size_t getVertexCount() const { return vertex_count; }
-	size_t getIndexCount() const { return index_count; }
+	uint32_t getVertexCount() const { return vertex_array->getVertexCount(); }
+	uint32_t getIndexCount() const { return vertex_array->getIndexCount(); }
 	const shared<VertexArray>& getVertexArray() const { return vertex_array; }
 
 	operator const shared<VertexArray>&() const { return vertex_array; }
@@ -20,10 +20,6 @@ public:
 	void drawIndexed(uint32_t first_index = 0, uint32_t vertex_offset = 0);
 
 private:
-	size_t vertex_count = 0;
-	size_t index_count = 0;
-	size_t vertex_type_size = 0;
-	size_t index_type_size = 0;
 	shared<VertexArray> vertex_array = nullptr;
 
 public:

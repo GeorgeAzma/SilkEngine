@@ -3,8 +3,7 @@
 CubeMesh::CubeMesh()
 {
 	//UNTESTED: Most likely false
-	resizeVertices(36);
-	resizeIndices(36);
+	resize(36, 36);
 		
 	getVertex(0 ).position = { 0, 0, 0 };
 	getVertex(1 ).position = { 1, 0, 0 };

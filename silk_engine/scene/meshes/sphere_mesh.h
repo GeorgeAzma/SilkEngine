@@ -1,10 +1,9 @@
 #pragma once
 
-#include "mesh.h"
+#include "raw_mesh.h"
 
-class SphereMesh : public RawMesh3D
+struct SphereMesh : public RawMesh3D
 {
-public:
 	SphereMesh(uint32_t resolution = 16);
 
 private:

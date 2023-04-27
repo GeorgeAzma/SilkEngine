@@ -4,8 +4,7 @@ CircleOutlineMesh::CircleOutlineMesh(uint resolution, float thickness)
 {
 	size_t vertices_count = resolution * 2;
 	size_t indices_count = resolution * 6 + 6; //TODO:
-	resizeVertices(vertices_count);
-	resizeIndices(indices_count);
+	resize(vertices_count, indices_count);
 
 	size_t id = 0;
 

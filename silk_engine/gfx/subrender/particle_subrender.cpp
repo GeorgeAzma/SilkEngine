@@ -3,6 +3,7 @@
 #include "gfx/renderer.h"
 #include "gfx/devices/physical_device.h"
 #include "gfx/debug_renderer.h"
+#include "gfx/render_context.h"
 
 ParticleSubrender::ParticleSubrender(const PipelineStage& pipeline_stage)
 {

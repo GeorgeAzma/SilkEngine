@@ -1,55 +1,81 @@
 #pragma once
 
-class RawMesh : NonCopyable
+struct RawMesh : NonCopyable
 {
-public:
-	RawMesh() = default;
-	RawMesh(const void* vertices, size_t vertices_size, size_t vertex_type_size, const void* indices, size_t indices_size, size_t index_type_size);
+	RawMesh(size_t vertex_type_size = 0, size_t index_type_size = 0)
+		: vertex_type_size(vertex_type_size), index_type_size(index_type_size) {}
 
-	size_t getVertexCount() const { return vertices.size() / vertex_type_size; }
-	size_t getIndexCount() const { return indices.size() / index_type_size; }
-	size_t getVertexTypeSize() const { return vertex_type_size; }
-	size_t getIndexTypeSize() const { return index_type_size; }
-
-	RawMesh& operator=(RawMesh&& other) noexcept
+	void init(const void* vertices, size_t vertices_size, const void* indices = nullptr, size_t indices_size = 0)
 	{
-		vertices = std::move(other.vertices);
-		indices = std::move(other.indices);
+		if (!vertices_size)
+			return;
+		resize(vertices_size, indices_size);
+		memcpy(data.data(), vertices, vertices_size);
+		if (indices_size)
+			memcpy(data.data() + vertices_size, indices, indices_size);
+	}
+
+	void resize(size_t vertices_size, size_t indices_size, const void* vertex_init = nullptr)
+	{
+		if (!vertices_size)
+			return;
+		size_t old_vertices_size = this->vertices_size;
+		size_t old_indices_size = this->indices_size;
+		this->vertices_size = vertices_size;
+		this->indices_size = indices_size;
+		data.resize(vertices_size + indices_size, 0);
+		if (vertex_init)
+			for (size_t i = old_vertices_size; i < vertices_size; i += vertex_type_size)
+				memcpy(data.data() + i, vertex_init, vertex_type_size);
+
+	}
+
+	RawMesh& move(RawMesh&& other) noexcept
+	{
+		data = std::move(other.data);
+		vertices_size = std::move(other.vertices_size);
+		indices_size = std::move(other.indices_size);
 		vertex_type_size = std::move(other.vertex_type_size);
 		index_type_size = std::move(other.index_type_size);
 		return *this;
 	}
 
-public:
-	std::vector<uint8_t> vertices{};
-	std::vector<uint8_t> indices{};
+	const std::vector<byte>& getData() const { return data; }
+	size_t getVerticesSize() const { return vertices_size; }
+	size_t getIndicesSize() const { return indices_size; }
+	size_t getVertexCount() const { return vertices_size / vertex_type_size; }
+	size_t getIndexCount() const { return indices_size / index_type_size; }
+	size_t getVertexTypeSize() const { return vertex_type_size; }
+	size_t getIndexTypeSize() const { return index_type_size; }
+
+protected:
+	std::vector<byte>& getData() { return data; }
 
 private:
+	std::vector<byte> data{};
+	size_t vertices_size = 0;
+	size_t indices_size = 0;
 	size_t vertex_type_size = 0;
 	size_t index_type_size = 0;
 };
 
-template<typename V, typename I>
-class CustomRawMesh : public RawMesh
+template<typename V, typename I> requires std::same_as<I, uint32_t> || std::same_as<I, uint16_t>
+struct CustomRawMesh : public RawMesh
 {
-public:
-	CustomRawMesh()
-		: RawMesh(vertices.data(), vertices.size() * sizeof(V), sizeof(V), indices.data(), indices.size() * sizeof(I), sizeof(I))
-	{}
-	CustomRawMesh(const std::vector<V>& vertices, const std::vector<I>& indices)
-		: RawMesh(vertices.data(), vertices.size() * sizeof(V), sizeof(V), indices.data(), indices.size() * sizeof(I), sizeof(I))
-	{}
-
-	V& getVertex(size_t index) { return *((V*)vertices.data() + index); };
-	I& getIndex(size_t index) { return *((I*)indices.data() + index); };
-	void resizeVertices(size_t size)
+	CustomRawMesh(const std::vector<V>& vertices = {}, const std::vector<I>& indices = {})
+		: RawMesh(sizeof(V), sizeof(I)) 
 	{
-		size_t old_size = vertices.size() / sizeof(V);
-		vertices.resize(size * sizeof(V));
-		for (size_t i = old_size; i < size; ++i)
-			*((V*)vertices.data() + i) = V{};
+		init(vertices.data(), vertices.size() * sizeof(V), indices.data(), indices.size() * sizeof(I));
 	}
-	void resizeIndices(size_t size) { indices.resize(size * sizeof(I), 0u); }
+
+	void resize(size_t vertices_count, size_t indices_count = 0)
+	{
+		V v{};
+		RawMesh::resize(vertices_count * sizeof(V), indices_count * sizeof(I), &v);
+	}
+
+	V& getVertex(size_t index) { return *((V*)(getData().data()) + index); };
+	I& getIndex(size_t index) { return *((I*)(getData().data() + getVerticesSize()) + index); };
 };
 
 struct Vertex2D
@@ -59,13 +85,9 @@ struct Vertex2D
 	vec4 color = vec4(1);
 };
 
-class RawMesh2D : public CustomRawMesh<Vertex2D, uint32_t>
+struct RawMesh2D : public CustomRawMesh<Vertex2D, uint32_t>
 {
-public:
-	RawMesh2D() : CustomRawMesh<Vertex2D, uint32_t>({}, {}) {}
-	RawMesh2D(const std::vector<Vertex2D>& vertices, const std::vector<uint32_t>& indices)
-		: CustomRawMesh<Vertex2D, uint32_t>(vertices, indices)
-	{}
+	using CustomRawMesh<Vertex2D, uint32_t>::CustomRawMesh;
 };
 
 struct Vertex3D
@@ -76,11 +98,7 @@ struct Vertex3D
 	vec4 color = vec4(1);
 };
 
-class RawMesh3D : public CustomRawMesh<Vertex3D, uint32_t>
+struct RawMesh3D : public CustomRawMesh<Vertex3D, uint32_t>
 {
-public:
-	RawMesh3D() : CustomRawMesh<Vertex3D, uint32_t>({}, {}) {}
-	RawMesh3D(const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices)
-		: CustomRawMesh<Vertex3D, uint32_t>(vertices, indices)
-	{}
+	using CustomRawMesh<Vertex3D, uint32_t>::CustomRawMesh;
 };

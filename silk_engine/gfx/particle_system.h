@@ -1,11 +1,10 @@
 #pragma once
 
-#include "buffers/vertex_array.h"
 #include "scene/instance_images.h"
-#include "gfx/pipeline/graphics_pipeline.h"
 
 class ThreadPool;
 class Material;
+class VertexBuffer;
 
 struct ParticleProps
 {
@@ -86,7 +85,6 @@ private:
 	static inline std::vector<Particle> particles;
 	static inline std::vector<ParticleSpout> particle_spouts;
 	static inline std::vector<ParticleData> particle_data;
-	static inline shared<VertexArray> vao;
 	static inline shared<VertexBuffer> instance_vbo;
 	static inline shared<InstanceImages> instance_images;
 	static unique<ThreadPool> thread_pool;

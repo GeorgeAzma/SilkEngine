@@ -1,7 +1,6 @@
 #pragma once
 
-#include "gfx/render_context.h"
-#include "gfx/descriptors/descriptor_set.h"
+class DescriptorSetLayout;
 
 namespace spirv_cross
 {

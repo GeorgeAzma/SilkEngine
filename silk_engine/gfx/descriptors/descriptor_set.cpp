@@ -8,7 +8,12 @@
 DescriptorSet::DescriptorSet(const DescriptorSetLayout& layout) 
 	: layout(layout), pool(DescriptorAllocator::allocate(descriptor_set, layout))
 {
-	
+	for (auto&& [binding, binding_info] : layout.getBindings())
+	{
+		buffer_infos[binding].resize(binding_info.descriptorCount, VkDescriptorBufferInfo{ .buffer = nullptr, .offset = 0, .range = 0 });
+		image_infos[binding].resize(binding_info.descriptorCount, VkDescriptorImageInfo{ .sampler = nullptr, .imageView = nullptr, .imageLayout = VK_IMAGE_LAYOUT_MAX_ENUM });
+		buffer_views[binding].resize(binding_info.descriptorCount, nullptr);
+	}
 }
 
 DescriptorSet::~DescriptorSet()
@@ -16,75 +21,60 @@ DescriptorSet::~DescriptorSet()
 	pool->deallocate();
 }
 
-void DescriptorSet::write(uint32_t binding, const std::vector<VkDescriptorBufferInfo>& buffer_infos, size_t array_index)
+void DescriptorSet::write(uint32_t binding, const std::vector<VkDescriptorBufferInfo>& buffer_infos, uint32_t array_index)
 {
-	auto it = old_buffer_infos.emplace(binding, buffer_infos);
-	if (!it.second)
+	for (size_t i = 0; i < buffer_infos.size(); ++i)
 	{
-		size_t i;
-		for (i = 0; i < it.first->second.size(); ++i)
+		VkDescriptorBufferInfo& existing_buffer = this->buffer_infos.at(binding)[array_index + i];
+		if (existing_buffer.buffer != buffer_infos[i].buffer || 
+			existing_buffer.range  != buffer_infos[i].range  || 
+			existing_buffer.offset != buffer_infos[i].offset)
 		{
-			const auto& dbi = it.first->second[i];
-			if (dbi.buffer != buffer_infos[i].buffer ||
-				dbi.offset != buffer_infos[i].offset ||
-				dbi.range != buffer_infos[i].range)
-				break;
+			existing_buffer = buffer_infos[i];
+			write(binding, array_index + i, 1, &existing_buffer);
 		}
-		if (i >= it.first->second.size())
-			return;
 	}
-	write(binding, array_index, buffer_infos.size());
-	this->buffer_infos.emplace(binding, buffer_infos);
 }
 
-void DescriptorSet::write(uint32_t binding, const std::vector<VkDescriptorImageInfo>& image_infos, size_t array_index)
+void DescriptorSet::write(uint32_t binding, const std::vector<VkDescriptorImageInfo>& image_infos, uint32_t array_index)
 {
-	auto it = old_image_infos.emplace(binding, image_infos);
-	if (!it.second)
+	for (size_t i = 0; i < image_infos.size(); ++i)
 	{
-		size_t i;
-		for (i = 0; i < it.first->second.size(); ++i)
+		VkDescriptorImageInfo& existing_image = this->image_infos.at(binding)[array_index + i];
+		if (existing_image.imageLayout != image_infos[i].imageLayout ||
+			existing_image.imageView   != image_infos[i].imageView ||
+			existing_image.sampler     != image_infos[i].sampler)
 		{
-			const auto& dii = it.first->second[i];
-			if (dii.imageLayout != image_infos[i].imageLayout ||
-				dii.imageView != image_infos[i].imageView ||
-				dii.sampler != image_infos[i].sampler)
-				break;
+			existing_image = image_infos[i];
+			write(binding, array_index + i, 1, nullptr, &existing_image);
 		}
-		if (i >= it.first->second.size())
-			return;
 	}
-	write(binding, array_index, image_infos.size());
-	this->image_infos.emplace(binding, image_infos);
 }
 
-void DescriptorSet::write(uint32_t binding, const std::vector<VkBufferView>& buffer_views, size_t array_index)
+void DescriptorSet::write(uint32_t binding, const std::vector<VkBufferView>& buffer_views, uint32_t array_index)
 {
-	auto it = old_buffer_views.emplace(binding, buffer_views);
-	if (!it.second)
+	for (size_t i = 0; i < image_infos.size(); ++i)
 	{
-		size_t i;
-		for (i = 0; i < it.first->second.size(); ++i)
-			if (it.first->second[i] != buffer_views[i])
-				break;
-		if (i >= it.first->second.size())
-			return;
+		VkBufferView& existing_buffer_view = this->buffer_views.at(binding)[array_index + i];
+		if (existing_buffer_view != buffer_views[i])
+		{
+			existing_buffer_view = buffer_views[i];
+			write(binding, array_index + i, 1, nullptr, nullptr, &existing_buffer_view);
+		}
 	}
-	write(binding, array_index, buffer_views.size());
-	this->buffer_views.emplace(binding, buffer_views);
 }
 
-void DescriptorSet::write(uint32_t binding, const VkDescriptorBufferInfo& buffer_info, size_t array_index)
+void DescriptorSet::write(uint32_t binding, const VkDescriptorBufferInfo& buffer_info, uint32_t array_index)
 {
 	write(binding, std::vector<VkDescriptorBufferInfo> { buffer_info }, array_index);
 }
 
-void DescriptorSet::write(uint32_t binding, const VkDescriptorImageInfo& image_info, size_t array_index)
+void DescriptorSet::write(uint32_t binding, const VkDescriptorImageInfo& image_info, uint32_t array_index)
 {
 	write(binding, std::vector<VkDescriptorImageInfo> { image_info }, array_index);
 }
 
-void DescriptorSet::write(uint32_t binding, const VkBufferView& buffer_view, size_t array_index)
+void DescriptorSet::write(uint32_t binding, const VkBufferView& buffer_view, uint32_t array_index)
 {
 	write(binding, std::vector<VkBufferView> { buffer_view }, array_index);
 }
@@ -93,29 +83,9 @@ void DescriptorSet::update()
 {
 	if (writes.empty())
 		return;
-
-	for (auto& write : writes)
-	{
-		DescriptorAllocator::trackUpdate(write.descriptorType, write.descriptorCount);
-		if (auto it = buffer_infos.find(write.dstBinding); it != buffer_infos.end())
-			write.pBufferInfo = it->second.data();
-		if (auto it = image_infos.find(write.dstBinding); it != image_infos.end())
-			write.pImageInfo = it->second.data();
-		if (auto it = buffer_views.find(write.dstBinding); it != buffer_views.end())
-			write.pTexelBufferView = it->second.data();
-	}
-
 	RenderContext::getLogicalDevice().updateDescriptorSets(writes);
-
-	old_buffer_infos = std::move(buffer_infos);
-	buffer_infos = {};
-
-	old_image_infos = std::move(image_infos);
-	image_infos = {};
-
-	old_buffer_views = std::move(buffer_views);
-	buffer_views = {};
-
+	for (const auto& write : writes)
+		DescriptorAllocator::trackUpdate(write.descriptorType, write.descriptorCount);
 	writes.clear();
 }
 
@@ -125,17 +95,20 @@ void DescriptorSet::bind(size_t first_set)
 	RenderContext::record([&](CommandBuffer& cb) { cb.bindDescriptorSets(first_set, { descriptor_set }); });
 }
 
-void DescriptorSet::write(uint32_t binding, uint32_t array_index, uint32_t descriptor_count)
+void DescriptorSet::write(uint32_t binding, uint32_t array_index, uint32_t descriptor_count, const VkDescriptorBufferInfo* buffer_info, const VkDescriptorImageInfo* image_info, const VkBufferView* buffer_view)
 {
 	VkWriteDescriptorSet write{};
 	write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	write.dstSet = descriptor_set;
 	write.dstBinding = binding;
 	write.dstArrayElement = array_index;
+	write.pBufferInfo = buffer_info;
+	write.pImageInfo = image_info;
+	write.pTexelBufferView = buffer_view;
 
 	const auto& layout_binding = layout.getBindings().at(binding);
 	write.descriptorCount = descriptor_count ? descriptor_count : layout_binding.descriptorCount;
-	write.descriptorType = layout_binding.descriptorType;
+	write.descriptorType = layout_binding.descriptorType; 
 
 	writes.emplace_back(std::move(write));
 }

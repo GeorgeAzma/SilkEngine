@@ -4,6 +4,7 @@
 #include "gfx/window/surface.h"
 #include "gfx/subrender/mesh_subrender.h"
 #include "gfx/subrender/particle_subrender.h"
+#include "gfx/render_context.h"
 
 DefaultRenderPipeline::DefaultRenderPipeline()
 {

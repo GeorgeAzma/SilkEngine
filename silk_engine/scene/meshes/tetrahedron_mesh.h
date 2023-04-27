@@ -1,9 +1,8 @@
 #pragma once
 
-#include "mesh.h"
+#include "raw_mesh.h"
 
-class TetrahedronMesh : public RawMesh3D
+struct TetrahedronMesh : public RawMesh3D
 {
-public:
 	TetrahedronMesh();
 };

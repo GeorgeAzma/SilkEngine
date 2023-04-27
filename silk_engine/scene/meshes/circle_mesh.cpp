@@ -2,10 +2,9 @@
 
 CircleMesh::CircleMesh(uint resolution)
 {
-	const size_t vertices_count = resolution + 1; // + 1 for Center point
-	const size_t indices_count = resolution * 3;
-	resizeVertices(vertices_count);
-	resizeIndices(indices_count);
+	size_t vertices_count = resolution + 1; // + 1 for Center point
+	size_t indices_count = resolution * 3;
+	resize(vertices_count, indices_count);
 	constexpr vec2 center(0);
 	constexpr size_t center_index = 0;
 	getVertex(0).position = center;

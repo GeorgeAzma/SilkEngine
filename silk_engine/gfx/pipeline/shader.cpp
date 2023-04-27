@@ -5,6 +5,8 @@
 #include "gfx/instance.h"
 #define STB_INCLUDE_IMPLEMENTATION
 #include "stb_include.h"
+#include "gfx/render_context.h"
+#include "gfx/descriptors/descriptor_set_layout.h"
 #include <spirv_cross/spirv_cross.hpp>
 #include <shaderc/shaderc.hpp>
 

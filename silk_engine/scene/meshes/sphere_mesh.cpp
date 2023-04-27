@@ -6,8 +6,7 @@ SphereMesh::SphereMesh(uint32_t resolution)
 	size_t vertices_size = resolution * resolution;
 	uint32_t lines = resolution - 1;
 	size_t indices_size = lines * lines * 6;
-	resizeVertices(vertices_size * 6);
-	resizeIndices(indices_size * 6);
+	resize(vertices_size * 6, indices_size * 6);
 	float d = 1.0f / lines;
 	constexpr vec3 faces[6] =
 	{

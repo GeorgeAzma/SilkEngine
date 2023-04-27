@@ -2,6 +2,7 @@
 #include "gfx/render_context.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/buffers/command_buffer.h"
+#include "gfx/descriptors/descriptor_set.h"
 
 Pipeline::~Pipeline()
 {

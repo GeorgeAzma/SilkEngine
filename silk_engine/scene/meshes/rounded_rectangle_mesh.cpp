@@ -3,9 +3,8 @@
 RoundedRectangleMesh::RoundedRectangleMesh(uint resolution, float roundness_x, float roundness_y)
 {
 	size_t vertex_count = resolution * 4 + 1;
-	resizeVertices(vertex_count);
 	size_t index_count = ((resolution - 1) * 3) * 4 + 3 * 4;
-	resizeIndices(index_count);
+	resize(vertex_count, index_count);
 	uint res = resolution - 1;
 
 	constexpr vec3 center(0.5f, 0.5f, 0.0f);

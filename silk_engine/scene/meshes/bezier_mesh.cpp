@@ -16,9 +16,7 @@ BezierMesh::BezierMesh(float x1, float y1, float px, float py, float x2, float y
         points[i] = math::lerp(math::lerp(points.front(), p, t), math::lerp(points.back(), p, t), t);
     }
 
-    LineMesh line_mesh(points, width, edge_resolution, tile_UVs);
-    vertices = std::move(line_mesh.vertices);
-    indices = std::move(line_mesh.indices);
+    move(LineMesh(points, width, edge_resolution, tile_UVs));
 }
 
 BezierMesh::BezierMesh(float x1, float y1, float px1, float py1, float px2, float py2, float x2, float y2, uint32_t resolution, float width, uint32_t edge_resolution, bool tile_UVs)
@@ -41,7 +39,5 @@ BezierMesh::BezierMesh(float x1, float y1, float px1, float py1, float px2, floa
             + t * t * t * points.back();
     }
 
-    LineMesh line_mesh(points, width, edge_resolution, tile_UVs);
-    vertices = std::move(line_mesh.vertices);
-    indices = std::move(line_mesh.indices);
+    move(LineMesh(points, width, edge_resolution, tile_UVs));
 }

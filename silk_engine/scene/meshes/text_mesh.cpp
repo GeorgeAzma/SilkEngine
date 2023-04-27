@@ -7,8 +7,7 @@ TextMesh::TextMesh(std::string_view text, uint32_t size, shared<Font> font)
 
 	size_t vertex_index = 0;
 	size_t indices_index = 0;
-	resizeVertices(layout.size() * 4);
-	resizeIndices(layout.size() * 6);
+	resize(layout.size() * 4, layout.size() * 6);
 
 	for (auto& c : layout)
 	{

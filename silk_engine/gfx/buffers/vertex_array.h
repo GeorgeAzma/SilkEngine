@@ -1,26 +1,31 @@
 #pragma once
 
-#include "vertex_buffer.h"
-#include "index_buffer.h"
+struct RawMesh;
+class Buffer;
+
+enum class IndexType
+{
+	NONE = 0,
+	UINT16 = VK_INDEX_TYPE_UINT16,
+	UINT32 = VK_INDEX_TYPE_UINT32
+};
 
 class VertexArray
 {
 public:
-	~VertexArray();
+	VertexArray(const RawMesh& raw_mesh);
 
-	VertexArray& addVertexBuffer(const shared<VertexBuffer>& vertex_buffer);
-	VertexArray& setIndexBuffer(const shared<IndexBuffer>& index_buffer);
-
-	const shared<VertexBuffer>& getVertexBuffer(size_t index) const { return vertex_buffers[index]; }
-	const shared<IndexBuffer>& getIndexBuffer() const { return index_buffer; }
-
-	bool hasIndexBuffer() const { return index_buffer != nullptr; }
-
-	void bind(const std::vector<VkDeviceSize>& offsets = {}, VkDeviceSize index_offset = 0) const;
+	void bind(uint32_t first = 0, VkDeviceSize offset = 0) const;
 	void draw() const;
 
+	bool isIndexed() const { return index_type != IndexType::NONE; }
+	uint32_t getVertexCount() const { return vertex_count; }
+	uint32_t getIndexCount() const { return index_count; }
+
 private:
-	std::vector<shared<VertexBuffer>> vertex_buffers = {};
-	std::vector<VkBuffer> vk_vertex_buffers = {};
-	shared<IndexBuffer> index_buffer = nullptr;
+	shared<Buffer> buffer = nullptr;
+	IndexType index_type = IndexType::NONE;
+	VkDeviceSize vertices_size = 0;
+	uint32_t vertex_count = 0;
+	uint32_t index_count = 0;
 };

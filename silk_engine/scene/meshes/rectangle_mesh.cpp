@@ -2,8 +2,7 @@
 
 RectangleMesh::RectangleMesh()
 {
-	resizeVertices(4);
-	resizeIndices(6);
+	resize(4, 6);
 
 	getVertex(0).position = { 0, 0 };
 	getVertex(1).position = { 0, 1 };

@@ -3,8 +3,7 @@
 LineMesh::LineMesh(const std::vector<vec2>& points, float width, uint32_t edge_resolution, bool tile_UVs)
 {
 	width *= 0.5f;
-	resizeVertices(points.size() * 2);
-	resizeIndices(points.size() * 6);
+	resize(points.size() * 2, points.size() * 6);
 
 	size_t index = 0;
 	for (size_t i = 0; i < points.size() - 1; ++i)

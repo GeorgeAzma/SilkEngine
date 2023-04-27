@@ -1,9 +1,8 @@
 #pragma once
 
-#include "mesh.h"
+#include "raw_mesh.h"
 
-class RectangleMesh : public RawMesh2D
+struct RectangleMesh : public RawMesh2D
 {
-public:
 	RectangleMesh();
 };

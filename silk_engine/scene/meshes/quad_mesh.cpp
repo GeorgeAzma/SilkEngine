@@ -2,8 +2,7 @@
 
 QuadMesh::QuadMesh()
 {
-	resizeVertices(4);
-	resizeIndices(6);
+	resize(4, 6);
 
 	getVertex(0).position = { -1, -1 };
 	getVertex(1).position = { -1,  1 };

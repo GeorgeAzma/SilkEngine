@@ -78,7 +78,7 @@ void Buffer::drawIndexedIndirect(uint32_t index)
 	RenderContext::record([&](CommandBuffer& cb) { cb.drawIndexedIndirect(buffer, index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand)); });
 }
 
-bool Buffer::setData(const void* data, size_t size, size_t offset)
+bool Buffer::setData(const void* data, VkDeviceSize size, VkDeviceSize offset)
 {
 	if (size + offset > ci.size)
 		return false;
@@ -95,7 +95,7 @@ bool Buffer::setData(const void* data, size_t size, size_t offset)
 	return true;
 }
 
-void Buffer::getData(void* data, size_t size) const
+void Buffer::getData(void* data, VkDeviceSize size) const
 {
 	if (VmaAllocation(allocation) && allocation.isHostVisible())
 		allocation.getData(data, size ? size : ci.size);

@@ -1,39 +1,31 @@
 #include "vertex_array.h"
 #include "gfx/render_context.h"
-#include "gfx/buffers/command_buffer.h"
+#include "scene/meshes/raw_mesh.h"
+#include "command_buffer.h"
+#include "buffer.h"
 
-VertexArray::~VertexArray()
+VertexArray::VertexArray(const RawMesh& raw_mesh)
+	: buffer(makeShared<Buffer>(raw_mesh.getData().size(), Buffer::VERTEX | Buffer::INDEX | Buffer::TRANSFER_DST)),
+	index_type(raw_mesh.getIndexTypeSize() == sizeof(uint32_t) ? IndexType::UINT32 : (raw_mesh.getIndexTypeSize() == sizeof(uint16_t) ? IndexType::UINT16 : IndexType::NONE)),
+	vertices_size(raw_mesh.getVerticesSize()),
+	vertex_count(raw_mesh.getVertexCount()),
+	index_count(raw_mesh.getIndexCount())
 {
-	for (auto& vertex_buffer : vertex_buffers)
-		vertex_buffer = nullptr;
-	index_buffer = nullptr;
+	buffer->setData(raw_mesh.getData().data());
 }
 
-VertexArray& VertexArray::addVertexBuffer(const shared<VertexBuffer>& vertex_buffer)
+void VertexArray::bind(uint32_t first, VkDeviceSize offset) const
 {
-	vertex_buffers.emplace_back(vertex_buffer);
-	vk_vertex_buffers.emplace_back(*vertex_buffer);
-	return *this;
-}
-
-VertexArray& VertexArray::setIndexBuffer(const shared<IndexBuffer>& index_buffer)
-{
-	this->index_buffer = index_buffer;
-	return *this;
-}
-
-void VertexArray::bind(const std::vector<VkDeviceSize>& offsets, VkDeviceSize index_offset) const
-{
-	RenderContext::record([&](CommandBuffer& cb) { cb.bindVertexBuffers(0, vk_vertex_buffers, offsets); });
-	if (index_buffer)
-		index_buffer->bind(index_offset);
+	RenderContext::record([&](CommandBuffer& cb) { cb.bindVertexBuffers(first, { *buffer }, { offset }); });
+	if (isIndexed())
+		RenderContext::record([&](CommandBuffer& cb) { cb.bindIndexBuffer(*buffer, vertices_size + offset, VkIndexType(index_type)); });
 }
 
 void VertexArray::draw() const
 {
 	bind();
-	if (index_buffer)
-		RenderContext::record([&](CommandBuffer& cb) { cb.drawIndexed(index_buffer->getCount(), 1, 0, 0, 0); });
+	if (isIndexed())
+		RenderContext::record([&](CommandBuffer& cb) { cb.drawIndexed(index_count, 1, 0, 0, 0); });
 	else
-		RenderContext::record([&](CommandBuffer& cb) { cb.draw(vertex_buffers.front()->getCount(), 1, 0, 0); });
+		RenderContext::record([&](CommandBuffer& cb) { cb.draw(vertex_count, 1, 0, 0); });
 }

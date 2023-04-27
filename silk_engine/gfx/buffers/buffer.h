@@ -30,9 +30,9 @@ public:
 	void drawIndirect(uint32_t index);
 	void drawIndexedIndirect(uint32_t index);
 
-	bool setData(const void* data, size_t size = 0, size_t offset = 0);
+	bool setData(const void* data, VkDeviceSize size = 0, VkDeviceSize offset = 0);
 
-	void getData(void* data, size_t size = 0) const;
+	void getData(void* data, VkDeviceSize size = 0) const;
 	VkDeviceSize getSize() const { return ci.size; }
 
 	Allocation getAllocation() const { return allocation; }
