@@ -28,7 +28,7 @@ shared<GraphicsPipeline> DebugRenderer::graphics_pipeline_3D = nullptr;
 
 void DebugRenderer::InstancedRenderContextBase::init()
 {
-	indirect_buffer = makeShared<Buffer>(256 * sizeof(VkDrawIndexedIndirectCommand), Buffer::INDIRECT | Buffer::TRANSFER_DST, Allocation::Props{ Allocation::MAPPED | Allocation::RANDOM_ACCESS, Allocation::Device::CPU });
+	indirect_buffer = makeShared<Buffer>(256 * sizeof(VkDrawIndexedIndirectCommand), Buffer::INDIRECT, Allocation::Props{ Allocation::MAPPED | Allocation::RANDOM_ACCESS, Allocation::Device::CPU });
 }
 
 void DebugRenderer::InstancedRenderContextBase::update()

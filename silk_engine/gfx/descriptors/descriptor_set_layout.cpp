@@ -7,7 +7,7 @@ DescriptorSetLayout::DescriptorSetLayout(const std::vector<VkDescriptorSetLayout
 	this->bindings.reserve(bindings.size());
 	for (size_t i = 0; i < bindings.size(); ++i)
 		this->bindings.emplace(bindings[i].binding, bindings[i]);
-
+	
 	VkDescriptorSetLayoutCreateInfo ci{};
 	ci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	ci.bindingCount = bindings.size();
