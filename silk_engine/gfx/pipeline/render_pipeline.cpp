@@ -8,9 +8,9 @@ void RenderPipeline::render()
 {
 	RenderContext::record([&](CommandBuffer& cb)
 		{
-			PipelineStage pipeline_stage{};
-			for (auto& render_pass : getRenderPasses())
+			for (uint32_t render_pass_index = 0; render_pass_index < render_passes.size(); ++render_pass_index)
 			{
+				auto& render_pass = render_passes[render_pass_index];
 				float width = render_pass->getFramebuffer()->getWidth();
 				float height = render_pass->getFramebuffer()->getHeight();
 
@@ -28,20 +28,7 @@ void RenderPipeline::render()
 				scissor.extent = { (uint32_t)width, (uint32_t)height };
 				cb.setScissor({ scissor });
 
-				render_pass->begin();
-				for (size_t i = 0; i < render_pass->getSubpassCount(); ++i)
-				{
-					pipeline_stage.subpass = i;
-
-					for (const auto& [tid, stage, subrender] : subrenders)
-						if (stage == pipeline_stage && subrender->enabled)
-							subrender->render();
-
-					if (i < render_pass->getSubpassCount() - 1)
-						render_pass->nextSubpass();
-				}
-				render_pass->end();
-				++pipeline_stage.render_pass;
+				render_pass->render();
 			}
 		});
 }

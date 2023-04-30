@@ -16,7 +16,6 @@ void Renderer::init()
 	render_finished = new Semaphore();
 
 	setRenderPipeline<DefaultRenderPipeline>();
-	render_pipeline->init();
 	render_pipeline->resize();
 	
 	DebugRenderer::init();
@@ -40,7 +39,7 @@ void Renderer::wait()
 
 const RenderPass& Renderer::getRenderPass(uint32_t index)
 {
-	return *render_pipeline->getRenderPasses()[index];
+	return *render_pipeline->render_passes[index];
 }
 
 void Renderer::render()
@@ -55,7 +54,6 @@ void Renderer::render()
 	}
 
 	render_pipeline->render();
-
 	RenderContext::submit(previous_frame_finished, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { *swap_chain_image_available }, { *render_finished });
 
 	if (!Window::getActive().getSwapChain().present(*render_finished))

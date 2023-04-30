@@ -6,6 +6,4 @@ class DefaultRenderPipeline : public RenderPipeline
 {
 public:
 	DefaultRenderPipeline();
-
-	void init() override;
 };

@@ -3,6 +3,7 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/buffers/framebuffer.h"
 #include "gfx/window/swap_chain.h"
+#include "gfx/subrender/subrender.h"
 
 RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
     : subpass_count(subpass_props.size())
@@ -60,17 +61,11 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
                 }
             }
             else if (depth && !stencil)
-            {
                 depth_attachment_references[subpass_index] = { (uint32_t)attachment_descriptions.size() - 1, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL };
-            }
             else if (!depth && stencil)
-            {
                 depth_attachment_references[subpass_index] = { (uint32_t)attachment_descriptions.size() - 1, VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL };
-            }
             else if (depth && stencil)
-            {
                 depth_attachment_references[subpass_index] = { (uint32_t)attachment_descriptions.size() - 1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
-            }
             
             if (output.clear_value)
                 clear_values.emplace_back(*output.clear_value);
@@ -131,6 +126,24 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
 RenderPass::~RenderPass()
 {
     RenderContext::getLogicalDevice().destroyRenderPass(render_pass);
+}
+
+void RenderPass::render()
+{
+    begin();
+    uint32_t last_subpass = 0;
+    for (auto&& [subpass, subrenders] : subrenders)
+    {
+        if (last_subpass != subpass)
+        {
+            nextSubpass();
+            last_subpass = subpass;
+        }
+        for (auto& subrender : subrenders)
+            if (subrender->enabled)
+                subrender->render();
+    }
+    end();
 }
 
 void RenderPass::begin(VkSubpassContents subpass_contents)

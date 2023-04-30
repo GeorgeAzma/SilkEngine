@@ -1,12 +1,14 @@
 #pragma once
 
 #include "subrender.h"
-#include "gfx/material.h"
+
+class Material;
+class RenderPass;
 
 class ParticleSubrender : public Subrender
 {
 public:
-	ParticleSubrender(const PipelineStage& pipeline_stage);
+	ParticleSubrender(RenderPass& render_pass, uint32_t subpass);
 
 	void render() override;
 

@@ -5,6 +5,7 @@
 #include "gfx/subrender/mesh_subrender.h"
 #include "gfx/subrender/particle_subrender.h"
 #include "gfx/render_context.h"
+#include "render_pass.h"
 
 DefaultRenderPipeline::DefaultRenderPipeline()
 {
@@ -16,11 +17,7 @@ DefaultRenderPipeline::DefaultRenderPipeline()
 			   }, {}
 		   }
 		}));
-	addRenderPass(render_pass);
-}
-
-void DefaultRenderPipeline::init()
-{
-	addSubrender<ParticleSubrender>({ 0, 0 });
-	addSubrender<MeshSubrender>({ 0, 0 });
+	render_pass->addSubrender<ParticleSubrender>(0);
+	render_pass->addSubrender<MeshSubrender>(0);
+	render_passes.emplace_back(render_pass);
 }

@@ -4,13 +4,16 @@
 #include "gfx/devices/physical_device.h"
 #include "gfx/debug_renderer.h"
 #include "gfx/render_context.h"
+#include "gfx/material.h"
+#include "gfx/pipeline/render_pass.h"
 
-ParticleSubrender::ParticleSubrender(const PipelineStage& pipeline_stage)
+ParticleSubrender::ParticleSubrender(RenderPass& render_pass, uint32_t subpass)
 {
     shared<GraphicsPipeline> pipeline = makeShared<GraphicsPipeline>();
     pipeline->setShader(makeShared<Shader>("particle"))
         .setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
-        .setStage(pipeline_stage)
+        .setRenderPass(render_pass)
+        .setSubpass(subpass)
         .setDepthCompareOp(GraphicsPipeline::CompareOp::LESS)
         .build();
     material = makeShared<Material>(pipeline);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gfx/images/image.h"
+#include "gfx/subrender/subrender.h"
 
 class Framebuffer;
 class SwapChain;
@@ -38,6 +39,14 @@ public:
 	RenderPass(const std::vector<SubpassProps>& subpass_props);
 	~RenderPass();
 
+	void render();
+
+	template<typename T>
+	void addSubrender(uint32_t subpass)
+	{
+		subrenders[subpass].emplace_back(makeUnique<T>(*this, subpass));
+	}
+
 	void begin(VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
 	void nextSubpass(VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
 	void end();
@@ -49,6 +58,9 @@ public:
 	const std::vector<VkAttachmentDescription>& getAttachmentDescriptions() const { return attachment_descriptions; }
 	operator const VkRenderPass& () const { return render_pass; }
 	const shared<Framebuffer>& getFramebuffer() const { return framebuffer; }
+
+public:
+	std::map<uint32_t, std::vector<unique<Subrender>>> subrenders;
 
 private:
 	VkRenderPass render_pass = nullptr;

@@ -1,12 +1,13 @@
 #pragma once
 
 #include "subrender.h"
-#include "gfx/pipeline/render_pipeline.h"
+
+class RenderPass;
 
 class MeshSubrender : public Subrender
 {
 public:
-	MeshSubrender(const PipelineStage& pipeline_stage);
+	MeshSubrender(RenderPass& render_pass, uint32_t subpass);
 
 	void render() override;
 };

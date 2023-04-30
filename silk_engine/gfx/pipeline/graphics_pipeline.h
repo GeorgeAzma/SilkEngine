@@ -2,8 +2,6 @@
 
 #include "pipeline.h"
 
-struct PipelineStage;
-
 class GraphicsPipeline : public Pipeline
 {
 public:
@@ -102,7 +100,6 @@ public:
 	GraphicsPipeline& setSamples(VkSampleCountFlagBits sample_count);
 	GraphicsPipeline& setRenderPass(VkRenderPass render_pass);
 	GraphicsPipeline& setSubpass(uint32_t subpass);
-	GraphicsPipeline& setStage(const PipelineStage& stage);
 	GraphicsPipeline& addDynamicState(VkDynamicState dynamic_state);
 	GraphicsPipeline& enableTag(EnableTag tag, bool enable = true);
 	GraphicsPipeline& setCullMode(CullMode cull_mode);

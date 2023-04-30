@@ -83,13 +83,6 @@ GraphicsPipeline& GraphicsPipeline::setSubpass(uint32_t subpass)
 	return *this;
 }
 
-GraphicsPipeline& GraphicsPipeline::setStage(const PipelineStage& stage)
-{
-	render_pass = Renderer::getRenderPass(stage.render_pass);
-	subpass = stage.subpass;
-	return *this;
-}
-
 GraphicsPipeline& GraphicsPipeline::addDynamicState(VkDynamicState dynamic_state)
 {
 	dynamic_states.emplace_back(dynamic_state);
