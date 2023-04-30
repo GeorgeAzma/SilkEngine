@@ -35,6 +35,13 @@ Joystick::Joystick(int id)
     name = glfwGetJoystickName(id);
     guid = glfwGetJoystickGUID(id);
     is_gamepad = glfwJoystickIsGamepad(id) == GLFW_TRUE;
+    if (is_gamepad)
+    {
+        gamepad_name = glfwGetGamepadName(id);
+        gamepad_buttons.resize(15, GLFW_RELEASE);
+        last_gamepad_buttons.resize(15, GLFW_RELEASE);
+        gamepad_axes.resize(6, 0.0f);
+    }
 
     int count = 0;
     glfwGetJoystickAxes(id, &count);
@@ -58,6 +65,14 @@ void Joystick::update()
     memcpy(buttons.data(), button_data, count * sizeof(byte));
     const byte* hat_data = glfwGetJoystickHats(id, &count);
     memcpy(hats.data(), hat_data, count * sizeof(byte));
+    if (is_gamepad)
+    {
+        GLFWgamepadstate gamepad_state;
+        glfwGetGamepadState(id, &gamepad_state);
+        memcpy(gamepad_axes.data(), gamepad_state.axes, sizeof(gamepad_state.axes));
+        memcpy(last_gamepad_buttons.data(), gamepad_buttons.data(), gamepad_buttons.size() * sizeof(byte));
+        memcpy(gamepad_buttons.data(), gamepad_state.buttons, sizeof(gamepad_state.buttons));
+    }
 }
 
 bool Joystick::isPresent() const
