@@ -99,7 +99,7 @@ public:
 	const VkSampler& getSampler() const { return *sampler; }
 	VkSampleCountFlagBits getSamples() const { return props.samples; }
 	VkImageAspectFlags getAspectFlags() const { return getFormatVulkanAspectFlags(props.format); }
-	Allocation getAllocation() const { return allocation; }
+	const Allocation& getAllocation() const { return allocation; }
 	void setLayout(VkImageLayout layout) { this->layout = layout; } // Use sparingly
 
 	void setData(const void* data, uint32_t base_layer = 0, uint32_t layers = 1);

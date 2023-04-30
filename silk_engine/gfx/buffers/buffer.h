@@ -37,7 +37,7 @@ public:
 	void getData(void* data, VkDeviceSize size = 0) const;
 
 	VkDeviceSize getSize() const { return ci.size; }
-	Allocation getAllocation() const { return allocation; }
+	const Allocation& getAllocation() const { return allocation; }
 	VkDescriptorBufferInfo getDescriptorInfo() const { return { buffer, 0, ci.size }; }
 	operator const VkBuffer& () const { return buffer; }
 
@@ -49,7 +49,7 @@ protected:
 
 protected:
 	VkBuffer buffer = nullptr;
-	VkBufferCreateInfo ci{};
-	VmaAllocationCreateInfo alloc_ci{};
-	Allocation allocation{};
+	VkBufferCreateInfo ci;
+	VmaAllocationCreateInfo alloc_ci;
+	Allocation allocation;
 };

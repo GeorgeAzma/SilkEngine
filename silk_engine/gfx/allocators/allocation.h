@@ -44,5 +44,5 @@ public:
 	operator const VmaAllocation& () const { return allocation; }
 
 private:
-	VmaAllocation allocation = nullptr;
+	VmaAllocation allocation;
 };
