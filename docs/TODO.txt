@@ -1,4 +1,4 @@
 - Don't recompile already compiled shaders
 - Create system which handles vulkan object creation and update for multiple frames
 - Replace user used vulkan enums with engine enums
-- Multiple render passes
+- Render Graph (Resources: https://themaister.net/blog/2017/08/15/render-graphs-and-vulkan-a-deep-dive/)

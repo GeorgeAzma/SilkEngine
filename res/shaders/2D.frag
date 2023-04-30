@@ -1,6 +1,6 @@
 layout(location = 0) in VertexOutput 
 {
-    vec2 texture_coordinate;
+    vec2 uv;
     vec4 color;
     flat uint instance_image_index;
 } fragment_input;
@@ -13,7 +13,7 @@ void main()
 {
     color = fragment_input.color;
     if (fragment_input.instance_image_index != 0)
-        color *= texture(images[fragment_input.instance_image_index], fragment_input.texture_coordinate);
+        color *= texture(images[fragment_input.instance_image_index], fragment_input.uv);
     if (color.a <= 0.01)
         discard;
 }

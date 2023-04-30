@@ -345,13 +345,13 @@ void DebugRenderer::bezier(float x1, float y1, float px1, float py1, float px2, 
 void DebugRenderer::text(const std::string& text, float x, float y, float width, float height)
 {
 	active.images = { active.font->getAtlas() };
-	draw(GraphicsPipeline::get("Font"), makeShared<Mesh>(TextMesh(text, 64, active.font)), x, y, width, height);
+	draw(graphics_pipeline_2D, makeShared<Mesh>(TextMesh(text, 64, active.font)), x, y, width, height);
 }
 
 void DebugRenderer::text(const std::string& text, float x, float y, float size)
 {
 	active.images = { active.font->getAtlas() };
-	draw(GraphicsPipeline::get("Font"), makeShared<Mesh>(TextMesh(text, 32, active.font)), x, y, size, size);
+	draw(graphics_pipeline_2D, makeShared<Mesh>(TextMesh(text, 32, active.font)), x, y, size, size);
 }
 
 void DebugRenderer::tetrahedron(float x, float y, float z, float size)

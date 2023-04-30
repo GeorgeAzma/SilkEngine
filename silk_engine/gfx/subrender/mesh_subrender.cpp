@@ -26,15 +26,6 @@ MeshSubrender::MeshSubrender(RenderPass& render_pass, uint32_t subpass)
         .setDepthCompareOp(GraphicsPipeline::CompareOp::LESS_OR_EQUAL)
         .build();
     GraphicsPipeline::add("2D", graphics_pipeline);
-
-    graphics_pipeline = makeShared<GraphicsPipeline>();
-    graphics_pipeline->setShader(makeShared<Shader>("font"))
-        .setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
-        .setRenderPass(render_pass)
-        .setSubpass(subpass)
-        .setDepthCompareOp(GraphicsPipeline::CompareOp::ALWAYS)
-        .build();
-    GraphicsPipeline::add("Font", graphics_pipeline);
 }
 
 void MeshSubrender::render()

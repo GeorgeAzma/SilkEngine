@@ -5,10 +5,10 @@
 class Material;
 class RenderPass;
 
-class ParticleSubrender : public Subrender
+class PostProcessSubrender : public Subrender
 {
 public:
-	ParticleSubrender(RenderPass& render_pass, uint32_t subpass = 0);
+	PostProcessSubrender(RenderPass& render_pass, uint32_t subpass = 0);
 
 	void render() override;
 

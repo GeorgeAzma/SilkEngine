@@ -8,7 +8,7 @@
 layout(location = 0) in VertexOutput 
 {
     vec3 world_position;
-    vec2 texture_coordinate;
+    vec2 uv;
     vec3 normal;
     vec4 color;
     flat uint instance_image_index;
@@ -107,7 +107,7 @@ vec3 aces(vec3 x)
 
 void main()
 {
-    vec4 albedo = texture(images[fragment_input.instance_image_index + DIFFUSE_TEXTURE], fragment_input.texture_coordinate) * fragment_input.color;
+    vec4 albedo = texture(images[fragment_input.instance_image_index + DIFFUSE_TEXTURE], fragment_input.uv) * fragment_input.color;
     color.a = albedo.a;
     if (color.a <= 0.01)
         discard;

@@ -135,7 +135,18 @@ Shader::Shader(std::string_view name)
 	stages.reserve(source_files.size());
 	for (const auto& file : source_files)
 		stages.emplace_back(makeUnique<Stage>(file));
-	std::sort(stages.begin(), stages.end(), [](const unique<Stage>& l, const unique<Stage>& r) { return l->type < r->type; });
+	std::ranges::sort(stages);
+	compile();
+}
+
+Shader::Shader(const std::vector<std::string_view>& names)
+{
+	for (const auto& file : std::filesystem::directory_iterator("res/shaders"))
+		for (const auto& name : names)
+			if (file.path().stem() == name)
+				stages.emplace_back(makeUnique<Stage>(file));
+	SK_ASSERT(stages.size() == names.size(), "Couldn't find one of the shader stage files, make sure paths are correct");
+	std::ranges::sort(stages);
 	compile();
 }
 

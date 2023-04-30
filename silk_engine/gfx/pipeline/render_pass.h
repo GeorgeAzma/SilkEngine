@@ -18,6 +18,7 @@ struct AttachmentProps
 	VkAttachmentLoadOp stencil_load_operation = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	VkAttachmentStoreOp stencil_store_operation = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+	bool preserve = false;
 };
 
 struct RenderTargetInfo
@@ -41,7 +42,7 @@ public:
 
 	void render();
 
-	template<typename T>
+	template<std::derived_from<Subrender> T>
 	void addSubrender(uint32_t subpass)
 	{
 		subrenders[subpass].emplace_back(makeUnique<T>(*this, subpass));

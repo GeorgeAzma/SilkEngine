@@ -42,6 +42,8 @@ public:
 
 		path getCachePath() const;
 
+		bool operator<(const Stage& other) { return type < other.type; }
+
 	private:
 		void createModule();
 
@@ -90,6 +92,7 @@ public:
 
 public:
     Shader(std::string_view name);
+	Shader(const std::vector<std::string_view>& names);
 
 	void compile();
 	void reflect();

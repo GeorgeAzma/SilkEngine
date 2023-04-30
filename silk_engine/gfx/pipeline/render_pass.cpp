@@ -13,6 +13,7 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
     std::vector<std::vector<VkAttachmentReference>> resolve_attachment_references(subpass_props.size());
     std::vector<std::vector<VkAttachmentReference>> color_attachment_references(subpass_props.size());
     std::vector<VkAttachmentReference> depth_attachment_references(subpass_props.size(), { VK_ATTACHMENT_UNUSED, VK_IMAGE_LAYOUT_UNDEFINED });
+    std::vector<std::vector<uint32_t>> preserve_attachment_references(subpass_props.size());
     std::vector<std::vector<VkAttachmentReference>> input_attachment_references(subpass_props.size());
     for (size_t subpass_index = 0; subpass_index < subpass_props.size(); ++subpass_index)
     {
@@ -36,13 +37,15 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
             attachment_description.finalLayout = output.final_layout;
 
             attachment_descriptions.emplace_back(attachment_description);
+            // We need resolve attachments for each multisampled color attachment
+            // If attachment layout is present_src then it should be set to color_attachment
+            // And it's corresponding resolve attachment should get the present_src layout instead
             if (multisampled)
             {
                 attachment_descriptions.back().storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
                 if (attachment_descriptions.back().finalLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
                     attachment_descriptions.back().finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
             }
-
             if (color)
             {
                 if (multisampled)
@@ -60,12 +63,16 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
                     resolve_attachment_references[subpass_index].emplace_back(VK_ATTACHMENT_UNUSED, VK_IMAGE_LAYOUT_UNDEFINED);
                 }
             }
+            // Handle Depth/Stencil attachments
             else if (depth && !stencil)
                 depth_attachment_references[subpass_index] = { (uint32_t)attachment_descriptions.size() - 1, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL };
             else if (!depth && stencil)
                 depth_attachment_references[subpass_index] = { (uint32_t)attachment_descriptions.size() - 1, VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL };
             else if (depth && stencil)
                 depth_attachment_references[subpass_index] = { (uint32_t)attachment_descriptions.size() - 1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+
+            if (output.preserve) // If multisampled, only preserves resolved attachment??
+                preserve_attachment_references[subpass_index].emplace_back(attachment_descriptions.size() - 1);
             
             if (output.clear_value)
                 clear_values.emplace_back(*output.clear_value);
@@ -90,8 +97,8 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
         subpass_description.pColorAttachments = color_attachment_references[subpass_index].data();
         subpass_description.pResolveAttachments = resolve_attachment_references[subpass_index].data();
         subpass_description.pDepthStencilAttachment = &depth_attachment_references[subpass_index];
-        //subpass_description.preserveAttachmentCount;
-        //subpass_description.pPreserveAttachments;
+        subpass_description.preserveAttachmentCount = preserve_attachment_references[subpass_index].size();
+        subpass_description.pPreserveAttachments = preserve_attachment_references[subpass_index].data();
         subpass_descriptions[subpass_index] = std::move(subpass_description);
 
         //TODO: Figure out how to do this automatically (I don't think it is possible to do it automatically though, without some performance implication) (good reference: https://www.reddit.com/r/vulkan/comments/s80reu/subpass_dependencies_what_are_those_and_why_do_i/)

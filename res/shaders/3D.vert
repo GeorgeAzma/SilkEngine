@@ -1,5 +1,5 @@
 layout(location = 0) in vec3 vertex_position;
-layout(location = 1) in vec2 vertex_texture_coordinate;
+layout(location = 1) in vec2 vertex_uv;
 layout(location = 2) in vec3 vertex_normal;
 layout(location = 3) in vec4 vertex_color;
 
@@ -10,7 +10,7 @@ layout(location = 9) in uint instance_image_index;
 layout(location = 0) out VertexOutput 
 {
     vec3 world_position;
-    vec2 texture_coordinate;
+    vec2 uv;
     vec3 normal;
     vec4 color;
     flat uint instance_image_index;
@@ -23,7 +23,7 @@ layout(set = 0, binding = 0) uniform GlobalUniform
 
 void main()
 {
-    vertex_output.texture_coordinate = vertex_texture_coordinate;
+    vertex_output.uv = vertex_uv;
     vertex_output.normal = mat3(transpose(inverse(instance_transform))) * vertex_normal;
     vertex_output.color = vertex_color * instance_color;
     vertex_output.instance_image_index = instance_image_index;
