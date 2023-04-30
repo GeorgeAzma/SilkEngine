@@ -7,11 +7,6 @@
 #include "gfx/devices/logical_device.h"
 #include "scene/camera/camera.h"
 
-/** TODOs: 
-* Subpass attachment references / descriptions.Not all previous subpass outputs are inputs of the next subpass etc.
-* Bind vertex/index buffers before actually drawing
-*/
-
 Application::Application()
 {
 }

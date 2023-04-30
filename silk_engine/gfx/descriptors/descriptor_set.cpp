@@ -89,10 +89,11 @@ void DescriptorSet::update()
 	writes.clear();
 }
 
-void DescriptorSet::bind(size_t first_set)
+void DescriptorSet::bind(size_t first, const std::vector<uint32_t> dynamic_offsets)
 {
+	SK_ASSERT(dynamic_offsets.size() == layout.getDynamicDescriptorCount());
 	update();
-	RenderContext::record([&](CommandBuffer& cb) { cb.bindDescriptorSets(first_set, { descriptor_set }); });
+	RenderContext::record([&](CommandBuffer& cb) { cb.bindDescriptorSets(first, { descriptor_set }, dynamic_offsets); });
 }
 
 void DescriptorSet::write(uint32_t binding, uint32_t array_index, uint32_t descriptor_count, const VkDescriptorBufferInfo* buffer_info, const VkDescriptorImageInfo* image_info, const VkBufferView* buffer_view)

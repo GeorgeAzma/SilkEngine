@@ -3,7 +3,6 @@
     #include <spdlog/sinks/ansicolor_sink.h>
 #endif
 
-
 void Log::init()
 {
 #ifdef SK_ENABLE_DEBUG_OUTPUT

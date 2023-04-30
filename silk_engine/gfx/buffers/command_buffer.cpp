@@ -5,7 +5,7 @@
 #include "gfx/allocators/command_pool.h"
 #include "gfx/fence.h"
 
-//TODO: Doesn't account for: "Any primary command buffer that is in the recording or executable state and has resetting command buffer recorded into it, becomes invalid."
+// TODO: Doesn't account for: "Any primary command buffer that is in the recording or executable state and has resetting command buffer recorded into it, becomes invalid."
 
 CommandBuffer::CommandBuffer(CommandPool& command_pool, VkCommandBufferLevel level)
 	: level(level), command_pool(command_pool),
@@ -103,38 +103,23 @@ void CommandBuffer::bindPipeline(VkPipelineBindPoint bind_point, VkPipeline pipe
 
 void CommandBuffer::bindDescriptorSets(uint32_t first, const std::vector<VkDescriptorSet>& sets, const std::vector<uint32_t>& dynamic_offsets)
 {
+	// TODO: Support dynamic offsets
 	if (active.descriptor_sets.size() >= (sets.size() + first))
 	{
 		size_t i = 0;
 		for (; i < sets.size(); ++i)
-			if (sets[i] != active.descriptor_sets[i + first].set)
+			if (sets[i] != active.descriptor_sets[i + first])
 				break;
 		if (i >= sets.size())
-		{
-			i = 0;
-			for (; i < sets.size(); ++i)
-			{
-				if (dynamic_offsets.size() != active.descriptor_sets[i + first].dynamic_offsets.size())
-					break; 
-				size_t j = 0;
-				for (; j < dynamic_offsets.size(); ++j)
-					if (dynamic_offsets[j] != active.descriptor_sets[i + first].dynamic_offsets[j])
-						break;
-				if (j < dynamic_offsets.size())
-					break;
-			}
-			if (i >= sets.size())
-				return;
-		}
+			return;
 	}
 
 	vkCmdBindDescriptorSets(command_buffer, active.pipeline_bind_point, active.pipeline_layout, first, sets.size(), sets.data(), dynamic_offsets.size(), dynamic_offsets.data());
-	active.descriptor_sets.resize(std::max(first + sets.size(), active.descriptor_sets.size()));
-	for (size_t i = 0; i < sets.size(); ++i)
-	{
-		active.descriptor_sets[first + i].set = sets[i];
-		active.descriptor_sets[first + i].dynamic_offsets = dynamic_offsets;
-	}
+	
+	active.descriptor_sets.resize(max(first + sets.size(), active.descriptor_sets.size()));
+	memcpy(active.descriptor_sets.data() + first, sets.data(), sets.size() * sizeof(VkDescriptorSet));
+	active.descriptor_dynamic_offsets.resize(max(active.descriptor_dynamic_offsets.size(), dynamic_offsets.size()));
+	memcpy(active.descriptor_dynamic_offsets.data(), dynamic_offsets.data(), dynamic_offsets.size() * sizeof(uint32_t));
 }
 
 void CommandBuffer::bindIndexBuffer(VkBuffer buffer, VkDeviceSize offset, VkIndexType index_type)
@@ -152,29 +137,26 @@ void CommandBuffer::bindVertexBuffers(uint32_t first, const std::vector<VkBuffer
 	if (active.vertex_buffers.size() >= (buffers.size() + first))
 	{
 		size_t i = 0;
-		for (;i < buffers.size(); ++i)
-			if (buffers[i] != active.vertex_buffers[i + first].vertex_buffer || (offsets.empty() ? VkDeviceSize(0) : offsets[i]) != active.vertex_buffers[i + first].offset)
+		for (; i < buffers.size(); ++i)
+			if (buffers[i] != active.vertex_buffers[i + first] || active.vertex_offsets[i + first] != offsets[i])
 				break;
 		if (i >= buffers.size())
 			return;
 	}
 
-	if (offsets.empty())
-	{
-		std::vector<VkDeviceSize> default_offsets(buffers.size());
-		for (auto& offset : default_offsets)
-			offset = 0;
-		vkCmdBindVertexBuffers(command_buffer, first, buffers.size(), buffers.data(), default_offsets.data());
-	}
-	else
-		vkCmdBindVertexBuffers(command_buffer, first, buffers.size(), buffers.data(), offsets.data());
+	vkCmdBindVertexBuffers(command_buffer, first, buffers.size(), buffers.data(), offsets.data());
 
 	active.vertex_buffers.resize(std::max(active.vertex_buffers.size(), first + buffers.size()));
-	for (size_t i = 0; i < buffers.size(); ++i)
-	{
-		active.vertex_buffers[first + i].vertex_buffer = buffers[i];
-		active.vertex_buffers[first + i].offset = offsets.empty() ? VkDeviceSize(0) : offsets[i];
-	}
+	memcpy(active.vertex_buffers.data() + first, buffers.data(), buffers.size() * sizeof(VkBuffer));
+	active.vertex_offsets.resize(std::max(active.vertex_offsets.size(), first + offsets.size()));
+	memcpy(active.vertex_offsets.data() + first, offsets.data(), offsets.size() * sizeof(VkDeviceSize));
+}
+
+void CommandBuffer::bindVertexBuffers(uint32_t first, const std::vector<VkBuffer>& buffers)
+{
+	std::vector<VkDeviceSize> offsets;
+	offsets.resize(buffers.size(), 0);
+	bindVertexBuffers(first, buffers, offsets);
 }
 #pragma endregion
 

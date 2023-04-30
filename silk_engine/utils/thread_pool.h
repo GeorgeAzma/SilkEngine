@@ -36,7 +36,6 @@ public:
         }
         ++running_tasks;
         condition.notify_one();
-
         return future;
     }
 

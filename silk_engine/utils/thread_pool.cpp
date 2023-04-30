@@ -4,9 +4,7 @@ ThreadPool::ThreadPool(uint thread_count)
     : threads(thread_count)
 {
     for (auto& t : threads)
-    {
         t = std::thread(&ThreadPool::work, this);
-    }
 }
 
 ThreadPool::~ThreadPool()
@@ -24,9 +22,7 @@ ThreadPool::~ThreadPool()
 void ThreadPool::wait()
 {
     while (running_tasks)
-    {
         std::this_thread::yield();
-    }
 }
 
 void ThreadPool::work()

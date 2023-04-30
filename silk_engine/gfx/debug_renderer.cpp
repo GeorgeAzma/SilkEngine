@@ -28,7 +28,7 @@ shared<GraphicsPipeline> DebugRenderer::graphics_pipeline_3D = nullptr;
 
 void DebugRenderer::InstancedRenderContextBase::init()
 {
-	indirect_buffer = makeShared<Buffer>(256 * sizeof(VkDrawIndexedIndirectCommand), Buffer::INDIRECT, Allocation::Props{ Allocation::MAPPED | Allocation::RANDOM_ACCESS, Allocation::Device::CPU });
+	indirect_buffer = makeShared<Buffer>(256 * sizeof(VkDrawIndexedIndirectCommand), Buffer::INDIRECT, Allocation::Props{ Allocation::MAPPED | Allocation::RANDOM_ACCESS });
 }
 
 void DebugRenderer::InstancedRenderContextBase::update()
@@ -52,7 +52,7 @@ void DebugRenderer::InstancedRenderContextBase::update()
 			}
 		}
 	}
-	
+
 	if (any_needs_update && !indirect_buffer->setData(draw_commands.data(), draw_commands.size() * sizeof(VkDrawIndexedIndirectCommand)))
 		indirect_buffer->resize(indirect_buffer->getSize() * 2);
 }
@@ -65,7 +65,7 @@ void DebugRenderer::InstancedRenderContextBase::render()
 		instance_batch.material->set("GlobalUniform", *global_uniform_buffer);
 		instance_batch.material->set("images", instance_batch.instance_images.getDescriptorImageInfos());
 		instance_batch.material->bind();
-
+		
 		instance_batch.mesh->bind();
 		instance_batch.instance_buffer->bindVertex(1);
 		indirect_buffer->drawIndexedIndirect(draw_index);
@@ -97,7 +97,7 @@ DebugRenderer::RenderedInstance DebugRenderer::InstancedRenderContextBase::creat
 		auto& new_batch = instance_batches.back();
 		new_batch.instance_data.emplace_back(instance_data);
 		new_batch.material = makeShared<Material>(pipeline);
-		new_batch.instance_buffer = makeShared<Buffer>(sizeof(InstanceData) * 8192, Buffer::VERTEX, Allocation::Props{ Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED, Allocation::Device::CPU });
+		new_batch.instance_buffer = makeShared<Buffer>(sizeof(InstanceData) * 8192, Buffer::VERTEX, Allocation::Props{ Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
 		new_batch.instance_images.add({ white_image });
 	}
 
@@ -194,7 +194,7 @@ void DebugRenderer::init()
 	null_image->setData(null_data);
 	null_image->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	Image::add("Null", null_image);
-	
+
 	Mesh::add("Triangle", makeShared<Mesh>(TriangleMesh()));
 	Mesh::add("Circle", makeShared<Mesh>(CircleMesh()));
 	Mesh::add("Circle Outline", makeShared<Mesh>(CircleOutlineMesh()));
@@ -203,9 +203,9 @@ void DebugRenderer::init()
 	Mesh::add("Quad", makeShared<Mesh>(QuadMesh()));
 	Mesh::add("Cube", makeShared<Mesh>(CubeMesh()));
 	Mesh::add("Sphere", makeShared<Mesh>(SphereMesh()));
-	
+
 	Font::add("Arial", makeShared<Font>("arial.ttf"));
-	
+
 	reset();
 }
 

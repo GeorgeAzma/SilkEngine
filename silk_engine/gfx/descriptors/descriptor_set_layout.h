@@ -9,12 +9,14 @@ public:
 	DescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 	~DescriptorSetLayout();
 
-	const std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding>& getBindings() const { return bindings; }
+	const std::map<uint32_t, VkDescriptorSetLayoutBinding>& getBindings() const { return bindings; }
+	uint32_t getDynamicDescriptorCount() const { return dynamic_descriptor_count; }
 	operator const VkDescriptorSetLayout& () const { return layout; }
 
 private:
 	VkDescriptorSetLayout layout = nullptr;
-	std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings;
+	std::map<uint32_t, VkDescriptorSetLayoutBinding> bindings;
+	uint32_t dynamic_descriptor_count = 0;
 
 public:
 	static shared<DescriptorSetLayout> get(const std::vector<VkDescriptorSetLayoutBinding>& bindings)

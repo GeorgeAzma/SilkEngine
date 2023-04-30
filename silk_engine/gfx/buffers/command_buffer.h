@@ -28,18 +28,6 @@ public:
 		INVALID
 	};
 
-	struct BoundDescriptorSet
-	{
-		VkDescriptorSet set = nullptr;
-		std::vector<uint32_t> dynamic_offsets;
-	};
-
-	struct OffsetVertexBuffer
-	{
-		VkBuffer vertex_buffer = nullptr;
-		VkDeviceSize offset = 0;
-	};
-
 public:
 	CommandBuffer(CommandPool& command_pool, VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 	~CommandBuffer();
@@ -55,7 +43,8 @@ public:
 	void bindPipeline(VkPipelineBindPoint bind_point, VkPipeline pipeline, VkPipelineLayout layout);
 	void bindDescriptorSets(uint32_t first, const std::vector<VkDescriptorSet>& sets, const std::vector<uint32_t>& dynamic_offsets = {});
 	void bindIndexBuffer(VkBuffer buffer, VkDeviceSize offset, VkIndexType index_type);
-	void bindVertexBuffers(uint32_t first, const std::vector<VkBuffer>& buffers, const std::vector<VkDeviceSize>& offsets = {});
+	void bindVertexBuffers(uint32_t first, const std::vector<VkBuffer>& buffers, const std::vector<VkDeviceSize>& offsets);
+	void bindVertexBuffers(uint32_t first, const std::vector<VkBuffer>& buffers);
 
 	void setViewport(VkViewport viewport);
 	void setScissor(VkRect2D scissor);
@@ -115,9 +104,11 @@ private:
 	struct Active
 	{
 		uint32_t subpass = None<uint32_t>();
-		std::vector<BoundDescriptorSet> descriptor_sets{};
+		std::vector<VkDescriptorSet> descriptor_sets{};
+		std::vector<uint32_t> descriptor_dynamic_offsets{};
 		VkDeviceSize index_buffer_offset = None<VkDeviceSize>();
-		std::vector<OffsetVertexBuffer> vertex_buffers{};
+		std::vector<VkBuffer> vertex_buffers{};
+		std::vector<VkDeviceSize> vertex_offsets{};
 		VkPipelineBindPoint pipeline_bind_point = None<VkPipelineBindPoint>();
 		VkPipeline pipeline = nullptr;
 		VkPipelineLayout pipeline_layout = nullptr;

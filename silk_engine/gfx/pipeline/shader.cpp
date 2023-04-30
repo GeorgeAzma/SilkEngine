@@ -359,7 +359,6 @@ void Shader::reflect()
 		reflection_data.resource_locations.emplace(resource.name, ResourceLocation{ resource.set, resource.binding });
 	}
 
-	reflection_data.descriptor_set_layouts.reserve(descriptor_set_layout_bindings.size());
 	for (auto&& [set, bindings] : descriptor_set_layout_bindings)
 		reflection_data.descriptor_set_layouts.emplace(set, DescriptorSetLayout::get(bindings));
 }

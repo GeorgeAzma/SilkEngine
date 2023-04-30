@@ -79,7 +79,7 @@ public:
 	struct ReflectionData
 	{
 		uvec3 local_size = uvec3(0);
-		std::unordered_map<uint32_t, shared<DescriptorSetLayout>> descriptor_set_layouts;
+		std::map<uint32_t, shared<DescriptorSetLayout>> descriptor_set_layouts;
 		std::vector<Resource> resources;
 		std::vector<VkPushConstantRange> push_constants;
 		std::unordered_map<std::string_view, ResourceLocation> resource_locations;
