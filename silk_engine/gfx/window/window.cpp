@@ -217,6 +217,8 @@ Window::Window()
 
 Window::~Window()
 {
+    if (active_window == this)
+        active_window = nullptr;
     delete swap_chain;
     delete surface;
     glfwDestroyWindow(window);

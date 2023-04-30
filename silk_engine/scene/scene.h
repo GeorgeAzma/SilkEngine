@@ -38,16 +38,18 @@ private:
 	entt::registry registry;
 
 public:
-	static void addScene(const shared<Scene>& scene);
-	static void removeScene(const shared<Scene>& scene);
-
-	static void updateScenes();
-	static void destroyScenes();
-
-	static void switchTo(const shared<Scene>& scene);
-	static shared<Scene>& getActive() { return active_scene; }
-
+	static Scene* getActive() { return active_scene; }
+	static void setActive(Scene* scene) 
+	{
+		if (active_scene == scene)
+			return;
+		if (active_scene)
+			active_scene->onStop();
+		active_scene = scene; 
+		if (active_scene)
+			active_scene->onStart(); 
+	}
+	
 private:
-	static inline shared<Scene> active_scene = nullptr;
-	static inline std::unordered_map<size_t, shared<Scene>> scenes;
+	static inline Scene* active_scene = nullptr;
 };

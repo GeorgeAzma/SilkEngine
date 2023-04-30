@@ -49,10 +49,6 @@ public:
     Window();
     ~Window();
 
-    static Window& getActive() { return *active_window; }
-    static void setActive(Window* window) { active_window = window; }
-    static std::vector<Window*>& getWindows() { return all_windows; }
-
     void update();
     void recreate();
 
@@ -74,13 +70,16 @@ public:
     bool isMinimized() const { return data.minimized || data.width == 0 || data.height == 0; }
     bool isMaximized() const { return data.maximized; }
     bool isFocused() const { return data.focused; }
-    bool isMouseDown(int button) const { return data.mouse_buttons[button]; }
-    bool isKeyDown(int key) const { return data.keys[key]; }
+    
+    bool isMouseHeld(int button) const { return data.mouse_buttons[button]; }
     bool isMousePressed(int button) const { return data.isMousePressed(button); }
-    bool isKeyPressed(int key) const { return data.isKeyPressed(key); }
     bool isMouseReleased(int button) const { return data.isMouseReleased(button); }
-    bool isKeyReleased(int key) const { return data.isKeyReleased(key); }
     bool isMouseOn() const { return data.is_mouse_on; }
+    
+    bool isKeyHeld(int key) const { return data.keys[key]; }
+    bool isKeyPressed(int key) const { return data.isKeyPressed(key); }
+    bool isKeyReleased(int key) const { return data.isKeyReleased(key); }
+    
     bool isResizable() const { return resizable; }
     bool isDecorated() const { return decorated; }
     bool isAlwaysOnTop() const { return always_on_top; }
@@ -122,9 +121,6 @@ public:
     operator GLFWwindow* () const { return window; }
 
 private:
-    static inline Window* active_window = nullptr;
-    static inline std::vector<Window*> all_windows;
-
     GLFWwindow *window = nullptr;
 
     struct UserPointer
@@ -150,8 +146,8 @@ private:
         vec2 dpi = vec2(0);
 
         bool isMousePressed(int button) const { return mouse_buttons[button] && !last_mouse_buttons[button]; }
-        bool isKeyPressed(int key) const { return keys[key] && !last_keys[key]; }
         bool isMouseReleased(int button) const { return !mouse_buttons[button] && last_mouse_buttons[button]; }
+        bool isKeyPressed(int key) const { return keys[key] && !last_keys[key]; }
         bool isKeyReleased(int key) const { return !keys[key] && last_keys[key]; }
     } data;
 
@@ -175,4 +171,11 @@ private:
 
     Surface* surface = nullptr;
     SwapChain* swap_chain = nullptr;
+
+public:
+    static Window& getActive() { return *active_window; }
+    static void setActive(Window* window) { active_window = window; }
+
+private:
+    static inline Window* active_window = nullptr;
 };

@@ -1,6 +1,8 @@
 #include "joystick.h"
 #include "core/event.h"
 
+Joystick Joystick::active_joystick = Joystick(-1);
+
 void Joystick::init()
 {
     glfwSetJoystickCallback(
@@ -8,45 +10,54 @@ void Joystick::init()
         {
             bool connected = event == GLFW_CONNECTED;
             Joystick joystick(id);
-            Dispatcher<JoystickEvent>::post(JoystickEvent(joystick, connected));
+            if (connected)
+            {
+                active_joystick = joystick;
+                connected_joysticks.emplace(joystick, joystick);
+            }
+            else
+            {
+                connected_joysticks.erase(joystick);
+                if (joystick == active_joystick)
+                    active_joystick = connected_joysticks.size() ? connected_joysticks.begin()->second : Joystick(-1);
+            }
+            Dispatcher<JoystickEvent>::post(joystick, connected);
             SK_INFO("Joystick {}connected: {}", connected ? "" : "dis", joystick.getName());
         });
 }
 
-std::span<const float> Joystick::getAxes() const
+Joystick::Joystick(int id)
+    : id(id)
 {
-    int count = 0; 
-    const float* data = glfwGetJoystickAxes(id, &count);
-    return std::span<const float>(data, count);
-}
+    if (id == -1)
+        return;
 
-std::span<const unsigned char> Joystick::getButtons() const
-{
+    name = glfwGetJoystickName(id);
+    guid = glfwGetJoystickGUID(id);
+    is_gamepad = glfwJoystickIsGamepad(id) == GLFW_TRUE;
+
     int count = 0;
-    const unsigned char* data = glfwGetJoystickButtons(id, &count);
-    return std::span<const unsigned char>(data, count);
+    glfwGetJoystickAxes(id, &count);
+    axes.resize(count, 0.0f);
+    glfwGetJoystickButtons(id, &count);
+    last_buttons.resize(count, GLFW_RELEASE);
+    buttons.resize(count, GLFW_RELEASE);
+    glfwGetJoystickHats(id, &count);
+    hats.resize(count, GLFW_HAT_CENTERED);
 }
 
-const char* Joystick::getGUID() const
+void Joystick::update()
 {
-    return glfwGetJoystickGUID(id);
-}
-
-std::span<const unsigned char> Joystick::getHats() const
-{
+    if (id == -1)
+        return;
     int count = 0;
-    const unsigned char* data = glfwGetJoystickHats(id, &count);
-    return std::span<const unsigned char>(data, count);
-}
-
-const char* Joystick::getName() const
-{
-	return glfwGetJoystickName(id);
-}
-
-bool Joystick::isGamepad() const
-{
-    return glfwJoystickIsGamepad(id) == GLFW_TRUE;
+    const float* axes_data = glfwGetJoystickAxes(id, &count);
+    memcpy(axes.data(), axes_data, count * sizeof(float));
+    const byte* button_data = glfwGetJoystickButtons(id, &count);
+    memcpy(last_buttons.data(), buttons.data(), buttons.size());
+    memcpy(buttons.data(), button_data, count * sizeof(byte));
+    const byte* hat_data = glfwGetJoystickHats(id, &count);
+    memcpy(hats.data(), hat_data, count * sizeof(byte));
 }
 
 bool Joystick::isPresent() const

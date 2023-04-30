@@ -45,7 +45,8 @@ const RenderPass& Renderer::getRenderPass(uint32_t index)
 
 void Renderer::render()
 {
-	DebugRenderer::update(Scene::getActive().get() ? Scene::getActive()->getMainCamera() : nullptr);
+	if (Scene::getActive())
+		DebugRenderer::update(Scene::getActive()->getMainCamera());
 
 	if (!Window::getActive().getSwapChain().acquireNextImage(*Renderer::swap_chain_image_available))
 	{

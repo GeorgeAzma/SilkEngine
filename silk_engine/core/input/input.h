@@ -1,5 +1,12 @@
 #pragma once
 
+/*
+TODO:
+	when window switches clear key_pressed and mouse_pressed
+	have onWindowSwitchEvent?
+	same for joystick
+*/
+
 enum class InputDevice : uint32_t
 {
 	KEYBOARD_AND_MOUSE,
@@ -10,6 +17,7 @@ class Input
 {
 public:
 	static void init();
+	static void update();
 
 	static void setKeyBind(std::string_view name, int key) { bindings.keys[name] = key; }
 	static void setMouseButtonBind(std::string_view name, int button) { bindings.mouse_buttons[name] = button; }
@@ -20,6 +28,18 @@ public:
 	static int getMouseButtonBind(std::string_view name) { return bindings.mouse_buttons.at(name); }
 	static int getJoystickButtonBind(std::string_view name) { return bindings.joystick_buttons.at(name); }
 	static std::string getClipboardString();
+
+	static bool isMouseHeld(int button);
+	static bool isMousePressed(int button);
+	static bool isMouseReleased(int button);
+	
+	static bool isKeyHeld(int key);
+	static bool isKeyPressed(int key);
+	static bool isKeyReleased(int key);
+
+	static bool isJoystickHeld(int button);
+	static bool isJoystickPressed(int button);
+	static bool isJoystickReleased(int button);
 
 private:
 	static inline struct Bindings

@@ -84,6 +84,8 @@ void ParticleSystem::update()
         p.position += p.velocity * dt;
     }
 
+    if (!Scene::getActive())
+        return;
     particle_data.resize(particles.size());
     auto camera = Scene::getActive()->getMainCamera();
     if (camera)

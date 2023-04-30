@@ -2,6 +2,7 @@
 #include "time.h"
 #include "gfx/render_context.h"
 #include "gfx/window/window.h"
+#include "core/input/input.h"
 #include "scene/scene.h"
 #include "gfx/renderer.h"
 #include "gfx/devices/logical_device.h"
@@ -33,10 +34,11 @@ void Application::update()
     Renderer::wait();
 
     onUpdate();
-    Scene::updateScenes();
+    if (Scene::getActive())
+        Scene::getActive()->onUpdate();
 
     Renderer::render();
 
-    Window::getActive().update();
+    Input::update();
     Time::update();
 }

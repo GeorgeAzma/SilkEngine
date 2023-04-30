@@ -19,7 +19,7 @@ MyApp::MyApp()
     Renderer::init();
 
     scene = makeShared<MyScene>();
-    Scene::addScene(scene);
+    Scene::setActive(scene.get());
 
     Dispatcher<KeyPressEvent>::subscribe(*this, &MyApp::onKeyPress);
     Dispatcher<WindowCloseEvent>::subscribe(*this, &MyApp::onWindowClose);
@@ -32,7 +32,7 @@ MyApp::~MyApp()
     Dispatcher<WindowCloseEvent>::unsubscribe(*this, &MyApp::onWindowClose);
     Dispatcher<FramebufferResizeEvent>::unsubscribe(*this, &MyApp::onFramebufferResize);
 
-    Scene::destroyScenes();
+    scene = nullptr;
     Renderer::destroy();
     delete window;
     RenderContext::destroy();

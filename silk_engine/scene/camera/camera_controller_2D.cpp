@@ -2,7 +2,7 @@
 #include "gfx/window/window.h"
 #include "scene/components.h"
 #include "utils/math.h"
-#include "gfx/window/window.h"
+#include "core/input/input.h"
 #include "core/input/keys.h"
 #include "utils/time.h"
 
@@ -16,20 +16,20 @@ void CameraController2D::onUpdate()
 	auto& camera = get<CameraComponent>().camera;
 
 	auto old_position = camera.position;
-	float speed = 2.0f * Time::dt * (1 + Window::getActive().isKeyDown(Keys::LEFT_SHIFT) * 20);
-	if (Window::getActive().isKeyDown(Keys::W))
+	float speed = 2.0f * Time::dt * (1 + Input::isKeyHeld(Keys::LEFT_SHIFT) * 20);
+	if (Input::isKeyHeld(Keys::W))
 	{
 		camera.position.y += speed;
 	}
-	if (Window::getActive().isKeyDown(Keys::A))
+	if (Input::isKeyHeld(Keys::A))
 	{
 		camera.position.x -= speed;
 	}
-	if (Window::getActive().isKeyDown(Keys::S))
+	if (Input::isKeyHeld(Keys::S))
 	{
 		camera.position.y -= speed;
 	}
-	if (Window::getActive().isKeyDown(Keys::D))
+	if (Input::isKeyHeld(Keys::D))
 	{
 		camera.position.x += speed;
 	}

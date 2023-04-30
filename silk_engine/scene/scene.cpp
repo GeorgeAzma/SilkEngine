@@ -15,13 +15,14 @@
 Scene::Scene()
 {
 	Dispatcher<WindowResizeEvent>::subscribe(*this, &Scene::onWindowResize);
-
 	SK_TRACE("Scene created");
 }
 
 Scene::~Scene()
 {
+	destroy();
 	Dispatcher<WindowResizeEvent>::unsubscribe(*this, &Scene::onWindowResize);
+	SK_TRACE("Scene destroyed");
 }
 
 void Scene::init()
@@ -87,40 +88,4 @@ Camera* Scene::getMainCamera()
 		main_camera = &registry.get<CameraComponent>(registry.view<CameraComponent>().front()).camera;
 
 	return main_camera;
-}
-
-void Scene::addScene(const shared<Scene>& scene)
-{
-	scenes.emplace((size_t)scene.get(), scene);
-	if (!active_scene.get())
-		switchTo(scene);
-}
-
-void Scene::removeScene(const shared<Scene>& scene)
-{
-	if (scene == active_scene)
-		active_scene = nullptr;
-	scenes.erase((size_t)scene.get());
-}
-
-void Scene::updateScenes()
-{
-	if (!active_scene.get())
-		return;
-	active_scene->update();
-}
-
-void Scene::destroyScenes()
-{
-	if (active_scene.get())
-		active_scene->destroy();
-	scenes.clear();
-}
-
-void Scene::switchTo(const shared<Scene>& scene)
-{
-	if (active_scene.get())
-		active_scene->destroy();
-	active_scene = scenes.at((size_t)scene.get());
-	active_scene->init();
 }
