@@ -4,7 +4,7 @@
 
 class RawAudio;
 
-class Audio : NonCopyable
+class Audio : NoCopy
 {
 public:
     Audio(const RawAudio& audio);

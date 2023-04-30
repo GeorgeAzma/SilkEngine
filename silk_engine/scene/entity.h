@@ -2,7 +2,7 @@
 
 #include "scene.h"
 
-class Entity : NonCopyable
+class Entity : NoCopy
 {
 public:
 	Entity(entt::entity handle, Scene* scene);

@@ -2,7 +2,7 @@
 
 class Instance;
 
-class PhysicalDevice : NonCopyable
+class PhysicalDevice : NoCopy
 {
 	friend class LogicalDevice;
 public:

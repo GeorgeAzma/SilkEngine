@@ -6,7 +6,7 @@ class PhysicalDevice;
 class LogicalDevice;
 class Allocation;
 
-class Allocator : NonCopyable
+class Allocator : NoCopy
 {
 public:
 	Allocator(const PhysicalDevice& physical_device, const LogicalDevice& logical_device);

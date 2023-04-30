@@ -4,7 +4,7 @@
 
 class ALCdevice;
 
-class Microphone : NonCopyable
+class Microphone : NoCopy
 {
 public:
 	Microphone(const char* microphone_name = nullptr, uint32_t sample_rate = 44100, AudioFormat format = AudioFormat::MONO16, size_t buffer_size = 1024);

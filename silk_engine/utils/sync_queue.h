@@ -1,7 +1,7 @@
 #pragma once
 
 template<typename T>
-class SyncQueue : protected std::deque<T>, NonCopyable
+class SyncQueue : protected std::deque<T>, NoCopy
 {
 public:
 	SyncQueue() = default;

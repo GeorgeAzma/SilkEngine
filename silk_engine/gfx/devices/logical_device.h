@@ -5,7 +5,7 @@ class QueueFamily;
 class PhysicalDevice;
 class Surface;
 
-class LogicalDevice : NonCopyable
+class LogicalDevice : NoCopy
 {
 public:
 	LogicalDevice(const PhysicalDevice& physical_device);

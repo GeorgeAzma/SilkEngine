@@ -2,7 +2,7 @@
 
 #include "shader.h"
 
-class Pipeline : NonCopyable
+class Pipeline : NoCopy
 {
 private:
 	struct StageSpecializationInfo

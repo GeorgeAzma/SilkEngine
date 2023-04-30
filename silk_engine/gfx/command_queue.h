@@ -7,7 +7,7 @@ class CommandPool;
 template <typename Func>
 concept Command = requires (Func && val, CommandBuffer & cb) { { val(cb) } -> std::same_as<void>; };
 
-class CommandQueue : NonCopyable
+class CommandQueue : NoCopy
 {
 public:
 	CommandQueue(std::optional<uint32_t> queue_family_index, VkQueueFlagBits queue_type);

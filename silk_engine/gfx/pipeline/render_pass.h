@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gfx/images/image.h"
-#include "gfx/subrender/subrender.h"
+#include "subrenders/subrender.h"
 
 class Framebuffer;
 class SwapChain;
@@ -34,7 +34,7 @@ struct SubpassProps
 	std::vector<uint32_t> inputs{};
 };
 
-class RenderPass : NonCopyable
+class RenderPass : NoCopy
 {
 public:
 	RenderPass(const std::vector<SubpassProps>& subpass_props);

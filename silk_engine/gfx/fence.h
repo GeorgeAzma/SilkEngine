@@ -1,7 +1,7 @@
 #pragma once
 #undef ERROR
 
-class Fence : NonCopyable
+class Fence : NoCopy
 {
 public:
 	enum State

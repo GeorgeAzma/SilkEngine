@@ -2,7 +2,7 @@
 
 #include "gfx/allocators/allocation.h"
 
-class Buffer : NonCopyable
+class Buffer : NoCopy
 {
 public:
 	typedef VkBufferUsageFlags Usage;

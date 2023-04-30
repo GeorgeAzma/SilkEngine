@@ -3,7 +3,7 @@
 #include "descriptor_set_layout.h"
 #include "descriptor_pool.h"
 
-class DescriptorSet : NonCopyable
+class DescriptorSet : NoCopy
 {
 public:
 	DescriptorSet(const DescriptorSetLayout& layout);

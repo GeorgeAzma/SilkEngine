@@ -42,21 +42,21 @@ constexpr const char* ENGINE_NAME = "Silk";
     | ((uint32_t(minor)) << 12)              \
     | (uint32_t(patch)))
 
-class NonMovable
+struct NoMove
 {
-public:
-    NonMovable() {}
-    NonMovable(NonMovable&&) = delete;
-    NonMovable& operator=(NonMovable&&) = delete;
+    NoMove() {}
+    NoMove(NoMove&&) = delete;
+    NoMove& operator=(NoMove&&) = delete;
 };
 
-class NonCopyable
+struct NoCopy
 {
-public:
-    NonCopyable() {}
-    NonCopyable(const NonCopyable&) = delete;
-    NonCopyable& operator=(const NonCopyable&) = delete;
+    NoCopy() {}
+    NoCopy(const NoCopy&) = delete;
+    NoCopy& operator=(const NoCopy&) = delete;
 };
+
+struct NoCopyNoMove : NoCopy, NoMove {};
 
 using namespace std::chrono_literals;
 

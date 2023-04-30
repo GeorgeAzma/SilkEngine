@@ -3,7 +3,7 @@
 class AudioContext;
 class ALCdevice;
 
-class AudioDevice : NonCopyable
+class AudioDevice : NoCopy
 {
 public:
 	AudioDevice(const char* device_name = nullptr);

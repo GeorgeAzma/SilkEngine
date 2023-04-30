@@ -5,7 +5,7 @@
 class SwapChain;
 class RenderPass;
 
-class Framebuffer : NonCopyable
+class Framebuffer : NoCopy
 {
 public:
 	Framebuffer(const SwapChain& swap_chain, const RenderPass& render_pass, uint32_t width, uint32_t height, bool imageless = false);

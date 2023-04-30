@@ -224,7 +224,7 @@ void Shader::reflect()
 			}
 		}
 
-		if (VkShaderStageFlags(type) & VkShaderStageFlags(Stage::Type::VERTEX))
+		if (type & Stage::VERTEX)
 		{
 			struct VertexAttribute
 			{
@@ -340,6 +340,10 @@ void Shader::reflect()
 				}
 			}
 		}
+
+		if (type & Stage::FRAGMENT)
+			for (const spirv_cross::Resource& output : shader_resources.stage_outputs)
+				reflection_data.render_targets[compiler.get_decoration(output.id, spv::DecorationLocation)] = output.name;
 
 		auto constants = compiler.get_specialization_constants();
 		for (auto& constant : constants)

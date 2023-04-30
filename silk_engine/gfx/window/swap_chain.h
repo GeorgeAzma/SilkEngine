@@ -5,7 +5,7 @@
 
 class Surface;
 
-class SwapChain : NonCopyable
+class SwapChain : NoCopy
 {
 public:
     SwapChain(const Surface& surface, bool vsync = false);

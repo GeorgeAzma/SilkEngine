@@ -2,7 +2,7 @@
 
 enum class AudioFormat;
 
-class RawAudio : NonCopyable
+class RawAudio : NoCopy
 {
 private:
     struct RiffChunk

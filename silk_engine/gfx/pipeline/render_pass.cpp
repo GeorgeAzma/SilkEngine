@@ -3,7 +3,6 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/buffers/framebuffer.h"
 #include "gfx/window/swap_chain.h"
-#include "gfx/subrender/subrender.h"
 
 RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
     : subpass_count(subpass_props.size())

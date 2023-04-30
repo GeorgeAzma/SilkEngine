@@ -7,7 +7,7 @@
 class Image;
 class Buffer;
 
-class Material : NonCopyable
+class Material : NoCopy
 {
 public:
 	Material(const shared<GraphicsPipeline>& graphics_pipeline);

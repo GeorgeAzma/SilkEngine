@@ -1,6 +1,6 @@
 #pragma once
 
-struct RawMesh : NonCopyable
+struct RawMesh : NoCopy
 {
 	RawMesh(size_t vertex_type_size = 0, size_t index_type_size = 0)
 		: vertex_type_size(vertex_type_size), index_type_size(index_type_size) {}

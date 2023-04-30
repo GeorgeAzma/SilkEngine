@@ -11,7 +11,7 @@ enum class VulkanVersion : uint32_t
 class DebugMessenger;
 class PhysicalDevice;
 
-class Instance : NonCopyable
+class Instance : NoCopy
 {
 public:
     static constexpr VulkanVersion MINIMUM_VULKAN_VERSION = VulkanVersion::VULKAN_1_1;

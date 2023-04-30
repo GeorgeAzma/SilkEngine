@@ -5,7 +5,7 @@
 
 class ImageView;
 
-class Image : NonCopyable
+class Image : NoCopy
 {
 public:
 	enum class Type : std::underlying_type_t<VkImageViewType>

@@ -1,6 +1,6 @@
 #pragma once
 
-class PipelineCache : NonCopyable
+class PipelineCache : NoCopy
 {
 private:
 	struct Header

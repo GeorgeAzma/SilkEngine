@@ -3,7 +3,7 @@
 struct Hash;
 struct Equal;
 
-class DescriptorSetLayout : NonCopyable
+class DescriptorSetLayout : NoCopy
 {
 public:
 	DescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);

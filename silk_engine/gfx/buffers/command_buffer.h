@@ -4,7 +4,7 @@ class Queue;
 class Fence;
 class CommandPool;
 
-class CommandBuffer : NonCopyable
+class CommandBuffer : NoCopy
 {
 	template<std::unsigned_integral T>
 	static constexpr T None() 

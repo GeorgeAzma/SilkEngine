@@ -2,7 +2,7 @@
 
 class Window;
 
-class Surface : NonCopyable
+class Surface : NoCopy
 {
 public:
 	Surface(const Window& window);

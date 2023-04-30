@@ -1,6 +1,6 @@
 #pragma once
 
-class CommandPool : NonCopyable
+class CommandPool : NoCopy
 {
 public:
 	CommandPool(VkCommandPoolCreateFlags flags = {}, std::optional<uint32_t> queue_family_index = {});

@@ -15,13 +15,13 @@ namespace shaderc
 	class CompileOptions;
 }
 
-class Shader : NonCopyable
+class Shader : NoCopy
 {
 public:
-	struct Stage : NonCopyable
+	struct Stage : NoCopy
 	{
 	public:
-		enum class Type : VkShaderStageFlags
+		enum Type : VkShaderStageFlags
 		{
 			VERTEX = VK_SHADER_STAGE_VERTEX_BIT,
 			FRAGMENT = VK_SHADER_STAGE_FRAGMENT_BIT,
@@ -88,6 +88,7 @@ public:
 		std::unordered_map<std::string_view, Constant> constants;
 		std::vector<VkVertexInputBindingDescription> vertex_input_binding_descriptions;
 		std::vector<VkVertexInputAttributeDescription> vertex_input_attribute_descriptions;
+		std::unordered_map<uint32_t, std::string_view> render_targets;
 	};
 
 public:

@@ -1,6 +1,6 @@
 #pragma once
 
-class DescriptorPool : NonCopyable
+class DescriptorPool : NoCopy
 {
 public:
 	DescriptorPool(uint32_t max_sets, const std::vector<VkDescriptorPoolSize>& sizes);
