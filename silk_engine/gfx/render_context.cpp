@@ -73,6 +73,7 @@ void RenderContext::update()
 
 void RenderContext::screenshot(const path& file)
 {
+	// TODO: Fix sync error (though this works)
 	if (!std::filesystem::exists("res/images/screenshots"))
 		std::filesystem::create_directories("res/images/screenshots");
 	
@@ -83,28 +84,18 @@ void RenderContext::screenshot(const path& file)
 	Image::Props props{};
 	props.width = Window::getActive().getWidth();
 	props.height = Window::getActive().getHeight();
-	props.format = Image::Format::BGRA;
-	props.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+	props.format = Image::Format::RGBA;
+	props.usage = Image::TRANSFER_DST | Image::TRANSFER_SRC;
 	props.tiling = VK_IMAGE_TILING_OPTIMAL;
 	props.sampler_props.mipmap_mode = Sampler::MipmapMode::NONE;
 	props.create_view = false;
 	auto image = makeShared<Image>(props);
-	img->copyImage(*image);
-	execute();
-
-	shared<ComputePipeline> cp = ComputePipeline::get("BGRA To RGBA");
-	if (!cp) cp = ComputePipeline::add("BGRA To RGBA", makeShared<ComputePipeline>(makeShared<Shader>("bgra_to_rgba")));
-	Material mat(cp);
-	Buffer ssbo(img->getSize(), Buffer::UsageBits::STORAGE | Buffer::UsageBits::TRANSFER_DST, Allocation::Props{ .flags = Allocation::RANDOM_ACCESS | Allocation::MAPPED });
-	image->copyToBuffer(ssbo);
-	execute();
-	mat.set("Image", ssbo);
-	mat.bind();
-	cp->dispatch(img->getSize());
+	img->copyToImage(*image);
 	execute();
 
 	std::vector<byte> data(img->getSize());
-	ssbo.getData(data.data(), img->getSize());
+	image->getData(data.data());
+
 	const path folder = "res/images/screenshots";
 	path file_path = folder / file;
 	stbi_write_png(file_path.string().c_str(), Window::getActive().getWidth(), Window::getActive().getHeight(), Image::getFormatChannelCount(Image::Format(Window::getActive().getSurface().getFormat().format)), data.data(), 0);

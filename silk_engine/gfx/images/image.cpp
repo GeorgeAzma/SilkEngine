@@ -293,12 +293,17 @@ void Image::insertMemoryBarrier(const VkImage& image, VkAccessFlags source_acces
 
 void Image::insertMemoryBarrier(const VkImage& image, VkImageLayout old_layout, VkImageLayout new_layout, VkImageAspectFlags aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t layers, uint32_t base_layer)
 {
+	if (old_layout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
+		return;
 	VkPipelineStageFlags src_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
 	VkAccessFlags src_access = VK_ACCESS_NONE;
 	switch (old_layout)
 	{
 	case VK_IMAGE_LAYOUT_UNDEFINED:
 		src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR: // NOTE: probably doesn't work in some cases 
+		src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_GENERAL:
 		src_stage = VK_PIPELINE_STAGE_HOST_BIT;
@@ -335,6 +340,9 @@ void Image::insertMemoryBarrier(const VkImage& image, VkImageLayout old_layout, 
 	{
 	case VK_IMAGE_LAYOUT_UNDEFINED:
 		dst_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR: // NOTE: probably doesn't work in some cases 
+		dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_GENERAL:
 		dst_stage = VK_PIPELINE_STAGE_HOST_BIT;
@@ -526,12 +534,12 @@ void Image::getData(void* data, uint32_t base_layer, uint32_t layers)
 	{
 		Buffer sb(layer_size * layers, Buffer::TRANSFER_DST, { Allocation::RANDOM_ACCESS | Allocation::MAPPED });
 		copyToBuffer(sb, base_layer, layers);
-		sb.getData(data);
 		RenderContext::execute();
+		sb.getData(data);
 	}
 }
 
-bool Image::copyImage(Image& destination)
+bool Image::copyToImage(Image& destination)
 {
 	bool supports_blit = true;
 
@@ -561,13 +569,13 @@ bool Image::copyImage(Image& destination)
 			if (supports_blit)
 			{
 				VkImageBlit blit{};
-				blit.srcSubresource.aspectMask = getFormatVulkanAspectFlags(props.format);
+				blit.srcSubresource.aspectMask = getAspectFlags();
 				blit.srcSubresource.mipLevel = 0;
 				blit.srcSubresource.baseArrayLayer = 0;
 				blit.srcSubresource.layerCount = 1;
 				blit.srcOffsets[0] = VkOffset3D(0, 0, 0);
 				blit.srcOffsets[1] = VkOffset3D((int32_t)props.width, (int32_t)props.height, (int32_t)props.depth);
-				blit.dstSubresource.aspectMask = getFormatVulkanAspectFlags(destination.getProps().format);
+				blit.dstSubresource.aspectMask = destination.getAspectFlags();
 				blit.dstSubresource.mipLevel = 0;
 				blit.dstSubresource.baseArrayLayer = 0;
 				blit.dstSubresource.layerCount = 1;
@@ -579,11 +587,11 @@ bool Image::copyImage(Image& destination)
 			{
 				//Otherwise use image copy (requires us to manually flip components).
 				VkImageCopy region{};
-				region.srcSubresource.aspectMask = getFormatVulkanAspectFlags(props.format);
+				region.srcSubresource.aspectMask = getAspectFlags();
 				region.srcSubresource.mipLevel = 0;
 				region.srcSubresource.baseArrayLayer = 0;
 				region.srcSubresource.layerCount = 1;
-				region.dstSubresource.aspectMask = getFormatVulkanAspectFlags(destination.getProps().format);
+				region.dstSubresource.aspectMask = destination.getAspectFlags();
 				region.dstSubresource.mipLevel = 0;
 				region.dstSubresource.baseArrayLayer = 0;
 				region.dstSubresource.layerCount = 1;

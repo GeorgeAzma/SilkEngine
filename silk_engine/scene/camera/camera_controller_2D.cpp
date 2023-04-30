@@ -18,21 +18,13 @@ void CameraController2D::onUpdate()
 	auto old_position = camera.position;
 	float speed = 2.0f * Time::dt * (1 + Input::isKeyHeld(Keys::LEFT_SHIFT) * 20);
 	if (Input::isKeyHeld(Keys::W))
-	{
 		camera.position.y += speed;
-	}
 	if (Input::isKeyHeld(Keys::A))
-	{
 		camera.position.x -= speed;
-	}
 	if (Input::isKeyHeld(Keys::S))
-	{
 		camera.position.y -= speed;
-	}
 	if (Input::isKeyHeld(Keys::D))
-	{
 		camera.position.x += speed;
-	}
 
 	bool needs_update = (old_position != camera.position);
 

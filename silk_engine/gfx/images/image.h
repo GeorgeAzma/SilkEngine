@@ -36,6 +36,19 @@ public:
 		DEPTH_STENCIL = VK_FORMAT_D32_SFLOAT_S8_UINT
 	};
 
+	typedef VkBufferUsageFlags Usage;
+	enum UsageBits : Usage
+	{
+		TRANSFER_SRC = VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+		TRANSFER_DST = VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+		SAMPLED = VK_IMAGE_USAGE_SAMPLED_BIT,
+		STORAGE = VK_IMAGE_USAGE_STORAGE_BIT,
+		COLOR_ATTACHMENT = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+		DEPTH_STENCIL_ATTACHMENT = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+		TRANSIENT_ATTACHMENT = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
+		INPUT_ATTACHMENT = VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT
+	};
+
 	static Format getFormatFromChannelCount(uint8_t channels);
 	static VkImageAspectFlags getFormatVulkanAspectFlags(Format format);
 	static uint8_t getFormatChannelCount(Format format);
@@ -61,7 +74,7 @@ public:
 		uint32_t depth = 1;
 		uint32_t layers = 1;
 		Format format = Format::BGRA;
-		VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		Usage usage = TRANSFER_DST | SAMPLED;
 		Allocation::Props allocation_props{};
 		VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 		VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -104,9 +117,9 @@ public:
 
 	void setData(const void* data, uint32_t base_layer = 0, uint32_t layers = 1);
 	void getData(void* data, uint32_t base_layer = 0, uint32_t layers = 1);
-	bool copyImage(Image& destination);
 	void transitionLayout(VkImageLayout new_layout);
 	bool isFeatureSupported(VkFormatFeatureFlags feature) const;
+	bool copyToImage(Image& destination);
 	void copyFromBuffer(VkBuffer buffer, uint32_t base_layer = 0, uint32_t layers = 1);
 	void copyToBuffer(VkBuffer buffer, uint32_t base_layer = 0, uint32_t layers = 1);
 
