@@ -37,7 +37,7 @@ struct SubpassProps
 class RenderPass : NoCopy
 {
 public:
-	RenderPass(const std::vector<SubpassProps>& subpass_props);
+	RenderPass(const std::vector<SubpassProps>& subpass_props, const std::vector<VkSubpassDependency>& dependencies = {});
 	~RenderPass();
 
 	void render();

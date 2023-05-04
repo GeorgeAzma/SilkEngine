@@ -26,6 +26,15 @@ shared<Image> DebugRenderer::white_image = nullptr;
 shared<GraphicsPipeline> DebugRenderer::graphics_pipeline_2D = nullptr;
 shared<GraphicsPipeline> DebugRenderer::graphics_pipeline_3D = nullptr;
 
+void DebugRenderer::InstancedRenderContextBase::InstanceBatch::bind()
+{
+	material->set("GlobalUniform", *global_uniform_buffer);
+	material->set("images", instance_images.getDescriptorImageInfos());
+	material->bind();
+	mesh->bind();
+	instance_buffer->bindVertex(1);
+}
+
 void DebugRenderer::InstancedRenderContextBase::init()
 {
 	indirect_buffer = makeShared<Buffer>(256 * sizeof(VkDrawIndexedIndirectCommand), Buffer::INDIRECT, Allocation::Props{ Allocation::MAPPED | Allocation::RANDOM_ACCESS });
@@ -39,16 +48,16 @@ void DebugRenderer::InstancedRenderContextBase::update()
 	for (size_t i = 0; i < instance_batches.size(); ++i)
 	{
 		auto& instance_batch = instance_batches[i];
-		if (instance_batch.needs_update && instance_batch.instance_data.size())
+		if (instance_batch.needs_update && instance_batch.instance_count)
 		{
 			instance_batch.needs_update = false;
 			any_needs_update = true;
-			draw_commands[i].instanceCount = instance_batch.instance_data.size();
+			draw_commands[i].instanceCount = instance_batch.instance_count;
 			draw_commands[i].indexCount = instance_batch.mesh->getIndexCount();
-			if (!instance_batch.instance_buffer->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size() * sizeof(InstanceData)))
+			if (!instance_batch.instance_buffer->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size()))
 			{
-				instance_batch.instance_buffer->resize(instance_batch.instance_data.size() * sizeof(InstanceData) * 2);
-				instance_batch.instance_buffer->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size() * sizeof(InstanceData));
+				instance_batch.instance_buffer->resize(instance_batch.instance_data.size() * 2);
+				instance_batch.instance_buffer->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size());
 			}
 		}
 	}
@@ -62,18 +71,13 @@ void DebugRenderer::InstancedRenderContextBase::render()
 	uint32_t draw_index = 0;
 	for (auto& instance_batch : instance_batches)
 	{
-		instance_batch.material->set("GlobalUniform", *global_uniform_buffer);
-		instance_batch.material->set("images", instance_batch.instance_images.getDescriptorImageInfos());
-		instance_batch.material->bind();
-		
-		instance_batch.mesh->bind();
-		instance_batch.instance_buffer->bindVertex(1);
+		instance_batch.bind();
 		indirect_buffer->drawIndexedIndirect(draw_index);
 		++draw_index;
 	}
 }
 
-DebugRenderer::RenderedInstance DebugRenderer::InstancedRenderContextBase::createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
+DebugRenderer::RenderedInstance DebugRenderer::InstancedRenderContextBase::createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
 {
 	size_t instance_batch_index = instance_batches.size();
 	size_t instance_data_index = 0;
@@ -85,8 +89,8 @@ DebugRenderer::RenderedInstance DebugRenderer::InstancedRenderContextBase::creat
 		{
 			instance_batch_index = i;
 			instance_data_index = instance_batch.instance_data.size();
-			instance_batch.needs_update = true;
-			instance_batch.instance_data.emplace_back(instance_data);
+			instance_batch.addData(instance_data);
+			++instance_batch.instance_count;
 			break;
 		}
 	}
@@ -95,25 +99,28 @@ DebugRenderer::RenderedInstance DebugRenderer::InstancedRenderContextBase::creat
 	{
 		instance_batches.emplace_back(mesh);
 		auto& new_batch = instance_batches.back();
-		new_batch.instance_data.emplace_back(instance_data);
+		new_batch.data_size = instance_data_size;
+		new_batch.addData(instance_data);
 		new_batch.material = makeShared<Material>(pipeline);
-		new_batch.instance_buffer = makeShared<Buffer>(sizeof(InstanceData) * 8192, Buffer::VERTEX, Allocation::Props{ Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
+		new_batch.instance_buffer = makeShared<Buffer>(65536, Buffer::VERTEX, Allocation::Props{ Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
 		new_batch.instance_images.add({ white_image });
+		++new_batch.instance_count;
 	}
 
+	uint32_t image_index = 0;
 	if (images.size())
 	{
-		uint32_t image_index = instance_batches[instance_batch_index].instance_images.add(images);
+		image_index = instance_batches[instance_batch_index].instance_images.add(images);
 		SK_VERIFY(image_index != UINT32_MAX, "Instance has too much images");
-		instance_batches[instance_batch_index].instance_data[instance_data_index].image_index = image_index;
+		memcpy(&instance_batches[instance_batch_index].instance_data[instance_data_index + image_index_offset], &image_index, sizeof(uint32_t));
 	}
 
-	return RenderedInstance(images.size(), instance_data_index, instance_batch_index);
+	return RenderedInstance(instance_data_index, instance_batch_index, image_index, images.size());
 }
 
-shared<DebugRenderer::RenderedInstance> DebugRenderer::InstancedRenderContext::createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
+shared<DebugRenderer::RenderedInstance> DebugRenderer::InstancedRenderContext::createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
 {
-	RenderedInstance instance = DebugRenderer::InstancedRenderContextBase::createInstance(mesh, instance_data, pipeline, images);
+	RenderedInstance instance = DebugRenderer::InstancedRenderContextBase::createInstance(mesh, instance_data, instance_data_size, image_index_offset, pipeline, images);
 	if (instance.batch_index >= instances.size())
 		instances.emplace_back();
 	auto& instance_vec = instances[instance.batch_index];
@@ -139,19 +146,20 @@ void DebugRenderer::InstancedRenderContext::destroyInstance(const RenderedInstan
 		return;
 	}
 
-	instance_batch.instance_images.remove(instance_batch.instance_data[instance.data_index].image_index, instance.image_count);
-	std::swap(instance_batch.instance_data[instance.data_index], instance_batch.instance_data.back());
-	instance_batch.instance_data.pop_back();
+	instance_batch.instance_images.remove(instance.image_index, instance.image_count);
+	std::swap_ranges(instance_batch.instance_data.begin() + instance.data_offset, instance_batch.instance_data.begin() + instance.data_offset + instance_batch.data_size, instance_batch.instance_data.end() - instance_batch.data_size);
+	instance_batch.instance_data.erase(instance_batch.instance_data.end() - instance_batch.data_size);
+	--instance_batch.instance_count;
 	instance_batch.needs_update = true;
 
-	instances[instance.batch_index].back()->data_index = instance.data_index;
-	std::swap(instances[instance.batch_index][instance.data_index], instances[instance.batch_index].back());
+	instances[instance.batch_index].back()->data_offset = instance.data_offset;
+	std::swap(instances[instance.batch_index][instance.data_offset], instances[instance.batch_index].back());
 	instances[instance.batch_index].pop_back();
 }
 
-void DebugRenderer::ImmediateInstancedRenderContext::createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
+void DebugRenderer::ImmediateInstancedRenderContext::createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
 {
-	RenderedInstance instance = DebugRenderer::InstancedRenderContextBase::createInstance(mesh, instance_data, pipeline, images);
+	RenderedInstance instance = DebugRenderer::InstancedRenderContextBase::createInstance(mesh, instance_data, instance_data_size, image_index_offset, pipeline, images);
 	if (instance.batch_index >= instances.size())
 		instances.emplace_back();
 	auto& instance_vec = instances[instance.batch_index];
@@ -404,7 +412,7 @@ void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, cons
 	data.color = active.color;
 	if (active.transformed)
 		data.transform *= active.transform;
-	immediate_render_context.createInstance(mesh, std::move(data), graphics_pipeline, active.images);
+	immediate_render_context.createInstance(mesh, &data, sizeof(data), offsetof(InstanceData, image_index), graphics_pipeline, active.images);
 }
 
 void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
@@ -419,7 +427,7 @@ void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, cons
 	data.color = active.color;
 	if (active.transformed)
 		data.transform *= active.transform;
-	immediate_render_context.createInstance(mesh, std::move(data), graphics_pipeline, active.images);
+	immediate_render_context.createInstance(mesh, &data, sizeof(data), offsetof(InstanceData, image_index), graphics_pipeline, active.images);
 }
 
 void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float width, float height)
@@ -434,7 +442,7 @@ void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, cons
 	data.color = active.color;
 	if (active.transformed)
 		data.transform *= active.transform;
-	immediate_render_context.createInstance(mesh, std::move(data), graphics_pipeline, active.images);
+	immediate_render_context.createInstance(mesh, &data, sizeof(data), offsetof(InstanceData, image_index), graphics_pipeline, active.images);
 	active.depth -= 1e-10;
 }
 

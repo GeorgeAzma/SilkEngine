@@ -64,13 +64,7 @@ size_t Image::getFormatSize(Format format)
 
 VkImageAspectFlags Image::getFormatVulkanAspectFlags(Format format)
 {
-	if (isDepthFormat(format))
-		return VK_IMAGE_ASPECT_DEPTH_BIT | (isStencilFormat(format) * VK_IMAGE_ASPECT_STENCIL_BIT);
-
-	if (isStencilFormat(format))
-		return VK_IMAGE_ASPECT_STENCIL_BIT;
-
-	return VK_IMAGE_ASPECT_COLOR_BIT;
+	return (isColorFormat(format) * VK_IMAGE_ASPECT_COLOR_BIT) | (isStencilFormat(format) * VK_IMAGE_ASPECT_DEPTH_BIT) | (isStencilFormat(format) * VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 uint8_t Image::getFormatChannelCount(Format format)
@@ -90,7 +84,6 @@ uint8_t Image::getFormatChannelCount(Format format)
 	case Format::DEPTH_STENCIL:  //NOTE: Might be 2, probably not gonna use this anyways tho
 		return 1;
 	}
-
 	return 4;
 }
 
@@ -395,7 +388,8 @@ void Image::create()
 		layout = props.initial_layout;
 		ci.extent = { props.width, props.height, props.depth };
 		ci.arrayLayers = props.layers;
-		mip_levels = (props.sampler_props.mipmap_mode != Sampler::MipmapMode::NONE) ? calculateMipLevels(props.width, props.height, props.depth) : 1;
+		// Multisampled images are never mip mapped
+		mip_levels = ((props.samples & VK_SAMPLE_COUNT_1_BIT) && props.sampler_props.mipmap_mode != Sampler::MipmapMode::NONE) ? calculateMipLevels(props.width, props.height, props.depth) : 1;
 		ci.mipLevels = mip_levels;
 		ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		ci.samples = props.samples;

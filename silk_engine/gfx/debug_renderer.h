@@ -23,20 +23,14 @@ public:
 		mat4 transform = mat4(1);
 		vec4 color = vec4(1);
 		uint32_t image_index = 0;
-
-		bool operator==(const InstanceData& other) const
-		{
-			return transform == other.transform
-				&& image_index == other.image_index
-				&& color == color;
-		}
 	};
 
 	struct RenderedInstance
 	{
-		size_t image_count = 0;
-		size_t data_index = std::numeric_limits<size_t>::max();
+		size_t data_offset = std::numeric_limits<size_t>::max();
 		size_t batch_index = std::numeric_limits<size_t>::max();
+		size_t image_index = 0;
+		size_t image_count = 0;
 	};
 
 private:
@@ -88,13 +82,40 @@ private:
 	{
 		struct InstanceBatch
 		{
+		public:
+			void bind();
+			void setData(size_t offset, const void* data, size_t image_index_offset, uint32_t image_index)
+			{ 
+				memcpy(instance_data.data() + offset, data, data_size);
+				*(uint32_t*)(instance_data.data() + offset + image_index_offset) = image_index;
+				needs_update = true; 
+			}
+			void addData(const void* data, size_t image_index_offset, uint32_t image_index)
+			{ 
+				instance_data.resize(instance_data.size() + data_size); 
+				setData(instance_data.size() - data_size, data, image_index_offset, image_index); 
+			}
+			void setData(size_t offset, const void* data)
+			{ 
+				memcpy(instance_data.data() + offset, data, data_size);
+				needs_update = true; 
+			}
+			void addData(const void* data) 
+			{ 
+				instance_data.resize(instance_data.size() + data_size); 
+				setData(instance_data.size() - data_size, data); 
+			}
+
+		public:
 			shared<Mesh> mesh = nullptr;
-			std::vector<InstanceData> instance_data{};
+			std::vector<byte> instance_data{};
 			InstanceImages instance_images{};
 			shared<Material> material = nullptr;
 			shared<Buffer> instance_buffer = nullptr;
 			shared<Buffer> old_instance_buffer = nullptr;
-			bool needs_update = true;
+			bool needs_update = false;
+			size_t instance_count = 0;
+			size_t data_size = 0;
 		};
 	public:
 		void init();
@@ -109,12 +130,10 @@ private:
 		void render();
 
 
-		RenderedInstance createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
-		void updateInstance(const RenderedInstance& instance, const InstanceData& instance_data)
+		RenderedInstance createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset = 0, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
+		void updateInstance(const RenderedInstance& instance, const void* instance_data)
 		{
-			auto& instance_batch = instance_batches[instance.batch_index];
-			instance_batch.instance_data[instance.data_index] = instance_data;
-			instance_batch.needs_update = true;
+			instance_batches[instance.batch_index].setData(instance.data_offset, instance_data);
 		}
 
 	public:
@@ -126,7 +145,7 @@ private:
 	class InstancedRenderContext : public InstancedRenderContextBase
 	{
 	public:
-		shared<RenderedInstance> createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
+		shared<RenderedInstance> createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset = 0, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
 		void destroyInstance(const RenderedInstance& instance);
 
 	private:
@@ -147,7 +166,7 @@ private:
 				instance.clear();
 		}
 
-		void createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
+		void createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset = 0, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
 
 	private:
 		std::vector<std::vector<RenderedInstance>> instances;
@@ -206,8 +225,9 @@ public:
 
 	static Light* addLight(const Light& light);
 
-	static shared<RenderedInstance> createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {}) { return render_context.createInstance(mesh, instance_data, pipeline, images); }
-	static void updateInstance(const RenderedInstance& instance, const InstanceData& instance_data) { render_context.updateInstance(instance, instance_data); }
+	static shared<RenderedInstance> createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, uint32_t image_index_offset = 0, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {}) { return render_context.createInstance(mesh, instance_data, instance_data_size, image_index_offset, pipeline, images); }
+	static shared<RenderedInstance> createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {}) { return createInstance(mesh, &instance_data, sizeof(instance_data), offsetof(instance_data, image_index), pipeline, images); }
+	static void updateInstance(const RenderedInstance& instance, const void* instance_data) { render_context.updateInstance(instance, instance_data); }
 	static void destroyInstance(const RenderedInstance& instance) { render_context.destroyInstance(instance); }
 
 private:

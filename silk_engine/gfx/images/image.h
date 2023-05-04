@@ -65,6 +65,22 @@ public:
 	{
 		return format >= Format::DEPTH16 && format <= Format::DEPTH_STENCIL;
 	}
+	static bool isStencilOnlyFormat(Format format)
+	{
+		return format == Format::STENCIL;
+	}
+	static bool isDepthOnlyFormat(Format format)
+	{
+		return format == Format::DEPTH || format == Format::DEPTH16;
+	}
+	static bool isDepthStencilOnlyFormat(Format format)
+	{
+		return format == Format::DEPTH24_STENCIL || format == Format::DEPTH16_STENCIL;
+	}
+	static bool isColorFormat(Format format)
+	{
+		return !isDepthStencilFormat(format);
+	}
 	static uint32_t calculateMipLevels(uint32_t width, uint32_t height = 1, uint32_t depth = 1);
 
 	struct Props

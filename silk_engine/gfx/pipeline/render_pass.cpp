@@ -4,11 +4,15 @@
 #include "gfx/buffers/framebuffer.h"
 #include "gfx/window/swap_chain.h"
 
-RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
+// TODO:
+// figure stuff out with VK_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT
+// Because of resolve attachments getting automatically added to attachment_descriptions, SubpassProps::inputs may not function as user would think, make it simpler
+// Support subpass input depth attachments
+RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props, const std::vector<VkSubpassDependency>& dependencies)
     : subpass_count(subpass_props.size())
 {
     std::vector<VkSubpassDescription> subpass_descriptions(subpass_props.size());
-    std::vector<VkSubpassDependency> subpass_dependencies(subpass_props.size());
+    std::vector<VkSubpassDependency> subpass_dependencies = dependencies;
     std::vector<std::vector<VkAttachmentReference>> resolve_attachment_references(subpass_props.size());
     std::vector<std::vector<VkAttachmentReference>> color_attachment_references(subpass_props.size());
     std::vector<VkAttachmentReference> depth_attachment_references(subpass_props.size(), { VK_ATTACHMENT_UNUSED, VK_IMAGE_LAYOUT_UNDEFINED });
@@ -17,75 +21,111 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
     for (size_t subpass_index = 0; subpass_index < subpass_props.size(); ++subpass_index)
     {
         const auto& subpass = subpass_props[subpass_index];
-        bool has_depth_output = false;
         for (const auto& output : subpass.outputs)
         {
-            bool multisampled = output.samples != VK_SAMPLE_COUNT_1_BIT;
-            bool depth = Image::isDepthFormat(output.format);
-            has_depth_output |= depth;
-            bool stencil = Image::isStencilFormat(output.format);
-            bool color = !(depth || stencil);
+            size_t attachment_index = attachment_descriptions.size();
+
             VkAttachmentDescription attachment_description{};
             attachment_description.format = VkFormat(output.format);
             attachment_description.samples = output.samples;
+            attachment_description.initialLayout = output.initial_layout;
             attachment_description.storeOp = output.store_operation;
             attachment_description.loadOp = output.load_operation;
-            attachment_description.stencilLoadOp = stencil ? output.stencil_load_operation : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-            attachment_description.stencilStoreOp = stencil ? output.stencil_store_operation : VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            attachment_description.initialLayout = output.initial_layout;
-            attachment_description.finalLayout = output.final_layout;
+            attachment_description.stencilLoadOp = output.stencil_load_operation;
+            attachment_description.stencilStoreOp = output.stencil_store_operation;
 
-            attachment_descriptions.emplace_back(attachment_description);
-            // We need resolve attachments for each multisampled color attachment
-            // If attachment layout is present_src then it should be set to color_attachment
-            // And it's corresponding resolve attachment should get the present_src layout instead
+            // RULE: Preserved subpass attachments always have LOAD_OP_LOAD and STORE_OP_STORE
+            if (output.preserve)
+            {
+                attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+                attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                preserve_attachment_references[subpass_index].emplace_back(attachment_index);
+            }
+
+            // RULE: If not using stencil, stencil load and store ops should be set to DONT_CARE
+            bool stencil = Image::isStencilFormat(output.format);
+            if (!stencil)
+            {
+                attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            }
+
+            bool multisampled = output.samples != VK_SAMPLE_COUNT_1_BIT;
             if (multisampled)
             {
-                attachment_descriptions.back().storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-                if (attachment_descriptions.back().finalLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
-                    attachment_descriptions.back().finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                if (attachment_description.loadOp == VK_ATTACHMENT_LOAD_OP_LOAD)
+                    attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             }
-            if (color)
+
+            if (Image::isColorFormat(output.format))
             {
                 if (multisampled)
                 {
-                    color_attachment_references[subpass_index].emplace_back((uint32_t)attachment_descriptions.size() - 1, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+                    attachment_description.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-                    attachment_descriptions.emplace_back(attachment_description);
-                    attachment_descriptions.back().samples = VK_SAMPLE_COUNT_1_BIT;
-                    attachment_descriptions.back().loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-                    resolve_attachment_references[subpass_index].emplace_back((uint32_t)attachment_descriptions.size() - 1, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+                    size_t resolve_attachment_index = attachment_descriptions.size();
+                    VkAttachmentDescription resolve_attachment_description = attachment_description;
+                    resolve_attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
+                    resolve_attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                    resolve_attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                    resolve_attachment_description.finalLayout = output.final_layout;
+                    resolve_attachment_references[subpass_index].emplace_back(resolve_attachment_index, attachment_description.finalLayout);
+                    attachment_descriptions.emplace_back(std::move(resolve_attachment_description));
+                    ++attachment_index;
                 }
                 else
                 {
-                    color_attachment_references[subpass_index].emplace_back((uint32_t)attachment_descriptions.size() - 1, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+                    attachment_description.finalLayout = output.final_layout;
                     resolve_attachment_references[subpass_index].emplace_back(VK_ATTACHMENT_UNUSED, VK_IMAGE_LAYOUT_UNDEFINED);
                 }
+                color_attachment_references[subpass_index].emplace_back(attachment_index, attachment_description.finalLayout);
+                clear_values.emplace_back(output.clear_value ? *output.clear_value : VkClearValue{ .color = { 0.0f, 0.0f, 0.0f, 1.0f } });
             }
-            // Handle Depth/Stencil attachments
-            else if (depth && !stencil)
-                depth_attachment_references[subpass_index] = { (uint32_t)attachment_descriptions.size() - 1, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL };
-            else if (!depth && stencil)
-                depth_attachment_references[subpass_index] = { (uint32_t)attachment_descriptions.size() - 1, VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL };
-            else if (depth && stencil)
-                depth_attachment_references[subpass_index] = { (uint32_t)attachment_descriptions.size() - 1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
-
-            if (output.preserve) // If multisampled, only preserves resolved attachment??
-                preserve_attachment_references[subpass_index].emplace_back(attachment_descriptions.size() - 1);
-            
-            if (output.clear_value)
-                clear_values.emplace_back(*output.clear_value);
-            else if (depth || stencil)
-                clear_values.emplace_back(VkClearValue{ .depthStencil = { 1.0f, 0 } });
-            else
-                clear_values.emplace_back(VkClearValue{ .color = { 0.0f, 0.0f, 0.0f, 1.0f } });
+            else // Depth | Stencil
+            {
+                if (Image::isDepthOnlyFormat(output.format))
+                    attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+                else if (Image::isStencilOnlyFormat(output.format))
+                    attachment_description.finalLayout = VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL;
+                else if (Image::isDepthStencilFormat(output.format))
+                    attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                else SK_ERROR("Render pass attachment is in incompatible format");
+                depth_attachment_references[subpass_index].attachment = attachment_index;
+                depth_attachment_references[subpass_index].layout = attachment_description.finalLayout;
+                clear_values.emplace_back(output.clear_value ? *output.clear_value : VkClearValue{ .depthStencil = { 1.0f, 0 } });            
+            }
+            attachment_descriptions.emplace_back(std::move(attachment_description));
         }
 
+        // RULE: Subpass input attachments are always either VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL or VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL or 
+        // VK_IMAGE_LAYOUT_STENCIL_READ_ONLY_OPTIMAL or VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, depending on final layout of the input attachment
         input_attachment_references[subpass_index].resize(subpass.inputs.size());
-        for (size_t input_index = 0; input_index < subpass.inputs.size(); ++input_index)
+        for (size_t i = 0; i < subpass.inputs.size(); ++i)
         {
-            const auto& input = subpass.inputs[input_index];
-            input_attachment_references[subpass_index][input_index] = VkAttachmentReference(input, attachment_descriptions[input].finalLayout);
+            auto& subpass_input_attachment = input_attachment_references[subpass_index][i];
+            subpass_input_attachment.attachment = subpass.inputs[i];
+
+            auto& previous_subpass_output_attachment = attachment_descriptions[subpass.inputs[i]];
+            // RULE: Subpasses that are used in a subsequent subpass as an input attachment always have STORE_OP_STORE
+            previous_subpass_output_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            switch (previous_subpass_output_attachment.finalLayout)
+            {
+            case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+                subpass_input_attachment.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                break;
+            case VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL:
+                subpass_input_attachment.layout = VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL;
+                break;
+            case VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL:
+                subpass_input_attachment.layout = VK_IMAGE_LAYOUT_STENCIL_READ_ONLY_OPTIMAL;
+                break;
+            case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+                subpass_input_attachment.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                break;
+            default:
+                SK_ERROR("Previous subpass output attachment had an incompatible final layout to be used as an input attachment to subsequent subpasses");
+            }
         }
         
         VkSubpassDescription subpass_description{};
@@ -99,24 +139,17 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props)
         subpass_description.preserveAttachmentCount = preserve_attachment_references[subpass_index].size();
         subpass_description.pPreserveAttachments = preserve_attachment_references[subpass_index].data();
         subpass_descriptions[subpass_index] = std::move(subpass_description);
-
-        //TODO: Figure out how to do this automatically (I don't think it is possible to do it automatically though, without some performance implication) (good reference: https://www.reddit.com/r/vulkan/comments/s80reu/subpass_dependencies_what_are_those_and_why_do_i/)
-        //NOTE: VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT does not support access mask VK_ACCESS_SHADER_READ_BIT
-        VkSubpassDependency subpass_dependency{};
-        subpass_dependency.srcSubpass = subpass_index ? (subpass_index - 1) : VK_SUBPASS_EXTERNAL;
-        subpass_dependency.dstSubpass = subpass_index;
-        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpass_dependency.srcAccessMask = 0;
-        subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        if (has_depth_output)
-        {
-            subpass_dependency.srcStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-            subpass_dependency.dstStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-            subpass_dependency.dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        }
-        subpass_dependencies[subpass_index] = std::move(subpass_dependency);
     }
+
+    //TODO: (good reference: https://www.reddit.com/r/vulkan/comments/s80reu/subpass_dependencies_what_are_those_and_why_do_i/)
+    VkSubpassDependency subpass_dependency{};
+    subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    subpass_dependency.dstSubpass = 0;
+    subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    subpass_dependency.srcAccessMask = VK_ACCESS_NONE;
+    subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    subpass_dependencies.emplace_back(std::move(subpass_dependency));
 
     VkRenderPassCreateInfo ci{};
     ci.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
