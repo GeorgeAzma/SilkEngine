@@ -41,7 +41,9 @@ bool Input::isJoystickHeld(JoystickButton button) { return Joystick::getActive()
 bool Input::isJoystickPressed(JoystickButton button) { return Joystick::getActive().isPressed(button); }
 bool Input::isJoystickReleased(JoystickButton button) { return Joystick::getActive().isReleased(button); }
 
-JoystickHat Input::getJoystickHat(int hat) { return Joystick::getActive().getHat(hat); }
+bool Input::isJoystickHatHeld(JoystickHat button, int hat) { return Joystick::getActive().isHatHeld(button); }
+bool Input::getJoystickHatPressed(JoystickHat button, int hat) { return Joystick::getActive().isHatPressed(button); }
+bool Input::getJoystickHatReleased(JoystickHat button, int hat) { return Joystick::getActive().isHatReleased(button); }
 ivec2 Input::getJoystickHatDirection(int hat) { return Joystick::getActive().getHatDirection(hat); }
 
 float Input::getGamepadAxis(GamepadAxis axis) { return Joystick::getActive().getGamepadAxis(axis); }

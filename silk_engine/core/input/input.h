@@ -55,7 +55,9 @@ public:
 	static bool isJoystickPressed(JoystickButton button);
 	static bool isJoystickReleased(JoystickButton button);
 
-	static JoystickHat getJoystickHat(int hat = 0);
+	static bool isJoystickHatHeld(JoystickHat button, int hat = 0);
+	static bool getJoystickHatPressed(JoystickHat button, int hat = 0);
+	static bool getJoystickHatReleased(JoystickHat button, int hat = 0);
 	static ivec2 getJoystickHatDirection(int hat = 0);
 
 	static float getGamepadAxis(GamepadAxis axis);

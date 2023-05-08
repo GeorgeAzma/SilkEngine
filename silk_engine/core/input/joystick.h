@@ -35,6 +35,11 @@ enum class JoystickHat : byte
 	LEFT_DOWN = (LEFT | DOWN)
 };
 
+static JoystickHat operator&(JoystickHat lhs, JoystickHat rhs)
+{
+	return JoystickHat(ecast(lhs) & ecast(rhs));
+}
+
 enum class GamepadButton : byte
 {
 	A = 0,
@@ -93,8 +98,9 @@ public:
 	bool isPressed(JoystickButton button) const { return buttons[ecast(button)] == GLFW_PRESS && last_buttons[ecast(button)] == GLFW_RELEASE; }
 	bool isReleased(JoystickButton button) const { return buttons[ecast(button)] == GLFW_RELEASE && last_buttons[ecast(button)] == GLFW_PRESS; }
 
-	const std::vector<JoystickHat>& getHats() const { return hats; }
-	JoystickHat getHat(int hat = 0) const { return hats[hat]; }
+	bool isHatHeld(JoystickHat button, int hat = 0) const { return (hats[hat] & button) == button; }
+	bool isHatPressed(JoystickHat button, int hat = 0) const { return (hats[hat] & button) == button && (last_hats[hat] & button) == JoystickHat(0); }
+	bool isHatReleased(JoystickHat button, int hat = 0) const { return (hats[hat] & button) == JoystickHat(0) && (last_hats[hat] & button) == button; }
 	ivec2 getHatDirection(int hat = 0) const 
 	{ 
 		return ((ecast(hats[hat]) & GLFW_HAT_UP   ) > 0 ? ivec2( 0,  1) : ivec2(0)) +

@@ -122,8 +122,7 @@ private:
 
 static Shader::Stage::Type operator|(Shader::Stage::Type lhs, Shader::Stage::Type rhs)
 {
-	using T = std::underlying_type_t<Shader::Stage::Type>;
-	return static_cast<Shader::Stage::Type>(static_cast<T>(lhs) | static_cast<T>(rhs));
+	return Shader::Stage::Type(ecast(lhs) | ecast(rhs));
 }
 
 static Shader::Stage::Type& operator|=(Shader::Stage::Type& lhs, Shader::Stage::Type rhs)
@@ -133,8 +132,7 @@ static Shader::Stage::Type& operator|=(Shader::Stage::Type& lhs, Shader::Stage::
 
 static Shader::Stage::Type operator&(Shader::Stage::Type lhs, Shader::Stage::Type rhs)
 {
-	using T = std::underlying_type_t<Shader::Stage::Type>;
-	return static_cast<Shader::Stage::Type>(static_cast<T>(lhs) & static_cast<T>(rhs));
+	return Shader::Stage::Type(ecast(lhs) & ecast(rhs));
 }
 
 static Shader::Stage::Type& operator&=(Shader::Stage::Type& lhs, Shader::Stage::Type rhs)
