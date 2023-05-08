@@ -3,7 +3,6 @@
 #include "scene/components.h"
 #include "utils/math.h"
 #include "core/input/input.h"
-#include "core/input/keys.h"
 #include "utils/time.h"
 
 void CameraController::onCreate()
@@ -30,11 +29,11 @@ void CameraController::onUpdate()
 	vec3 front2D(math::normalize(vec3(camera.direction.x, 0, camera.direction.z)));
 
 	auto old_position = camera.position;
-	float speed = 20.0f * Time::dt * (1 + Input::isKeyHeld(Keys::LEFT_SHIFT) * 20);
+	float speed = 20.0f * Time::dt * (1 + Input::isKeyHeld(Key::LEFT_SHIFT) * 20);
 	
-	camera.position += float(Input::isKeyHeld(Keys::W) - Input::isKeyHeld(Keys::S)) * front2D * speed;
-	camera.position += float(Input::isKeyHeld(Keys::A) - Input::isKeyHeld(Keys::D)) * math::cross(front2D, math::UP) * speed;
-	camera.position.y += (Input::isKeyHeld(Keys::SPACE) - Input::isKeyHeld(Keys::LEFT_CONTROL)) * speed;
+	camera.position += float(Input::isKeyHeld(Key::W) - Input::isKeyHeld(Key::S)) * front2D * speed;
+	camera.position += float(Input::isKeyHeld(Key::A) - Input::isKeyHeld(Key::D)) * math::cross(front2D, math::UP) * speed;
+	camera.position.y += (Input::isKeyHeld(Key::SPACE) - Input::isKeyHeld(Key::LEFT_CONTROL)) * speed;
 
 	if (old_position != camera.position || rotated)
 	{

@@ -69,6 +69,7 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props, const std
                     resolve_attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
                     resolve_attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
                     resolve_attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                    resolve_attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
                     resolve_attachment_description.finalLayout = output.final_layout;
                     resolve_attachment_references[subpass_index].emplace_back(resolve_attachment_index, attachment_description.finalLayout);
                     attachment_descriptions.emplace_back(std::move(resolve_attachment_description));

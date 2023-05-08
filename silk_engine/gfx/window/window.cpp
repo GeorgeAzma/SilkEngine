@@ -1,5 +1,4 @@
 #include "window.h"
-#include "core/input/keys.h"
 #include "core/event.h"
 #include "gfx/images/raw_image.h"
 #include "monitor.h"
@@ -125,18 +124,18 @@ Window::Window()
             {
             case GLFW_PRESS:
             {
-                Dispatcher<KeyPressEvent>::post(*data.window, key, 0);
+                Dispatcher<KeyPressEvent>::post(*data.window, Key(key), 0);
                 data.keys[key] = true;
                 break;
             }
             case GLFW_REPEAT:
             {
-                Dispatcher<KeyPressEvent>::post(*data.window, key, 1);
+                Dispatcher<KeyPressEvent>::post(*data.window, Key(key), 1);
                 break;
             }
             case GLFW_RELEASE:
             {
-                Dispatcher<KeyReleaseEvent>::post(*data.window, key);
+                Dispatcher<KeyReleaseEvent>::post(*data.window, Key(key));
                 data.keys[key] = false;
                 break;
             }
@@ -152,14 +151,14 @@ Window::Window()
             {
             case GLFW_PRESS:
             {
-                Dispatcher<MousePressEvent>::post(*data.window, button);
+                Dispatcher<MousePressEvent>::post(*data.window, MouseButton(button));
                 data.mouse_pressed = button;
                 data.mouse_buttons[button] = true;
                 break;
             }
             case GLFW_RELEASE:
             {
-                Dispatcher<MouseReleaseEvent>::post(*data.window, button);
+                Dispatcher<MouseReleaseEvent>::post(*data.window, MouseButton(button));
                 data.mouse_buttons[button] = false;
                 break;
             }
@@ -174,7 +173,7 @@ Window::Window()
             Dispatcher<MouseMoveEvent>::post(*data.window, mx, my);
             data.mouse = vec2(mx, my);
             if (data.mouse_pressed != -1)
-                Dispatcher<MouseDragEvent>::post(*data.window, data.mouse_pressed, mx, my);
+                Dispatcher<MouseDragEvent>::post(*data.window, MouseButton(data.mouse_pressed), mx, my);
         });
 
     glfwSetCursorEnterCallback(window, 

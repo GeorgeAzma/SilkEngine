@@ -207,7 +207,7 @@ void Image::transitionLayout(VkImageLayout new_layout)
 bool Image::isFeatureSupported(VkFormatFeatureFlags feature) const
 {
 	VkFormatProperties format_properties = RenderContext::getPhysicalDevice().getFormatProperties(VkFormat(props.format));
-	const VkFormatFeatureFlags& features = (props.tiling == VK_IMAGE_TILING_OPTIMAL) ? format_properties.optimalTilingFeatures : format_properties.linearTilingFeatures;
+	const VkFormatFeatureFlags& features = (props.linear_tiling) ? format_properties.linearTilingFeatures : format_properties.optimalTilingFeatures;
 	return (features & feature) == feature;
 }
 
@@ -381,7 +381,7 @@ void Image::create()
 		ci.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		ci.imageType = getVulkanTypeFromType(props.type);
 		ci.format = VkFormat(props.format);
-		ci.tiling = props.tiling;
+		ci.tiling = props.linear_tiling ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
 		ci.usage = props.usage;
 		ci.flags = (props.type == Type::CUBE) * VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 		ci.initialLayout = props.initial_layout;

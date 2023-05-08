@@ -4,15 +4,14 @@
 #include "silk_engine/gfx/window/window.h"
 #include "silk_engine/gfx/renderer.h"
 #include "silk_engine/core/event.h"
-#include "silk_engine/core/input/keys.h"
 
 #include "my_app.h"
 #include "my_scene.h"
 
 MyApp::MyApp()
 {
-    Input::init();
     GLFW::init();
+    Input::init();
     RenderContext::init("MyApp");
 
     window = new Window();
@@ -48,10 +47,10 @@ void MyApp::onKeyPress(const KeyPressEvent& e)
 {
     switch (e.key)
     {
-    case Keys::ESCAPE:
+    case Key::ESCAPE:
         Dispatcher<WindowCloseEvent>::post(e.window);
         break;
-    case Keys::F11:
+    case Key::F11:
         e.window.setFullscreen(!e.window.isFullscreen());
         break;
     }

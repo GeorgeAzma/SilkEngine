@@ -42,6 +42,12 @@ constexpr const char* ENGINE_NAME = "Silk";
     | ((uint32_t(minor)) << 12)              \
     | (uint32_t(patch)))
 
+template <typename Enum> requires std::is_enum_v<Enum>
+static constexpr std::underlying_type_t<Enum> ecast(Enum e)
+{
+    return static_cast<std::underlying_type_t<Enum>>(e);
+}
+
 struct NoMove
 {
     NoMove() {}

@@ -7,6 +7,14 @@ TODO:
 	same for joystick
 */
 
+enum class Key : int;
+enum class MouseButton : int;
+
+class Joystick;
+enum class JoystickButton : byte;
+enum class GamepadButton : byte; 
+enum class GamepadAxis : byte;
+
 enum class InputDevice : uint32_t
 {
 	KEYBOARD_AND_MOUSE,
@@ -28,18 +36,24 @@ public:
 	static int getMouseButtonBind(std::string_view name) { return bindings.mouse_buttons.at(name); }
 	static int getJoystickButtonBind(std::string_view name) { return bindings.joystick_buttons.at(name); }
 	static std::string getClipboardString();
-
-	static bool isMouseHeld(int button);
-	static bool isMousePressed(int button);
-	static bool isMouseReleased(int button);
 	
-	static bool isKeyHeld(int key);
-	static bool isKeyPressed(int key);
-	static bool isKeyReleased(int key);
+	static bool isKeyHeld(Key key);
+	static bool isKeyPressed(Key key);
+	static bool isKeyReleased(Key key);
 
-	static bool isJoystickHeld(int button);
-	static bool isJoystickPressed(int button);
-	static bool isJoystickReleased(int button);
+	static bool isMouseHeld(MouseButton button);
+	static bool isMousePressed(MouseButton button);
+	static bool isMouseReleased(MouseButton button);
+
+	static Joystick& getActiveJoystick();
+
+	static bool isJoystickHeld(JoystickButton button);
+	static bool isJoystickPressed(JoystickButton button);
+	static bool isJoystickReleased(JoystickButton button);
+
+	static bool isGamepadHeld(GamepadButton button);
+	static bool isGamepadPressed(GamepadButton button);
+	static bool isGamepadReleased(GamepadButton button);
 
 private:
 	static inline struct Bindings

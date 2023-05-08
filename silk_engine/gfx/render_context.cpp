@@ -86,7 +86,6 @@ void RenderContext::screenshot(const path& file)
 	props.height = Window::getActive().getHeight();
 	props.format = Image::Format::RGBA;
 	props.usage = Image::TRANSFER_DST | Image::TRANSFER_SRC;
-	props.tiling = VK_IMAGE_TILING_OPTIMAL;
 	props.sampler_props.mipmap_mode = Sampler::MipmapMode::NONE;
 	props.create_view = false;
 	auto image = makeShared<Image>(props);

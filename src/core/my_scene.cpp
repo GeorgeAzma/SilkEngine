@@ -1,7 +1,4 @@
 #include "silk_engine/gfx/window/window.h"
-#include "silk_engine/core/input/keys.h"
-#include "silk_engine/core/input/mouse_buttons.h"
-#include "silk_engine/gfx/window/window.h"
 #include "silk_engine/scene/camera/camera_controller.h"
 #include "silk_engine/scene/components.h"
 #include "silk_engine/gfx/debug_renderer.h"
@@ -56,7 +53,7 @@ void MyScene::onStart()
 
 void MyScene::onUpdate()
 {
-    if (Window::getActive().isKeyPressed(Keys::F2))
+    if (Window::getActive().isKeyPressed(Key::F2))
         RenderContext::screenshot("screenshot.png");
 
     if (c())

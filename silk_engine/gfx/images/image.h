@@ -95,7 +95,7 @@ public:
 		VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 		VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 		Sampler::Props sampler_props{};
-		VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+		bool linear_tiling = false;
 		bool create_view = true;
 		Type type = Type::_2D;
 	};

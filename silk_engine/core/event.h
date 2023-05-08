@@ -5,6 +5,11 @@
 class Window;
 class Monitor;
 class Joystick;
+enum class Key : int;
+enum class MouseButton : int;
+enum class JoystickButton : byte;
+enum class GamepadButton : byte;
+enum class GamepadAxis : byte;
 
 //WINDOW EVENTS
 struct WindowEvent
@@ -96,36 +101,36 @@ struct MonitorEvent
 //KEY EVENTS
 struct KeyPressEvent : WindowEvent
 {
-    KeyPressEvent(Window& window, uint16_t key, uint32_t repeat_count)
+    KeyPressEvent(Window& window, Key key, int repeat_count)
         : WindowEvent(window), key(key), repeat_count(repeat_count) {}
 
-    const int key;
-    const uint repeat_count;
+    const Key key;
+    const int repeat_count;
  };
 
 struct KeyReleaseEvent : WindowEvent
 {
-    KeyReleaseEvent(Window& window, uint16_t key)
+    KeyReleaseEvent(Window& window, Key key)
         : WindowEvent(window), key(key) {}
 
-    const uint16_t key;
+    const Key key;
  };
 
 //MOUSE EVENTS
 struct MousePressEvent : WindowEvent
 {
-    MousePressEvent(Window& window, uint32_t button)
+    MousePressEvent(Window& window, MouseButton button)
         : WindowEvent(window), button(button) {}
 
-    const uint32_t button;
+    const MouseButton button;
  };
 
 struct MouseReleaseEvent : WindowEvent
 {
-    MouseReleaseEvent(Window& window, uint32_t button)
+    MouseReleaseEvent(Window& window, MouseButton button)
         : WindowEvent(window), button(button) {}
 
-    const uint32_t button;
+    const MouseButton button;
  };
 
 struct MouseMoveEvent : WindowEvent
@@ -138,10 +143,10 @@ struct MouseMoveEvent : WindowEvent
 
 struct MouseDragEvent : WindowEvent
 {
-    MouseDragEvent(Window& window, uint32_t button, double x, double y)
+    MouseDragEvent(Window& window, MouseButton button, double x, double y)
         : WindowEvent(window), button(button), x(x), y(y) {}
 
-    const uint32_t button;
+    const MouseButton button;
     const double x, y;
  };
 
@@ -192,6 +197,74 @@ struct JoystickEvent
 
     Joystick& joystick;
     const bool connected;
+};
+
+struct JoystickPressEvent
+{
+    JoystickPressEvent(Joystick& joystick, JoystickButton button)
+        : joystick(joystick), button(button) {}
+
+    Joystick& joystick;
+    const JoystickButton button;
+};
+
+struct JoystickReleaseEvent
+{
+    JoystickReleaseEvent(Joystick& joystick, JoystickButton button)
+        : joystick(joystick), button(button) {}
+
+    Joystick& joystick;
+    const JoystickButton button;
+};
+
+struct JoystickHatEvent
+{
+    JoystickHatEvent(Joystick& joystick, int hat, const ivec2& direction)
+        : joystick(joystick), hat(hat), direction(direction) {}
+
+    Joystick& joystick;
+    const int hat;
+    const ivec2 direction;
+};
+
+struct JoystickAxisEvent
+{
+    JoystickAxisEvent(Joystick& joystick, int axis, float value, float delta)
+        : joystick(joystick), axis(axis), value(value), delta(delta) {}
+
+    Joystick& joystick;
+    const int axis;
+    const float value;
+    const float delta;
+};
+
+struct GamepadPressEvent
+{
+    GamepadPressEvent(Joystick& joystick, GamepadButton button)
+        : joystick(joystick), button(button) {}
+
+    Joystick& joystick;
+    const GamepadButton button;
+};
+
+struct GamepadReleaseEvent
+{
+    GamepadReleaseEvent(Joystick& joystick, GamepadButton button)
+        : joystick(joystick), button(button) {}
+
+    Joystick& joystick;
+    const GamepadButton button;
+};
+
+struct GamepadAxisEvent
+{
+    GamepadAxisEvent(Joystick& joystick, GamepadAxis axis, float value, float delta)
+        : joystick(joystick), axis(axis), value(value), delta(delta) {}
+
+    Joystick& joystick;
+    const GamepadAxis axis;
+    const float value;
+    const float delta;
 };
 
 template<typename EventType>

@@ -19,7 +19,9 @@ void Application::run()
         if (Window::getActive().isMinimized())
             glfwWaitEvents();
         else
-            glfwPollEvents();
+        {
+            Input::update();
+        }
             
         update();
     }
@@ -39,6 +41,5 @@ void Application::update()
 
     Renderer::render();
 
-    Input::update();
     Time::update();
 }

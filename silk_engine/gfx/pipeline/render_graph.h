@@ -8,4 +8,6 @@ class RenderGraph
 		//std::vector<> outputs;
 	};
 public:
+	void addRenderPass();
+
 };

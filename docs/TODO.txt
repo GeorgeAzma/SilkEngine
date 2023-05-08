@@ -2,3 +2,7 @@
 - Create system which handles vulkan object creation and update for multiple frames
 - Replace user used vulkan enums with engine enums
 - Render Graph (Resources: https://themaister.net/blog/2017/08/15/render-graphs-and-vulkan-a-deep-dive/)
+- Aliasable images
+- Render pass stuff
+- Subpasses for compute pipelines
+- Support different types of joysticks/gamepads/steering wheels and add different configurable options for each of them, like 'centering spring strength'
