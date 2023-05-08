@@ -1,17 +1,19 @@
 #pragma once
 
+#include "physical_device.h"
+
 class Queue;
 class QueueFamily;
-class PhysicalDevice;
 class Surface;
 
 class LogicalDevice : NoCopy
 {
 public:
-	LogicalDevice(const PhysicalDevice& physical_device);
+	LogicalDevice(const PhysicalDevice& physical_device, const std::vector<PhysicalDevice::Feature>& features = {});
 	~LogicalDevice();
 
 	bool hasExtension(const char* extension) const;
+	bool hasFeature(PhysicalDevice::Feature feature) const { return enabled_features.contains(feature); }
 
 	void wait() const;
 	VkCommandPool createCommandPool(const VkCommandPoolCreateInfo& ci) const;
@@ -87,5 +89,6 @@ private:
 	VkDevice logical_device = nullptr;
 	std::vector<std::vector<Queue>> queues;
 	std::unordered_set<const char*> enabled_extensions;
-	const PhysicalDevice& physical_device;
+	std::unordered_set<PhysicalDevice::Feature> enabled_features;
+	const PhysicalDevice& physical_device; 
 };

@@ -25,7 +25,22 @@ void RenderContext::init(std::string_view app_name)
 {
 	instance = new Instance(app_name);
 	physical_device = instance->selectPhysicalDevice();
-	logical_device = new LogicalDevice(*physical_device);
+
+	using enum PhysicalDevice::Feature;
+	logical_device = new LogicalDevice(*physical_device, 
+		{ 
+			SAMPLER_ANISOTROPY, 
+			OCCLUSION_QUERY_PRECISE, 
+			MULTI_DRAW_INDIRECT, 
+			FRAGMENT_STORES_AND_ATOMICS,  
+			FILL_MODE_NON_SOLID,
+			GEOMETRY_SHADER,
+			TESSELLATION_SHADER,
+			WIDE_LINES,
+			HOST_QUERY_RESET,
+			DRAW_INDIRECT_COUNT,
+			MAINTENANCE4
+		});
 	for (size_t i = 0; i < 3; ++i)
 		command_queues.emplace_back(makeShared<CommandQueue>(physical_device->getGraphicsQueue(), VK_QUEUE_GRAPHICS_BIT));
 	if (physical_device->getComputeQueue() != -1)

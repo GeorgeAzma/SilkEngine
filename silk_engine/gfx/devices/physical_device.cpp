@@ -12,6 +12,19 @@ PhysicalDevice::PhysicalDevice(const Instance& instance, VkPhysicalDevice physic
 	vkGetPhysicalDeviceProperties(physical_device, &properties);
 	vkGetPhysicalDeviceMemoryProperties(physical_device, &memory_properties);
 	vkGetPhysicalDeviceFeatures(physical_device, &features);
+	
+	vulkan_11_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+
+	vulkan_12_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+	vulkan_12_features.pNext = &vulkan_11_features;
+
+	vulkan_13_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+	vulkan_13_features.pNext = &vulkan_12_features;
+
+	VkPhysicalDeviceFeatures2 features2 = {};
+	features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+	features2.pNext = &vulkan_13_features;
+	vkGetPhysicalDeviceFeatures2(physical_device, &features2);
 
 	uint32_t queue_family_count = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queue_family_count, nullptr);
@@ -101,6 +114,20 @@ PhysicalDevice::PhysicalDevice(const Instance& instance, VkPhysicalDevice physic
 bool PhysicalDevice::supportsExtension(const char* extension_name) const 
 { 
 	return supported_extensions.contains(extension_name); 
+}
+
+bool PhysicalDevice::supportsFeature(PhysicalDevice::Feature feature) const
+{
+	constexpr size_t off = (sizeof(VkStructureType) + sizeof(void*)) / sizeof(VkBool32);
+	if (feature <= Feature::VULKAN10_LAST)
+		return *(((const VkBool32*)&features) + ecast(feature));
+	if (feature <= Feature::VULKAN11_LAST)
+		return *(((const VkBool32*)&vulkan_11_features) + off + (ecast(feature) - ecast(Feature::VULKAN10_LAST) - 1));
+	if (feature <= Feature::VULKAN12_LAST)
+		return *(((const VkBool32*)&vulkan_12_features) + off + (ecast(feature) - ecast(Feature::VULKAN11_LAST) - 1));
+	if (feature <= Feature::VULKAN13_LAST)
+		return *(((const VkBool32*)&vulkan_13_features) + off + (ecast(feature) - ecast(Feature::VULKAN12_LAST) - 1));
+	return false;
 }
 
 VkDevice PhysicalDevice::createLogicalDevice(const VkDeviceCreateInfo& create_info) const

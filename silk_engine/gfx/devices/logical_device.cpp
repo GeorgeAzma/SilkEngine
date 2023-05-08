@@ -1,11 +1,10 @@
 #include "logical_device.h"
-#include "physical_device.h"
 #include "gfx/render_context.h"
 #include "gfx/queue.h"
 #include "gfx/window/surface.h"
 #include "gfx/instance.h"
 
-LogicalDevice::LogicalDevice(const PhysicalDevice& physical_device)
+LogicalDevice::LogicalDevice(const PhysicalDevice& physical_device, const std::vector<PhysicalDevice::Feature>& features)
 	: physical_device(physical_device)
 {
 	std::vector<uint32_t> queue_family_indices = physical_device.getQueueFamilyIndices();
@@ -25,23 +24,44 @@ LogicalDevice::LogicalDevice(const PhysicalDevice& physical_device)
 
 	// Specifies which device features we want by enabling them
 	VkPhysicalDeviceFeatures physical_device_features{};
-	physical_device_features.samplerAnisotropy = VK_TRUE;
-	physical_device_features.occlusionQueryPrecise = VK_TRUE;
-	physical_device_features.multiDrawIndirect = VK_TRUE;
-	physical_device_features.fragmentStoresAndAtomics = VK_TRUE;
-	physical_device_features.fillModeNonSolid = VK_TRUE;
-	physical_device_features.geometryShader = VK_TRUE;
-	physical_device_features.wideLines = VK_TRUE;
 
-	VkPhysicalDeviceVulkan13Features physical_device_features_vulkan_13{};
-	physical_device_features_vulkan_13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-	physical_device_features_vulkan_13.maintenance4 = VK_TRUE;
+	VkPhysicalDeviceVulkan13Features physical_device_vulkan_13_features{};
+	physical_device_vulkan_13_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
 
-	VkPhysicalDeviceVulkan12Features physical_device_features_vulkan_12{};
-	physical_device_features_vulkan_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-	physical_device_features_vulkan_12.hostQueryReset = VK_TRUE;
-	physical_device_features_vulkan_12.drawIndirectCount = VK_TRUE;
-	physical_device_features_vulkan_12.pNext = &physical_device_features_vulkan_13;
+	VkPhysicalDeviceVulkan12Features physical_device_vulkan_12_features{};
+	physical_device_vulkan_12_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+	physical_device_vulkan_12_features.pNext = &physical_device_vulkan_13_features;
+
+	VkPhysicalDeviceVulkan11Features physical_device_vulkan_11_features{};
+	physical_device_vulkan_11_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+	physical_device_vulkan_11_features.pNext = &physical_device_vulkan_12_features;
+
+	auto getFeature = [&](PhysicalDevice::Feature feature) -> VkBool32*
+	{
+		if (!physical_device.supportsFeature(feature))
+			return nullptr;
+		constexpr size_t off = (sizeof(VkStructureType) + sizeof(void*)) / sizeof(VkBool32);
+		if (feature <= PhysicalDevice::Feature::VULKAN10_LAST)
+			return ((VkBool32*)&physical_device_features) + ecast(feature);
+		if (feature <= PhysicalDevice::Feature::VULKAN11_LAST)
+			return ((VkBool32*)&physical_device_vulkan_11_features) + off + (ecast(feature) - ecast(PhysicalDevice::Feature::VULKAN10_LAST) - 1);
+		if (feature <= PhysicalDevice::Feature::VULKAN12_LAST)
+			return ((VkBool32*)&physical_device_vulkan_12_features) + off + (ecast(feature) - ecast(PhysicalDevice::Feature::VULKAN11_LAST) - 1);
+		if (feature <= PhysicalDevice::Feature::VULKAN13_LAST)
+			return ((VkBool32*)&physical_device_vulkan_13_features) + off + (ecast(feature) - ecast(PhysicalDevice::Feature::VULKAN12_LAST) - 1);
+		return nullptr;
+	};
+
+	for (size_t i = 0; i < features.size(); ++i)
+	{
+		VkBool32* feature = getFeature(features[i]);
+		if (feature)
+		{
+			*feature = VK_TRUE;
+			enabled_features.emplace(features[i]);
+		}
+		else SK_WARN("Device feature not supported: {}", ecast(features[i]));
+	}
 
 	VkDeviceCreateInfo ci{};
 	ci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -62,7 +82,7 @@ LogicalDevice::LogicalDevice(const PhysicalDevice& physical_device)
 
 	ci.enabledExtensionCount = enabled_extensions.size();
 	ci.ppEnabledExtensionNames = enabled_extensions.data();
-	ci.pNext = &physical_device_features_vulkan_12;
+	ci.pNext = &physical_device_vulkan_11_features;
 
 	logical_device = physical_device.createLogicalDevice(ci);
 
