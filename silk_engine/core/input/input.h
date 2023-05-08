@@ -12,6 +12,7 @@ enum class MouseButton : int;
 
 class Joystick;
 enum class JoystickButton : byte;
+enum class JoystickHat : byte;
 enum class GamepadButton : byte; 
 enum class GamepadAxis : byte;
 
@@ -47,9 +48,18 @@ public:
 
 	static Joystick& getActiveJoystick();
 
+	static float getJoystickAxis(int axis);
+	static float getJoystickAxisDelta(int axis);
+
 	static bool isJoystickHeld(JoystickButton button);
 	static bool isJoystickPressed(JoystickButton button);
 	static bool isJoystickReleased(JoystickButton button);
+
+	static JoystickHat getJoystickHat(int hat = 0);
+	static ivec2 getJoystickHatDirection(int hat = 0);
+
+	static float getGamepadAxis(GamepadAxis axis);
+	static float getGamepadAxisDelta(GamepadAxis axis);
 
 	static bool isGamepadHeld(GamepadButton button);
 	static bool isGamepadPressed(GamepadButton button);

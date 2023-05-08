@@ -34,9 +34,18 @@ bool Input::isMouseReleased(MouseButton button) { return Window::getActive().isM
 
 Joystick& Input::getActiveJoystick() { return Joystick::getActive(); }
 
+float Input::getJoystickAxis(int axis) { return Joystick::getActive().getAxis(axis); }
+float Input::getJoystickAxisDelta(int axis) { return Joystick::getActive().getAxisDelta(axis); }
+
 bool Input::isJoystickHeld(JoystickButton button) { return Joystick::getActive().isHeld(button); }
 bool Input::isJoystickPressed(JoystickButton button) { return Joystick::getActive().isPressed(button); }
 bool Input::isJoystickReleased(JoystickButton button) { return Joystick::getActive().isReleased(button); }
+
+JoystickHat Input::getJoystickHat(int hat) { return Joystick::getActive().getHat(hat); }
+ivec2 Input::getJoystickHatDirection(int hat) { return Joystick::getActive().getHatDirection(hat); }
+
+float Input::getGamepadAxis(GamepadAxis axis) { return Joystick::getActive().getGamepadAxis(axis); }
+float Input::getGamepadAxisDelta(GamepadAxis axis) { return Joystick::getActive().getGamepadAxisDelta(axis); }
 
 bool Input::isGamepadHeld(GamepadButton button) { return Joystick::getActive().isGamepadHeld(button); }
 bool Input::isGamepadPressed(GamepadButton button) { return Joystick::getActive().isGamepadPressed(button); }

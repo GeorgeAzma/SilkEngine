@@ -112,8 +112,6 @@ public:
 	float getGamepadAxis(GamepadAxis axis) const { return gamepad_axes[ecast(axis)]; }
 	float getGamepadAxisDelta(GamepadAxis axis) const { return gamepad_axes[ecast(axis)] - last_gamepad_axes[ecast(axis)]; }
 
-	const std::vector<byte>& getGamepadButtons() const { return gamepad_buttons; }
-	byte getGamepadButton(GamepadButton button) const { return gamepad_buttons[ecast(button)]; }
 	bool isGamepadHeld(GamepadButton button) const { return gamepad_buttons[ecast(button)] == GLFW_PRESS; }
 	bool isGamepadPressed(GamepadButton button) const { return gamepad_buttons[ecast(button)] == GLFW_PRESS && last_gamepad_buttons[ecast(button)] == GLFW_RELEASE; }
 	bool isGamepadReleased(GamepadButton button) const { return gamepad_buttons[ecast(button)] == GLFW_RELEASE && last_gamepad_buttons[ecast(button)] == GLFW_PRESS; }
