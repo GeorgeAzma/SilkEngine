@@ -17,7 +17,6 @@ void Renderer::init()
 
 	setRenderPipeline<DefaultRenderPipeline>();
 	render_pipeline->resize();
-	
 	DebugRenderer::init();
 }
 

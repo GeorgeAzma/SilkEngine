@@ -10,7 +10,6 @@
 #include "gfx/render_context.h"
 #include "meshes/text_mesh.h"
 #include "camera/camera.h"
-#include "gfx/renderer.h"
 
 Scene::Scene()
 {

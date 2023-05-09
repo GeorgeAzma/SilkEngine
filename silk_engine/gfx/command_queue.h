@@ -17,7 +17,7 @@ public:
 	{
 		auto& command_buffer = getCommandBuffer();
 		command_buffer.begin();
-		std::forward<Func>(command)(command_buffer);
+		command(command_buffer);
 	}
 	void submit(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
 	void execute();

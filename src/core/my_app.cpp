@@ -41,6 +41,12 @@ MyApp::~MyApp()
 
 void MyApp::onUpdate()
 {
+    Renderer::wait();
+
+    if (Scene::getActive())
+        Scene::getActive()->onUpdate();
+
+    Renderer::render();
 }
 
 void MyApp::onKeyPress(const KeyPressEvent& e)

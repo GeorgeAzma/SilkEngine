@@ -4,9 +4,7 @@
 #include "gfx/window/swap_chain.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/buffers/command_buffer.h"
-#include "gfx/renderer.h"
 #include "gfx/pipeline/render_pass.h"
-#include "gfx/pipeline/render_pipeline.h"
 
 GraphicsPipeline::GraphicsPipeline()
 {

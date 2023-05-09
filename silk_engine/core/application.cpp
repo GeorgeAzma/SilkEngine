@@ -4,7 +4,6 @@
 #include "gfx/window/window.h"
 #include "core/input/input.h"
 #include "scene/scene.h"
-#include "gfx/renderer.h"
 #include "gfx/devices/logical_device.h"
 #include "scene/camera/camera.h"
 
@@ -19,9 +18,7 @@ void Application::run()
         if (Window::getActive().isMinimized())
             glfwWaitEvents();
         else
-        {
             Input::update();
-        }
             
         update();
     }
@@ -33,13 +30,6 @@ void Application::update()
     if (!running || Window::getActive().isMinimized())
         return;
 
-    Renderer::wait();
-
     onUpdate();
-    if (Scene::getActive())
-        Scene::getActive()->onUpdate();
-
-    Renderer::render();
-
     Time::update();
 }
