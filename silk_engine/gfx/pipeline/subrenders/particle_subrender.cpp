@@ -12,6 +12,9 @@ ParticleSubrender::ParticleSubrender(RenderPass& render_pass, uint32_t subpass)
         .setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
         .setRenderPass(render_pass)
         .setSubpass(subpass)
+        .enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
+        .enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
+        .enableTag(GraphicsPipeline::EnableTag::BLEND)
         .setDepthCompareOp(GraphicsPipeline::CompareOp::LESS)
         .build();
     material = makeShared<Material>(pipeline);

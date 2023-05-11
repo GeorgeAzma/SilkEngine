@@ -63,7 +63,6 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props, const std
                 if (multisampled)
                 {
                     attachment_description.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
                     size_t resolve_attachment_index = attachment_descriptions.size();
                     VkAttachmentDescription resolve_attachment_description = attachment_description;
                     resolve_attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -71,7 +70,7 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props, const std
                     resolve_attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
                     resolve_attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
                     resolve_attachment_description.finalLayout = output.final_layout;
-                    resolve_attachment_references[subpass_index].emplace_back(resolve_attachment_index, attachment_description.finalLayout);
+                    resolve_attachment_references[subpass_index].emplace_back(resolve_attachment_index, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
                     attachment_descriptions.emplace_back(std::move(resolve_attachment_description));
                     ++attachment_index;
                 }
@@ -80,7 +79,7 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props, const std
                     attachment_description.finalLayout = output.final_layout;
                     resolve_attachment_references[subpass_index].emplace_back(VK_ATTACHMENT_UNUSED, VK_IMAGE_LAYOUT_UNDEFINED);
                 }
-                color_attachment_references[subpass_index].emplace_back(attachment_index, attachment_description.finalLayout);
+                color_attachment_references[subpass_index].emplace_back(attachment_index, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
                 clear_values.emplace_back(output.clear_value ? *output.clear_value : VkClearValue{ .color = { 0.0f, 0.0f, 0.0f, 1.0f } });
             }
             else // Depth | Stencil

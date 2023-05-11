@@ -10,7 +10,6 @@ GraphicsPipeline::GraphicsPipeline()
 {
 	input_assembly_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 	input_assembly_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-	input_assembly_info.primitiveRestartEnable = VK_FALSE;
 
 	viewport_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 	viewport_info.viewportCount = 1;
@@ -21,22 +20,15 @@ GraphicsPipeline::GraphicsPipeline()
 	rasterizer.lineWidth = 1.0f;
 	rasterizer.cullMode = VK_CULL_MODE_NONE;
 	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-	rasterizer.rasterizerDiscardEnable = VK_FALSE;
-	rasterizer.depthClampEnable = VK_FALSE;
-	rasterizer.depthBiasEnable = VK_FALSE;
 	rasterizer.depthBiasConstantFactor = 0.0f;
 	rasterizer.depthBiasSlopeFactor = 0.0f;
 	rasterizer.depthBiasClamp = 0.0f;
 
 	depth_stencil_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 	depth_stencil_info.depthCompareOp = VK_COMPARE_OP_LESS;
-	depth_stencil_info.depthTestEnable = VK_TRUE;
-	depth_stencil_info.depthWriteEnable = VK_TRUE;
-	depth_stencil_info.stencilTestEnable = VK_FALSE;
 
 	color_blending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 	color_blending.attachmentCount = 1;
-	color_blending.logicOpEnable = VK_FALSE;
 	color_blending.pAttachments = &color_blend_attachment;
 
 	color_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
@@ -46,14 +38,12 @@ GraphicsPipeline::GraphicsPipeline()
 	color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
 	color_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 	color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
-	color_blend_attachment.blendEnable = VK_TRUE;
 
 	dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 
 	vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
 	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-	multisampling.sampleShadingEnable = VK_FALSE;
 	multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
 	ci.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
