@@ -82,13 +82,13 @@ public:
 	const PhysicalDevice& getPhysicalDevice() const { return physical_device; }
 	operator const VkDevice& () const { return logical_device; }
 
-	static constexpr std::vector<const char*> getRequiredExtensions() { return { "VK_KHR_swapchain" }; }
-	static constexpr std::vector<const char*> getPreferredExtensions() { return { "VK_EXT_memory_priority" }; }
+	static constexpr std::vector<const char*> getRequiredExtensions() { return { VK_KHR_SWAPCHAIN_EXTENSION_NAME }; }
+	static constexpr std::vector<const char*> getPreferredExtensions() { return { VK_EXT_MEMORY_PRIORITY_EXTENSION_NAME }; }
 
 private:
 	VkDevice logical_device = nullptr;
 	std::vector<std::vector<Queue>> queues;
-	std::unordered_set<const char*> enabled_extensions;
+	std::unordered_set<std::string_view> enabled_extensions;
 	std::unordered_set<PhysicalDevice::Feature> enabled_features;
 	const PhysicalDevice& physical_device; 
 };

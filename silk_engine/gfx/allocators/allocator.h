@@ -2,14 +2,13 @@
 
 #include <vk_mem_alloc.h>
 
-class PhysicalDevice;
 class LogicalDevice;
 class Allocation;
 
 class Allocator : NoCopy
 {
 public:
-	Allocator(const PhysicalDevice& physical_device, const LogicalDevice& logical_device);
+	Allocator(const LogicalDevice& logical_device);
 	~Allocator();
 
 	void map(VmaAllocation allocation, void** data) const;

@@ -49,7 +49,7 @@ void RenderContext::init(std::string_view app_name)
 	if (physical_device->getTransferQueue() != -1)
 		for (size_t i = 0; i < 3; ++i)
 			transfer_command_queues.emplace_back(makeShared<CommandQueue>(physical_device->getTransferQueue(), VK_QUEUE_TRANSFER_BIT));
-	allocator = new Allocator(*physical_device, *logical_device);
+	allocator = new Allocator(*logical_device);
 	pipeline_cache = new PipelineCache();
 	Font::init();
 }

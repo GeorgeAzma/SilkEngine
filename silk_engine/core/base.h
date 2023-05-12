@@ -216,3 +216,4 @@ namespace std
 #include "utils/random.h"
 #include "core/log.h"
 #include "utils/debug_timer.h"
+#include "gfx/vulkan_object.h"

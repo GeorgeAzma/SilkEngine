@@ -10,6 +10,7 @@ class DebugMessenger
         void* pUserData);
     static VkResult create(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
     static void destroy(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
+
 public:
     DebugMessenger();
     ~DebugMessenger();

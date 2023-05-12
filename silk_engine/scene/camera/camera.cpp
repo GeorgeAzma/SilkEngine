@@ -10,6 +10,9 @@ Camera::Camera()
 
 void Camera::onViewportResize()
 {
+	if (Window::getActive().isMinimized())
+		return;
+
 	switch (type)
 	{
 	case Camera::Type::PERSPECTIVE:

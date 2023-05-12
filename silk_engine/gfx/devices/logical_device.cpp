@@ -78,7 +78,7 @@ LogicalDevice::LogicalDevice(const PhysicalDevice& physical_device, const std::v
 		if (physical_device.supportsExtension(preferred_extension))
 			enabled_extensions.emplace_back(preferred_extension);
 
-	this->enabled_extensions = std::unordered_set<const char*>(enabled_extensions.begin(), enabled_extensions.end());
+	this->enabled_extensions = std::unordered_set<std::string_view>(enabled_extensions.begin(), enabled_extensions.end());
 
 	ci.enabledExtensionCount = enabled_extensions.size();
 	ci.ppEnabledExtensionNames = enabled_extensions.data();
