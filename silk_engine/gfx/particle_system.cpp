@@ -49,12 +49,12 @@ void ParticleSystem::emit(const ParticleProps& props)
     particles.emplace_back
     (
         props.position,
-        props.velocity + props.velocity_variation * (float)Random::Float() * Random::Vec3(),
+        props.velocity + props.velocity_variation * Random::get<float>() * Random::get<vec3>(),
         props.acceleration,
         props.color_begin,
         props.color_end,
-        Random::Float() * math::two_pi<float>(),
-        Random::Float() * math::two_pi<float>(),
+        Random::get<float>() * math::two_pi<float>(),
+        Random::get<float>() * math::two_pi<float>(),
         props.size_begin,
         props.size_end,
         props.life_time,

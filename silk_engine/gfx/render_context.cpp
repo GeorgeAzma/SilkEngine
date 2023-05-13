@@ -108,7 +108,6 @@ void RenderContext::screenshot(const path& file)
 	props.format = Image::Format::RGBA;
 	props.usage = Image::TRANSFER_DST | Image::TRANSFER_SRC;
 	props.sampler_props.mipmap_mode = Sampler::MipmapMode::NONE;
-	props.create_view = false;
 	auto image = makeShared<Image>(props);
 	img->copyToImage(*image);
 	execute();

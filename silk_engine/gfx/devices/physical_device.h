@@ -174,9 +174,9 @@ public:
 	VkFormat getDepthFormat() const { return depth_format; }
 	VkFormatProperties getFormatProperties(VkFormat format) const;
 	VkImageFormatProperties getImageFormatProperties(VkFormat format, VkImageType type, VkImageTiling tilling, VkImageUsageFlags usage, VkImageCreateFlags flags) const;
-	int getGraphicsQueue() const { return graphics_queue; }
-	int getComputeQueue() const { return compute_queue; }
-	int getTransferQueue() const { return transfer_queue; }
+	uint32_t getGraphicsQueue() const { return graphics_queue; }
+	uint32_t getComputeQueue() const { return compute_queue; }
+	uint32_t getTransferQueue() const { return transfer_queue; }
 	operator const VkPhysicalDevice& () const { return physical_device; }
 	const Instance& getInstance() const { return instance; }
 
@@ -186,9 +186,9 @@ private:
 	std::vector<VkQueueFamilyProperties> queue_family_properties{};
 	std::vector<uint32_t> queue_family_indices{}; // Sorted
 	std::unordered_map<std::string, uint32_t> supported_extensions{}; // extension name | extension spec version
-	int32_t graphics_queue = -1;
-	int32_t compute_queue = -1;
-	int32_t transfer_queue = -1;
+	uint32_t graphics_queue = 0;
+	uint32_t compute_queue = 0;
+	uint32_t transfer_queue = 0;
 	VkPhysicalDeviceProperties properties{};
 	VkPhysicalDeviceMemoryProperties memory_properties{};
 	VkPhysicalDeviceFeatures features{};

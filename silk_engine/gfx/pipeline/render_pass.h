@@ -20,13 +20,6 @@ struct AttachmentProps
 	bool preserve = false;
 };
 
-struct RenderTargetInfo
-{
-	Image::Format format = Image::Format::BGRA;
-	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
-	bool presented = false;
-};
-
 struct SubpassProps
 {
 	std::vector<AttachmentProps> outputs{};

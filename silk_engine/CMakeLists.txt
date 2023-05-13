@@ -20,7 +20,7 @@ target_compile_definitions(${ENGINE_NAME} PRIVATE "SK_CORE")
 target_compile_definitions(${ENGINE_NAME} INTERFACE "SK_CLIENT")
 
 #Precompile headers
-target_precompile_headers(${ENGINE_NAME} PRIVATE [["core/base.h"]])
+target_precompile_headers(${ENGINE_NAME} PUBLIC [["core/base.h"]])
 set(CMAKE_PCH_INSTANTIATE_TEMPLATES ON)
 
 #Link

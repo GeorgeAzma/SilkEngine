@@ -157,11 +157,6 @@ void LogicalDevice::freeCommandBuffers(VkCommandPool command_pool, const std::ve
 	vkFreeCommandBuffers(logical_device, command_pool, command_buffers.size(), command_buffers.data());
 }
 
-void LogicalDevice::resetFences(const std::vector<VkFence>& fences) const
-{
-	RenderContext::vulkanAssert(vkResetFences(logical_device, fences.size(), fences.data()));
-}
-
 VkFence LogicalDevice::createFence(bool signaled) const
 {
 	VkFenceCreateInfo fence_info{};
@@ -175,6 +170,16 @@ VkFence LogicalDevice::createFence(bool signaled) const
 void LogicalDevice::destroyFence(VkFence fence) const
 {
 	vkDestroyFence(logical_device, fence, nullptr);
+}
+
+void LogicalDevice::resetFences(const std::vector<VkFence>& fences) const
+{
+	RenderContext::vulkanAssert(vkResetFences(logical_device, fences.size(), fences.data()));
+}
+
+VkResult LogicalDevice::waitForFences(const std::vector<VkFence>& fences, VkBool32 wait_all, uint64_t timeout) const
+{
+	return vkWaitForFences(logical_device, fences.size(), fences.data(), wait_all, timeout);
 }
 
 VkResult LogicalDevice::getFenceStatus(VkFence fence) const
@@ -197,9 +202,13 @@ void LogicalDevice::destroySemaphore(VkSemaphore semaphore) const
 	vkDestroySemaphore(logical_device, semaphore, nullptr);
 }
 
-VkResult LogicalDevice::waitForFences(const std::vector<VkFence>& fences, VkBool32 wait_all, uint64_t timeout) const
+VkResult LogicalDevice::signalSemaphore(const VkSemaphore& semaphore, uint64_t value) const
 {
-	return vkWaitForFences(logical_device, fences.size(), fences.data(), wait_all, timeout);
+	VkSemaphoreSignalInfo semaphore_signal_info{};
+	semaphore_signal_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SIGNAL_INFO;
+	semaphore_signal_info.semaphore = semaphore;
+	semaphore_signal_info.value = value;
+	return vkSignalSemaphore(logical_device, &semaphore_signal_info);
 }
 
 VkResult LogicalDevice::waitForSemaphores(const std::vector<VkSemaphore>& semaphores, const std::vector<uint64_t>& values, VkBool32 wait_any, uint64_t timeout) const
@@ -212,15 +221,36 @@ VkResult LogicalDevice::waitForSemaphores(const std::vector<VkSemaphore>& semaph
 	semaphore_wait_info.pValues = values.data();
 	semaphore_wait_info.flags = wait_any * VK_SEMAPHORE_WAIT_ANY_BIT;
 	return vkWaitSemaphores(logical_device, &semaphore_wait_info, timeout);
+}	
+
+VkEvent LogicalDevice::createEvent(bool device_only) const
+{
+	VkEventCreateInfo event_info{};
+	event_info.sType = VK_STRUCTURE_TYPE_EVENT_CREATE_INFO;
+	event_info.flags = device_only * VK_EVENT_CREATE_DEVICE_ONLY_BIT;
+	VkEvent event = nullptr;
+	RenderContext::vulkanAssert(vkCreateEvent(logical_device, &event_info, nullptr, &event));
+	return event;
 }
 
-VkResult LogicalDevice::signalSemaphore(const VkSemaphore& semaphore, uint64_t value) const
+void LogicalDevice::destroyEvent(VkEvent event) const
 {
-	VkSemaphoreSignalInfo semaphore_signal_info{};
-	semaphore_signal_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SIGNAL_INFO;
-	semaphore_signal_info.semaphore = semaphore;
-	semaphore_signal_info.value = value;
-	return vkSignalSemaphore(logical_device, &semaphore_signal_info);
+	vkDestroyEvent(logical_device, event, nullptr);
+}
+
+VkResult LogicalDevice::setEvent(VkEvent event) const
+{
+	return vkSetEvent(logical_device, event);
+}
+
+VkResult LogicalDevice::resetEvent(VkEvent event) const
+{
+	return vkResetEvent(logical_device, event);
+}
+
+VkResult LogicalDevice::getEventStatus(VkEvent event) const
+{
+	return vkGetEventStatus(logical_device, event);
 }
 
 VkFramebuffer LogicalDevice::createFramebuffer(const VkFramebufferCreateInfo& framebuffer_info) const

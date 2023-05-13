@@ -10,6 +10,7 @@ class Scene;
 class Fence;
 class Semaphore;
 class RenderPass;
+class Material;
 
 class MyApp : public Application
 {
@@ -30,4 +31,5 @@ private:
     Semaphore* swap_chain_image_available = nullptr;
     Semaphore* render_finished = nullptr;
     std::vector<shared<RenderPass>> render_passes{};
+    shared<Material> material = nullptr;
 };

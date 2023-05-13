@@ -13,7 +13,7 @@ public:
 
 	void map(VmaAllocation allocation, void** data) const;
 	void unmap(VmaAllocation allocation) const;
-	VkMemoryPropertyFlags getAllocationProperties(VmaAllocation allocation) const;
+	VkMemoryPropertyFlags getAllocationMemoryProperties(VmaAllocation allocation) const;
 
 	Allocation allocateBuffer(const VkBufferCreateInfo& buffer_create_info, const VmaAllocationCreateInfo& alloc_ci, VkBuffer& buffer) const;
 	Allocation allocateImage(const VkImageCreateInfo& image_create_info, const VmaAllocationCreateInfo& alloc_ci, VkImage& image) const;

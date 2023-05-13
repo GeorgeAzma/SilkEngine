@@ -70,6 +70,7 @@ public:
 	static const PipelineCache& getPipelineCache() { return *pipeline_cache; }
 
 private:
+	static inline VkAllocationCallbacks allocation_callbacks = {}; // TODO: add this everywhere?
 	static inline Instance* instance = nullptr;
 	static inline PhysicalDevice* physical_device = nullptr;
 	static inline LogicalDevice* logical_device = nullptr;

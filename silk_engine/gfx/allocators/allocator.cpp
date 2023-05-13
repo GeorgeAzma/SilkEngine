@@ -31,7 +31,7 @@ void Allocator::unmap(VmaAllocation allocation) const
 	vmaUnmapMemory(allocator, allocation);
 }
 
-VkMemoryPropertyFlags Allocator::getAllocationProperties(VmaAllocation allocation) const
+VkMemoryPropertyFlags Allocator::getAllocationMemoryProperties(VmaAllocation allocation) const
 {
 	VkMemoryPropertyFlags mem_prop_flags = 0;
 	vmaGetAllocationMemoryProperties(allocator, allocation, &mem_prop_flags);

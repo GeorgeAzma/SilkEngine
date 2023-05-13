@@ -27,7 +27,7 @@ void Allocation::unmap() const
 
 bool Allocation::isHostVisible() const
 {
-	return (RenderContext::getAllocator().getAllocationProperties(allocation) & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+	return (RenderContext::getAllocator().getAllocationMemoryProperties(allocation) & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 }
 
 bool Allocation::isPersistentMap() const

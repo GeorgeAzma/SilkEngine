@@ -16,12 +16,11 @@ Framebuffer::Framebuffer(const SwapChain& swap_chain, const RenderPass& render_p
     for (const auto& attachment_desc : render_pass.getAttachmentDescriptions())
     {
         if (attachment_desc.finalLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
-        {
             for (size_t i = 0; i < swap_chain.getImages().size(); ++i)
                 attachments[i].emplace_back(swap_chain.getImages()[i]);
-        }
         else
-        {
+        { 
+            // TODO: Remove hardcodes
             Image::Props image_props{};
             image_props.format = Image::Format(attachment_desc.format);
             image_props.width = width;
@@ -32,6 +31,7 @@ Framebuffer::Framebuffer(const SwapChain& swap_chain, const RenderPass& render_p
             image_props.allocation_props.preferred_device = Allocation::Device::GPU;
             image_props.allocation_props.priority = 1.0f;
             image_props.usage = Image::isDepthStencilFormat(Image::Format(attachment_desc.format)) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+            image_props.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
             shared<Image> image = makeShared<Image>(image_props);
             for (size_t i = 0; i < framebuffers.size(); ++i)
                 attachments[i].emplace_back(image);

@@ -13,6 +13,7 @@
 #include "silk_engine/gfx/debug_renderer.h"
 #include "silk_engine/gfx/pipeline/render_pass.h"
 #include "silk_engine/gfx/pipeline/graphics_pipeline.h"
+#include "silk_engine/gfx/devices/logical_device.h"
 
 #include "my_app.h"
 #include "my_scene.h"
@@ -33,12 +34,31 @@ MyApp::MyApp()
            {
                {
                    { Image::Format(RenderContext::getPhysicalDevice().getDepthFormat()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() },
-                   { Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, RenderContext::getPhysicalDevice().getMaxSampleCount() }
+                   { Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() }
                }, {}
            }
         }));
 
     DebugRenderer::init(*render_pass);
+    render_passes.emplace_back(render_pass);
+
+    render_pass = shared<RenderPass>(new RenderPass({
+           {
+               {
+                   { Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR }
+               }, {}
+           }
+        }));
+
+    shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
+    graphics_pipeline->setShader(makeShared<Shader>(std::vector<std::string_view>{ "screen", "image" }))
+        .setRenderPass(*render_pass)
+        .enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
+        .enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
+        .enableTag(GraphicsPipeline::EnableTag::BLEND)
+        .setDepthCompareOp(GraphicsPipeline::CompareOp::LESS_OR_EQUAL)
+        .build();
+    material = makeShared<Material>(graphics_pipeline);
     render_passes.emplace_back(render_pass);
 
     for (auto& render_pass : render_passes)
@@ -90,9 +110,10 @@ void MyApp::onUpdate()
     }
 
     CommandBuffer& cb = RenderContext::getCommandBuffer();
-
+    
     for (uint32_t render_pass_index = 0; render_pass_index < render_passes.size(); ++render_pass_index)
     {
+        
         auto& render_pass = render_passes[render_pass_index];
         uint32_t width = render_pass->getFramebuffer()->getWidth();
         uint32_t height = render_pass->getFramebuffer()->getHeight();
@@ -111,11 +132,17 @@ void MyApp::onUpdate()
         scissor.extent = { width, height };
         cb.setScissor({ scissor });
 
-
         render_pass->begin();
         if (render_pass_index == 0)
         {
             DebugRenderer::render();
+        }
+        else if (render_pass_index == 1)
+        {
+            auto& attachment = render_passes[0]->getFramebuffer()->getAttachments()[1];
+            material->set("image", *attachment);
+            material->bind();
+            cb.draw(3);
         }
         render_pass->end();
     }

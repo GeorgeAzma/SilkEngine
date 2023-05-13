@@ -389,13 +389,19 @@ void CommandBuffer::pipelineBarrier(VkPipelineStageFlags source_stage_mask, VkPi
 	vkCmdPipelineBarrier(command_buffer, source_stage_mask, destination_stage_mask, dependency, memory_barriers.size(), memory_barriers.data(), buffer_barriers.size(), buffer_barriers.data(), image_barriers.size(), image_barriers.data());
 }
 
-void CommandBuffer::pipelineBarrier(VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, const std::vector<VkBufferMemoryBarrier>& buffer_barriers, const std::vector<VkMemoryBarrier>& memory_barriers) const
+void CommandBuffer::setEvent(VkEvent event, VkPipelineStageFlags stage_mask) const
 {
-	pipelineBarrier(source_stage_mask, destination_stage_mask, VkDependencyFlags(0), memory_barriers, buffer_barriers, {});
+	vkCmdSetEvent(command_buffer, event, stage_mask);
 }
-void CommandBuffer::pipelineBarrier(VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, const std::vector<VkImageMemoryBarrier>& image_barriers, const std::vector<VkMemoryBarrier>& memory_barriers) const
+
+void CommandBuffer::resetEvent(VkEvent event, VkPipelineStageFlags stage_mask) const
 {
-	pipelineBarrier(source_stage_mask, destination_stage_mask, VkDependencyFlags(0), memory_barriers, {}, image_barriers);
+	vkCmdResetEvent(command_buffer, event, stage_mask);
+}
+
+void CommandBuffer::waitEvents(const std::vector<VkEvent>& events, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDependencyFlags dependency, const std::vector<VkMemoryBarrier>& memory_barriers, const std::vector<VkBufferMemoryBarrier>& buffer_barriers, const std::vector<VkImageMemoryBarrier>& image_barriers) const
+{
+	vkCmdWaitEvents(command_buffer, events.size(), events.data(), source_stage_mask, destination_stage_mask, memory_barriers.size(), memory_barriers.data(), buffer_barriers.size(), buffer_barriers.data(), image_barriers.size(), image_barriers.data());
 }
 
 void CommandBuffer::blitImage(VkImage source, VkImageLayout source_layout, VkImage destination, VkImageLayout destination_layout, const std::vector<VkImageBlit>& blit_regions, VkFilter filter) const

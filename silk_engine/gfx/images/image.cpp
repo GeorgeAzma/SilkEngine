@@ -393,7 +393,8 @@ void Image::create()
 			sampler = Sampler::get(props.sampler_props);
 	}
 
-	if (props.create_view)
+	// Determining if image should create ImageView based on usage (Note: this is probably correct, but not sure)
+	if (props.usage & (VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT))
 		view = makeUnique<ImageView>(*this);
 }
 

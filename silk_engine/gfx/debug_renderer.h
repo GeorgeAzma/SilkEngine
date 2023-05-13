@@ -129,7 +129,6 @@ private:
 		void update();
 		void render();
 
-
 		RenderedInstance createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset = 0, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
 		void updateInstance(const RenderedInstance& instance, const void* instance_data)
 		{

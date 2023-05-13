@@ -31,15 +31,20 @@ public:
 	}
 	std::vector<VkCommandBuffer> allocateCommandBuffers(const VkCommandBufferAllocateInfo& allocate_info) const;
 	void freeCommandBuffers(VkCommandPool command_pool, const std::vector<VkCommandBuffer>& command_buffers) const;
-	void resetFences(const std::vector<VkFence>& fences) const;
 	VkFence createFence(bool signaled = false) const;
 	void destroyFence(VkFence fence) const;
+	void resetFences(const std::vector<VkFence>& fences) const;
+	VkResult waitForFences(const std::vector<VkFence>& fences, VkBool32 wait_all = VK_TRUE, uint64_t timeout = UINT64_MAX) const;
 	VkResult getFenceStatus(VkFence fence) const;
 	VkSemaphore createSemaphore(const VkSemaphoreCreateFlags& flags = {}) const;
 	void destroySemaphore(VkSemaphore semaphore) const;
-	VkResult waitForFences(const std::vector<VkFence>& fences, VkBool32 wait_all = VK_TRUE, uint64_t timeout = UINT64_MAX) const;
-	VkResult waitForSemaphores(const std::vector<VkSemaphore>& semaphores, const std::vector<uint64_t>& values, VkBool32 wait_any = false, uint64_t timeout = UINT64_MAX) const;
 	VkResult signalSemaphore(const VkSemaphore& semaphore, uint64_t value) const;
+	VkResult waitForSemaphores(const std::vector<VkSemaphore>& semaphores, const std::vector<uint64_t>& values, VkBool32 wait_any = false, uint64_t timeout = UINT64_MAX) const;
+	VkEvent createEvent(bool device_only = true) const;
+	void destroyEvent(VkEvent event) const;
+	VkResult setEvent(VkEvent event) const;
+	VkResult resetEvent(VkEvent event) const;
+	VkResult getEventStatus(VkEvent event) const;
 	VkFramebuffer createFramebuffer(const VkFramebufferCreateInfo& framebuffer_info) const;
 	void destroyFramebuffer(VkFramebuffer framebuffer) const;
 	VkDescriptorPool createDescriptorPool(const VkDescriptorPoolCreateInfo& descriptor_pool_info) const;

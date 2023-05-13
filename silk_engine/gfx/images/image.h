@@ -96,7 +96,6 @@ public:
 		VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 		Sampler::Props sampler_props{};
 		bool linear_tiling = false;
-		bool create_view = true;
 		Type type = Type::_2D;
 	};
 
@@ -113,24 +112,29 @@ public:
 
 	uint32_t getWidth() const { return props.width; }
 	uint32_t getHeight() const { return props.height; }
-	float getAspectRatio() const { return float(getWidth()) / getHeight(); }
-	uint32_t getChannelCount() const { return getFormatChannelCount(getFormat()); }
+	uint32_t getDepth() const { return props.depth; }
 	uint32_t getLayers() const { return props.layers; }
 	Format getFormat() const { return props.format; }
+	Usage getUsage() const { return props.usage; }
+	VkSampleCountFlagBits getSamples() const { return props.samples; }
+	Type getType() const { return props.type; }
+
+	bool isSampled() const { return props.usage == VK_IMAGE_USAGE_SAMPLED_BIT; }
+	uint32_t getChannelCount() const { return getFormatChannelCount(getFormat()); }
 	uint32_t getPixelCount() const { return props.width * props.height * props.depth * props.layers; }
+	float getAspectRatio() const { return float(getWidth()) / getHeight(); }
 	size_t getSize() const { return getPixelCount() * getFormatSize(props.format); }
 	uint32_t getMipLevels() const { return mip_levels; }
-	const Props& getProps() const { return props; }
-	Type getType() const { return props.type; }
-	VkDescriptorImageInfo getDescriptorInfo() const;
+	VkImageAspectFlags getAspectFlags() const { return getFormatVulkanAspectFlags(props.format); }
+
 	const VkImageLayout& getLayout() const { return layout; }
 	const VkImageView& getView() const;
 	const VkSampler& getSampler() const { return *sampler; }
-	VkSampleCountFlagBits getSamples() const { return props.samples; }
-	VkImageAspectFlags getAspectFlags() const { return getFormatVulkanAspectFlags(props.format); }
-	const Allocation& getAllocation() const { return allocation; }
-	void setLayout(VkImageLayout layout) { this->layout = layout; } // Use sparingly
+	VkDescriptorImageInfo getDescriptorInfo() const;
 
+	const Allocation& getAllocation() const { return allocation; }
+
+	void setLayout(VkImageLayout layout) { this->layout = layout; } // Use sparingly
 	void setData(const void* data, uint32_t base_layer = 0, uint32_t layers = 1);
 	void getData(void* data, uint32_t base_layer = 0, uint32_t layers = 1);
 	void transitionLayout(VkImageLayout new_layout);

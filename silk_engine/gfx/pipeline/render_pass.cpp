@@ -80,7 +80,6 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props, const std
                     resolve_attachment_references[subpass_index].emplace_back(VK_ATTACHMENT_UNUSED, VK_IMAGE_LAYOUT_UNDEFINED);
                 }
                 color_attachment_references[subpass_index].emplace_back(attachment_index, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-                clear_values.emplace_back(output.clear_value ? *output.clear_value : VkClearValue{ .color = { 0.0f, 0.0f, 0.0f, 1.0f } });
             }
             else // Depth | Stencil
             {
@@ -92,9 +91,10 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props, const std
                     attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
                 else SK_ERROR("Render pass attachment is in incompatible format");
                 depth_attachment_references[subpass_index].attachment = attachment_index;
-                depth_attachment_references[subpass_index].layout = attachment_description.finalLayout;
-                clear_values.emplace_back(output.clear_value ? *output.clear_value : VkClearValue{ .depthStencil = { 1.0f, 0 } });            
+                depth_attachment_references[subpass_index].layout = attachment_description.finalLayout;        
             }
+            if (attachment_description.loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
+                clear_values.emplace_back(output.clear_value ? *output.clear_value : (Image::isColorFormat(output.format) ? VkClearValue{ .color = { 0.0f, 0.0f, 0.0f, 1.0f } } : VkClearValue{ .depthStencil = { 1.0f, 0 } }));
             attachment_descriptions.emplace_back(std::move(attachment_description));
         }
 
@@ -141,7 +141,7 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props, const std
         subpass_descriptions[subpass_index] = std::move(subpass_description);
     }
 
-    //TODO: (good reference: https://www.reddit.com/r/vulkan/comments/s80reu/subpass_dependencies_what_are_those_and_why_do_i/)
+    //TODO: Subpass dependencies (good reference: https://www.reddit.com/r/vulkan/comments/s80reu/subpass_dependencies_what_are_those_and_why_do_i/)
     VkSubpassDependency subpass_dependency{};
     subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
     subpass_dependency.dstSubpass = 0;
@@ -183,6 +183,11 @@ void RenderPass::begin(VkSubpassContents subpass_contents)
     begin_info.pClearValues = clear_values.data();
 
     RenderContext::getCommandBuffer().beginRenderPass(begin_info, subpass_contents);
+
+    // TODO: set framebuffer attachment final layouts to what they will be transitioned to, so that they can be used in a descriptor set?
+    // For now I hardcode that all of them will be transitioned to VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+    for (auto& attachment : framebuffer->getAttachments())
+        attachment->setLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 }
 
 void RenderPass::nextSubpass(VkSubpassContents subpass_contents)
