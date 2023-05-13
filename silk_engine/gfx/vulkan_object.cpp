@@ -1,9 +1,11 @@
+#ifdef SK_ENABLE_DEBUG_OUTPUT
+
 #include "vulkan_object.h"
 #include "render_context.h"
 #include "devices/logical_device.h"
 #include "instance.h"
 
-void VulkanObject::create(Type type, uint64_t handle, const char* name)
+void VulkanObject::setName(Type type, uint64_t handle, const char* name)
 {
 	if (type == Type::UNKNOWN || handle == 0 || name == nullptr)
 		return;
@@ -20,3 +22,5 @@ void VulkanObject::create(Type type, uint64_t handle, const char* name)
 
 	vkSetDebugUtilsObjectNameEXT(RenderContext::getLogicalDevice(), &name_info);
 }
+
+#endif

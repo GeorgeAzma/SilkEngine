@@ -407,7 +407,7 @@ void LogicalDevice::destroyRenderPass(VkRenderPass render_pass) const
 
 void LogicalDevice::wait() const
 {
-	vkDeviceWaitIdle(logical_device);
+	RenderContext::vulkanAssert(vkDeviceWaitIdle(logical_device));
 }
 
 VkShaderModule LogicalDevice::createShaderModule(const VkShaderModuleCreateInfo& shader_module_info) const

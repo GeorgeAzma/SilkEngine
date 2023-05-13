@@ -18,6 +18,7 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props, const std
     std::vector<VkAttachmentReference> depth_attachment_references(subpass_props.size(), { VK_ATTACHMENT_UNUSED, VK_IMAGE_LAYOUT_UNDEFINED });
     std::vector<std::vector<uint32_t>> preserve_attachment_references(subpass_props.size());
     std::vector<std::vector<VkAttachmentReference>> input_attachment_references(subpass_props.size());
+    bool any_cleared = false;
     for (size_t subpass_index = 0; subpass_index < subpass_props.size(); ++subpass_index)
     {
         const auto& subpass = subpass_props[subpass_index];
@@ -33,20 +34,6 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props, const std
             attachment_description.loadOp = output.load_operation;
             attachment_description.stencilLoadOp = output.stencil_load_operation;
             attachment_description.stencilStoreOp = output.stencil_store_operation;
-            
-            static constexpr VkClearColorValue default_color_clear_value { 0.0f, 0.0f, 0.0f, 1.0f };
-            static constexpr VkClearDepthStencilValue default_depth_stencil_clear_value { 1.0f, 0 };
-            VkClearValue clear_value{};
-            bool cleared = attachment_description.loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR || attachment_description.stencilLoadOp == VK_ATTACHMENT_LOAD_OP_CLEAR;
-            if (cleared)
-            {
-                if (output.clear_value)
-                    clear_value = *output.clear_value;
-                else if (Image::isColorFormat(output.format))
-                    clear_value.color = default_color_clear_value;
-                else
-                    clear_value.depthStencil = default_depth_stencil_clear_value;
-            }
 
             // RULE: Preserved subpass attachments always have LOAD_OP_LOAD and STORE_OP_STORE
             if (output.preserve)
@@ -72,6 +59,21 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props, const std
                 attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             }
 
+            static constexpr VkClearColorValue default_color_clear_value { 0.0f, 0.0f, 0.0f, 1.0f };
+            static constexpr VkClearDepthStencilValue default_depth_stencil_clear_value { 1.0f, 0 };
+            VkClearValue clear_value{};
+            bool cleared = attachment_description.loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR || attachment_description.stencilLoadOp == VK_ATTACHMENT_LOAD_OP_CLEAR;
+            if (cleared)
+            {
+                any_cleared = true;
+                if (output.clear_value)
+                    clear_value = *output.clear_value;
+                else if (Image::isColorFormat(output.format))
+                    clear_value.color = default_color_clear_value;
+                else 
+                    clear_value.depthStencil = default_depth_stencil_clear_value;
+            }
+
             if (Image::isColorFormat(output.format))
             {
                 if (multisampled)
@@ -85,7 +87,7 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props, const std
                     resolve_attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
                     resolve_attachment_description.finalLayout = output.final_layout;
                     resolve_attachment_references[subpass_index].emplace_back(resolve_attachment_index, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-                    clear_values.emplace_back(clear_value);
+                    clear_values.emplace_back();
                     attachment_descriptions.emplace_back(std::move(resolve_attachment_description));
                     ++attachment_index;
                 }
@@ -184,6 +186,8 @@ RenderPass::RenderPass(const std::vector<SubpassProps>& subpass_props, const std
     ci.dependencyCount = subpass_dependencies.size();
     ci.pDependencies = subpass_dependencies.data();
     render_pass = RenderContext::getLogicalDevice().createRenderPass(ci);
+    if (!any_cleared)
+        clear_values.clear();
 }
 
 RenderPass::~RenderPass()
@@ -220,12 +224,7 @@ void RenderPass::nextSubpass(VkSubpassContents subpass_contents)
 void RenderPass::end()
 {
     RenderContext::getCommandBuffer().endRenderPass();
-    //RenderContext::execute();
-
     // TODO: set framebuffer attachment final layouts to what they will be transitioned to, so that they can be used in a descriptor set?
-    //framebuffer->getAttachments()[0]->setLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    //framebuffer->getAttachments()[0]->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    //RenderContext::execute();
 }
 
 void RenderPass::resize(const SwapChain& swap_chain)

@@ -27,7 +27,6 @@ Framebuffer::Framebuffer(const SwapChain& swap_chain, const RenderPass& render_p
             image_props.height = height;
             image_props.sampler_props.mipmap_mode = Sampler::MipmapMode::NONE;
             image_props.samples = attachment_desc.samples;
-            image_props.allocation_props.flags = Allocation::FlagBits::DEDICATED_MEMORY;
             image_props.allocation_props.preferred_device = Allocation::Device::GPU;
             image_props.allocation_props.priority = 1.0f;
             image_props.usage = Image::isDepthStencilFormat(Image::Format(attachment_desc.format)) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;

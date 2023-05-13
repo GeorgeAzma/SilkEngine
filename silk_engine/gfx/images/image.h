@@ -97,6 +97,10 @@ public:
 		Sampler::Props sampler_props{};
 		bool linear_tiling = false;
 		Type type = Type::_2D;
+
+		uint32_t getChannelCount() const { return getFormatChannelCount(format); }
+		uint32_t getPixelCount() const { return width * height * depth * layers; }
+		size_t getSize() const { return getPixelCount() * getFormatSize(format); }
 	};
 
 public:
@@ -120,10 +124,10 @@ public:
 	Type getType() const { return props.type; }
 
 	bool isSampled() const { return props.usage == VK_IMAGE_USAGE_SAMPLED_BIT; }
-	uint32_t getChannelCount() const { return getFormatChannelCount(getFormat()); }
-	uint32_t getPixelCount() const { return props.width * props.height * props.depth * props.layers; }
+	uint32_t getChannelCount() const { return props.getChannelCount(); }
+	uint32_t getPixelCount() const { return props.getPixelCount(); }
 	float getAspectRatio() const { return float(getWidth()) / getHeight(); }
-	size_t getSize() const { return getPixelCount() * getFormatSize(props.format); }
+	size_t getSize() const { return props.getSize(); }
 	uint32_t getMipLevels() const { return mip_levels; }
 	VkImageAspectFlags getAspectFlags() const { return getFormatVulkanAspectFlags(props.format); }
 

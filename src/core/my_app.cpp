@@ -29,15 +29,17 @@ MyApp::MyApp()
     previous_frame_finished = new Fence(true);
     swap_chain_image_available = new Semaphore();
     render_finished = new Semaphore();
+    s1 = new Semaphore();
 
     shared<RenderPass> render_pass = shared<RenderPass>(new RenderPass({
            {
                {
-                   { Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, RenderContext::getPhysicalDevice().getMaxSampleCount() },
+                   { Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() },
                    { Image::Format(RenderContext::getPhysicalDevice().getDepthFormat()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() }
                }, {}
            }
         }));
+    VulkanObject::setName(VulkanObject::Type::RENDER_PASS, uint64_t(VkRenderPass(*render_pass)), "Geometry");
 
     DebugRenderer::init(*render_pass);
     render_passes.emplace_back(render_pass);
@@ -49,6 +51,7 @@ MyApp::MyApp()
                }, {}
            }
         }));
+    VulkanObject::setName(VulkanObject::Type::RENDER_PASS, uint64_t(VkRenderPass(*render_pass)), "Final");
 
     shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
     graphics_pipeline->setShader(makeShared<Shader>(std::vector<std::string_view>{ "screen", "image" }))
@@ -59,7 +62,7 @@ MyApp::MyApp()
         .setDepthCompareOp(GraphicsPipeline::CompareOp::LESS_OR_EQUAL)
         .build();
     material = makeShared<Material>(graphics_pipeline);
-   // render_passes.emplace_back(render_pass);
+    render_passes.emplace_back(render_pass);
 
     for (auto& render_pass : render_passes)
         render_pass->resize(Window::getActive().getSwapChain());
@@ -83,6 +86,7 @@ MyApp::~MyApp()
     delete previous_frame_finished;
     delete swap_chain_image_available;
     delete render_finished;
+    delete s1;
     render_passes.clear();
     delete window;
     RenderContext::destroy();
@@ -141,9 +145,18 @@ void MyApp::onUpdate()
             material->bind();
             RenderContext::getCommandBuffer().draw(3);
         }
-        render_pass->end();
+        render_pass->end(); 
+        if (render_pass_index == 0)
+        {
+            render_pass->getFramebuffer()->getAttachments()[0]->setLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+            render_pass->getFramebuffer()->getAttachments()[0]->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            RenderContext::submit(nullptr, {}, {}, { *s1 });
+        }
+        else
+        {
+            RenderContext::submit(previous_frame_finished, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { *swap_chain_image_available, *s1 }, { *render_finished });
+        }
     }
-    RenderContext::submit(previous_frame_finished, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { *swap_chain_image_available }, { *render_finished });
 
     if (!Window::getActive().getSwapChain().present(*render_finished))
     {

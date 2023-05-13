@@ -19,8 +19,8 @@ public:
 
     void recreate(bool vsync = false);
 
-    bool acquireNextImage(VkSemaphore signal_semaphore, VkFence signal_fence = nullptr) const;
-    bool present(VkSemaphore wait_semaphore) const;
+    bool acquireNextImage(VkSemaphore signal_semaphore = nullptr, VkFence signal_fence = nullptr) const;
+    bool present(VkSemaphore wait_semaphore = nullptr) const;
 
     operator const VkSwapchainKHR& () const { return swap_chain; }
 

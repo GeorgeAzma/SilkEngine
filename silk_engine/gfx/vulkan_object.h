@@ -1,6 +1,5 @@
 #pragma once
 
-
 struct VulkanObject
 {
 	enum class Type : std::underlying_type_t<VkObjectType>
@@ -57,8 +56,8 @@ struct VulkanObject
         OPTICAL_FLOW_SESSION = 1000464000, // NV
 	};
 #ifdef SK_ENABLE_DEBUG_OUTPUT
-	static void create(Type type = Type::UNKNOWN, uint64_t handle = 0, const char* name = nullptr);
+	static void setName(Type type = Type::UNKNOWN, uint64_t handle = 0, const char* name = nullptr);
 #else
-    static void create(Type type = Type::UNKNOWN, uint64_t handle = 0, const char* name = nullptr) {}
+    static void setName(Type type = Type::UNKNOWN, uint64_t handle = 0, const char* name = nullptr) {}
 #endif
 };

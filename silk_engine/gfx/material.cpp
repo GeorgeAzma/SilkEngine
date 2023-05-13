@@ -1,6 +1,9 @@
 #include "material.h"
 #include "gfx/buffers/buffer.h"
 #include "gfx/images/image.h"
+#include "gfx/pipeline/graphics_pipeline.h"
+#include "gfx/pipeline/compute_pipeline.h"
+#include "gfx/descriptors/descriptor_set.h"
 
 void Material::bind()
 {

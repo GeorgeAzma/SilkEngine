@@ -9,6 +9,7 @@
 #include "material.h"
 #include "render_context.h"
 #include "buffers/buffer.h"
+#include "pipeline/graphics_pipeline.h"
 
 unique<ThreadPool> ParticleSystem::thread_pool = nullptr;
 

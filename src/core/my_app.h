@@ -30,6 +30,7 @@ private:
     Fence* previous_frame_finished = nullptr;
     Semaphore* swap_chain_image_available = nullptr;
     Semaphore* render_finished = nullptr;
+    Semaphore* s1 = nullptr;
     std::vector<shared<RenderPass>> render_passes{};
     shared<Material> material = nullptr;
 };

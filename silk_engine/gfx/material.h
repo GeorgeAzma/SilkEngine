@@ -1,9 +1,9 @@
 #pragma once
 
-#include "gfx/pipeline/graphics_pipeline.h"
-#include "gfx/pipeline/compute_pipeline.h"
-#include "gfx/descriptors/descriptor_set.h"
-
+class Pipeline;
+class ComputePipeline;
+class GraphicsPipeline;
+class DescriptorSet;
 class Image;
 class Buffer;
 
@@ -32,6 +32,7 @@ public:
 	void bind();
 
 	const shared<Pipeline>& getPipeline() const { return pipeline; }
+	const std::unordered_map<uint32_t, shared<DescriptorSet>>& getDescriptorSets() const { return descriptor_sets; }
 
 private:
 	shared<Pipeline> pipeline;
