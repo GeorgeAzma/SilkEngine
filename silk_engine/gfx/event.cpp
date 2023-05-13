@@ -3,8 +3,8 @@
 #include "devices/logical_device.h"
 
 Event::Event(bool device_only)
+	: event(RenderContext::getLogicalDevice().createEvent(device_only))
 {
-	RenderContext::getLogicalDevice().createEvent();
 }
 
 Event::~Event()

@@ -37,7 +37,7 @@ void MyScene::onStart()
     size_t j = 100;
     float r = 12;
     DebugRenderer::image(Image::get("Cursor"));
-    for (int i = 0; i < 1'000'000; ++i)
+    for (int i = 0; i < 100'000; ++i)
     {
         data.transform = {
                 r, 0, 0, 0,
