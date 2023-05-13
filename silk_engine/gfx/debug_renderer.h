@@ -173,7 +173,7 @@ private:
 	};
 
 public:
-	static void init();
+	static void init(VkRenderPass render_pass);
 	static void destroy();
 	static void reset();
 	static void update(Camera* camera);

@@ -166,14 +166,33 @@ void DebugRenderer::ImmediateInstancedRenderContext::createInstance(const shared
 	instance_vec.emplace_back(std::move(instance));
 }
 
-void DebugRenderer::init()
+void DebugRenderer::init(VkRenderPass render_pass)
 {
 	render_context.init();
 	immediate_render_context.init();
 	global_uniform_buffer = makeShared<Buffer>(sizeof(GlobalUniformData), Buffer::UNIFORM | Buffer::TRANSFER_DST, Allocation::Props{ Allocation::MAPPED | Allocation::SEQUENTIAL_WRITE });
 
-	graphics_pipeline_2D = GraphicsPipeline::get("2D");
-	graphics_pipeline_3D = GraphicsPipeline::get("3D");
+	graphics_pipeline_3D = makeShared<GraphicsPipeline>();
+	graphics_pipeline_3D->setShader(makeShared<Shader>("3D"))
+		.setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
+		.setRenderPass(render_pass)
+		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
+		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
+		.enableTag(GraphicsPipeline::EnableTag::BLEND)
+		.setDepthCompareOp(GraphicsPipeline::CompareOp::LESS)
+		.build();
+	GraphicsPipeline::add("3D", graphics_pipeline_3D);
+
+	graphics_pipeline_2D = makeShared<GraphicsPipeline>();
+	graphics_pipeline_2D->setShader(makeShared<Shader>("2D"))
+		.setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
+		.setRenderPass(render_pass)
+		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
+		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
+		.enableTag(GraphicsPipeline::EnableTag::BLEND)
+		.setDepthCompareOp(GraphicsPipeline::CompareOp::LESS_OR_EQUAL)
+		.build();
+	GraphicsPipeline::add("2D", graphics_pipeline_2D);
 
 	Image::Props image_props{};
 	image_props.width = 1;

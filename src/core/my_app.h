@@ -1,11 +1,15 @@
 #pragma once
 
 #include "silk_engine/core/application.h"
-#include "silk_engine/scene/scene.h"
 
 struct KeyPressEvent;
 struct WindowCloseEvent;
 struct FramebufferResizeEvent;
+class Window;
+class Scene;
+class Fence;
+class Semaphore;
+class RenderPass;
 
 class MyApp : public Application
 {
@@ -22,4 +26,8 @@ public:
 private:
     Window* window = nullptr;
     shared<Scene> scene = nullptr;
+    Fence* previous_frame_finished = nullptr;
+    Semaphore* swap_chain_image_available = nullptr;
+    Semaphore* render_finished = nullptr;
+    std::vector<shared<RenderPass>> render_passes{};
 };

@@ -1,11 +1,11 @@
 #pragma once
 
 #include "utils/type_info.h"
-#include "core/event.h"
 #include <entt/entt.hpp>
 
 class Entity;
 class Camera;
+struct WindowResizeEvent;
 
 class Scene
 {

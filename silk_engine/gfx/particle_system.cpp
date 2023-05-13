@@ -1,6 +1,7 @@
 #include "particle_system.h"
 #include "scene/scene.h"
 #include "scene/camera/camera.h"
+#include "scene/instance_images.h"
 #include "utils/thread_pool.h"
 #include "buffers/command_buffer.h"
 #include "debug_renderer.h"
@@ -11,11 +12,22 @@
 
 unique<ThreadPool> ParticleSystem::thread_pool = nullptr;
 
-void ParticleSystem::init()
+void ParticleSystem::init(VkRenderPass render_pass)
 {
 	instance_vbo = makeShared<Buffer>(sizeof(ParticleData) * MAX_PARTICLES, Buffer::VERTEX, Allocation::Props{ Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED, Allocation::Device::CPU });
     instance_images = makeShared<InstanceImages>();
     thread_pool = makeUnique<ThreadPool>();
+
+    shared<GraphicsPipeline> pipeline = makeShared<GraphicsPipeline>();
+    pipeline->setShader(makeShared<Shader>("particle"))
+        .setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
+        .setRenderPass(render_pass)
+        .enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
+        .enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
+        .enableTag(GraphicsPipeline::EnableTag::BLEND)
+        .setDepthCompareOp(GraphicsPipeline::CompareOp::LESS)
+        .build();
+    material = makeShared<Material>(pipeline);
 }
 
 void ParticleSystem::addSpout(const ParticleSpoutProps& props)

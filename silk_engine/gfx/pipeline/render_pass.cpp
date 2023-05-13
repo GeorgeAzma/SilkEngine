@@ -167,28 +167,8 @@ RenderPass::~RenderPass()
     RenderContext::getLogicalDevice().destroyRenderPass(render_pass);
 }
 
-void RenderPass::render()
-{
-    begin();
-    uint32_t last_subpass = 0;
-    for (auto&& [subpass, subrenders] : subrenders)
-    {
-        if (last_subpass != subpass)
-        {
-            nextSubpass();
-            last_subpass = subpass;
-        }
-        for (auto& subrender : subrenders)
-            if (subrender->enabled)
-                subrender->render();
-    }
-    end();
-}
-
 void RenderPass::begin(VkSubpassContents subpass_contents)
 {
-    current_subpass = 0;
-
     VkRenderPassBeginInfo begin_info{};
     begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     begin_info.renderPass = render_pass;
@@ -207,11 +187,10 @@ void RenderPass::begin(VkSubpassContents subpass_contents)
 
 void RenderPass::nextSubpass(VkSubpassContents subpass_contents)
 {
-    if (current_subpass >= (subpass_count - 1))
+    if (RenderContext::getCommandBuffer().getActive().subpass >= (subpass_count - 1))
         return;
 
     RenderContext::getCommandBuffer().nextSubpass(subpass_contents);
-    ++current_subpass;
 }
 
 void RenderPass::end()

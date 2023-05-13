@@ -1,7 +1,7 @@
 #pragma once
 
-#include "scene/instance_images.h"
-
+class Image;
+class InstanceImages;
 class ThreadPool;
 class Material;
 class Buffer;
@@ -71,7 +71,7 @@ public:
 	static constexpr uint32_t MAX_PARTICLES = 65536;
 
 public:
-	static void init();
+	static void init(VkRenderPass render_pass);
 
 	static void addSpout(const ParticleSpoutProps& props);
 	static void emit(const ParticleProps& props);
@@ -88,4 +88,5 @@ private:
 	static inline shared<Buffer> instance_vbo;
 	static inline shared<InstanceImages> instance_images;
 	static unique<ThreadPool> thread_pool;
+	static inline shared<Material> material = nullptr;
 };

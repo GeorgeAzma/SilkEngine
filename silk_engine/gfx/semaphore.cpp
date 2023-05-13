@@ -16,3 +16,8 @@ void Semaphore::signal(uint64_t value) const
 {
 	RenderContext::getLogicalDevice().signalSemaphore(semaphore, value);
 }
+
+void Semaphore::wait(uint64_t value, uint64_t timeout) const
+{
+	RenderContext::getLogicalDevice().waitForSemaphores({ semaphore }, { value }, 0, timeout);
+}
