@@ -51,7 +51,7 @@ GraphicsPipeline::GraphicsPipeline()
 
 void GraphicsPipeline::bind()
 {
-	RenderContext::record([&](CommandBuffer& cb) { cb.bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline, layout); });
+	RenderContext::getCommandBuffer().bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline, layout);
 }
 
 GraphicsPipeline& GraphicsPipeline::setSamples(VkSampleCountFlagBits sample_count)

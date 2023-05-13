@@ -216,22 +216,18 @@ void Image::copyFromBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers
 	VkImageLayout old_layout = layout;
 	transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-	RenderContext::record(
-		[&](CommandBuffer& cb)
-		{
-			VkBufferImageCopy region{};
-			region.bufferOffset = 0;
-			region.bufferRowLength = 0;
-			region.bufferImageHeight = 0;
-			region.imageSubresource.aspectMask = getFormatVulkanAspectFlags(props.format);
-			region.imageSubresource.mipLevel = 0;
-			region.imageSubresource.baseArrayLayer = base_layer;
-			region.imageSubresource.layerCount = layers;
-			region.imageOffset = VkOffset3D(0, 0, 0);
-			region.imageExtent = VkExtent3D(props.width, props.height, props.depth);
-			cb.copyBufferToImage(buffer, image, layout, { region });
-		});
-
+	VkBufferImageCopy region{};
+	region.bufferOffset = 0;
+	region.bufferRowLength = 0;
+	region.bufferImageHeight = 0;
+	region.imageSubresource.aspectMask = getFormatVulkanAspectFlags(props.format);
+	region.imageSubresource.mipLevel = 0;
+	region.imageSubresource.baseArrayLayer = base_layer;
+	region.imageSubresource.layerCount = layers;
+	region.imageOffset = VkOffset3D(0, 0, 0);
+	region.imageExtent = VkExtent3D(props.width, props.height, props.depth);
+	RenderContext::getCommandBuffer().copyBufferToImage(buffer, image, layout, { region });
+	
 	transitionLayout(old_layout);
 }
 
@@ -240,21 +236,17 @@ void Image::copyToBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers)
 	VkImageLayout old_layout = layout;
 	transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
-	RenderContext::record(
-		[&](CommandBuffer& cb)
-		{
-			VkBufferImageCopy region{};
-			region.imageOffset = VkOffset3D(0, 0, 0);
-			region.imageExtent = VkExtent3D(props.width, props.height, props.depth);
-			region.bufferOffset = 0;
-			region.bufferImageHeight = props.height;
-			region.bufferRowLength = props.width;
-			region.imageSubresource.aspectMask = getFormatVulkanAspectFlags(props.format);
-			region.imageSubresource.baseArrayLayer = base_layer;
-			region.imageSubresource.layerCount = layers;
-			region.imageSubresource.mipLevel = 0;
-			cb.copyImageToBuffer(image, layout, buffer, { region });
-		});
+	VkBufferImageCopy region{};
+	region.imageOffset = VkOffset3D(0, 0, 0);
+	region.imageExtent = VkExtent3D(props.width, props.height, props.depth);
+	region.bufferOffset = 0;
+	region.bufferImageHeight = props.height;
+	region.bufferRowLength = props.width;
+	region.imageSubresource.aspectMask = getFormatVulkanAspectFlags(props.format);
+	region.imageSubresource.baseArrayLayer = base_layer;
+	region.imageSubresource.layerCount = layers;
+	region.imageSubresource.mipLevel = 0;
+	RenderContext::getCommandBuffer().copyImageToBuffer(image, layout, buffer, { region });
 
 	transitionLayout(old_layout);
 }
@@ -263,25 +255,22 @@ void Image::insertMemoryBarrier(const VkImage& image, VkAccessFlags source_acces
 {
 	if (old_layout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
 		return;
-	RenderContext::record(
-		[&](CommandBuffer& cb)
-		{
-			VkImageMemoryBarrier barrier{};
-			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			barrier.srcAccessMask = source_access_mask;	// Source access mask controls actions that have to be finished on the old layout before it will be transitioned to the new layout.
-			barrier.dstAccessMask = destination_access_mask; // Destination access mask controls the dependency for the new image layout.
-			barrier.oldLayout = old_layout;
-			barrier.newLayout = new_layout;
-			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.image = image;
-			barrier.subresourceRange.aspectMask = aspect;
-			barrier.subresourceRange.baseMipLevel = base_mip_level;
-			barrier.subresourceRange.levelCount = mip_levels;
-			barrier.subresourceRange.baseArrayLayer = base_layer;
-			barrier.subresourceRange.layerCount = layers;
-			cb.pipelineBarrier(source_stage_mask, destination_stage_mask, VkDependencyFlags(0), {}, {}, { barrier });
-		});
+
+	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.srcAccessMask = source_access_mask;	// Source access mask controls actions that have to be finished on the old layout before it will be transitioned to the new layout.
+	barrier.dstAccessMask = destination_access_mask; // Destination access mask controls the dependency for the new image layout.
+	barrier.oldLayout = old_layout;
+	barrier.newLayout = new_layout;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = image;
+	barrier.subresourceRange.aspectMask = aspect;
+	barrier.subresourceRange.baseMipLevel = base_mip_level;
+	barrier.subresourceRange.levelCount = mip_levels;
+	barrier.subresourceRange.baseArrayLayer = base_layer;
+	barrier.subresourceRange.layerCount = layers;
+	RenderContext::getCommandBuffer().pipelineBarrier(source_stage_mask, destination_stage_mask, VkDependencyFlags(0), {}, {}, { barrier });
 }
 
 void Image::insertMemoryBarrier(const VkImage& image, VkImageLayout old_layout, VkImageLayout new_layout, VkImageAspectFlags aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t layers, uint32_t base_layer)
@@ -389,7 +378,7 @@ void Image::create()
 		ci.extent = { props.width, props.height, props.depth };
 		ci.arrayLayers = props.layers;
 		// Multisampled images are never mip mapped
-		mip_levels = ((props.samples & VK_SAMPLE_COUNT_1_BIT) && props.sampler_props.mipmap_mode != Sampler::MipmapMode::NONE) ? calculateMipLevels(props.width, props.height, props.depth) : 1;
+		mip_levels = (props.samples != VK_SAMPLE_COUNT_1_BIT || props.sampler_props.mipmap_mode == Sampler::MipmapMode::NONE) ? 1 : calculateMipLevels(props.width, props.height, props.depth);
 		ci.mipLevels = mip_levels;
 		ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		ci.samples = props.samples;
@@ -413,68 +402,66 @@ void Image::generateMipmaps()
 	if (mip_levels <= 1 || props.sampler_props.mipmap_mode == Sampler::MipmapMode::NONE)
 		return;
 
-	RenderContext::record(
-		[&](CommandBuffer& cb)
-		{
-			VkImageMemoryBarrier barrier{};
-			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			barrier.image = image;
-			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.subresourceRange.aspectMask = getFormatVulkanAspectFlags(props.format);
-			barrier.subresourceRange.baseArrayLayer = 0;
-			barrier.subresourceRange.layerCount = props.layers;
-			barrier.subresourceRange.levelCount = 1;
+	CommandBuffer& cb = RenderContext::getCommandBuffer();
 
-			int32_t mip_width = props.width;
-			int32_t mip_height = props.height;
-			int32_t mip_depth = props.depth;
+	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.image = image;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.subresourceRange.aspectMask = getFormatVulkanAspectFlags(props.format);
+	barrier.subresourceRange.baseArrayLayer = 0;
+	barrier.subresourceRange.layerCount = props.layers;
+	barrier.subresourceRange.levelCount = 1;
 
-			for (uint32_t i = 1; i < mip_levels; ++i)
-			{
-				barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-				barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-				barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-				barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-				barrier.subresourceRange.baseMipLevel = i - 1;
-				cb.pipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VkDependencyFlags(0), {}, {}, { barrier });
+	int32_t mip_width = props.width;
+	int32_t mip_height = props.height;
+	int32_t mip_depth = props.depth;
 
-				VkImageBlit blit{};
-				blit.srcOffsets[0] = VkOffset3D(0, 0, 0);
-				blit.srcOffsets[1] = VkOffset3D(mip_width, mip_height, mip_depth);
-				blit.srcSubresource.aspectMask = barrier.subresourceRange.aspectMask;
-				blit.srcSubresource.mipLevel = i - 1;
-				blit.srcSubresource.baseArrayLayer = 0;
-				blit.srcSubresource.layerCount = props.layers;
-				blit.dstOffsets[0] = VkOffset3D(0, 0, 0);
-				if (mip_width > 1) mip_width >>= 1;
-				if (mip_height > 1) mip_height >>= 1;
-				if (mip_depth > 1) mip_depth >>= 1;
-				blit.dstOffsets[1] = VkOffset3D(mip_width, mip_height, mip_depth);
-				blit.dstSubresource.aspectMask = barrier.subresourceRange.aspectMask;
-				blit.dstSubresource.mipLevel = i;
-				blit.dstSubresource.baseArrayLayer = 0;
-				blit.dstSubresource.layerCount = props.layers;
+	for (uint32_t i = 1; i < mip_levels; ++i)
+	{
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		barrier.subresourceRange.baseMipLevel = i - 1;
+		cb.pipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VkDependencyFlags(0), {}, {}, { barrier });
 
-				cb.blitImage(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { blit }, VK_FILTER_LINEAR);
+		VkImageBlit blit{};
+		blit.srcOffsets[0] = VkOffset3D(0, 0, 0);
+		blit.srcOffsets[1] = VkOffset3D(mip_width, mip_height, mip_depth);
+		blit.srcSubresource.aspectMask = barrier.subresourceRange.aspectMask;
+		blit.srcSubresource.mipLevel = i - 1;
+		blit.srcSubresource.baseArrayLayer = 0;
+		blit.srcSubresource.layerCount = props.layers;
+		blit.dstOffsets[0] = VkOffset3D(0, 0, 0);
+		if (mip_width > 1) mip_width >>= 1;
+		if (mip_height > 1) mip_height >>= 1;
+		if (mip_depth > 1) mip_depth >>= 1;
+		blit.dstOffsets[1] = VkOffset3D(mip_width, mip_height, mip_depth);
+		blit.dstSubresource.aspectMask = barrier.subresourceRange.aspectMask;
+		blit.dstSubresource.mipLevel = i;
+		blit.dstSubresource.baseArrayLayer = 0;
+		blit.dstSubresource.layerCount = props.layers;
 
-				barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-				barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-				barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-				barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-				layout = barrier.newLayout;
-				cb.pipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, {}, {}, { barrier });
+		cb.blitImage(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { blit }, VK_FILTER_LINEAR);
 
-			}
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		layout = barrier.newLayout;
+		cb.pipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, {}, {}, { barrier });
 
-			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			barrier.subresourceRange.baseMipLevel = mip_levels - 1;
-			cb.pipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, {}, {}, { barrier });
+	}
 
-		});
+	barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+	barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+	barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	barrier.subresourceRange.baseMipLevel = mip_levels - 1;
+	cb.pipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, {}, {}, { barrier });
+
 	RenderContext::execute();
 }
 
@@ -550,52 +537,50 @@ bool Image::copyToImage(Image& destination)
 	}
 
 	//Do the actual blit from the swapchain image to our host visible destination image.
-	RenderContext::record(
-		[&](CommandBuffer& cb)
-		{
-			VkImageLayout last_destination_layout = destination.getLayout();
-			destination.transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	CommandBuffer& cb = RenderContext::getCommandBuffer();
 
-			VkImageLayout last_layout = getLayout();
-			transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+	VkImageLayout last_destination_layout = destination.getLayout();
+	destination.transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-			//If source and destination support blit we'll blit as this also does automatic format conversion (e.g. from BGR to RGB).
-			if (supports_blit)
-			{
-				VkImageBlit blit{};
-				blit.srcSubresource.aspectMask = getAspectFlags();
-				blit.srcSubresource.mipLevel = 0;
-				blit.srcSubresource.baseArrayLayer = 0;
-				blit.srcSubresource.layerCount = 1;
-				blit.srcOffsets[0] = VkOffset3D(0, 0, 0);
-				blit.srcOffsets[1] = VkOffset3D((int32_t)props.width, (int32_t)props.height, (int32_t)props.depth);
-				blit.dstSubresource.aspectMask = destination.getAspectFlags();
-				blit.dstSubresource.mipLevel = 0;
-				blit.dstSubresource.baseArrayLayer = 0;
-				blit.dstSubresource.layerCount = 1;
-				blit.dstOffsets[0] = VkOffset3D(0, 0, 0);
-				blit.dstOffsets[1] = VkOffset3D((int32_t)props.width, (int32_t)props.height, (int32_t)props.depth);
-				cb.blitImage(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { blit }, VK_FILTER_NEAREST);
-			}
-			else
-			{
-				//Otherwise use image copy (requires us to manually flip components).
-				VkImageCopy region{};
-				region.srcSubresource.aspectMask = getAspectFlags();
-				region.srcSubresource.mipLevel = 0;
-				region.srcSubresource.baseArrayLayer = 0;
-				region.srcSubresource.layerCount = 1;
-				region.dstSubresource.aspectMask = destination.getAspectFlags();
-				region.dstSubresource.mipLevel = 0;
-				region.dstSubresource.baseArrayLayer = 0;
-				region.dstSubresource.layerCount = 1;
-				region.extent = VkExtent3D(props.width, props.height, props.depth);
-				cb.copyImage(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { region });
-			}
+	VkImageLayout last_layout = getLayout();
+	transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
-			destination.transitionLayout(last_destination_layout);
-			transitionLayout(last_layout);
-		});
+	//If source and destination support blit we'll blit as this also does automatic format conversion (e.g. from BGR to RGB).
+	if (supports_blit)
+	{
+		VkImageBlit blit{};
+		blit.srcSubresource.aspectMask = getAspectFlags();
+		blit.srcSubresource.mipLevel = 0;
+		blit.srcSubresource.baseArrayLayer = 0;
+		blit.srcSubresource.layerCount = 1;
+		blit.srcOffsets[0] = VkOffset3D(0, 0, 0);
+		blit.srcOffsets[1] = VkOffset3D((int32_t)props.width, (int32_t)props.height, (int32_t)props.depth);
+		blit.dstSubresource.aspectMask = destination.getAspectFlags();
+		blit.dstSubresource.mipLevel = 0;
+		blit.dstSubresource.baseArrayLayer = 0;
+		blit.dstSubresource.layerCount = 1;
+		blit.dstOffsets[0] = VkOffset3D(0, 0, 0);
+		blit.dstOffsets[1] = VkOffset3D((int32_t)props.width, (int32_t)props.height, (int32_t)props.depth);
+		cb.blitImage(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { blit }, VK_FILTER_NEAREST);
+	}
+	else
+	{
+		//Otherwise use image copy (requires us to manually flip components).
+		VkImageCopy region{};
+		region.srcSubresource.aspectMask = getAspectFlags();
+		region.srcSubresource.mipLevel = 0;
+		region.srcSubresource.baseArrayLayer = 0;
+		region.srcSubresource.layerCount = 1;
+		region.dstSubresource.aspectMask = destination.getAspectFlags();
+		region.dstSubresource.mipLevel = 0;
+		region.dstSubresource.baseArrayLayer = 0;
+		region.dstSubresource.layerCount = 1;
+		region.extent = VkExtent3D(props.width, props.height, props.depth);
+		cb.copyImage(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { region });
+	}
+
+	destination.transitionLayout(last_destination_layout);
+	transitionLayout(last_layout);
 
 	return supports_blit;
 }

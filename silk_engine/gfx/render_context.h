@@ -20,10 +20,9 @@ public:
 	static void destroy();
 	static void update();
 
-	template <Command Func>
-	static void record(Func&& command)
+	static CommandBuffer& getCommandBuffer(bool begin = true)
 	{
-		command_queues[frame]->record(std::forward<Func>(command));
+		return command_queues[frame]->getCommandBuffer(begin);
 	}
 	static void submit(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {}) 
 	{
@@ -34,32 +33,30 @@ public:
 		command_queues[frame]->execute();
 	}
 
-	template <Command Func>
-	static void recordCompute(Func&& command)
+	static CommandBuffer& getComputeCommandBuffer(bool begin = true)
 	{
-		((physical_device->getComputeQueue() > -1) ? compute_command_queues : command_queues)[frame]->record(std::forward<Func>(command));
+		return compute_command_queues[frame]->getCommandBuffer(begin);
 	}
 	static void submitCompute(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {}) 
 	{
-		((physical_device->getComputeQueue() > -1) ? compute_command_queues : command_queues)[frame]->submit(fence, wait_stages, wait_semaphores, signal_semaphores);
+		compute_command_queues[frame]->submit(fence, wait_stages, wait_semaphores, signal_semaphores);
 	}
 	static void executeCompute()
 	{
-		((physical_device->getComputeQueue() > -1) ? compute_command_queues : command_queues)[frame]->execute();
+		compute_command_queues[frame]->execute();
 	}
 
-	template <Command Func>
-	static void recordTransfer(Func&& command)
+	static CommandBuffer& getTransferCommandBuffer(bool begin = true)
 	{
-		((physical_device->getTransferQueue() > -1) ? transfer_command_queues : command_queues)[frame]->record(std::forward<Func>(command));
+		return transfer_command_queues[frame]->getCommandBuffer(begin);
 	}
 	static void submitTransfer(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {}) 
 	{
-		((physical_device->getTransferQueue() > -1) ? transfer_command_queues : command_queues)[frame]->submit(fence, wait_stages, wait_semaphores, signal_semaphores);
+		transfer_command_queues[frame]->submit(fence, wait_stages, wait_semaphores, signal_semaphores);
 	}
 	static void executeTransfer()
 	{
-		((physical_device->getTransferQueue() > -1) ? transfer_command_queues : command_queues)[frame]->execute();
+		transfer_command_queues[frame]->execute();
 	}
 
 	static void screenshot(const path& file);

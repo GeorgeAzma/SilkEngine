@@ -17,16 +17,19 @@ VertexArray::VertexArray(const RawMesh& raw_mesh)
 
 void VertexArray::bind(uint32_t first, VkDeviceSize offset) const
 {
-	RenderContext::record([&](CommandBuffer& cb) { cb.bindVertexBuffers(first, { *buffer }, { offset }); });
+	CommandBuffer& cb = RenderContext::getCommandBuffer();
+	cb.bindVertexBuffers(first, { *buffer }, { offset });
 	if (isIndexed())
-		RenderContext::record([&](CommandBuffer& cb) { cb.bindIndexBuffer(*buffer, vertices_size + offset, VkIndexType(index_type)); });
+		cb.bindIndexBuffer(*buffer, vertices_size + offset, VkIndexType(index_type));
 }
 
 void VertexArray::draw() const
 {
 	bind();
+
+	CommandBuffer& cb = RenderContext::getCommandBuffer();
 	if (isIndexed())
-		RenderContext::record([&](CommandBuffer& cb) { cb.drawIndexed(index_count, 1, 0, 0, 0); });
+		cb.drawIndexed(index_count, 1, 0, 0, 0);
 	else
-		RenderContext::record([&](CommandBuffer& cb) { cb.draw(vertex_count, 1, 0, 0); });
+		cb.draw(vertex_count, 1, 0, 0);
 }

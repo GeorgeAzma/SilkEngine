@@ -43,22 +43,22 @@ bool Buffer::copy(VkBuffer destination, VkDeviceSize size, VkDeviceSize offset, 
 
 void Buffer::bindVertex(uint32_t first, VkDeviceSize offset)
 {
-	RenderContext::record([&](CommandBuffer& cb) { cb.bindVertexBuffers(first, { buffer }, { offset }); });
+	RenderContext::getCommandBuffer().bindVertexBuffers(first, { buffer }, { offset });
 }
 
 void Buffer::bindIndex(VkIndexType index_type, VkDeviceSize offset)
 {
-	RenderContext::record([&](CommandBuffer& cb) { cb.bindIndexBuffer(buffer, offset, index_type); });
+	RenderContext::getCommandBuffer().bindIndexBuffer(buffer, offset, index_type);
 }
 
 void Buffer::drawIndirect(uint32_t index)
 {
-	RenderContext::record([&](CommandBuffer& cb) { cb.drawIndirect(buffer, index * sizeof(VkDrawIndirectCommand), 1, sizeof(VkDrawIndirectCommand)); });
+	RenderContext::getCommandBuffer().drawIndirect(buffer, index * sizeof(VkDrawIndirectCommand), 1, sizeof(VkDrawIndirectCommand));
 }
 
 void Buffer::drawIndexedIndirect(uint32_t index)
 {
-	RenderContext::record([&](CommandBuffer& cb) { cb.drawIndexedIndirect(buffer, index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand)); });
+	RenderContext::getCommandBuffer().drawIndexedIndirect(buffer, index * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
 }
 
 bool Buffer::setData(const void* data, VkDeviceSize size, VkDeviceSize offset)
@@ -100,17 +100,14 @@ void Buffer::insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_ac
 	barrier.buffer = buffer;
 	barrier.offset = offset;
 	barrier.size = size;
-	RenderContext::record([&] (CommandBuffer& cb) { cb.pipelineBarrier(source_stage_mask, destination_stage_mask, VkDependencyFlags(0), {}, { barrier }, {}); });
+	RenderContext::getCommandBuffer().pipelineBarrier(source_stage_mask, destination_stage_mask, VkDependencyFlags(0), {}, { barrier }, {});
 }
 
 void Buffer::copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDeviceSize dst_offset, VkDeviceSize src_offset)
 {
-	RenderContext::recordTransfer([&] (CommandBuffer& cb)
-		{
-			VkBufferCopy copy_region{};
-			copy_region.srcOffset = src_offset;
-			copy_region.dstOffset = dst_offset;
-			copy_region.size = size;
-			cb.copyBuffer(source, destination, { copy_region });
-		});
+	VkBufferCopy copy_region{};
+	copy_region.srcOffset = src_offset;
+	copy_region.dstOffset = dst_offset;
+	copy_region.size = size;
+	RenderContext::getTransferCommandBuffer().copyBuffer(source, destination, { copy_region });
 }

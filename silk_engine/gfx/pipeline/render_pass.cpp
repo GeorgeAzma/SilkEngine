@@ -188,25 +188,21 @@ void RenderPass::render()
 void RenderPass::begin(VkSubpassContents subpass_contents)
 {
     current_subpass = 0;
-    RenderContext::record(
-        [&](CommandBuffer& cb)
-        {
-            VkRenderPassBeginInfo begin_info{};
-            begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-            begin_info.renderPass = render_pass;
-            begin_info.framebuffer = *framebuffer;
 
-            begin_info.renderArea.offset = { 0, 0 };
-            begin_info.renderArea.extent.width = framebuffer->getWidth();
-            begin_info.renderArea.extent.height = framebuffer->getHeight();
+    VkRenderPassBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    begin_info.renderPass = render_pass;
+    begin_info.framebuffer = *framebuffer;
 
-            std::vector<VkClearValue> clear_values = this->clear_values;
+    begin_info.renderArea.offset = { 0, 0 };
+    begin_info.renderArea.extent.width = framebuffer->getWidth();
+    begin_info.renderArea.extent.height = framebuffer->getHeight();
 
-            begin_info.clearValueCount = clear_values.size();
-            begin_info.pClearValues = clear_values.data();
+    std::vector<VkClearValue> clear_values = this->clear_values;
+    begin_info.clearValueCount = clear_values.size();
+    begin_info.pClearValues = clear_values.data();
 
-            cb.beginRenderPass(begin_info, subpass_contents);
-        });
+    RenderContext::getCommandBuffer().beginRenderPass(begin_info, subpass_contents);
 }
 
 void RenderPass::nextSubpass(VkSubpassContents subpass_contents)
@@ -214,13 +210,13 @@ void RenderPass::nextSubpass(VkSubpassContents subpass_contents)
     if (current_subpass >= (subpass_count - 1))
         return;
 
-    RenderContext::record([&](CommandBuffer& cb) { cb.nextSubpass(subpass_contents); });
+    RenderContext::getCommandBuffer().nextSubpass(subpass_contents);
     ++current_subpass;
 }
 
 void RenderPass::end()
 {
-    RenderContext::record([&](CommandBuffer& cb) { cb.endRenderPass(); });
+    RenderContext::getCommandBuffer().endRenderPass();
 }
 
 void RenderPass::resize(const SwapChain& swap_chain)

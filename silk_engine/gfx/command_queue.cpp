@@ -9,6 +9,22 @@ CommandQueue::CommandQueue(std::optional<uint32_t> queue_family_index, VkQueueFl
 {
 }
 
+CommandBuffer& CommandQueue::getCommandBuffer(bool begin)
+{
+	shared<CommandBuffer> command_buffer = command_buffers[index];
+	if (command_buffer->getState() != CommandBuffer::State::INITIAL && command_buffer->getState() != CommandBuffer::State::RECORDING)
+	{
+		++index;
+		if (index >= command_buffers.size())
+			command_buffers.emplace_back(makeShared<CommandBuffer>(*command_pool));
+		command_buffer = command_buffers[index];
+	}
+	if (begin)
+		command_buffer->begin();
+	return *command_buffer;
+}
+
+
 void CommandQueue::submit(const Fence* fence, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
 {
 	command_buffers[index]->submit(fence, wait_stages, wait_semaphores, signal_semaphores, queue_type);
@@ -35,17 +51,4 @@ void CommandQueue::reset()
 			command_buffer->reset();
 	}
 	index = 0;
-}
-
-CommandBuffer& CommandQueue::getCommandBuffer()
-{
-	shared<CommandBuffer> command_buffer = command_buffers[index];
-	if (command_buffer->getState() != CommandBuffer::State::INITIAL && command_buffer->getState() != CommandBuffer::State::RECORDING)
-	{
-		++index;
-		if (index >= command_buffers.size())
-			command_buffers.emplace_back(makeShared<CommandBuffer>(*command_pool));
-		command_buffer = command_buffers[index];
-	}
-	return *command_buffer;
 }

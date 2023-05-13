@@ -41,14 +41,20 @@ void RenderContext::init(std::string_view app_name)
 			DRAW_INDIRECT_COUNT,
 			MAINTENANCE4
 		});
+
 	for (size_t i = 0; i < 3; ++i)
 		command_queues.emplace_back(makeShared<CommandQueue>(physical_device->getGraphicsQueue(), VK_QUEUE_GRAPHICS_BIT));
-	if (physical_device->getComputeQueue() != -1)
+	
+	if (physical_device->getComputeQueue() != physical_device->getGraphicsQueue())
 		for (size_t i = 0; i < 3; ++i)
 			compute_command_queues.emplace_back(makeShared<CommandQueue>(physical_device->getComputeQueue(), VK_QUEUE_COMPUTE_BIT));
-	if (physical_device->getTransferQueue() != -1)
+	else compute_command_queues = command_queues;
+
+	if (physical_device->getComputeQueue() != physical_device->getGraphicsQueue())
 		for (size_t i = 0; i < 3; ++i)
 			transfer_command_queues.emplace_back(makeShared<CommandQueue>(physical_device->getTransferQueue(), VK_QUEUE_TRANSFER_BIT));
+	else transfer_command_queues = command_queues;
+
 	allocator = new Allocator(*logical_device);
 	pipeline_cache = new PipelineCache();
 	Font::init();

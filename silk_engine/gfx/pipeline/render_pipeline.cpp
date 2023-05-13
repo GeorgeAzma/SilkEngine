@@ -6,31 +6,30 @@
 
 void RenderPipeline::render()
 {
-	RenderContext::record([&](CommandBuffer& cb)
-		{
-			for (uint32_t render_pass_index = 0; render_pass_index < render_passes.size(); ++render_pass_index)
-			{
-				auto& render_pass = render_passes[render_pass_index];
-				float width = render_pass->getFramebuffer()->getWidth();
-				float height = render_pass->getFramebuffer()->getHeight();
+	CommandBuffer& cb = RenderContext::getCommandBuffer();
 
-				VkViewport viewport = {};
-				viewport.x = 0.0f;
-				viewport.y = height;
-				viewport.width = width;
-				viewport.height = -height;
-				viewport.minDepth = 0.0f;
-				viewport.maxDepth = 1.0f;
-				cb.setViewport({ viewport });
+	for (uint32_t render_pass_index = 0; render_pass_index < render_passes.size(); ++render_pass_index)
+	{
+		auto& render_pass = render_passes[render_pass_index];
+		float width = render_pass->getFramebuffer()->getWidth();
+		float height = render_pass->getFramebuffer()->getHeight();
 
-				VkRect2D scissor = {};
-				scissor.offset = { 0, 0 };
-				scissor.extent = { (uint32_t)width, (uint32_t)height };
-				cb.setScissor({ scissor });
+		VkViewport viewport = {};
+		viewport.x = 0.0f;
+		viewport.y = height;
+		viewport.width = width;
+		viewport.height = -height;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		cb.setViewport({ viewport });
 
-				render_pass->render();
-			}
-		});
+		VkRect2D scissor = {};
+		scissor.offset = { 0, 0 };
+		scissor.extent = { (uint32_t)width, (uint32_t)height };
+		cb.setScissor({ scissor });
+
+		render_pass->render();
+	}
 }
 
 void RenderPipeline::resize()

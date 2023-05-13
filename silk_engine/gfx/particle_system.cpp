@@ -123,7 +123,7 @@ void ParticleSystem::render(Material& material)
         material.bind();
         Mesh::get("Quad")->bind();
         instance_vbo->bindVertex(1);
-        RenderContext::record([&](CommandBuffer& cb) { cb.drawIndexed(Mesh::get("Quad")->getIndexCount(), particle_data.size(), 0, 0, 0); });
+        RenderContext::getCommandBuffer().drawIndexed(Mesh::get("Quad")->getIndexCount(), particle_data.size(), 0, 0, 0);
     }
 }
 
