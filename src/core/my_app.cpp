@@ -18,8 +18,6 @@
 #include "my_app.h"
 #include "my_scene.h"
 
-#define RENDERPASS 1
-
 MyApp::MyApp()
 {
     GLFW::init();
@@ -33,50 +31,33 @@ MyApp::MyApp()
     render_finished = new Semaphore();
 
     shared<RenderPass> render_pass = makeShared<RenderPass>();
-#if RENDERPASS 
-    render_pass->addAttachment(AttachmentProps{ Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() });
-#else
-    render_pass->addAttachment(AttachmentProps{ Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, RenderContext::getPhysicalDevice().getMaxSampleCount() });
-#endif
+    render_pass->addAttachment(AttachmentProps{ Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() });
     render_pass->addAttachment(AttachmentProps{ Image::Format(RenderContext::getPhysicalDevice().getDepthFormat()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() });
-#if RENDERPASS
-    VkSubpassDependency subpass_dependency{};
-    subpass_dependency.srcSubpass = 0;
-    subpass_dependency.dstSubpass = 0;
-    subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    subpass_dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
-    subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
-    subpass_dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-    render_pass->build({  });
-#else
+    render_pass->addSubpass();
+    render_pass->addInputAttachment(0);
+    render_pass->addAttachment(AttachmentProps{ Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR });
+    VkSubpassDependency dep{};
+    dep.srcSubpass = 0;
+    dep.dstSubpass = 1;
+    dep.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dep.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    dep.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    dep.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    dep.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+    render_pass->addSubpassDependency(dep);
     render_pass->build();
-#endif
     RenderContext::getLogicalDevice().setObjectName(VK_OBJECT_TYPE_RENDER_PASS, VkRenderPass(*render_pass), "Geometry");
-
     DebugRenderer::init(*render_pass);
     render_passes.emplace_back(render_pass);
 
-#if RENDERPASS
-    render_pass = makeShared<RenderPass>();
-    render_pass->addAttachment(AttachmentProps{ Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR });
-    subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    subpass_dependency.dstSubpass = 0;
-    subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    subpass_dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    subpass_dependency.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    subpass_dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-    render_pass->build({  });
-    RenderContext::getLogicalDevice().setObjectName(VK_OBJECT_TYPE_RENDER_PASS, VkRenderPass(*render_pass), "Final");
-
     shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
     graphics_pipeline->setShader(makeShared<Shader>(std::vector<std::string_view>{ "screen", "image" }))
+       // .setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
         .setRenderPass(*render_pass)
+        .setSubpass(1)
         .build();
     material = makeShared<Material>(graphics_pipeline);
-    render_passes.emplace_back(render_pass);
-#endif
+
     for (auto& render_pass : render_passes)
         render_pass->resize(Window::getActive().getSwapChain());
 
@@ -149,19 +130,13 @@ void MyApp::onUpdate()
         if (render_pass_index == 0)
         {
             DebugRenderer::render();
-        }
-#if RENDERPASS
-        else if (render_pass_index == 1)
-        {
+            render_pass->nextSubpass();
             auto& attachment = render_passes[0]->getFramebuffer()->getAttachments()[0];
             material->set("image", *attachment);
             material->bind();
             RenderContext::getCommandBuffer().draw(3);
         }
-#endif
         render_pass->end();
-        if (render_pass_index < render_passes.size() - 1)
-            RenderContext::execute();
     }
     RenderContext::submit(previous_frame_finished, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { *swap_chain_image_available }, { *render_finished });
 

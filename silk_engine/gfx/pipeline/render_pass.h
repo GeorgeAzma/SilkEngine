@@ -50,6 +50,7 @@ public:
 	void setViewport(const ivec2& viewport) { this->viewport = viewport; }
 	void resize(const SwapChain& swap_chain);
 
+	bool isInputAttachment(uint32_t attachment) const { return attachments_used_as_inputs.contains(attachment); }
 	size_t getSubpassCount() const { return subpass_infos.size(); }
 	const std::vector<VkAttachmentDescription>& getAttachmentDescriptions() const { return attachment_descriptions; }
 	operator const VkRenderPass& () const { return render_pass; }
@@ -60,6 +61,7 @@ private:
 	std::vector<SubpassInfo> subpass_infos; 
 	std::vector<VkSubpassDependency> subpass_dependencies;
 	std::vector<VkAttachmentDescription> attachment_descriptions;
+	std::unordered_set<uint32_t> attachments_used_as_inputs;
 	std::vector<VkClearValue> clear_values;
 	bool any_cleared = false;
 	ivec2 viewport = ivec2(0);

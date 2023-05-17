@@ -196,11 +196,11 @@ VkDescriptorImageInfo Image::getDescriptorInfo() const
 
 const VkImageView& Image::getView() const { return *view; }
 
-void Image::transitionLayout(VkImageLayout new_layout)
+void Image::transitionLayout(VkImageLayout new_layout, VkDependencyFlags dependency)
 {
 	if (layout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
 		return;
-	insertMemoryBarrier(image, layout, new_layout, getFormatVulkanAspectFlags(props.format), mip_levels, 0, props.layers, 0);
+	insertMemoryBarrier(image, layout, new_layout, getFormatVulkanAspectFlags(props.format), mip_levels, dependency, props.layers, 0);
 	layout = new_layout;
 }
 

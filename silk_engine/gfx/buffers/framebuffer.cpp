@@ -13,8 +13,9 @@ Framebuffer::Framebuffer(const SwapChain& swap_chain, const RenderPass& render_p
     width(width),
     height(height)
 {
-    for (const auto& attachment_desc : render_pass.getAttachmentDescriptions())
+    for (size_t attachment = 0; attachment < render_pass.getAttachmentDescriptions().size(); ++attachment)
     {
+        const auto& attachment_desc = render_pass.getAttachmentDescriptions()[attachment];
         if (attachment_desc.finalLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
             for (size_t i = 0; i < swap_chain.getImages().size(); ++i)
                 attachments[i].emplace_back(swap_chain.getImages()[i]);
@@ -34,12 +35,13 @@ Framebuffer::Framebuffer(const SwapChain& swap_chain, const RenderPass& render_p
                 image_props.usage |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
             else
                 image_props.usage |= VK_IMAGE_USAGE_SAMPLED_BIT; // TODO: Configurable usage, does not support USAGE_INPUT_ATTACHMENT right now
+            if (render_pass.isInputAttachment(attachment))
+                image_props.usage |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+            
             shared<Image> image = makeShared<Image>(image_props);
             image->setLayout(attachment_desc.finalLayout);
             for (size_t i = 0; i < framebuffers.size(); ++i)
-            {
                 attachments[i].emplace_back(image);
-            }
         }
     }
 

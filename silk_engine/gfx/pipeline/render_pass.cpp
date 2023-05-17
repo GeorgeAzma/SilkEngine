@@ -71,8 +71,8 @@ void RenderPass::addAttachment(const AttachmentProps& attachment_props)
     bool stencil = Image::isStencilFormat(attachment_props.format);
     if (!stencil)
     {
-        attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     }
 
     bool multisampled = attachment_props.samples != VK_SAMPLE_COUNT_1_BIT;
@@ -170,8 +170,11 @@ void RenderPass::build(const std::vector<VkSubpassDependency>& dependencies)
     std::vector<VkSubpassDescription> subpass_descriptions(subpass_infos.size());
     for (size_t i = 0; i < subpass_infos.size(); ++i)
     {
-        auto& subpass_description = subpass_descriptions[i];
         const auto& subpass_info = subpass_infos[i];
+        for (const auto& input_attachment_reference : subpass_info.input_attachment_references)
+            attachments_used_as_inputs.emplace(input_attachment_reference.attachment);
+
+        auto& subpass_description = subpass_descriptions[i];
         subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass_description.inputAttachmentCount = subpass_info.input_attachment_references.size();
         subpass_description.pInputAttachments = subpass_info.input_attachment_references.data();
