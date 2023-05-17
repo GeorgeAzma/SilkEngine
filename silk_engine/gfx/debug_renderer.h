@@ -94,6 +94,7 @@ private:
 			{ 
 				instance_data.resize(instance_data.size() + data_size); 
 				setData(instance_data.size() - data_size, data, image_index_offset, image_index); 
+				++instance_count;
 			}
 			void setData(size_t offset, const void* data)
 			{ 
@@ -103,7 +104,14 @@ private:
 			void addData(const void* data) 
 			{ 
 				instance_data.resize(instance_data.size() + data_size); 
-				setData(instance_data.size() - data_size, data); 
+				setData(instance_data.size() - data_size, data);
+				++instance_count;
+			}
+			void clear()
+			{
+				instance_data.clear();
+				instance_images.clear();
+				instance_count = 0;
 			}
 
 		public:
@@ -157,12 +165,10 @@ private:
 		void clear()
 		{
 			for (auto& instance_batch : instance_batches)
-			{
-				instance_batch.instance_data.clear();
-				instance_batch.instance_images.clear();
-			}
+				instance_batch.clear();
 			for (auto& instance : instances)
 				instance.clear();
+			//instances.clear();
 		}
 
 		void createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset = 0, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});

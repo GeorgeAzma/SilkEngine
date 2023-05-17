@@ -90,7 +90,6 @@ DebugRenderer::RenderedInstance DebugRenderer::InstancedRenderContextBase::creat
 			instance_batch_index = i;
 			instance_data_index = instance_batch.instance_data.size();
 			instance_batch.addData(instance_data);
-			++instance_batch.instance_count;
 			break;
 		}
 	}
@@ -104,7 +103,6 @@ DebugRenderer::RenderedInstance DebugRenderer::InstancedRenderContextBase::creat
 		new_batch.material = makeShared<Material>(pipeline);
 		new_batch.instance_buffer = makeShared<Buffer>(65536, Buffer::VERTEX, Allocation::Props{ Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
 		new_batch.instance_images.add({ white_image });
-		++new_batch.instance_count;
 	}
 
 	uint32_t image_index = 0;

@@ -167,8 +167,13 @@ protected:
 	uint32_t mip_levels = 1;
 
 public:
-	static shared<Image> get(std::string_view name) { if (auto it = images.find(name); it != images.end()) return it->second; else return nullptr; }
-	static shared<Image> add(std::string_view name, const shared<Image> image) { return images.insert_or_assign(name, image).first->second; }
+	static shared<Image> get(std::string_view name) 
+	{ 
+		if (auto it = images.find(name); it != images.end()) 
+			return it->second; 
+		return nullptr;
+	}
+	static shared<Image> add(std::string_view name, const shared<Image>& image);
 	static void destroy() { images.clear(); }
 
 private:

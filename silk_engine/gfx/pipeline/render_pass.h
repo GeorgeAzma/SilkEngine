@@ -20,17 +20,28 @@ struct AttachmentProps
 	bool preserve = false;
 };
 
-struct SubpassProps
-{
-	std::vector<AttachmentProps> outputs{};
-	std::vector<uint32_t> inputs{};
-};
-
 class RenderPass : NoCopy
 {
+	struct SubpassInfo
+	{
+		std::vector<VkAttachmentReference> resolve_attachment_references;
+		std::vector<VkAttachmentReference> color_attachment_references;
+		VkAttachmentReference depth_attachment_reference = { VK_ATTACHMENT_UNUSED, VK_IMAGE_LAYOUT_UNDEFINED };
+		std::vector<uint32_t> preserve_attachment_references;
+		std::vector<VkAttachmentReference> input_attachment_references;
+	};
+
 public:
-	RenderPass(const std::vector<SubpassProps>& subpass_props, const std::vector<VkSubpassDependency>& dependencies = {});
+	RenderPass() { addSubpass(); }
 	~RenderPass();
+
+	void addSubpass();
+	void addInputAttachment(uint32_t index);
+	void addAttachment(const AttachmentProps& attachment_props);
+
+	void addSubpassDependency(const VkSubpassDependency& dependency);
+
+	void build(const std::vector<VkSubpassDependency>& dependencies = {});
 
 	void begin(VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
 	void nextSubpass(VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
@@ -39,16 +50,18 @@ public:
 	void setViewport(const ivec2& viewport) { this->viewport = viewport; }
 	void resize(const SwapChain& swap_chain);
 
-	size_t getSubpassCount() const { return subpass_count; }
+	size_t getSubpassCount() const { return subpass_infos.size(); }
 	const std::vector<VkAttachmentDescription>& getAttachmentDescriptions() const { return attachment_descriptions; }
 	operator const VkRenderPass& () const { return render_pass; }
 	const shared<Framebuffer>& getFramebuffer() const { return framebuffer; }
 
 private:
 	VkRenderPass render_pass = nullptr;
-	size_t subpass_count = 0;
-	std::vector<VkAttachmentDescription> attachment_descriptions{};
-	std::vector<VkClearValue> clear_values{};
+	std::vector<SubpassInfo> subpass_infos; 
+	std::vector<VkSubpassDependency> subpass_dependencies;
+	std::vector<VkAttachmentDescription> attachment_descriptions;
+	std::vector<VkClearValue> clear_values;
+	bool any_cleared = false;
 	ivec2 viewport = ivec2(0);
 	shared<Framebuffer> framebuffer = nullptr;
 };

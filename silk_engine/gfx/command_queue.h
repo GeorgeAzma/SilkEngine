@@ -12,7 +12,7 @@ public:
 	CommandBuffer& getCommandBuffer(bool begin = true);
 
 	void submit(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
-	void execute();
+	void execute(const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
 	void reset();
 
 private:

@@ -21,8 +21,13 @@ private:
 	path file;
 
 public:
-	static shared<Model> get(std::string_view name) { if (auto it = models.find(name); it != models.end()) return it->second; else return nullptr; }
-	static shared<Model> add(std::string_view name, const shared<Model> model) { return models.insert_or_assign(name, model).first->second; }
+	static shared<Model> get(std::string_view name) 
+	{ 
+		if (auto it = models.find(name); it != models.end()) 
+			return it->second; 
+		return nullptr; 
+	}
+	static shared<Model> add(std::string_view name, const shared<Model>& model) { return models.insert_or_assign(name, model).first->second; }
 	static void destroy() { models.clear(); }
 
 private:

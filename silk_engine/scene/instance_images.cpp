@@ -22,7 +22,7 @@ up:
 	{
 		if (i + j >= images.size())
 			actions[i] = Add;
-		else if (images[i + j] == new_images[i])
+		else if (images[i + j].get() == new_images[i].get())
 			actions[i] = Use;
 		else if (image_owners[i + j] == 0)
 			actions[i] = Replace;

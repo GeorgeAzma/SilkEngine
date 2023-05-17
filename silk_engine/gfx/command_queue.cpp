@@ -27,12 +27,12 @@ CommandBuffer& CommandQueue::getCommandBuffer(bool begin)
 
 void CommandQueue::submit(const Fence* fence, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
 {
-	command_buffers[index]->submit(fence, wait_stages, wait_semaphores, signal_semaphores, queue_type);
+	command_buffers[index]->submit(queue_type, fence, wait_stages, wait_semaphores, signal_semaphores);
 }
 
-void CommandQueue::execute()
+void CommandQueue::execute(const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
 {
-	command_buffers[index]->execute(queue_type);
+	command_buffers[index]->execute(queue_type, wait_stages, wait_semaphores, signal_semaphores);
 }
 
 void CommandQueue::reset()

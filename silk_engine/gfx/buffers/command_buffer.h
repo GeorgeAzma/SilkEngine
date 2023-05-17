@@ -1,3 +1,4 @@
+
 #pragma once
 
 class Queue;
@@ -38,7 +39,16 @@ public:
 	void endQuery(VkQueryPool query_pool, uint32_t query);
 	void beginRenderPass(const VkRenderPassBeginInfo& render_pass_begin_info, VkSubpassContents contents);
 	void nextSubpass(VkSubpassContents contents);
-	void endRenderPass();
+	void endRenderPass();   
+#ifdef SK_ENABLE_DEBUG_OUTPUT
+	void beginLabel(const char* name = nullptr, vec4 color = vec4(1));
+	void insertLabel(const char* name = nullptr, vec4 color = vec4(1));
+	void endLabel();
+#else
+	void beginLabel(const char* name = nullptr, vec4 color = vec4(1)) {}
+	void insertLabel(const char* name = nullptr, vec4 color = vec4(1)) {}
+	void endLabel() {}
+#endif
 
 	void bindPipeline(VkPipelineBindPoint bind_point, VkPipeline pipeline, VkPipelineLayout layout);
 	void bindDescriptorSets(uint32_t first, const std::vector<VkDescriptorSet>& sets, const std::vector<uint32_t>& dynamic_offsets = {});
@@ -86,8 +96,8 @@ public:
 	void drawIndirect(VkBuffer indirect_buffer, uint32_t offset, uint32_t draw_count, uint32_t stride) const;
 	void drawIndexedIndirect(VkBuffer indirect_buffer, uint32_t offset, uint32_t draw_count, uint32_t stride) const;
 
-	void submit(const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {}, VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT);
-	void execute(VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT);
+	void submit(VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT, const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
+	void execute(VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
 	void reset(bool free = false);
 
 	bool isPrimary() const { return is_primary; }

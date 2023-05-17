@@ -18,6 +18,8 @@
 #include "my_app.h"
 #include "my_scene.h"
 
+#define RENDERPASS 1
+
 MyApp::MyApp()
 {
     GLFW::init();
@@ -29,41 +31,52 @@ MyApp::MyApp()
     previous_frame_finished = new Fence(true);
     swap_chain_image_available = new Semaphore();
     render_finished = new Semaphore();
-    s1 = new Semaphore();
 
-    shared<RenderPass> render_pass = shared<RenderPass>(new RenderPass({
-           {
-               {
-                   { Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() },
-                   { Image::Format(RenderContext::getPhysicalDevice().getDepthFormat()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() }
-               }, {}
-           }
-        }));
-    VulkanObject::setName(VulkanObject::Type::RENDER_PASS, uint64_t(VkRenderPass(*render_pass)), "Geometry");
+    shared<RenderPass> render_pass = makeShared<RenderPass>();
+#if RENDERPASS 
+    render_pass->addAttachment(AttachmentProps{ Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() });
+#else
+    render_pass->addAttachment(AttachmentProps{ Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, RenderContext::getPhysicalDevice().getMaxSampleCount() });
+#endif
+    render_pass->addAttachment(AttachmentProps{ Image::Format(RenderContext::getPhysicalDevice().getDepthFormat()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() });
+#if RENDERPASS
+    VkSubpassDependency subpass_dependency{};
+    subpass_dependency.srcSubpass = 0;
+    subpass_dependency.dstSubpass = 0;
+    subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    subpass_dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
+    subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
+    subpass_dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+    render_pass->build({  });
+#else
+    render_pass->build();
+#endif
+    RenderContext::getLogicalDevice().setObjectName(VK_OBJECT_TYPE_RENDER_PASS, VkRenderPass(*render_pass), "Geometry");
 
     DebugRenderer::init(*render_pass);
     render_passes.emplace_back(render_pass);
 
-    render_pass = shared<RenderPass>(new RenderPass({
-           {
-               {
-                   { Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR }
-               }, {}
-           }
-        }));
-    VulkanObject::setName(VulkanObject::Type::RENDER_PASS, uint64_t(VkRenderPass(*render_pass)), "Final");
+#if RENDERPASS
+    render_pass = makeShared<RenderPass>();
+    render_pass->addAttachment(AttachmentProps{ Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR });
+    subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    subpass_dependency.dstSubpass = 0;
+    subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    subpass_dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    subpass_dependency.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    subpass_dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+    render_pass->build({  });
+    RenderContext::getLogicalDevice().setObjectName(VK_OBJECT_TYPE_RENDER_PASS, VkRenderPass(*render_pass), "Final");
 
     shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
     graphics_pipeline->setShader(makeShared<Shader>(std::vector<std::string_view>{ "screen", "image" }))
         .setRenderPass(*render_pass)
-        .enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
-        .enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
-        .enableTag(GraphicsPipeline::EnableTag::BLEND)
-        .setDepthCompareOp(GraphicsPipeline::CompareOp::LESS_OR_EQUAL)
         .build();
     material = makeShared<Material>(graphics_pipeline);
     render_passes.emplace_back(render_pass);
-
+#endif
     for (auto& render_pass : render_passes)
         render_pass->resize(Window::getActive().getSwapChain());
 
@@ -86,7 +99,6 @@ MyApp::~MyApp()
     delete previous_frame_finished;
     delete swap_chain_image_available;
     delete render_finished;
-    delete s1;
     render_passes.clear();
     delete window;
     RenderContext::destroy();
@@ -121,9 +133,9 @@ void MyApp::onUpdate()
 
         VkViewport viewport = {};
         viewport.x = 0.0f;
-        viewport.y = height;
+        viewport.y = (render_pass_index == 0 ? 1 : 0) * float(height);
         viewport.width = float(width);
-        viewport.height = -float(height);
+        viewport.height = (render_pass_index == 0 ? -1 : 1) * float(height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         RenderContext::getCommandBuffer().setViewport({ viewport });
@@ -138,6 +150,7 @@ void MyApp::onUpdate()
         {
             DebugRenderer::render();
         }
+#if RENDERPASS
         else if (render_pass_index == 1)
         {
             auto& attachment = render_passes[0]->getFramebuffer()->getAttachments()[0];
@@ -145,18 +158,13 @@ void MyApp::onUpdate()
             material->bind();
             RenderContext::getCommandBuffer().draw(3);
         }
-        render_pass->end(); 
-        if (render_pass_index == 0)
-        {
-            render_pass->getFramebuffer()->getAttachments()[0]->setLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-            render_pass->getFramebuffer()->getAttachments()[0]->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            RenderContext::submit(nullptr, {}, {}, { *s1 });
-        }
-        else
-        {
-            RenderContext::submit(previous_frame_finished, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { *swap_chain_image_available, *s1 }, { *render_finished });
-        }
+#endif
+        render_pass->end();
+        if (render_pass_index < render_passes.size() - 1)
+            RenderContext::execute();
     }
+    RenderContext::submit(previous_frame_finished, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { *swap_chain_image_available }, { *render_finished });
+
 
     if (!Window::getActive().getSwapChain().present(*render_finished))
     {

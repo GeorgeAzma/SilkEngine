@@ -28,9 +28,9 @@ public:
 	{
 		command_queues[frame]->submit(fence, wait_stages, wait_semaphores, signal_semaphores);
 	}
-	static void execute()
+	static void execute(const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {})
 	{
-		command_queues[frame]->execute();
+		command_queues[frame]->execute(wait_stages, wait_semaphores, signal_semaphores);
 	}
 
 	static CommandBuffer& getComputeCommandBuffer(bool begin = true)
@@ -41,9 +41,9 @@ public:
 	{
 		compute_command_queues[frame]->submit(fence, wait_stages, wait_semaphores, signal_semaphores);
 	}
-	static void executeCompute()
+	static void executeCompute(const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {})
 	{
-		compute_command_queues[frame]->execute();
+		compute_command_queues[frame]->execute(wait_stages, wait_semaphores, signal_semaphores);
 	}
 
 	static CommandBuffer& getTransferCommandBuffer(bool begin = true)
@@ -54,9 +54,9 @@ public:
 	{
 		transfer_command_queues[frame]->submit(fence, wait_stages, wait_semaphores, signal_semaphores);
 	}
-	static void executeTransfer()
+	static void executeTransfer(const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {})
 	{
-		transfer_command_queues[frame]->execute();
+		transfer_command_queues[frame]->execute(wait_stages, wait_semaphores, signal_semaphores);
 	}
 
 	static void screenshot(const path& file);

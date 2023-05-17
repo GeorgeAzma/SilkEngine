@@ -455,10 +455,12 @@ VkQueue LogicalDevice::getQueue(uint32_t queue_family_index, uint32_t queue_inde
 	return queue;
 }
 
-VkResult LogicalDevice::setDebugUtilsObjectName(VkObjectType object_type, std::string_view name, const void* handle)
+#ifdef SK_ENABLE_DEBUG_OUTPUT
+VkResult LogicalDevice::setObjectName(VkObjectType object_type, const void* handle, std::string_view name) const
 {
-#ifdef SK_ENABLE_DEBUG_MESSENGER
-	static const auto vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(physical_device.getInstance(), "vkSetDebugUtilsObjectNameEXT");
+	static auto vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(physical_device.getInstance(), "vkSetDebugUtilsObjectNameEXT");
+	if (vkSetDebugUtilsObjectNameEXT == nullptr)
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
 
 	VkDebugUtilsObjectNameInfoEXT name_info;
 	name_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
@@ -467,10 +469,23 @@ VkResult LogicalDevice::setDebugUtilsObjectName(VkObjectType object_type, std::s
 	name_info.objectHandle = (uint64_t)handle;
 	name_info.pNext = nullptr;
 	return vkSetDebugUtilsObjectNameEXT(logical_device, &name_info);
-#else
-	return VK_ERROR_EXTENSION_NOT_PRESENT;
-#endif
 }
+
+VkResult LogicalDevice::setObjectTag(VkObjectType object_type, const void* handle, uint64_t name, size_t tag_size, const void* tag) const
+{
+	static auto vkSetDebugUtilsObjectTagEXT = (PFN_vkSetDebugUtilsObjectTagEXT)vkGetInstanceProcAddr(physical_device.getInstance(), "vkSetDebugUtilsObjectTagEXT");
+	if (vkSetDebugUtilsObjectTagEXT == nullptr)
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
+
+	VkDebugUtilsObjectTagInfoEXT name_info;
+	name_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_TAG_INFO_EXT;
+	name_info.objectType = object_type;
+	name_info.tagName = name;
+	name_info.tagSize = tag_size;
+	name_info.pTag = nullptr;
+	return vkSetDebugUtilsObjectTagEXT(logical_device, &name_info);
+}
+#endif
 
 const Queue& LogicalDevice::getGraphicsQueue() const 
 { 

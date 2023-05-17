@@ -362,6 +362,13 @@ void Image::insertMemoryBarrier(const VkImage& image, VkImageLayout old_layout, 
 	insertMemoryBarrier(image, src_access, dst_access, old_layout, new_layout, src_stage, dst_stage, aspect, mip_levels, base_mip_level, layers, base_layer);
 }
 
+shared<Image> Image::add(std::string_view name, const shared<Image>& image)
+{
+	images.insert_or_assign(name, image);
+	RenderContext::getLogicalDevice().setObjectName(VK_OBJECT_TYPE_IMAGE, VkImage(*image), name.data());
+	return image;
+}
+
 void Image::create()
 {
 	if (image == nullptr)

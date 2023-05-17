@@ -4,6 +4,7 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/allocators/command_pool.h"
 #include "gfx/fence.h"
+#include "gfx/instance.h"
 
 // TODO: Doesn't account for: "Any primary command buffer that is in the recording or executable state and has resetting command buffer recorded into it, becomes invalid."
 
@@ -88,6 +89,52 @@ void CommandBuffer::endRenderPass()
 	active.framebuffer = nullptr;
 	active.render_area = { { None<int32_t>(), None<int32_t>() }, { None<uint32_t>(), None<uint32_t>() } };
 }
+
+void CommandBuffer::beginLabel(const char* name, vec4 color)
+{
+	static auto vkCmdBeginDebugUtilsLabelEXT = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetInstanceProcAddr(RenderContext::getInstance(), "vkCmdBeginDebugUtilsLabelEXT");
+	if (vkCmdBeginDebugUtilsLabelEXT == nullptr) // VK_ERROR_EXTENSION_NOT_PRESENT
+		return;
+
+	VkDebugUtilsLabelEXT label{};
+	label.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+	label.pNext = nullptr;
+	label.pLabelName = name;
+	label.color[0] = color.r;
+	label.color[1] = color.g;
+	label.color[2] = color.b;
+	label.color[3] = color.a;
+
+	vkCmdBeginDebugUtilsLabelEXT(command_buffer, &label);
+}
+
+void CommandBuffer::insertLabel(const char* name, vec4 color)
+{
+	static auto vkCmdInsertDebugUtilsLabelEXT = (PFN_vkCmdInsertDebugUtilsLabelEXT)vkGetInstanceProcAddr(RenderContext::getInstance(), "vkCmdInsertDebugUtilsLabelEXT");
+	if (vkCmdInsertDebugUtilsLabelEXT == nullptr) // VK_ERROR_EXTENSION_NOT_PRESENT
+		return;
+
+	VkDebugUtilsLabelEXT label{};
+	label.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+	label.pNext = nullptr;
+	label.pLabelName = name;
+	label.color[0] = color.r;
+	label.color[1] = color.g;
+	label.color[2] = color.b;
+	label.color[3] = color.a;
+
+	vkCmdInsertDebugUtilsLabelEXT(command_buffer, &label);
+}
+
+void CommandBuffer::endLabel()
+{
+	static auto vkCmdEndDebugUtilsLabelEXT = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetInstanceProcAddr(RenderContext::getInstance(), "vkCmdEndDebugUtilsLabelEXT");
+	if (vkCmdEndDebugUtilsLabelEXT == nullptr) // VK_ERROR_EXTENSION_NOT_PRESENT
+		return;
+
+	vkCmdEndDebugUtilsLabelEXT(command_buffer);
+}
+
 #pragma endregion
 
 #pragma region Binds
@@ -455,7 +502,7 @@ void CommandBuffer::drawIndexedIndirect(VkBuffer indirect_buffer, uint32_t offse
 }
 #pragma endregion
 
-void CommandBuffer::submit(const Fence* fence, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores, VkQueueFlagBits queue_type)
+void CommandBuffer::submit(VkQueueFlagBits queue_type, const Fence* fence, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
 {
 	end();
 	if (state != State::EXECUTABLE)
@@ -477,19 +524,14 @@ void CommandBuffer::submit(const Fence* fence, const std::vector<VkPipelineStage
 	state = State::PENDING;
 }
 
-void CommandBuffer::execute(VkQueueFlagBits queue_type)
+void CommandBuffer::execute(VkQueueFlagBits queue_type, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
 {
 	end();
 	if (state != State::EXECUTABLE)
 		return;
 
-	VkSubmitInfo submit_info{};
-	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &command_buffer;
-
 	Fence fence;
-	RenderContext::getLogicalDevice().getQueue(queue_type).submit(submit_info, fence);
+	submit(queue_type, &fence, wait_stages, wait_semaphores, signal_semaphores);
 	fence.wait();
 	state = State::INVALID;
 }
