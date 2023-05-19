@@ -11,10 +11,10 @@ enum class Key : int;
 enum class MouseButton : int;
 
 class Joystick;
-enum class JoystickButton : byte;
-enum class JoystickHat : byte;
-enum class GamepadButton : byte; 
-enum class GamepadAxis : byte;
+enum class JoystickButton : uint8_t;
+enum class JoystickHat : uint8_t;
+enum class GamepadButton : uint8_t;
+enum class GamepadAxis : uint8_t;
 
 enum class InputDevice : uint32_t
 {

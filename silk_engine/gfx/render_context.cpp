@@ -92,7 +92,7 @@ void RenderContext::update()
 }
 
 
-void RenderContext::screenshot(const path& file)
+void RenderContext::screenshot(const fs::path& file)
 {
 	// TODO: Fix sync error (though this works)
 	if (!std::filesystem::exists("res/images/screenshots"))
@@ -112,11 +112,11 @@ void RenderContext::screenshot(const path& file)
 	img->copyToImage(*image);
 	execute();
 
-	std::vector<byte> data(img->getSize());
+	std::vector<uint8_t> data(img->getSize());
 	image->getData(data.data());
 
-	const path folder = "res/images/screenshots";
-	path file_path = folder / file;
+	const fs::path folder = "res/images/screenshots";
+	fs::path file_path = folder / file;
 	stbi_write_png(file_path.string().c_str(), Window::getActive().getWidth(), Window::getActive().getHeight(), Image::getFormatChannelCount(Image::Format(Window::getActive().getSurface().getFormat().format)), data.data(), 0);
 	SK_TRACE("Screenshot saved at {}", file_path);
 }

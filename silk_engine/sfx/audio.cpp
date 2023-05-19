@@ -8,7 +8,7 @@ Audio::Audio(const RawAudio& audio)
 	setData(audio.data.data(), audio.data.size());
 }
 
-Audio::Audio(const path& file)
+Audio::Audio(const fs::path& file)
 	: Audio(RawAudio(file))
 {
 }

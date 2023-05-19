@@ -3,9 +3,9 @@
 #define TINYGLTF_USE_CPP14
 #include "tiny_gltf.h"
 
-RawModel::RawModel(const path& file)
+RawModel::RawModel(const fs::path& file)
 {
-    path file_path = path("res/models") / file;
+    fs::path file_path = fs::path("res/models") / file;
     this->file = file_path;
 
     //Assimp::Importer importer;
@@ -26,7 +26,7 @@ RawModel::RawModel(const path& file)
     SK_VERIFY(err.empty(), err);
     SK_VERIFY_WARN(warn.empty(), warn);
 
-    SK_CRITICAL("Unfinished code, can't load a model");
+    SK_ERROR("Unfinished code, can't load a model");
 
     SK_TRACE("Model loaded: {}", file);
 }

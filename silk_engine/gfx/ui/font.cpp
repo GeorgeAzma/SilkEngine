@@ -13,8 +13,8 @@ void Font::destroy()
 	fonts.clear();
 }
 
-Font::Font(const path& file, uint32_t size)
-	: characters(MAX_CHARACTER_COUNT), size(size), file(path("res/fonts") / file)
+Font::Font(const fs::path& file, uint32_t size)
+	: characters(MAX_CHARACTER_COUNT), size(size), file(fs::path("res/fonts") / file)
 {
 	FT_Error result = FT_New_Face(free_type_library, this->file.string().c_str(), 0, &face);
 	SK_VERIFY(!result, "FreeType: Couldn't create new face: {}", this->file.string());

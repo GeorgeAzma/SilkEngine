@@ -116,7 +116,7 @@ private:
 
 		public:
 			shared<Mesh> mesh = nullptr;
-			std::vector<byte> instance_data{};
+			std::vector<uint8_t> instance_data{};
 			InstanceImages instance_images{};
 			shared<Material> material = nullptr;
 			shared<Buffer> instance_buffer = nullptr;

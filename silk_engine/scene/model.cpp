@@ -3,12 +3,12 @@
 #include "meshes/mesh.h"
 #include "gfx/images/image.h"
 
-Model::Model(const path& file)
+Model::Model(const fs::path& file)
 {
     *this = RawModel(file);
 }
 
-RawModel Model::load(const path& file)
+RawModel Model::load(const fs::path& file)
 {
     return RawModel(file);
 }

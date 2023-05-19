@@ -40,7 +40,7 @@ struct RawMesh : NoCopy
 		return *this;
 	}
 
-	const std::vector<byte>& getData() const { return data; }
+	const std::vector<uint8_t>& getData() const { return data; }
 	size_t getVerticesSize() const { return vertices_size; }
 	size_t getIndicesSize() const { return indices_size; }
 	size_t getVertexCount() const { return vertices_size / vertex_type_size; }
@@ -49,10 +49,10 @@ struct RawMesh : NoCopy
 	size_t getIndexTypeSize() const { return index_type_size; }
 
 protected:
-	std::vector<byte>& getData() { return data; }
+	std::vector<uint8_t>& getData() { return data; }
 
 private:
-	std::vector<byte> data{};
+	std::vector<uint8_t> data{};
 	size_t vertices_size = 0;
 	size_t indices_size = 0;
 	size_t vertex_type_size = 0;

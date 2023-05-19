@@ -1,6 +1,6 @@
 #include "file.h"
 
-std::string File::read(const path& file, std::ios::openmode open_mode)
+std::string File::read(const fs::path& file, std::ios::openmode open_mode)
 {
 	std::ifstream is(file, std::ios::ate | open_mode);
 	if (!is)
@@ -12,7 +12,7 @@ std::string File::read(const path& file, std::ios::openmode open_mode)
 	return buffer;
 }
 
-void File::write(const path& file, const void* data, size_t size, std::ios::openmode open_mode)
+void File::write(const fs::path& file, const void* data, size_t size, std::ios::openmode open_mode)
 {
 	std::ofstream os(file, open_mode);
 	if (!os)
@@ -20,12 +20,12 @@ void File::write(const path& file, const void* data, size_t size, std::ios::open
 	os.write((const char*)data, size);
 }
 
-bool File::exists(const path& file)
+bool File::exists(const fs::path& file)
 {
 	return std::filesystem::exists(file);
 }
 
-path File::directory(const path& file)
+fs::path File::directory(const fs::path& file)
 {
 	return file.parent_path();
 }

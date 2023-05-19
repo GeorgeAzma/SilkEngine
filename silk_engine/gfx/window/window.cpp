@@ -343,9 +343,9 @@ void Window::setTitle(std::string_view title)
     glfwSetWindowTitle(window, title.data());
 }
 
-void Window::setIcon(const path& file)
+void Window::setIcon(const fs::path& file)
 {
-    path file_path = path("icons") / file;
+    fs::path file_path = fs::path("icons") / file;
     RawImage<> data(file_path);
     std::vector<GLFWimage> icons(1);
     icons[0].height = data.height;
@@ -388,9 +388,9 @@ void Window::setAlwaysOnTop(bool always_on_top)
     glfwSetWindowAttrib(window, GLFW_FLOATING, always_on_top);
 }
 
-void Window::setCursor(const path& file, CursorHotSpot hot_spot)
+void Window::setCursor(const fs::path& file, CursorHotSpot hot_spot)
 {
-    path file_path = path("cursors") / file;
+    fs::path file_path = fs::path("cursors") / file;
     RawImage<> raw(file_path);
     GLFWimage cursor_image[1];
     cursor_image[0].height = raw.height;

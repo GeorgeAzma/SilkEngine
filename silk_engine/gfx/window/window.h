@@ -238,10 +238,10 @@ public:
     void setHeight(uint32_t height);
     void setSize(const uvec2 &size);
     void setTitle(std::string_view title);
-    void setIcon(const path& file);
+    void setIcon(const fs::path& file);
     void setSizeLimit(uint32_t min_width, uint32_t min_height, uint32_t max_width, uint32_t max_height);
     void setAspectRatioLimit(uint32_t numerator, uint32_t denominator);
-	void setCursor(const path& file, CursorHotSpot hot_spot = CursorHotSpot::TOP_RIGHT);
+	void setCursor(const fs::path& file, CursorHotSpot hot_spot = CursorHotSpot::TOP_RIGHT);
     void setOpacity(float opacity);
     void setResizable(bool resizable);
     void setDecorated(bool decorated);
@@ -276,10 +276,10 @@ private:
         bool fullscreen = false;
         int mouse_pressed = -1;
         bool is_mouse_on = false;
-        std::vector<byte> keys;
-        std::vector<byte> last_keys;
-        std::vector<byte> mouse_buttons;
-        std::vector<byte> last_mouse_buttons;
+        std::vector<uint8_t> keys;
+        std::vector<uint8_t> last_keys;
+        std::vector<uint8_t> mouse_buttons;
+        std::vector<uint8_t> last_mouse_buttons;
         vec2 mouse = vec2(0);
         GLFWcursor* cursor = nullptr;
         bool minimized = false;

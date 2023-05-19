@@ -32,7 +32,7 @@ public:
 		};
 
 	public:
-		Stage(const path& file);
+		Stage(const fs::path& file);
 		~Stage();
 
 		bool compile();
@@ -40,7 +40,7 @@ public:
 		void loadCache();
 		void saveCache() const;
 
-		path getCachePath() const;
+		fs::path getCachePath() const;
 
 		bool operator<(const Stage& other) { return type < other.type; }
 
@@ -48,7 +48,7 @@ public:
 		void createModule();
 
 	public:
-		path file = "";
+		fs::path file = "";
 		Type type = Type(0);
 		VkShaderModule module = nullptr;
 		std::vector<uint32_t> binary = {};

@@ -93,9 +93,9 @@ void Joystick::update()
             Dispatcher<JoystickAxisEvent>::post(*this, axis, getAxis(axis), getAxisDelta(axis));
     }
     
-    const byte* button_data = glfwGetJoystickButtons(id, &count);
+    const uint8_t* button_data = glfwGetJoystickButtons(id, &count);
     memcpy(last_buttons.data(), buttons.data(), buttons.size());
-    memcpy(buttons.data(), button_data, count * sizeof(byte));
+    memcpy(buttons.data(), button_data, count * sizeof(uint8_t));
     for (int button = 0; button < count; ++button)
     {
         JoystickButton joystick_button = JoystickButton(button);
@@ -105,9 +105,9 @@ void Joystick::update()
             Dispatcher<JoystickReleaseEvent>::post(*this, joystick_button);
     }
     
-    const byte* hat_data = glfwGetJoystickHats(id, &count);
+    const uint8_t* hat_data = glfwGetJoystickHats(id, &count);
     memcpy(last_hats.data(), hats.data(), hats.size());
-    memcpy(hats.data(), hat_data, count * sizeof(byte));
+    memcpy(hats.data(), hat_data, count * sizeof(uint8_t));
     for (int hat = 0; hat < count; ++hat)
         if (hats[hat] != last_hats[hat])
             Dispatcher<JoystickHatEvent>::post(*this, hat, getHatDirection(hat));
@@ -124,7 +124,7 @@ void Joystick::update()
             if (getGamepadAxisDelta(gamepad_axis) != 0.0f)
                 Dispatcher<GamepadAxisEvent>::post(*this, gamepad_axis, getGamepadAxis(gamepad_axis), getGamepadAxisDelta(gamepad_axis));
         }
-        memcpy(last_gamepad_buttons.data(), gamepad_buttons.data(), gamepad_buttons.size() * sizeof(byte));
+        memcpy(last_gamepad_buttons.data(), gamepad_buttons.data(), gamepad_buttons.size() * sizeof(uint8_t));
         memcpy(gamepad_buttons.data(), gamepad_state.buttons, sizeof(gamepad_state.buttons));
         for (int button = 0; button < MAX_GAMEPAD_BUTTONS; ++button)
         {

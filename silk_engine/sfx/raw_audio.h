@@ -35,10 +35,10 @@ private:
 
 public:
     RawAudio() = default;
-    RawAudio(const path& file);
+    RawAudio(const fs::path& file);
 
     static AudioFormat getFormat(uint8_t num_channels, uint8_t bit_depth);
-    void load(const path& file);
+    void load(const fs::path& file);
 
 public:
     std::vector<uint8_t> data{};

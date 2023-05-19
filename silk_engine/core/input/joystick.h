@@ -1,6 +1,6 @@
 #pragma once
 
-enum class JoystickButton : byte
+enum class JoystickButton : uint8_t
 {
 	_1 = 0,
 	_2 = 1,
@@ -21,7 +21,7 @@ enum class JoystickButton : byte
 	LAST = _16
 };
 
-enum class JoystickHat : byte
+enum class JoystickHat : uint8_t
 {
 	CENTERED = 0,
 	UP = 1,
@@ -40,7 +40,7 @@ static JoystickHat operator&(JoystickHat lhs, JoystickHat rhs)
 	return JoystickHat(ecast(lhs) & ecast(rhs));
 }
 
-enum class GamepadButton : byte
+enum class GamepadButton : uint8_t
 {
 	A = 0,
 	B = 1,
@@ -65,7 +65,7 @@ enum class GamepadButton : byte
 	TRIANGLE = Y
 };
 
-enum class GamepadAxis : byte
+enum class GamepadAxis : uint8_t
 {
 	LEFT_X = 0,
 	LEFT_Y = 1,
@@ -135,15 +135,15 @@ private:
 	int id = -1;
 	std::vector<float> axes;
 	std::vector<float> last_axes;
-	std::vector<byte> buttons;
-	std::vector<byte> last_buttons;
+	std::vector<uint8_t> buttons;
+	std::vector<uint8_t> last_buttons;
 	std::vector<JoystickHat> hats;
 	std::vector<JoystickHat> last_hats;
 	std::string name = "";
 	std::string guid = "";
 	bool is_gamepad = false;
-	std::vector<byte> gamepad_buttons;
-	std::vector<byte> last_gamepad_buttons;
+	std::vector<uint8_t> gamepad_buttons;
+	std::vector<uint8_t> last_gamepad_buttons;
 	std::vector<float> gamepad_axes;
 	std::vector<float> last_gamepad_axes;
 	std::string gamepad_name = "";

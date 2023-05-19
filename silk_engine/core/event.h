@@ -7,9 +7,9 @@ class Monitor;
 class Joystick;
 enum class Key : int;
 enum class MouseButton : int;
-enum class JoystickButton : byte;
-enum class GamepadButton : byte;
-enum class GamepadAxis : byte;
+enum class JoystickButton : uint8_t;
+enum class GamepadButton : uint8_t;
+enum class GamepadAxis : uint8_t;
 
 //WINDOW EVENTS
 struct WindowEvent

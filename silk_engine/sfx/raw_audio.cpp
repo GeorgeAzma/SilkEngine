@@ -1,7 +1,7 @@
 #include "raw_audio.h"
 #include "audio_format.h"
 
-RawAudio::RawAudio(const path& file)
+RawAudio::RawAudio(const fs::path& file)
 {
 	load(file);
 }
@@ -30,9 +30,9 @@ AudioFormat RawAudio::getFormat(uint8_t num_channels, uint8_t bit_depth)
 	return format;
 }
 
-void RawAudio::load(const path& file)
+void RawAudio::load(const fs::path& file)
 {
-	path file_path = path("res/audio") / file;
+	fs::path file_path = fs::path("res/audio") / file;
 
 	std::ifstream wav_file(file_path, std::ios::binary);
 	SK_VERIFY(wav_file.is_open(), "Couldn't open WAV file: {}", file_path);

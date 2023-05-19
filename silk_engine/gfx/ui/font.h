@@ -28,7 +28,7 @@ public:
 	static constexpr size_t MAX_CHARACTER_COUNT = 256;
 
 public:
-	Font(const path& file, uint32_t size = 64);
+	Font(const fs::path& file, uint32_t size = 64);
 	~Font();
 
 	shared<Image> getAtlas() const { return texture_atlas; }
@@ -40,7 +40,7 @@ private:
 
 private:
 	FT_Face face;
-	path file;
+	fs::path file;
 	std::vector<CharacterInfo> characters;
 	size_t size;
 

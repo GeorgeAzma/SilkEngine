@@ -10,12 +10,12 @@
 #include <spirv_cross/spirv_cross.hpp>
 #include <shaderc/shaderc.hpp>
 
-Shader::Stage::Stage(const path& file)
+Shader::Stage::Stage(const fs::path& file)
 	: file(file)
 {
 	using enum Type;
 
-	path file_extension = file.extension();
+	fs::path file_extension = file.extension();
 	if (file_extension == ".vert") type = VERTEX;
 	else if (file_extension == ".frag") type = FRAGMENT;
 	else if (file_extension == ".geom") type = GEOMETRY;
@@ -120,14 +120,14 @@ void Shader::Stage::saveCache() const
 	File::write(getCachePath(), binary.data(), binary.size() * sizeof(uint32_t));
 }
 
-path Shader::Stage::getCachePath() const
+fs::path Shader::Stage::getCachePath() const
 {
-	return path("res/cache/shaders") / (file.string() + ".spv");
+	return fs::path("res/cache/shaders") / (file.string() + ".spv");
 }
 
 Shader::Shader(std::string_view name)
 {
-	std::vector<path> source_files;
+	std::vector<fs::path> source_files;
 	for (const auto& file : std::filesystem::directory_iterator("res/shaders"))
 		if (file.path().stem() == name)
 			source_files.push_back(file);

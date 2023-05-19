@@ -75,9 +75,11 @@ using ulong = unsigned long;
 using uint = unsigned int;
 using ushort = unsigned short;
 using uchar = unsigned char;
-using std::byte;
 
-using path = std::filesystem::path;
+namespace fs
+{
+    using namespace std::filesystem;
+}
 
 template <typename T>
 concept IsContainer = requires (T t, size_t n)
@@ -199,10 +201,10 @@ namespace std
     };
 
     template <>
-    struct formatter<path>: formatter<double>
+    struct formatter<fs::path>: formatter<double>
     {
         template <typename FormatContext>
-        auto format(const path& p, FormatContext& ctx)
+        auto format(const fs::path& p, FormatContext& ctx)
         {
             auto&& out = ctx.out();
             format_to(out, "{}", p.string());

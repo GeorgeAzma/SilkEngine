@@ -8,7 +8,7 @@ class Audio : NoCopy
 {
 public:
     Audio(const RawAudio& audio);
-    Audio(const path& file);
+    Audio(const fs::path& file);
     ~Audio();
 
     uint32_t getChannelCount() const;

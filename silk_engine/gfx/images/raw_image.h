@@ -1,12 +1,13 @@
 #pragma once
 
-template<typename T = uint8_t>
+template <typename T>
 class IRawImage
 {
 public:
 	IRawImage() = default;
-	void allocate() { pixels.resize(size_t(width) * height * channels); }
-	size_t size() const { return width * height * channels; }
+	void allocate() { pixels.resize(getPixelCount()); }
+	size_t getPixelCount() const { return width * height * channels; }
+	size_t getSize() const { return getPixelCount() * sizeof(T); }
 	const T& operator()(uint32_t x, uint32_t y) const { return pixels[width * y + x]; }
 	const T& operator()(uint32_t index) const { return pixels[index]; }
 	const T& operator[](uint32_t index) const { return pixels[index]; }
@@ -18,11 +19,18 @@ public:
 	std::vector<T> pixels{};
 };
 
-template<typename T = uint8_t>
+template <typename T = uint8_t>
 class RawImage : public IRawImage<T>
 {
 public:
 	RawImage() = default;
+	RawImage(const fs::path& file, int align_channels = 0) {}
+	RawImage(std::span<const fs::path> files, int align_channels = 0) {} //Files must have same width/height/channels
+	
+	void load(const fs::path& file, int align_channels = 0) {}
+	void load(std::span<const fs::path> files, int align_channels = 0) {} //Files must have same width/height/channels
+	void save(const fs::path& file) {} //Save as BMP
+	void savePNG(const fs::path& file) {}
 };
 
 template<>
@@ -30,10 +38,11 @@ class RawImage<uint8_t> : public IRawImage<uint8_t>
 {
 public:
 	RawImage() = default;
-	RawImage(const path& file, int align_channels = 0);
-	RawImage(std::span<const path> files, int align_channels = 0); //Files must have same width/height/channels
-	void load(const path& file, int align_channels = 0);
-	void load(std::span<const path> files, int align_channels = 0); //Files must have same width/height/channels
-	void save(const path& file); //Save as BMP
-	void savePNG(const path& file);
+	RawImage(const fs::path& file, int align_channels = 0);
+	RawImage(std::span<const fs::path> files, int align_channels = 0); //Files must have same width/height/channels
+
+	void load(const fs::path& file, int align_channels = 0);
+	void load(std::span<const fs::path> files, int align_channels = 0); //Files must have same width/height/channels
+	void save(const fs::path& file); //Save as BMP
+	void savePNG(const fs::path& file);
 };

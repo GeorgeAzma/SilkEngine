@@ -18,13 +18,13 @@ class RawModel
 	};
 
 public:
-	RawModel(const path& file);
+	RawModel(const fs::path& file);
 
 private:
 	std::vector<shared<RawMesh3D>> meshes;
 	std::vector<MeshMaterialData> material_data;
-	path directory;
-	path file;
+	fs::path directory;
+	fs::path file;
 
 	std::unordered_map<std::string, RawImage<uint8_t>> image_cache;
 };

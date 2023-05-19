@@ -114,10 +114,10 @@ Image::Image(uint32_t width, uint32_t height, Format format)
 	create();
 }
 
-Image::Image(const path& file, const Props& p)
+Image::Image(const fs::path& file, const Props& p)
 	: props(p)
 {
-	RawImage<> raw(file);
+	RawImage raw(file);
 	props.width = raw.width;
 	props.height = raw.height;
 	props.format = getFormatFromChannelCount(raw.channels);
@@ -137,7 +137,7 @@ Image::Image(uint32_t width, uint32_t height, Format format, VkImage img)
 	create();
 }
 
-Image::Image(const std::array<path, 6>& files, const Props& p)
+Image::Image(const std::array<fs::path, 6>& files, const Props& p)
 	: props(p)
 {
 	RawImage<> raw(files);
@@ -149,7 +149,7 @@ Image::Image(const std::array<path, 6>& files, const Props& p)
 	generateMipmaps();
 }
 
-Image::Image(std::span<const path> files, const Props& p)
+Image::Image(std::span<const fs::path> files, const Props& p)
 	: props(p)
 {
 	RawImage<> raw(files);
@@ -162,10 +162,10 @@ Image::Image(std::span<const path> files, const Props& p)
 	generateMipmaps();
 }
 
-Image::Image(std::span<const std::array<path, 6>> files, const Props& p)
+Image::Image(std::span<const std::array<fs::path, 6>> files, const Props& p)
 	: props(p)
 {
-	std::vector<path> continous_files(files.size() * 6);
+	std::vector<fs::path> continous_files(files.size() * 6);
 	std::copy(files.front().begin(), files.back().end(), continous_files.begin());
 	RawImage<> raw(continous_files);
 	props.width = raw.width;

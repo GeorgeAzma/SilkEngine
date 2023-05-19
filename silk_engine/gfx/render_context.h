@@ -59,7 +59,7 @@ public:
 		transfer_command_queues[frame]->execute(wait_stages, wait_semaphores, signal_semaphores);
 	}
 
-	static void screenshot(const path& file);
+	static void screenshot(const fs::path& file);
 	static void vulkanAssert(VkResult result);
 	static std::string stringifyResult(VkResult result);
 

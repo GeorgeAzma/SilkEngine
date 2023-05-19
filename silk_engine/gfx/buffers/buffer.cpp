@@ -27,7 +27,7 @@ void Buffer::reallocate(VkDeviceSize size)
 {
 	if (size == ci.size)
 		return;
-	std::vector<byte> data(std::min(size, ci.size));
+	std::vector<uint8_t> data(std::min(size, ci.size));
 	getData(data.data(), data.size());
 	resize(size);
 	setData(data.data(), data.size());

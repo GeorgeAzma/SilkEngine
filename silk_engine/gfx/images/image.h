@@ -99,7 +99,7 @@ public:
 		Type type = Type::_2D;
 
 		uint32_t getChannelCount() const { return getFormatChannelCount(format); }
-		uint32_t getPixelCount() const { return width * height * depth * layers; }
+		size_t getPixelCount() const { return width * height * depth * layers; }
 		size_t getSize() const { return getPixelCount() * getFormatSize(format); }
 	};
 
@@ -107,10 +107,10 @@ public:
 	Image(const Props& props);
 	Image(uint32_t width, Format format = Format::BGRA); // 1D
 	Image(uint32_t width, uint32_t height, Format format = Format::BGRA); // 2D
-	Image(const path& file, const Props& props = {}); // 2D
-	Image(const std::array<path, 6>& files, const Props& props = {}); // Cubemap
-	Image(std::span<const path> files, const Props& props = {}); // 2D Array
-	Image(std::span<const std::array<path, 6>> files, const Props& props = {}); // Cubemap Array
+	Image(const fs::path& file, const Props& props = {}); // 2D
+	Image(const std::array<fs::path, 6>& files, const Props& props = {}); // Cubemap
+	Image(std::span<const fs::path> files, const Props& props = {}); // 2D Array
+	Image(std::span<const std::array<fs::path, 6>> files, const Props& props = {}); // Cubemap Array
 	Image(uint32_t width, uint32_t height, Format format, VkImage img); // Constructor used for swap chain image creation ONLY
 	~Image();
 
@@ -125,7 +125,7 @@ public:
 
 	bool isSampled() const { return props.usage == VK_IMAGE_USAGE_SAMPLED_BIT; }
 	uint32_t getChannelCount() const { return props.getChannelCount(); }
-	uint32_t getPixelCount() const { return props.getPixelCount(); }
+	size_t getPixelCount() const { return props.getPixelCount(); }
 	float getAspectRatio() const { return float(getWidth()) / getHeight(); }
 	size_t getSize() const { return props.getSize(); }
 	uint32_t getMipLevels() const { return mip_levels; }
