@@ -41,7 +41,7 @@ public:
 
 	void addSubpassDependency(const VkSubpassDependency& dependency);
 
-	void build(const std::vector<VkSubpassDependency>& dependencies = {});
+	void build();
 
 	void begin(VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);
 	void nextSubpass(VkSubpassContents subpass_contents = VK_SUBPASS_CONTENTS_INLINE);

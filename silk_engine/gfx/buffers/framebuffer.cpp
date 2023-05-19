@@ -34,7 +34,7 @@ Framebuffer::Framebuffer(const SwapChain& swap_chain, const RenderPass& render_p
             if (attachment_desc.samples != VK_SAMPLE_COUNT_1_BIT)
                 image_props.usage |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
             else
-                image_props.usage |= VK_IMAGE_USAGE_SAMPLED_BIT; // TODO: Configurable usage, does not support USAGE_INPUT_ATTACHMENT right now
+                image_props.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
             if (render_pass.isInputAttachment(attachment))
                 image_props.usage |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
             

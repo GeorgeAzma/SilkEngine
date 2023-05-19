@@ -144,29 +144,8 @@ void RenderPass::addSubpassDependency(const VkSubpassDependency& dependency)
     subpass_dependencies.emplace_back(dependency);
 }
 
-void RenderPass::build(const std::vector<VkSubpassDependency>& dependencies)
+void RenderPass::build()
 {
-    // TODO: Subpass dependencies (good reference: https://www.reddit.com/r/vulkan/comments/s80reu/subpass_dependencies_what_are_those_and_why_do_i/)
-    VkSubpassDependency subpass_dependency{};
-    subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    subpass_dependency.dstSubpass = 0;
-    subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    subpass_dependency.srcAccessMask = VK_ACCESS_NONE;
-    subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-    subpass_dependencies.emplace_back(std::move(subpass_dependency));
-
-    subpass_dependency.srcSubpass = 0;
-    subpass_dependency.dstSubpass = 0;
-    subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    subpass_dependency.srcAccessMask = VK_ACCESS_NONE;
-    subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    subpass_dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-    subpass_dependencies.emplace_back(std::move(subpass_dependency));
-
-    subpass_dependencies.insert(subpass_dependencies.end(), dependencies.begin(), dependencies.end());
-
     std::vector<VkSubpassDescription> subpass_descriptions(subpass_infos.size());
     for (size_t i = 0; i < subpass_infos.size(); ++i)
     {
