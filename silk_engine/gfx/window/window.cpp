@@ -346,7 +346,7 @@ void Window::setTitle(std::string_view title)
 void Window::setIcon(const fs::path& file)
 {
     fs::path file_path = fs::path("icons") / file;
-    RawImage<> data(file_path);
+    RawImage data(file_path);
     std::vector<GLFWimage> icons(1);
     icons[0].height = data.height;
     icons[0].width = data.width;
@@ -391,7 +391,7 @@ void Window::setAlwaysOnTop(bool always_on_top)
 void Window::setCursor(const fs::path& file, CursorHotSpot hot_spot)
 {
     fs::path file_path = fs::path("cursors") / file;
-    RawImage<> raw(file_path);
+    RawImage raw(file_path);
     GLFWimage cursor_image[1];
     cursor_image[0].height = raw.height;
     cursor_image[0].width = raw.width;
