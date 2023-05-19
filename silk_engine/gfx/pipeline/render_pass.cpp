@@ -83,7 +83,10 @@ void RenderPass::addAttachment(const AttachmentProps& attachment_props)
         attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     }
 
-    static constexpr VkClearColorValue default_color_clear_value { 0.0f, 0.0f, 0.0f, 1.0f };
+    if (attachment_description.loadOp != VK_ATTACHMENT_LOAD_OP_LOAD)
+        attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+    static constexpr VkClearColorValue default_color_clear_value { 0.0f, 0.0f, 0.0f, 0.0f };
     static constexpr VkClearDepthStencilValue default_depth_stencil_clear_value { 1.0f, 0 };
     VkClearValue clear_value{};
     bool cleared = attachment_description.loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR || attachment_description.stencilLoadOp == VK_ATTACHMENT_LOAD_OP_CLEAR;

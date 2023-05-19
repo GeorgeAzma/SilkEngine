@@ -75,7 +75,7 @@ using ulong = unsigned long;
 using uint = unsigned int;
 using ushort = unsigned short;
 using uchar = unsigned char;
-using byte = uint8_t;
+using std::byte;
 
 using path = std::filesystem::path;
 

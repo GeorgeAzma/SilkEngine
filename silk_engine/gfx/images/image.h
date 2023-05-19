@@ -141,11 +141,11 @@ public:
 	void setLayout(VkImageLayout layout) { this->layout = layout; } // Use sparingly
 	void setData(const void* data, uint32_t base_layer = 0, uint32_t layers = 1);
 	void getData(void* data, uint32_t base_layer = 0, uint32_t layers = 1);
-	void transitionLayout(VkImageLayout new_layout, VkDependencyFlags dependency = 0);
-	bool isFeatureSupported(VkFormatFeatureFlags feature) const;
 	bool copyToImage(Image& destination);
 	void copyFromBuffer(VkBuffer buffer, uint32_t base_layer = 0, uint32_t layers = 1);
 	void copyToBuffer(VkBuffer buffer, uint32_t base_layer = 0, uint32_t layers = 1);
+	void transitionLayout(VkImageLayout new_layout, VkDependencyFlags dependency = 0);
+	bool isFeatureSupported(VkFormatFeatureFlags feature) const;
 
 	operator const VkImage& () const { return image; }
 	

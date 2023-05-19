@@ -50,14 +50,6 @@ MyApp::MyApp()
     dep.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
     dep.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
     dep.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    render_pass->addSubpassDependency(dep); 
-    dep.srcSubpass = 0;
-    dep.dstSubpass = 0;
-    dep.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dep.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dep.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
-    dep.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
-    dep.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
     render_pass->addSubpassDependency(dep);
 #endif
     dep.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -158,7 +150,6 @@ void MyApp::onUpdate()
 #if PASSES
             auto& attachment = render_passes[0]->getFramebuffer()->getAttachments()[0];
             attachment->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            //attachment->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
             render_pass->nextSubpass();
 
