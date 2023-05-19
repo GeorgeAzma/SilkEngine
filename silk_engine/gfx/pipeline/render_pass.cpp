@@ -45,7 +45,7 @@ void RenderPass::addInputAttachment(uint32_t index)
     }
 }
 
-void RenderPass::addAttachment(const AttachmentProps& attachment_props)
+size_t RenderPass::addAttachment(const AttachmentProps& attachment_props)
 {
     auto& subpass_info = subpass_infos.back();
     size_t attachment_index = attachment_descriptions.size();
@@ -139,7 +139,10 @@ void RenderPass::addAttachment(const AttachmentProps& attachment_props)
         subpass_info.depth_attachment_reference.layout = attachment_description.finalLayout;
         clear_values.emplace_back(clear_value);
     }
-    attachment_descriptions.emplace_back(std::move(attachment_description));
+    attachment_descriptions.emplace_back(std::move(attachment_description)); 
+    if (Image::isColorFormat(attachment_props.format) && multisampled)
+        return attachment_descriptions.size() - 2;
+    return attachment_descriptions.size() - 1;
 }
 
 void RenderPass::addSubpassDependency(const VkSubpassDependency& dependency)
@@ -217,6 +220,11 @@ void RenderPass::end()
 {
     RenderContext::getCommandBuffer().endRenderPass();
     // TODO: set framebuffer attachment final layouts to what they will be transitioned to, so that they can be used in a descriptor set?
+    for (size_t i = 0; i < framebuffer->getAttachments().size(); ++i)
+    {
+        auto& attachment = *framebuffer->getAttachments()[i];
+        attachment.setLayout(attachment_descriptions[i].finalLayout);
+    }
 }
 
 void RenderPass::resize(const SwapChain& swap_chain)

@@ -11,9 +11,11 @@ public:
 	void updateCapabilities();
 
 	VkSurfaceCapabilitiesKHR getCapabilities() const { return capabilities; }
+	VkSurfaceFormatKHR getSurfaceFormat() const { return format; }
 	std::vector<VkSurfaceFormatKHR> getFormats() const { return formats; }
 	std::vector<VkPresentModeKHR> getPresentModes() const { return present_modes; }
-	VkSurfaceFormatKHR getFormat() const { return format; }
+	VkFormat getFormat() const { return format.format; }
+	VkColorSpaceKHR getColorSpace() const { return format.colorSpace; }
 	int getPresentQueue() const { return present_queue; }
 	bool isSupported() const { return formats.size(); }
 

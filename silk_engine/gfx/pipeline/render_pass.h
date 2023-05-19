@@ -37,7 +37,7 @@ public:
 
 	void addSubpass();
 	void addInputAttachment(uint32_t index);
-	void addAttachment(const AttachmentProps& attachment_props);
+	size_t addAttachment(const AttachmentProps& attachment_props);
 
 	void addSubpassDependency(const VkSubpassDependency& dependency);
 

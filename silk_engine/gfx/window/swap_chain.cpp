@@ -107,8 +107,8 @@ void SwapChain::recreate(bool vsync)
 	ci.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	ci.surface = surface;
 	ci.minImageCount = image_count;
-	ci.imageFormat = surface.getFormat().format;
-	ci.imageColorSpace = surface.getFormat().colorSpace;
+	ci.imageFormat = surface.getFormat();
+	ci.imageColorSpace = surface.getColorSpace();
 	ci.imageExtent = extent;
 	ci.imageArrayLayers = 1; //For stereoscopic 3D apps
 	ci.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -147,7 +147,7 @@ void SwapChain::recreate(bool vsync)
 	this->images.resize(image_count);
 
 	for (size_t i = 0; i < images.size(); ++i)
-		this->images[i] = makeShared<Image>(getWidth(), getHeight(), Image::Format(surface.getFormat().format), images[i]);
+		this->images[i] = makeShared<Image>(getWidth(), getHeight(), Image::Format(surface.getFormat()), images[i]);
 }
 
 SwapChain::~SwapChain()

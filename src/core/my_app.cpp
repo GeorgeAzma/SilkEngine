@@ -14,11 +14,11 @@
 #include "silk_engine/gfx/pipeline/render_pass.h"
 #include "silk_engine/gfx/pipeline/graphics_pipeline.h"
 #include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/pipeline/render_graph.h"
+#include "silk_engine/gfx/pipeline/render_pass.h"
 
 #include "my_app.h"
 #include "my_scene.h"
-
-#define PASSES 1
 
 MyApp::MyApp()
 {
@@ -26,56 +26,41 @@ MyApp::MyApp()
     Input::init();
     RenderContext::init("MyApp");
 
-    window = new Window();
+    window = makeUnique<Window>();
 
-    previous_frame_finished = new Fence(true);
-    swap_chain_image_available = new Semaphore();
-    render_finished = new Semaphore();
+    render_graph = makeUnique<RenderGraph>();
+    auto& geometry = render_graph->addPass("Geometry");
+    auto& color = geometry.addAttachment("Color", { Image::Format::BGRA, RenderContext::getPhysicalDevice().getMaxSampleCount() });
+    auto& depth = geometry.addAttachment("Depth", { Image::Format::DEPTH24_STENCIL, RenderContext::getPhysicalDevice().getMaxSampleCount() });
 
-    shared<RenderPass> render_pass = makeShared<RenderPass>();
-#if PASSES
-    render_pass->addAttachment(AttachmentProps{ Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() });
-#else
-    render_pass->addAttachment(AttachmentProps{ Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, RenderContext::getPhysicalDevice().getMaxSampleCount() });
-#endif
-    render_pass->addAttachment(AttachmentProps{ Image::Format(RenderContext::getPhysicalDevice().getDepthFormat()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, RenderContext::getPhysicalDevice().getMaxSampleCount() });
-    VkSubpassDependency dep{};
-#if PASSES
-    render_pass->addSubpass();
-    render_pass->addInputAttachment(0);
-    render_pass->addAttachment(AttachmentProps{ Image::Format(Window::getActive().getSurface().getFormat().format), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR });
-    dep.srcSubpass = 0;
-    dep.dstSubpass = 1;
-    dep.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dep.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    dep.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    dep.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    render_pass->addSubpassDependency(dep);
-#endif
-    dep.srcSubpass = VK_SUBPASS_EXTERNAL;
-    dep.dstSubpass = 0;
-    dep.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    dep.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    dep.srcAccessMask = VK_ACCESS_NONE;
-    dep.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-    render_pass->addSubpassDependency(dep);
-    render_pass->build();
-    RenderContext::getLogicalDevice().setObjectName(VK_OBJECT_TYPE_RENDER_PASS, VkRenderPass(*render_pass), "Geometry");
-    DebugRenderer::init(*render_pass);
-    render_passes.emplace_back(render_pass);
+    geometry.setRenderCallback([&](const RenderGraph& render_graph)
+        {
+            DebugRenderer::render();
+        });
 
-#if PASSES
+    auto& post_process = render_graph->addPass("Post Process");
+    auto& present_source = post_process.addAttachment("Present Source", {}, { &color });
+    post_process.setRenderCallback([&](const RenderGraph& render_graph)
+        {
+            auto& attachment = render_graph.getResource("Color").getAttachment();
+            attachment->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            //attachment->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            material->set("image", *attachment);
+            material->bind();
+            RenderContext::getCommandBuffer().draw(3);
+        });
+
+    render_graph->addRoot(present_source);
+    render_graph->build();
+    render_graph->print();
+
     shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
-    graphics_pipeline->setShader(makeShared<Shader>("input"))
-       // .setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
-        .setRenderPass(*render_pass)
-        .setSubpass(1)
+    graphics_pipeline->setShader(makeShared<Shader>(std::vector<std::string_view>{ "screen", "image" }))
+        .setRenderPass(*post_process.getRenderPass())
         .build();
     material = makeShared<Material>(graphics_pipeline);
-#endif
-
-    for (auto& render_pass : render_passes)
-        render_pass->resize(Window::getActive().getSwapChain());
+    
+    DebugRenderer::init(*geometry.getRenderPass());
 
     scene = makeShared<MyScene>();
     Scene::setActive(scene.get());
@@ -93,11 +78,7 @@ MyApp::~MyApp()
 
     scene = nullptr;
     DebugRenderer::destroy();
-    delete previous_frame_finished;
-    delete swap_chain_image_available;
-    delete render_finished;
-    render_passes.clear();
-    delete window;
+    window = nullptr;
     RenderContext::destroy();
     GLFW::destroy();
     SK_INFO("Terminated");
@@ -105,8 +86,6 @@ MyApp::~MyApp()
 
 void MyApp::onUpdate()
 {
-    previous_frame_finished->wait();
-    previous_frame_finished->reset();
     DebugRenderer::reset();
 
     if (Scene::getActive())
@@ -115,60 +94,7 @@ void MyApp::onUpdate()
         DebugRenderer::update(Scene::getActive()->getMainCamera());
     }
 
-    if (!Window::getActive().getSwapChain().acquireNextImage(*swap_chain_image_available))
-    {
-        Window::getActive().recreate();
-        for (auto& render_pass : render_passes)
-            render_pass->resize(Window::getActive().getSwapChain());
-    }
-
-    for (uint32_t render_pass_index = 0; render_pass_index < render_passes.size(); ++render_pass_index)
-    {
-        auto& render_pass = render_passes[render_pass_index];
-        uint32_t width = render_pass->getFramebuffer()->getWidth();
-        uint32_t height = render_pass->getFramebuffer()->getHeight();
-
-        VkViewport viewport = {};
-        viewport.x = 0.0f;
-        viewport.y = float(height);
-        viewport.width = float(width);
-        viewport.height = -float(height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        RenderContext::getCommandBuffer().setViewport({ viewport });
-
-        VkRect2D scissor = {};
-        scissor.offset = { 0, 0 };
-        scissor.extent = { width, height };
-        RenderContext::getCommandBuffer().setScissor({ scissor });
-
-        render_pass->begin();
-        if (render_pass_index == 0)
-        {
-            DebugRenderer::render();
-
-#if PASSES
-            auto& attachment = render_passes[0]->getFramebuffer()->getAttachments()[0];
-            attachment->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-            render_pass->nextSubpass();
-
-            material->set("attachment", *attachment);
-            material->bind();
-            RenderContext::getCommandBuffer().draw(3);
-#endif
-        }
-        render_pass->end();
-    }
-    RenderContext::submit(previous_frame_finished, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { *swap_chain_image_available }, { *render_finished });
-
-
-    if (!Window::getActive().getSwapChain().present(*render_finished))
-    {
-        Window::getActive().recreate();
-        for (auto& render_pass : render_passes)
-            render_pass->resize(Window::getActive().getSwapChain());
-    }
+    render_graph->render();
 
     RenderContext::update();
 }

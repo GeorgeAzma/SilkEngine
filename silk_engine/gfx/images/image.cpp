@@ -477,9 +477,6 @@ void Image::generateMipmaps()
 
 void Image::insertMemoryBarrier(const VkImage& image, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkImageAspectFlags aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t layers, uint32_t base_layer)
 {
-	if (old_layout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
-		return;
-
 	VkImageMemoryBarrier barrier{};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 	barrier.srcAccessMask = source_access_mask;	// Source access mask controls actions that have to be finished on the old layout before it will be transitioned to the new layout.
@@ -532,7 +529,7 @@ void Image::insertMemoryBarrier(const VkImage& image, VkImageLayout old_layout, 
 		break;
 	case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
 		src_access = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		src_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		src_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
 		src_access = VK_ACCESS_SHADER_READ_BIT;
@@ -571,7 +568,7 @@ void Image::insertMemoryBarrier(const VkImage& image, VkImageLayout old_layout, 
 		break;
 	case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
 		dst_access |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		dst_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dst_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
 		if (src_access == VK_ACCESS_NONE)
