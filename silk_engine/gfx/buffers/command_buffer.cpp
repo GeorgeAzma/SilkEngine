@@ -451,6 +451,11 @@ void CommandBuffer::waitEvents(const std::vector<VkEvent>& events, VkPipelineSta
 	vkCmdWaitEvents(command_buffer, events.size(), events.data(), source_stage_mask, destination_stage_mask, memory_barriers.size(), memory_barriers.data(), buffer_barriers.size(), buffer_barriers.data(), image_barriers.size(), image_barriers.data());
 }
 
+void CommandBuffer::resetQueryPool(VkQueryPool query_pool, uint32_t first, uint32_t count) const
+{
+	vkCmdResetQueryPool(command_buffer, query_pool, first, count);
+}
+
 void CommandBuffer::blitImage(VkImage source, VkImageLayout source_layout, VkImage destination, VkImageLayout destination_layout, const std::vector<VkImageBlit>& blit_regions, VkFilter filter) const
 {
 	vkCmdBlitImage(command_buffer, source, source_layout, destination, destination_layout, blit_regions.size(), blit_regions.data(), filter);

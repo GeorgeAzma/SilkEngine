@@ -39,7 +39,8 @@ void RenderContext::init(std::string_view app_name)
 			WIDE_LINES,
 			HOST_QUERY_RESET,
 			DRAW_INDIRECT_COUNT,
-			MAINTENANCE4
+			MAINTENANCE4,
+			PIPELINE_STATISTICS_QUERY
 		});
 
 	for (size_t i = 0; i < 3; ++i)

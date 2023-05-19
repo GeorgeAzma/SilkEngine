@@ -8,8 +8,8 @@
 Allocator::Allocator(const LogicalDevice& logical_device)
 {
 	VmaAllocatorCreateInfo allocator_info{};
-	allocator_info.vulkanApiVersion = uint32_t(RenderContext::getInstance().getVulkanVersion());
-	allocator_info.instance = RenderContext::getInstance();
+	allocator_info.vulkanApiVersion = uint32_t(logical_device.getPhysicalDevice().getInstance().getVulkanVersion());
+	allocator_info.instance = logical_device.getPhysicalDevice().getInstance();
 	allocator_info.physicalDevice = logical_device.getPhysicalDevice();
 	allocator_info.device = logical_device;
 	allocator_info.flags = logical_device.hasExtension(VK_EXT_MEMORY_PRIORITY_EXTENSION_NAME) * VMA_ALLOCATOR_CREATE_EXT_MEMORY_PRIORITY_BIT;

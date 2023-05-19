@@ -145,6 +145,13 @@ void LogicalDevice::resetQueryPool(VkQueryPool query_pool, uint32_t first_query,
 	vkResetQueryPool(logical_device, query_pool, first_query, query_count);
 }
 
+std::vector<uint32_t> LogicalDevice::getQueryPoolResults(VkQueryPool query_pool, uint32_t first_query, uint32_t query_count, size_t data_size, VkDeviceSize stride, VkQueryResultFlags flags) const
+{
+	std::vector<uint32_t> data(data_size);
+	vkGetQueryPoolResults(logical_device, query_pool, first_query, query_count, data_size, data.data(), stride, flags);
+	return data;
+}
+
 std::vector<VkCommandBuffer> LogicalDevice::allocateCommandBuffers(const VkCommandBufferAllocateInfo& allocate_info) const
 {
 	std::vector<VkCommandBuffer> command_buffers(allocate_info.commandBufferCount, nullptr);

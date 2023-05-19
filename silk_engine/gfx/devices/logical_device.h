@@ -22,13 +22,7 @@ public:
 	VkQueryPool createQueryPool(const VkQueryPoolCreateInfo& ci) const;
 	void destroyQueryPool(VkQueryPool query_pool) const;
 	void resetQueryPool(VkQueryPool query_pool, uint32_t first_query = 0, uint32_t query_count = 1) const;
-	template<typename T>
-	auto getQueryPoolResults(VkQueryPool query_pool, uint32_t first_query, uint32_t query_count, size_t data_size, VkDeviceSize stride, VkQueryResultFlags flags) const
-	{
-		T data{};
-		vkGetQueryPoolResults(logical_device, query_pool, first_query, query_count, data_size, &data, stride, flags);
-		return data;
-	}
+	std::vector<uint32_t> getQueryPoolResults(VkQueryPool query_pool, uint32_t first_query, uint32_t query_count, size_t data_size, VkDeviceSize stride, VkQueryResultFlags flags) const;
 	std::vector<VkCommandBuffer> allocateCommandBuffers(const VkCommandBufferAllocateInfo& allocate_info) const;
 	void freeCommandBuffers(VkCommandPool command_pool, const std::vector<VkCommandBuffer>& command_buffers) const;
 	VkFence createFence(bool signaled = false) const;

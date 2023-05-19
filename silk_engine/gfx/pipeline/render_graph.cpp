@@ -7,6 +7,7 @@
 #include "gfx/fence.h"
 #include "gfx/semaphore.h"
 #include "gfx/devices/logical_device.h"
+#include "gfx/allocators/query_pool.h"
 
 RenderGraph::Resource& RenderGraph::Pass::addAttachment(const char* name, const AttachmentInfo& info, const std::vector<const Resource*>& inputs)
 {
@@ -94,8 +95,6 @@ void RenderGraph::build()
 				props.store_operation = VK_ATTACHMENT_STORE_OP_STORE; // TODO:
 				props.stencil_load_operation = VK_ATTACHMENT_LOAD_OP_DONT_CARE; // TODO:
 				props.stencil_store_operation = VK_ATTACHMENT_STORE_OP_DONT_CARE; // TODO:
-				//props.initial_layout = VK_IMAGE_LAYOUT_UNDEFINED; // TODO:
-				//props.preserve = false; // TODO:
 				resource.render_pass_attachment_index = pass->render_pass->addAttachment(props);
 			}
 				break;
@@ -159,7 +158,10 @@ void RenderGraph::render()
 		Window::getActive().recreate();
 		resize(Window::getActive().getSwapChain());
 	}
-	static Semaphore s;
+
+	//QueryPool query(VK_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT | VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT | VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT);
+	//query.begin();
+
 	for (uint32_t pass_index = 0; pass_index < sorted_passes.size(); ++pass_index)
 	{
 		
@@ -187,13 +189,23 @@ void RenderGraph::render()
 		render_pass.end();
 		
 		if (pass_index < sorted_passes.size() - 1)
-		{
 			for (size_t read : passes[pass_index + 1]->reads)
 				resources[read]->getAttachment()->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		}
 	}
 
+	query.end();
+
 	RenderContext::submit(previous_frame_finished.get(), { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { *swap_chain_image_available }, { *render_finished });
+
+	//std::vector<uint32_t> results = query.getResults(0, true);
+	//static Cooldown c = Cooldown(1.0f);
+	//if (c())
+	//{
+	//	SK_INFO("----------------------------------");
+	//	SK_INFO("Vertex Invocations: {}", results[0]);
+	//	SK_INFO("Fragment Invocations: {}", results[1]);
+	//	SK_INFO("Compute Invocations: {}", results[2]);
+	//}
 
 	if (!Window::getActive().getSwapChain().present(*render_finished))
 	{

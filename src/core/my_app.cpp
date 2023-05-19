@@ -43,8 +43,6 @@ MyApp::MyApp()
     post_process.setRenderCallback([&](const RenderGraph& render_graph)
         {
             auto& attachment = render_graph.getResource("Color").getAttachment();
-            attachment->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            //attachment->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             material->set("image", *attachment);
             material->bind();
             RenderContext::getCommandBuffer().draw(3);

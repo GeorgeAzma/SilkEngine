@@ -85,6 +85,7 @@ public:
 	void setEvent(VkEvent event, VkPipelineStageFlags stage_mask) const; 
 	void resetEvent(VkEvent event, VkPipelineStageFlags stage_mask) const;
 	void waitEvents(const std::vector<VkEvent>& events, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDependencyFlags dependency, const std::vector<VkMemoryBarrier>& memory_barriers, const std::vector<VkBufferMemoryBarrier>& buffer_barriers, const std::vector<VkImageMemoryBarrier>& image_barriers) const;
+	void resetQueryPool(VkQueryPool query_pool, uint32_t first, uint32_t count) const;
 	void blitImage(VkImage source, VkImageLayout source_layout, VkImage destination, VkImageLayout destination_layout, const std::vector<VkImageBlit>& blit_regions, VkFilter filter = VK_FILTER_LINEAR) const;
 	void copyBufferToImage(VkBuffer buffer, VkImage image, VkImageLayout image_layout, const std::vector<VkBufferImageCopy>& copy_regions) const;
 	void copyImageToBuffer(VkImage image, VkImageLayout image_layout, VkBuffer buffer, const std::vector<VkBufferImageCopy>& copy_regions) const;
