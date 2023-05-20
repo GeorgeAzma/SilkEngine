@@ -12,7 +12,6 @@
 // TODO:
 // Handle preserved attachments
 // Handle different stencil load/store operations from load/store operations
-// Handle clear values and sets load operation to be always CLEAR
 // Handle subpasses
 // Handle subpass dependencies
 // Handle buffers
@@ -80,35 +79,12 @@ void RenderGraph::build()
 	}
 	// Reverse to get submission ordered passes
 	std::ranges::reverse(sorted_passes);
-	/*
-	
-	Render Graph:
-	Resources:
-		Attachment:
-			LOAD_OP:
-				DONT_CARE
-				LOAD
-				CLEAR
-			STORE_OP:
-				DONT_CARE
-				STORE
-			FINAL_LAYOUT:
-				DEPTH
-				STENCIL
-				DEPTH_STENCIL
-				COLOR
-				PRESENT_SRC
-			STENCIL_LOAD_OP
-			STENCIL_STORE_OP
-		Buffer:
-	Passes:
-		Render Pass:
-			Subpasses:
-		Compute Pass:
-	*/
+
 	for (Pass* pass : sorted_passes)
 	{
 		pass->render_pass = makeShared<RenderPass>();
+		
+		// TODO: handle subpass dependencies, remove this hardcode
 		VkSubpassDependency dep{};
 		dep.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dep.dstSubpass = 0;
@@ -118,6 +94,7 @@ void RenderGraph::build()
 		dep.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 		dep.dependencyFlags = 0;
 		pass->render_pass->addSubpassDependency(dep);
+
 		for (size_t write : pass->writes)
 		{
 			Resource& resource = *resources[write];
@@ -138,12 +115,13 @@ void RenderGraph::build()
 				else
 					props.final_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 				props.samples = resource.attachment_samples;
-				props.load_operation = resource.attachment_clear_value.has_value() ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE; // TODO:
-				props.store_operation = VK_ATTACHMENT_STORE_OP_STORE; // TODO:
+				props.load_operation = resource.attachment_clear_value.has_value() ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE; // TODO: LOAD_OP_LOAD for RMW
+				props.store_operation = VK_ATTACHMENT_STORE_OP_STORE; // TODO: In case of depth attachments this is unnecessary, unless it's read from subsequent passes
 				resource.render_pass_attachment_index = pass->render_pass->addAttachment(props);
 			}
 				break;
 			case Resource::Type::BUFFER:
+				// TODO:
 				break;
 			}
 		}
@@ -177,8 +155,9 @@ void RenderGraph::build()
 		case Resource::Type::ATTACHMENT:
 		RenderContext::getLogicalDevice().setObjectName(VK_OBJECT_TYPE_IMAGE, VkImage(*resource->getAttachment()), resource->name);
 			break;
-		case Resource::Type::BUFFER:
-			// RenderContext::getLogicalDevice().setObjectName(VK_OBJECT_TYPE_BUFFER, VkBuffer(*resource->getAttachment()), resource->name); // TODO:
+		case Resource::Type::BUFFER: 
+			// TODO:
+			// RenderContext::getLogicalDevice().setObjectName(VK_OBJECT_TYPE_BUFFER, VkBuffer(*resource->getAttachment()), resource->name);
 			break;
 		}
 		resource_map[resource->name] = resource.get();
@@ -190,10 +169,18 @@ void RenderGraph::print() const
 	SK_TRACE("|-------Render-Graph-------|");
 	for (const Pass* pass : sorted_passes)
 	{
-		SK_TRACE("\t{}({}):", pass->name, pass->index);
+		std::string reads = "";
+		for (const size_t& read : pass->reads)
+		{
+			reads += std::to_string(read);
+			if (&read != &pass->reads.back())
+				reads += ", ";
+		}
+		SK_TRACE("\t{}({}){}:", pass->name, pass->index, reads.size() ? std::format("[{}]", reads) : "");
 		for (size_t write : pass->writes)
 		{
-			SK_TRACE("\t\t{}({})", resources[write]->name, resources[write]->index);
+			const Resource& resource = *resources[write];
+			SK_TRACE("\t\t{}({})", resource.name, resource.index);
 		}
 	}
 	SK_TRACE("|--------------------------|");
