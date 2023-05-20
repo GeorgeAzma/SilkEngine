@@ -16,7 +16,7 @@
 Cooldown c(100ms);
 shared<Mesh> mesh;
 shared<Mesh> mesh2;
-std::vector<shared<DebugRenderer::RenderedInstance>> instances;
+std::vector<shared<DebugRenderer::Renderable>> instances;
 
 void MyScene::onStart()
 {

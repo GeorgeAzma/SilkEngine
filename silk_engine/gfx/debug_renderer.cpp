@@ -27,7 +27,7 @@ shared<Image> DebugRenderer::white_image = nullptr;
 shared<GraphicsPipeline> DebugRenderer::graphics_pipeline_2D = nullptr;
 shared<GraphicsPipeline> DebugRenderer::graphics_pipeline_3D = nullptr;
 
-void DebugRenderer::InstancedRenderContextBase::InstanceBatch::bind()
+void DebugRenderer::InstancedRendererBase::InstanceGroup::bind()
 {
 	material->set("GlobalUniform", *global_uniform_buffer);
 	material->set("images", instance_images.getDescriptorImageInfos());
@@ -36,12 +36,12 @@ void DebugRenderer::InstancedRenderContextBase::InstanceBatch::bind()
 	instance_buffer->bindVertex(1);
 }
 
-void DebugRenderer::InstancedRenderContextBase::init()
+void DebugRenderer::InstancedRendererBase::init()
 {
 	indirect_buffer = makeShared<Buffer>(256 * sizeof(VkDrawIndexedIndirectCommand), Buffer::INDIRECT, Allocation::Props{ Allocation::MAPPED | Allocation::RANDOM_ACCESS });
 }
 
-void DebugRenderer::InstancedRenderContextBase::update()
+void DebugRenderer::InstancedRendererBase::update()
 {
 	bool any_needs_update = false;
 	draw_commands.resize(instance_batches.size());
@@ -69,7 +69,7 @@ void DebugRenderer::InstancedRenderContextBase::update()
 		indirect_buffer->resize(indirect_buffer->getSize() * 2);
 }
 
-void DebugRenderer::InstancedRenderContextBase::render()
+void DebugRenderer::InstancedRendererBase::render()
 {
 	uint32_t draw_index = 0;
 	for (auto& instance_batch : instance_batches)
@@ -80,15 +80,16 @@ void DebugRenderer::InstancedRenderContextBase::render()
 	}
 }
 
-DebugRenderer::RenderedInstance DebugRenderer::InstancedRenderContextBase::createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
+DebugRenderer::Renderable DebugRenderer::InstancedRendererBase::createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
 {
+	size_t hash = size_t(mesh.get()) ^ size_t(pipeline.get());
 	size_t instance_batch_index = instance_batches.size();
 	size_t instance_data_index = 0;
 	bool need_new_instance_batch = true;
 	for (size_t i = 0; i < instance_batches.size(); ++i)
 	{
 		auto& instance_batch = instance_batches[i];
-		if (instance_batch.mesh == mesh && instance_batch.material->getPipeline() == pipeline && instance_batch.instance_images.available() >= images.size())
+		if (instance_batch.hash == hash && instance_batch.instance_images.available() >= images.size())
 		{
 			instance_batch_index = i;
 			instance_data_index = instance_batch.instance_data.size();
@@ -106,6 +107,7 @@ DebugRenderer::RenderedInstance DebugRenderer::InstancedRenderContextBase::creat
 		new_batch.material = makeShared<Material>(pipeline);
 		new_batch.instance_buffer = makeShared<Buffer>(65536, Buffer::VERTEX, Allocation::Props{ Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
 		new_batch.instance_images.add({ white_image });
+		new_batch.hash = hash;
 	}
 
 	uint32_t image_index = 0;
@@ -116,20 +118,20 @@ DebugRenderer::RenderedInstance DebugRenderer::InstancedRenderContextBase::creat
 		memcpy(&instance_batches[instance_batch_index].instance_data[instance_data_index + image_index_offset], &image_index, sizeof(uint32_t));
 	}
 
-	return RenderedInstance(instance_data_index, instance_batch_index, image_index, images.size());
+	return Renderable(instance_data_index, instance_batch_index, image_index, images.size());
 }
 
-shared<DebugRenderer::RenderedInstance> DebugRenderer::InstancedRenderContext::createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
+shared<DebugRenderer::Renderable> DebugRenderer::InstancedRenderer::createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
 {
-	RenderedInstance instance = DebugRenderer::InstancedRenderContextBase::createInstance(mesh, instance_data, instance_data_size, image_index_offset, pipeline, images);
+	Renderable instance = DebugRenderer::InstancedRendererBase::createInstance(mesh, instance_data, instance_data_size, image_index_offset, pipeline, images);
 	if (instance.batch_index >= instances.size())
 		instances.emplace_back();
 	auto& instance_vec = instances[instance.batch_index];
-	instance_vec.emplace_back(makeShared<RenderedInstance>(std::move(instance)));
+	instance_vec.emplace_back(makeShared<Renderable>(std::move(instance)));
 	return instance_vec.back();
 }
 
-void DebugRenderer::InstancedRenderContext::destroyInstance(const RenderedInstance& instance)
+void DebugRenderer::InstancedRenderer::destroyInstance(const Renderable& instance)
 {
 	auto& instance_batch = instance_batches[instance.batch_index];
 	if (instance_batch.instance_data.empty())
@@ -158,9 +160,9 @@ void DebugRenderer::InstancedRenderContext::destroyInstance(const RenderedInstan
 	instances[instance.batch_index].pop_back();
 }
 
-void DebugRenderer::ImmediateInstancedRenderContext::createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
+void DebugRenderer::ImmediateInstancedRenderer::createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
 {
-	RenderedInstance instance = DebugRenderer::InstancedRenderContextBase::createInstance(mesh, instance_data, instance_data_size, image_index_offset, pipeline, images);
+	Renderable instance = DebugRenderer::InstancedRendererBase::createInstance(mesh, instance_data, instance_data_size, image_index_offset, pipeline, images);
 	if (instance.batch_index >= instances.size())
 		instances.emplace_back();
 	auto& instance_vec = instances[instance.batch_index];
