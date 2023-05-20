@@ -16,7 +16,7 @@ public:
 	std::vector<VkPresentModeKHR> getPresentModes() const { return present_modes; }
 	VkFormat getFormat() const { return format.format; }
 	VkColorSpaceKHR getColorSpace() const { return format.colorSpace; }
-	int getPresentQueue() const { return present_queue; }
+	uint32_t getPresentQueue() const { return present_queue; }
 	bool isSupported() const { return formats.size(); }
 
 	operator const VkSurfaceKHR& () const { return surface; }
@@ -26,6 +26,6 @@ private:
 	VkSurfaceCapabilitiesKHR capabilities{};
 	std::vector<VkSurfaceFormatKHR> formats{};
 	std::vector<VkPresentModeKHR> present_modes{};
-	int present_queue = -1;
+	uint32_t present_queue = std::numeric_limits<uint32_t>::max();
 	VkSurfaceFormatKHR format{};
 };

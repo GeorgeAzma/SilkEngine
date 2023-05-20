@@ -41,7 +41,7 @@ PhysicalDevice::PhysicalDevice(const Instance& instance, VkPhysicalDevice physic
 	// Try to find a queue family index that supports compute but not graphics
 	for (uint32_t i = 0; i < queue_family_properties.size(); i++)
 	{
-		if ((queue_family_properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT) && ((queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0))
+		if (queue_family_properties[i].queueFlags == VK_QUEUE_COMPUTE_BIT)
 		{
 			compute_queue = i;
 			queue_family_indices.emplace_back(i);
@@ -52,7 +52,7 @@ PhysicalDevice::PhysicalDevice(const Instance& instance, VkPhysicalDevice physic
 	// Try to find a queue family index that supports transfer but not graphics
 	for (uint32_t i = 0; i < queue_family_properties.size(); i++)
 	{
-		if ((queue_family_properties[i].queueFlags & VK_QUEUE_TRANSFER_BIT) && ((queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0) && ((queue_family_properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT) == 0))
+		if (queue_family_properties[i].queueFlags == VK_QUEUE_TRANSFER_BIT)
 		{
 			transfer_queue = i;
 			queue_family_indices.emplace_back(i);
@@ -61,7 +61,7 @@ PhysicalDevice::PhysicalDevice(const Instance& instance, VkPhysicalDevice physic
 	}
 
 	// Try to find a graphics queue family
-	for (size_t i = 0; i < queue_family_properties.size(); ++i)
+	for (uint32_t i = 0; i < queue_family_properties.size(); ++i)
 	{
 		if (queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
 		{
@@ -72,9 +72,9 @@ PhysicalDevice::PhysicalDevice(const Instance& instance, VkPhysicalDevice physic
 	}
 
 	// Try to find compute/graphics combined queue family, if compute only queue family does not exist
-	if (compute_queue == -1)
+	if (compute_queue == std::numeric_limits<uint32_t>::max())
 	{
-		for (size_t i = 0; i < queue_family_properties.size(); ++i)
+		for (uint32_t i = 0; i < queue_family_properties.size(); ++i)
 		{
 			if (queue_family_properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT)
 			{
@@ -86,9 +86,9 @@ PhysicalDevice::PhysicalDevice(const Instance& instance, VkPhysicalDevice physic
 	}
 
 	// Try to find compute/graphics combined queue family, if compute only queue family does not exist
-	if (transfer_queue == -1)
+	if (transfer_queue == std::numeric_limits<uint32_t>::max())
 	{
-		for (size_t i = 0; i < queue_family_properties.size(); ++i)
+		for (uint32_t i = 0; i < queue_family_properties.size(); ++i)
 		{
 			if (queue_family_properties[i].queueFlags & VK_QUEUE_TRANSFER_BIT)
 			{

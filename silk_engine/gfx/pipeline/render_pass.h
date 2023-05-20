@@ -12,10 +12,9 @@ struct AttachmentProps
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 
 	VkAttachmentLoadOp load_operation = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	std::optional<VkClearValue> clear_value = std::nullopt;
 	VkAttachmentStoreOp store_operation = VK_ATTACHMENT_STORE_OP_STORE;
-	VkAttachmentLoadOp stencil_load_operation = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	VkAttachmentStoreOp stencil_store_operation = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	VkAttachmentLoadOp stencil_load_operation = VK_ATTACHMENT_LOAD_OP_MAX_ENUM; // VK_ATTACHMENT_LOAD_OP_MAX_ENUM sets stencil load_operation to same thing as load_operation if format is a stencil/depth_stencil format
+	VkAttachmentStoreOp stencil_store_operation = VK_ATTACHMENT_STORE_OP_MAX_ENUM; // VK_ATTACHMENT_STORE_OP_MAX_ENUM sets stencil store_operation to same thing as store_operation if format is a stencil/depth_stencil format
 	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 	bool preserve = false;
 };
@@ -48,6 +47,7 @@ public:
 	void end();
 
 	void setViewport(const ivec2& viewport) { this->viewport = viewport; }
+	void setClearValue(size_t index, const VkClearValue& clear_value) { clear_values[index] = clear_value; }
 	void resize(const SwapChain& swap_chain);
 
 	bool isInputAttachment(uint32_t attachment) const { return attachments_used_as_inputs.contains(attachment); }

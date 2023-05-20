@@ -356,11 +356,11 @@ void Image::copyToBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers)
 	transitionLayout(old_layout);
 }
 
-void Image::transitionLayout(VkImageLayout new_layout, VkDependencyFlags dependency)
+void Image::transitionLayout(VkImageLayout new_layout, VkDependencyFlags dependency, uint32_t mip_levels, uint32_t base_mip_level, uint32_t layers, uint32_t base_layer)
 {
 	if (layout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
 		return;
-	insertMemoryBarrier(image, layout, new_layout, getFormatVulkanAspectFlags(props.format), mip_levels, dependency, props.layers, 0);
+	insertMemoryBarrier(image, layout, new_layout, dependency, getFormatVulkanAspectFlags(props.format), mip_levels ? mip_levels : this->mip_levels, base_mip_level, layers ? layers : props.layers, base_layer);
 	layout = new_layout;
 }
 
@@ -475,7 +475,7 @@ void Image::generateMipmaps()
 	RenderContext::execute();
 }
 
-void Image::insertMemoryBarrier(const VkImage& image, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkImageAspectFlags aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t layers, uint32_t base_layer)
+void Image::insertMemoryBarrier(const VkImage& image, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDependencyFlags dependency, VkImageAspectFlags aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t layers, uint32_t base_layer)
 {
 	VkImageMemoryBarrier barrier{};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -491,10 +491,10 @@ void Image::insertMemoryBarrier(const VkImage& image, VkAccessFlags source_acces
 	barrier.subresourceRange.levelCount = mip_levels;
 	barrier.subresourceRange.baseArrayLayer = base_layer;
 	barrier.subresourceRange.layerCount = layers;
-	RenderContext::getCommandBuffer().pipelineBarrier(source_stage_mask, destination_stage_mask, VkDependencyFlags(0), {}, {}, { barrier });
+	RenderContext::getCommandBuffer().pipelineBarrier(source_stage_mask, destination_stage_mask, dependency, {}, {}, { barrier });
 }
 
-void Image::insertMemoryBarrier(const VkImage& image, VkImageLayout old_layout, VkImageLayout new_layout, VkImageAspectFlags aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t layers, uint32_t base_layer)
+void Image::insertMemoryBarrier(const VkImage& image, VkImageLayout old_layout, VkImageLayout new_layout, VkDependencyFlags dependency, VkImageAspectFlags aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t layers, uint32_t base_layer)
 {
 	if (old_layout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
 		return;
@@ -580,7 +580,7 @@ void Image::insertMemoryBarrier(const VkImage& image, VkImageLayout old_layout, 
 		dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 		break;
 	}
-	insertMemoryBarrier(image, src_access, dst_access, old_layout, new_layout, src_stage, dst_stage, aspect, mip_levels, base_mip_level, layers, base_layer);
+	insertMemoryBarrier(image, src_access, dst_access, old_layout, new_layout, src_stage, dst_stage, dependency, aspect, mip_levels, base_mip_level, layers, base_layer);
 }
 
 shared<Image> Image::add(std::string_view name, const shared<Image>& image)

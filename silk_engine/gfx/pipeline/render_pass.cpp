@@ -86,19 +86,21 @@ size_t RenderPass::addAttachment(const AttachmentProps& attachment_props)
     if (attachment_description.loadOp != VK_ATTACHMENT_LOAD_OP_LOAD)
         attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-    static constexpr VkClearColorValue default_color_clear_value { 0.0f, 0.0f, 0.0f, 0.0f };
-    static constexpr VkClearDepthStencilValue default_depth_stencil_clear_value { 1.0f, 0 };
+    if (attachment_description.stencilLoadOp == VK_ATTACHMENT_LOAD_OP_MAX_ENUM)
+        attachment_description.stencilLoadOp = attachment_description.loadOp;
+
+    if (attachment_description.stencilStoreOp == VK_ATTACHMENT_STORE_OP_MAX_ENUM)
+        attachment_description.stencilStoreOp = attachment_description.storeOp;
+
     VkClearValue clear_value{};
     bool cleared = attachment_description.loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR || attachment_description.stencilLoadOp == VK_ATTACHMENT_LOAD_OP_CLEAR;
     if (cleared)
     {
         any_cleared = true;
-        if (attachment_props.clear_value)
-            clear_value = *attachment_props.clear_value;
-        else if (Image::isColorFormat(attachment_props.format))
-            clear_value.color = default_color_clear_value;
+        if (Image::isColorFormat(attachment_props.format))
+            clear_value.color = { 0.0f, 0.0f, 0.0f, 0.0f };
         else
-            clear_value.depthStencil = default_depth_stencil_clear_value;
+            clear_value.depthStencil = { 1.0f, 0 };
     }
 
     if (Image::isColorFormat(attachment_props.format))

@@ -16,7 +16,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugMessenger::debugCallback(
     if (offset != std::string::npos)
         message = message.substr(offset + delimiter.size());
     
-    if (size_t off = message.find("https://", offset != std::string::npos ? offset : 0); off != std::string::npos)
+    if (size_t off = message.find("(https://", offset != std::string::npos ? offset : 0); off != std::string::npos)
         message = message.substr(0, off);
 
     switch (messageSeverity)

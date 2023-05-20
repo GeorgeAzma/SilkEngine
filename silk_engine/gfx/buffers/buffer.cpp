@@ -90,9 +90,15 @@ void Buffer::getData(void* data, VkDeviceSize size) const
 	}
 }
 
+void Buffer::insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDeviceSize offset, VkDeviceSize size) const
+{
+	insertMemoryBarrier(buffer, source_access_mask, destination_access_mask, source_stage_mask, destination_stage_mask, offset, size ? size : ci.size);
+}
+
 void Buffer::insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDeviceSize offset, VkDeviceSize size)
 {
 	VkBufferMemoryBarrier barrier = {};
+	barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
 	barrier.srcAccessMask = source_access_mask;
 	barrier.dstAccessMask = destination_access_mask;
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;

@@ -36,7 +36,7 @@ Surface::Surface(const Window& window)
 
 	// Find queue family that supports both present and graphics queue, if there is none, then find queue family with only present queue
 	const auto& queue_family_props = RenderContext::getPhysicalDevice().getQueueFamilyProperties();
-	for (size_t i = 0; i < queue_family_props.size(); ++i)
+	for (uint32_t i = 0; i < queue_family_props.size(); ++i)
 	{
 		if (RenderContext::getPhysicalDevice().getSurfaceSupport(i, surface))
 		{

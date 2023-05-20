@@ -33,13 +33,15 @@ public:
 	void drawIndirect(uint32_t index);
 	void drawIndexedIndirect(uint32_t index);
 
-	bool setData(const void* data, VkDeviceSize size = 0, VkDeviceSize offset = 0);
-	void getData(void* data, VkDeviceSize size = 0) const;
-
 	VkDeviceSize getSize() const { return ci.size; }
 	const Allocation& getAllocation() const { return allocation; }
 	VkDescriptorBufferInfo getDescriptorInfo() const { return { buffer, 0, ci.size }; }
 	operator const VkBuffer& () const { return buffer; }
+
+	bool setData(const void* data, VkDeviceSize size = 0, VkDeviceSize offset = 0);
+	void getData(void* data, VkDeviceSize size = 0) const;
+
+	void insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDeviceSize offset = 0, VkDeviceSize size = 0) const;
 
 public:
 	static void copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDeviceSize dst_offset = 0, VkDeviceSize src_offset = 0);

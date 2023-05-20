@@ -91,8 +91,12 @@ public:
 	void resize(const SwapChain& swap_chain);
 	void render();
 
-	const shared<RenderPass>& getRenderPass(std::string_view name) const { return render_pass_map.at(name); }
+	void setClearValue(const char* attachment_name, const VkClearValue& clear_value);
+
+	const Pass& getPass(std::string_view name) const { return *pass_map.at(name); }
+	const shared<RenderPass>& getRenderPass(std::string_view name) const { return pass_map.at(name)->render_pass; }
 	const Resource& getResource(std::string_view name) const { return *resource_map.at(name); }
+	const shared<Image>& getAttachment(std::string_view name) const { return resource_map.at(name)->getAttachment(); }
 
 private:
 	void buildNode(size_t resource_index);
@@ -102,7 +106,7 @@ private:
 	std::vector<Pass*> sorted_passes;
 	std::vector<const Resource*> roots;
 	std::vector<unique<Resource>> resources;
-	std::unordered_map<std::string_view, shared<RenderPass>> render_pass_map;
+	std::unordered_map<std::string_view, const Pass*> pass_map;
 	std::unordered_map<std::string_view, const Resource*> resource_map;
 	unique<Fence> previous_frame_finished = nullptr;
 	unique<Semaphore> swap_chain_image_available = nullptr;

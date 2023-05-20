@@ -9,6 +9,18 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/allocators/query_pool.h"
 
+// TODO:
+// Handle preserved attachments
+// Handle different stencil load/store operations from load/store operations
+// Handle clear values and sets load operation to be always CLEAR
+// Handle subpasses
+// Handle subpass dependencies
+// Handle buffers
+// Handle compute pases
+// Handle pipeline barriers well
+// Handle multiple outputs(roots) including buffer outputs
+// Handle RMW which should have LOAD_OP_LOAD and STORE_OP_STORE
+
 RenderGraph::Resource& RenderGraph::Pass::addAttachment(const char* name, const AttachmentInfo& info, const std::vector<const Resource*>& inputs)
 {
 	size_t resource_index = render_graph->resources.size();
@@ -57,7 +69,32 @@ void RenderGraph::build()
 	}
 	// Reverse to get submission ordered passes
 	std::ranges::reverse(sorted_passes);
-
+	/*
+	
+	Render Graph:
+	Resources:
+		Attachment:
+			LOAD_OP:
+				DONT_CARE
+				LOAD
+				CLEAR
+			STORE_OP:
+				DONT_CARE
+				STORE
+			FINAL_LAYOUT:
+				DEPTH
+				STENCIL
+				DEPTH_STENCIL
+				COLOR
+				PRESENT_SRC
+			STENCIL_LOAD_OP
+			STENCIL_STORE_OP
+		Buffer:
+	Passes:
+		Render Pass:
+			Subpasses:
+		Compute Pass:
+	*/
 	for (Pass* pass : sorted_passes)
 	{
 		pass->render_pass = makeShared<RenderPass>();
@@ -91,10 +128,7 @@ void RenderGraph::build()
 					props.final_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 				props.samples = resource.attachment_info.samples;
 				props.load_operation = VK_ATTACHMENT_LOAD_OP_CLEAR; // TODO:
-				//props.clear_value = std::nullopt; // TODO:
 				props.store_operation = VK_ATTACHMENT_STORE_OP_STORE; // TODO:
-				props.stencil_load_operation = VK_ATTACHMENT_LOAD_OP_DONT_CARE; // TODO:
-				props.stencil_store_operation = VK_ATTACHMENT_STORE_OP_DONT_CARE; // TODO:
 				resource.render_pass_attachment_index = pass->render_pass->addAttachment(props);
 			}
 				break;
@@ -110,7 +144,7 @@ void RenderGraph::build()
 	for (Pass* pass : sorted_passes)
 	{
 		RenderContext::getLogicalDevice().setObjectName(VK_OBJECT_TYPE_RENDER_PASS, VkRenderPass(*pass->render_pass), pass->name);
-		render_pass_map[pass->name] = pass->render_pass;
+		pass_map[pass->name] = pass;
 	}
 
 	for (auto& resource : resources)
@@ -190,10 +224,21 @@ void RenderGraph::render()
 		
 		if (pass_index < sorted_passes.size() - 1)
 			for (size_t read : passes[pass_index + 1]->reads)
-				resources[read]->getAttachment()->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			{
+				const Resource& resource = *resources[read];
+				switch (resource.type)
+				{
+				case Resource::Type::ATTACHMENT:
+					resource.getAttachment()->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+					break;
+				case Resource::Type::BUFFER:
+					// TODO:
+					break;
+				}
+			}
 	}
 
-	query.end();
+	//query.end();
 
 	RenderContext::submit(previous_frame_finished.get(), { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { *swap_chain_image_available }, { *render_finished });
 
@@ -212,6 +257,12 @@ void RenderGraph::render()
 		Window::getActive().recreate();
 		resize(Window::getActive().getSwapChain());
 	}
+}
+
+void RenderGraph::setClearValue(const char* attachment_name, const VkClearValue& clear_value)
+{
+	const Resource& attachment = *resource_map.at(attachment_name);
+	attachment.pass->getRenderPass()->setClearValue(attachment.render_pass_attachment_index, clear_value);
 }
 
 void RenderGraph::buildNode(size_t resource_index)

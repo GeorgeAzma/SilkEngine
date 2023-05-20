@@ -239,6 +239,7 @@ private:
 	static inline InstancedRenderContext render_context;
 	static inline ImmediateInstancedRenderContext immediate_render_context;
 	static shared<Buffer> global_uniform_buffer;
+	static inline GlobalUniformData global_uniform_data{};
 	static std::array<Light, MAX_LIGHTS> lights;
 	static shared<Image> white_image;
 	static shared<GraphicsPipeline> graphics_pipeline_2D;

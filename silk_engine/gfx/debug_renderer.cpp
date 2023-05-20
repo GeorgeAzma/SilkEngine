@@ -19,6 +19,7 @@
 #include "ui/font.h"
 #include "buffers/buffer.h"
 #include "render_context.h"
+#include "gfx/devices/logical_device.h"
 
 shared<Buffer> DebugRenderer::global_uniform_buffer = nullptr;
 std::array<Light, DebugRenderer::MAX_LIGHTS> DebugRenderer::lights{};
@@ -51,6 +52,8 @@ void DebugRenderer::InstancedRenderContextBase::update()
 		if (instance_batch.needs_update && instance_batch.instance_count)
 		{
 			instance_batch.needs_update = false;
+			if (!any_needs_update)
+				RenderContext::getLogicalDevice().wait();
 			any_needs_update = true;
 			draw_commands[i].instanceCount = instance_batch.instance_count;
 			draw_commands[i].indexCount = instance_batch.mesh->getIndexCount();
@@ -255,7 +258,6 @@ void DebugRenderer::update(Camera* camera)
 	stats = {};
 
 	// Update uniforms
-	GlobalUniformData global_uniform_data{};
 	if (camera)
 	{
 		global_uniform_data.projection_view = camera->projection_view;

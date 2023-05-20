@@ -42,7 +42,7 @@ MyApp::MyApp()
     auto& present_source = post_process.addAttachment("Present Source", {}, { &color });
     post_process.setRenderCallback([&](const RenderGraph& render_graph)
         {
-            auto& attachment = render_graph.getResource("Color").getAttachment();
+            auto& attachment = render_graph.getAttachment("Color");
             material->set("image", *attachment);
             material->bind();
             RenderContext::getCommandBuffer().draw(3);

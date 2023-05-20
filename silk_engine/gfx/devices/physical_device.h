@@ -186,9 +186,9 @@ private:
 	std::vector<VkQueueFamilyProperties> queue_family_properties{};
 	std::vector<uint32_t> queue_family_indices{}; // Sorted
 	std::unordered_map<std::string, uint32_t> supported_extensions{}; // extension name | extension spec version
-	uint32_t graphics_queue = 0;
-	uint32_t compute_queue = 0;
-	uint32_t transfer_queue = 0;
+	uint32_t graphics_queue = std::numeric_limits<uint32_t>::max();
+	uint32_t compute_queue = std::numeric_limits<uint32_t>::max();
+	uint32_t transfer_queue = std::numeric_limits<uint32_t>::max();
 	VkPhysicalDeviceProperties properties{};
 	VkPhysicalDeviceMemoryProperties memory_properties{};
 	VkPhysicalDeviceFeatures features{};

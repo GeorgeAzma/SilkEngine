@@ -89,16 +89,24 @@ namespace math
 	}
 
 	template<typename T, enum qualifier Q = qualifier::packed_highp>
-	inline bool isPointInRectangle(const vec<2, T, Q>& p, const vec<4, T, Q> rectangle)
+	inline bool isPointInRectangle(const vec<2, T, Q>& p, const vec<4, T, Q>& rectangle)
 	{
-		return p.x >= rectangle.x && p.y >= rectangle.y && p.x <= rectangle.x + rectangle.z && p.y < rectangle.y + rectangle.w;
+		return p.x >= rectangle.x && p.y >= rectangle.y && p.x <= rectangle.x + rectangle.z && p.y <= rectangle.y + rectangle.w;
 	}
 
 	template<typename T, enum qualifier Q = qualifier::packed_highp>
-	inline bool isPointInCircle(const vec<2, T, Q>& p, const vec<3, T, Q> circle)
+	inline bool isPointInCircle(const vec<2, T, Q>& p, const vec<3, T, Q>& circle)
 	{
 		return distance2(p, { circle.x, circle.y }) <= circle.z * circle.z;
 	}
+
+	template<typename T, enum qualifier Q = qualifier::packed_highp>
+	inline bool doRectanglesIntersect(const vec<4, T, Q>& rect1, const vec<4, T, Q>& rect2)
+	{
+		return rect1.x <= rect2.x + rect2.z && rect1.x + rect1.z >= rect2.x &&
+			   rect1.y <= rect2.y + rect2.w && rect1.y + rect1.w >= rect2.y;
+	}
+
 };
 
 using namespace glm;
