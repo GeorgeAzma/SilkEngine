@@ -30,8 +30,8 @@ MyApp::MyApp()
 
     render_graph = makeUnique<RenderGraph>();
     auto& geometry = render_graph->addPass("Geometry");
-    auto& color = geometry.addAttachment("Color", { Image::Format::BGRA, RenderContext::getPhysicalDevice().getMaxSampleCount() });
-    auto& depth = geometry.addAttachment("Depth", { Image::Format::DEPTH24_STENCIL, RenderContext::getPhysicalDevice().getMaxSampleCount() });
+    auto& color = geometry.addAttachment("Color", Image::Format::BGRA, RenderContext::getPhysicalDevice().getMaxSampleCount(), VkClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f });
+    auto& depth = geometry.addAttachment("Depth", Image::Format::DEPTH24_STENCIL, RenderContext::getPhysicalDevice().getMaxSampleCount(), VkClearDepthStencilValue{ 1.0f, 0 });
 
     geometry.setRenderCallback([&](const RenderGraph& render_graph)
         {
@@ -39,7 +39,7 @@ MyApp::MyApp()
         });
 
     auto& post_process = render_graph->addPass("Post Process");
-    auto& present_source = post_process.addAttachment("Present Source", {}, { &color });
+    auto& present_source = post_process.addAttachment("Present Source", Image::Format::BGRA, VK_SAMPLE_COUNT_1_BIT, { &color });
     post_process.setRenderCallback([&](const RenderGraph& render_graph)
         {
             auto& attachment = render_graph.getAttachment("Color");

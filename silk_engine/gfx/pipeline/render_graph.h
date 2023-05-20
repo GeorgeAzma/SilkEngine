@@ -8,19 +8,6 @@ class SwapChain;
 class Fence;
 class Semaphore;
 
-struct AttachmentInfo
-{
-	Image::Format format = Image::Format::BGRA;
-	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
-};
-
-struct BufferInfo
-{
-	VkDeviceSize size = 0;
-	Buffer::Usage usage = 0;
-	Allocation::Props allocation_props{};
-};
-
 class RenderGraph
 {
 public:
@@ -39,10 +26,10 @@ public:
 	public:
 		Resource(const char* name, Pass* pass, size_t index)
 			: name(name), pass(pass), index(index) {}
-		Resource(const char* name, Pass* pass, size_t index, const AttachmentInfo& info)
-			: name(name), pass(pass), index(index), attachment_info(info) {}
-		Resource(const char* name, Pass* pass, size_t index, const BufferInfo& info)
-			: name(name), pass(pass), index(index), buffer_info(info) {}
+		Resource(const char* name, Pass* pass, size_t index, Image::Format format = Image::Format::BGRA, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT, const std::optional<VkClearValue>& clear_value = std::nullopt)
+			: name(name), pass(pass), index(index), attachment_format(format), attachment_samples(samples), attachment_clear_value(clear_value) {}
+		Resource(const char* name, Pass* pass, size_t index, VkDeviceSize size, Buffer::Usage usage, Allocation::Props allocation_props = {})
+			: name(name), pass(pass), index(index), buffer_size(size), buffer_usage(usage), buffer_allocation_props(allocation_props) {}
 
 		const shared<Image>& getAttachment() const;
 
@@ -51,9 +38,16 @@ public:
 		Pass* pass = nullptr;
 		size_t index; 
 		Type type = Type::ATTACHMENT; 
-		AttachmentInfo attachment_info{};
-		BufferInfo buffer_info{};
+		
+		Image::Format attachment_format = Image::Format::BGRA;
+		VkSampleCountFlagBits attachment_samples = VK_SAMPLE_COUNT_1_BIT;
+		std::optional<VkClearValue> attachment_clear_value = std::nullopt;
 		size_t render_pass_attachment_index = 0;
+		
+		VkDeviceSize buffer_size = 0;
+		Buffer::Usage buffer_usage = 0;
+		Allocation::Props buffer_allocation_props = {};
+
 	};
 
 	friend class Pass;
@@ -66,9 +60,14 @@ public:
 
 		void setRenderCallback(std::function<void(const RenderGraph&)>&& render_callback) { this->render_callback = std::move(render_callback); }
 
-		Resource& addAttachment(const char* name = nullptr, const AttachmentInfo& info = {}, const std::vector<const Resource*>& inputs = {});
+		Resource& addAttachment(const char* name, Image::Format format = Image::Format::BGRA, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT, const std::vector<const Resource*>& inputs = {});
+		Resource& addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const VkClearColorValue& color_clear_value, const std::vector<const Resource*>& inputs = {});
+		Resource& addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const VkClearDepthStencilValue& depth_stencil_clear_value, const std::vector<const Resource*>& inputs = {});
 		
 		const shared<RenderPass>& getRenderPass() const { return render_pass; }
+
+	private:
+		Resource& addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const std::optional<VkClearValue>& clear_value, const std::vector<const Resource*>& inputs = {});
 
 	private:
 		const char* name = nullptr;
@@ -91,7 +90,8 @@ public:
 	void resize(const SwapChain& swap_chain);
 	void render();
 
-	void setClearValue(const char* attachment_name, const VkClearValue& clear_value);
+	void setClearColorValue(const char* attachment_name, const VkClearColorValue& color_clear_value);
+	void setClearDepthStencilValue(const char* attachment_name, const VkClearDepthStencilValue& depth_stencil_clear_value);
 
 	const Pass& getPass(std::string_view name) const { return *pass_map.at(name); }
 	const shared<RenderPass>& getRenderPass(std::string_view name) const { return pass_map.at(name)->render_pass; }

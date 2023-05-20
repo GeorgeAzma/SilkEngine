@@ -47,7 +47,17 @@ public:
 	void end();
 
 	void setViewport(const ivec2& viewport) { this->viewport = viewport; }
-	void setClearValue(size_t index, const VkClearValue& clear_value) { clear_values[index] = clear_value; }
+	void setClearColorValue(size_t index, const VkClearColorValue& color_clear_value) 
+	{ 
+		// For multisampled attachments render pass creates 2 images
+		// first is resolved image and second is multisampled image which comes right after resolved image
+		// we never need to clear resolved image, so add +1 to index to jump to multisampled image
+		clear_values[index + (attachment_descriptions[(index + 1) < attachment_descriptions.size() ? index + 1 : index].samples != VK_SAMPLE_COUNT_1_BIT)].color = color_clear_value; 
+	}
+	void setClearDepthStencilValue(size_t index, const VkClearDepthStencilValue& depth_stencil_clear_value) 
+	{ 
+		clear_values[index].depthStencil = depth_stencil_clear_value;
+	}
 	void resize(const SwapChain& swap_chain);
 
 	bool isInputAttachment(uint32_t attachment) const { return attachments_used_as_inputs.contains(attachment); }

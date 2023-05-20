@@ -21,16 +21,27 @@
 // Handle multiple outputs(roots) including buffer outputs
 // Handle RMW which should have LOAD_OP_LOAD and STORE_OP_STORE
 
-RenderGraph::Resource& RenderGraph::Pass::addAttachment(const char* name, const AttachmentInfo& info, const std::vector<const Resource*>& inputs)
+RenderGraph::Resource& RenderGraph::Pass::addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const std::vector<const Resource*>& inputs)
+{
+	return addAttachment(name, format, samples, std::nullopt, inputs);
+}
+RenderGraph::Resource& RenderGraph::Pass::addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const VkClearColorValue& color_clear_value, const std::vector<const Resource*>& inputs)
+{
+	return addAttachment(name, format, samples, VkClearValue{ .color = color_clear_value }, inputs);
+}
+
+RenderGraph::Resource& RenderGraph::Pass::addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const VkClearDepthStencilValue& depth_stencil_clear_value, const std::vector<const Resource*>& inputs)
+{
+	return addAttachment(name, format, samples, VkClearValue{ .depthStencil = depth_stencil_clear_value }, inputs);
+}
+
+RenderGraph::Resource& RenderGraph::Pass::addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const std::optional<VkClearValue>& clear_value, const std::vector<const Resource*>& inputs)
 {
 	size_t resource_index = render_graph->resources.size();
 	writes.emplace_back(resource_index);
-	
-	render_graph->resources.emplace_back(makeUnique<Resource>(name, this, resource_index, info));
-	
+	render_graph->resources.emplace_back(makeUnique<Resource>(name, this, resource_index, format, samples, clear_value));
 	for (const Resource* input : inputs)
 		reads.emplace_back(input->index);
-
 	return *render_graph->resources.back();
 }
 
@@ -115,7 +126,7 @@ void RenderGraph::build()
 			case Resource::Type::ATTACHMENT:
 			{
 				AttachmentProps props{};
-				props.format = resource.attachment_info.format;
+				props.format = resource.attachment_format;
 				if (Image::isDepthOnlyFormat(props.format))
 					props.final_layout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
 				else if (Image::isStencilOnlyFormat(props.format))
@@ -126,8 +137,8 @@ void RenderGraph::build()
 					props.final_layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 				else
 					props.final_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-				props.samples = resource.attachment_info.samples;
-				props.load_operation = VK_ATTACHMENT_LOAD_OP_CLEAR; // TODO:
+				props.samples = resource.attachment_samples;
+				props.load_operation = resource.attachment_clear_value.has_value() ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE; // TODO:
 				props.store_operation = VK_ATTACHMENT_STORE_OP_STORE; // TODO:
 				resource.render_pass_attachment_index = pass->render_pass->addAttachment(props);
 			}
@@ -136,7 +147,19 @@ void RenderGraph::build()
 				break;
 			}
 		}
-		pass->render_pass->build();
+		pass->render_pass->build(); 
+		
+		for (size_t write : pass->writes)
+		{
+			Resource& resource = *resources[write];
+			if (resource.type == Resource::Type::ATTACHMENT && resource.attachment_clear_value.has_value())
+			{
+				if (Image::isDepthStencilFormat(resource.attachment_format))
+					pass->render_pass->setClearDepthStencilValue(resource.render_pass_attachment_index, resource.attachment_clear_value->depthStencil);
+				else
+					pass->render_pass->setClearColorValue(resource.render_pass_attachment_index, resource.attachment_clear_value->color);
+			}
+		}
 	}
 
 	resize(Window::getActive().getSwapChain());
@@ -259,10 +282,16 @@ void RenderGraph::render()
 	}
 }
 
-void RenderGraph::setClearValue(const char* attachment_name, const VkClearValue& clear_value)
+void RenderGraph::setClearColorValue(const char* attachment_name, const VkClearColorValue& color_clear_value)
 {
 	const Resource& attachment = *resource_map.at(attachment_name);
-	attachment.pass->getRenderPass()->setClearValue(attachment.render_pass_attachment_index, clear_value);
+	attachment.pass->getRenderPass()->setClearColorValue(attachment.render_pass_attachment_index, color_clear_value);
+}
+
+void RenderGraph::setClearDepthStencilValue(const char* attachment_name, const VkClearDepthStencilValue& depth_stencil_clear_value)
+{
+	const Resource& attachment = *resource_map.at(attachment_name);
+	attachment.pass->getRenderPass()->setClearDepthStencilValue(attachment.render_pass_attachment_index, depth_stencil_clear_value);
 }
 
 void RenderGraph::buildNode(size_t resource_index)
