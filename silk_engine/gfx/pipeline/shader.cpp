@@ -144,7 +144,10 @@ Shader::Shader(const std::vector<std::string_view>& names)
 	for (const auto& file : std::filesystem::directory_iterator("res/shaders"))
 		for (const auto& name : names)
 			if (file.path().stem() == name)
+			{
 				stages.emplace_back(makeUnique<Stage>(file));
+				break;
+			}
 	SK_ASSERT(stages.size() == names.size(), "Couldn't find one of the shader stage files, make sure paths are correct");
 	std::ranges::sort(stages);
 	compile();

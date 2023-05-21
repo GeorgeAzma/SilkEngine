@@ -31,10 +31,9 @@ class RenderPass : NoCopy
 	};
 
 public:
-	RenderPass() { addSubpass(); }
 	~RenderPass();
 
-	void addSubpass();
+	size_t addSubpass();
 	void addInputAttachment(uint32_t index);
 	size_t addAttachment(const AttachmentProps& attachment_props);
 

@@ -43,7 +43,7 @@ MyApp::MyApp()
     post_process.setRenderCallback([&](const RenderGraph& render_graph)
         {
             auto& attachment = render_graph.getAttachment("Color");
-            material->set("image", *attachment);
+            material->set("attachment", *attachment);
             material->bind();
             RenderContext::getCommandBuffer().draw(3);
         });
@@ -53,8 +53,9 @@ MyApp::MyApp()
     render_graph->print();
 
     shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
-    graphics_pipeline->setShader(makeShared<Shader>(std::vector<std::string_view>{ "screen", "image" }))
+    graphics_pipeline->setShader(makeShared<Shader>(std::vector<std::string_view>{ "input", "input" }))
         .setRenderPass(*post_process.getRenderPass())
+        .setSubpass(post_process.getSubpass())
         .build();
     material = makeShared<Material>(graphics_pipeline);
     

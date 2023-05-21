@@ -6,12 +6,12 @@
 
 // TODO:
 // figure stuff out with VK_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT
-// Because of resolve attachments getting automatically added to attachment_descriptions, SubpassProps::inputs may not function as user would think, make it simpler
 // Support subpass input depth attachments
 
-void RenderPass::addSubpass()
+size_t RenderPass::addSubpass()
 {
     subpass_infos.emplace_back();
+    return subpass_infos.size() - 1;
 }
 
 void RenderPass::addInputAttachment(uint32_t index)

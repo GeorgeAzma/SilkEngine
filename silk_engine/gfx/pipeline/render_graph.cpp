@@ -19,34 +19,35 @@
 // Handle pipeline barriers well
 // Handle multiple outputs(roots) including buffer outputs
 // Handle RMW which should have LOAD_OP_LOAD and STORE_OP_STORE
+// Handle different attachment sizes and blits
 
-RenderGraph::Resource& RenderGraph::Pass::addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const std::vector<const Resource*>& inputs)
+RenderGraph::AttachmentNode& RenderGraph::Pass::addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const std::vector<const AttachmentNode*>& inputs)
 {
 	return addAttachment(name, format, samples, std::nullopt, inputs);
 }
-RenderGraph::Resource& RenderGraph::Pass::addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const VkClearColorValue& color_clear_value, const std::vector<const Resource*>& inputs)
+RenderGraph::AttachmentNode& RenderGraph::Pass::addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const VkClearColorValue& color_clear_value, const std::vector<const AttachmentNode*>& inputs)
 {
 	return addAttachment(name, format, samples, VkClearValue{ .color = color_clear_value }, inputs);
 }
 
-RenderGraph::Resource& RenderGraph::Pass::addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const VkClearDepthStencilValue& depth_stencil_clear_value, const std::vector<const Resource*>& inputs)
+RenderGraph::AttachmentNode& RenderGraph::Pass::addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const VkClearDepthStencilValue& depth_stencil_clear_value, const std::vector<const AttachmentNode*>& inputs)
 {
 	return addAttachment(name, format, samples, VkClearValue{ .depthStencil = depth_stencil_clear_value }, inputs);
 }
 
-RenderGraph::Resource& RenderGraph::Pass::addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const std::optional<VkClearValue>& clear_value, const std::vector<const Resource*>& inputs)
+RenderGraph::AttachmentNode& RenderGraph::Pass::addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const std::optional<VkClearValue>& clear_value, const std::vector<const AttachmentNode*>& inputs)
 {
 	size_t resource_index = render_graph->resources.size();
 	writes.emplace_back(resource_index);
-	render_graph->resources.emplace_back(makeUnique<Resource>(name, this, resource_index, format, samples, clear_value));
-	for (const Resource* input : inputs)
+	render_graph->resources.emplace_back(makeUnique<AttachmentNode>(name, this, resource_index, format, samples, clear_value));
+	for (const AttachmentNode* input : inputs)
 		reads.emplace_back(input->index);
 	return *render_graph->resources.back();
 }
 
-const shared<Image>& RenderGraph::Resource::getAttachment() const
+const shared<Image>& RenderGraph::AttachmentNode::getAttachment() const
 {
-	return pass->render_pass->getFramebuffer()->getAttachments()[render_pass_attachment_index];
+	return pass->render_graph->render_pass->getFramebuffer()->getAttachments()[attachment_index];
 }
 
 RenderGraph::RenderGraph()
@@ -64,7 +65,7 @@ RenderGraph::Pass& RenderGraph::addPass(const char* name)
 
 void RenderGraph::build()
 {
-	const Resource* root = roots[0]; // TODO: Support multiple roots
+	const AttachmentNode* root = roots[0]; // TODO: Support multiple roots
 	sorted_passes.reserve(passes.size());
 	buildNode(root->index);
 	// Remove duplicates starting from root to leaves
@@ -80,86 +81,71 @@ void RenderGraph::build()
 	// Reverse to get submission ordered passes
 	std::ranges::reverse(sorted_passes);
 
+	render_pass = makeShared<RenderPass>();
 	for (Pass* pass : sorted_passes)
 	{
-		pass->render_pass = makeShared<RenderPass>();
-		
-		// TODO: handle subpass dependencies, remove this hardcode
-		VkSubpassDependency dep{};
-		dep.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dep.dstSubpass = 0;
-		dep.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dep.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dep.srcAccessMask = 0;
-		dep.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		dep.dependencyFlags = 0;
-		pass->render_pass->addSubpassDependency(dep);
+		pass->subpass = render_pass->addSubpass();
 
 		for (size_t write : pass->writes)
 		{
-			Resource& resource = *resources[write];
-			switch (resource.type)
+			AttachmentNode& write_resource = *resources[write];
+			for (size_t read : pass->reads)
 			{
-			case Resource::Type::ATTACHMENT:
-			{
-				AttachmentProps props{};
-				props.format = resource.attachment_format;
-				if (Image::isDepthOnlyFormat(props.format))
-					props.final_layout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-				else if (Image::isStencilOnlyFormat(props.format))
-					props.final_layout = VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL;
-				else if (Image::isDepthStencilFormat(props.format))
-					props.final_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-				else if (resource.index == root->index) // If color attachment is root, then it is present src
-					props.final_layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-				else
-					props.final_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-				props.samples = resource.attachment_samples;
-				props.load_operation = resource.attachment_clear_value.has_value() ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE; // TODO: LOAD_OP_LOAD for RMW
-				props.store_operation = VK_ATTACHMENT_STORE_OP_STORE; // TODO: In case of depth attachments this is unnecessary, unless it's read from subsequent passes
-				resource.render_pass_attachment_index = pass->render_pass->addAttachment(props);
+				AttachmentNode& read_resource = *resources[read];
+
+				VkSubpassDependency dep{};
+				dep.srcSubpass = read_resource.pass->subpass;
+				dep.dstSubpass = write_resource.pass->subpass;
+				dep.srcStageMask = Image::isColorFormat(read_resource.format) ? VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT : VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+				dep.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+				dep.srcAccessMask = Image::isColorFormat(read_resource.format) ? VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT : VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+				dep.dstAccessMask = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
+				dep.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+				render_pass->addSubpassDependency(dep);
+				render_pass->addInputAttachment(read_resource.attachment_index);
 			}
-				break;
-			case Resource::Type::BUFFER:
-				// TODO:
-				break;
-			}
+
+
+			AttachmentProps props{};
+			props.format = write_resource.format;
+			if (Image::isDepthOnlyFormat(props.format))
+				props.final_layout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+			else if (Image::isStencilOnlyFormat(props.format))
+				props.final_layout = VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL;
+			else if (Image::isDepthStencilFormat(props.format))
+				props.final_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			else if (write_resource.index == root->index) // If color attachment is root, then it is present src
+				props.final_layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+			else
+				props.final_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			props.samples = write_resource.samples;
+			props.load_operation = write_resource.clear_value.has_value() ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE; // TODO: LOAD_OP_LOAD for RMW
+			props.store_operation = VK_ATTACHMENT_STORE_OP_STORE; // TODO: In case of depth attachments this is unnecessary, unless it's read from subsequent passes
+			write_resource.attachment_index = render_pass->addAttachment(props);
+	
 		}
-		pass->render_pass->build(); 
+		render_pass->build(); 
 		
 		for (size_t write : pass->writes)
 		{
-			Resource& resource = *resources[write];
-			if (resource.type == Resource::Type::ATTACHMENT && resource.attachment_clear_value.has_value())
-			{
-				if (Image::isDepthStencilFormat(resource.attachment_format))
-					pass->render_pass->setClearDepthStencilValue(resource.render_pass_attachment_index, resource.attachment_clear_value->depthStencil);
+			AttachmentNode& resource = *resources[write];
+			if (resource.clear_value.has_value())
+				if (Image::isDepthStencilFormat(resource.format))
+					render_pass->setClearDepthStencilValue(resource.attachment_index, resource.clear_value->depthStencil);
 				else
-					pass->render_pass->setClearColorValue(resource.render_pass_attachment_index, resource.attachment_clear_value->color);
-			}
+					render_pass->setClearColorValue(resource.attachment_index, resource.clear_value->color);
+
 		}
 	}
 
 	resize(Window::getActive().getSwapChain());
 
-	for (Pass* pass : sorted_passes)
-	{
-		RenderContext::getLogicalDevice().setObjectName(VK_OBJECT_TYPE_RENDER_PASS, VkRenderPass(*pass->render_pass), pass->name);
+	for (const Pass* pass : sorted_passes)
 		pass_map[pass->name] = pass;
-	}
 
-	for (auto& resource : resources)
+	for (const auto& resource : resources)
 	{
-		switch (resource->type)
-		{
-		case Resource::Type::ATTACHMENT:
 		RenderContext::getLogicalDevice().setObjectName(VK_OBJECT_TYPE_IMAGE, VkImage(*resource->getAttachment()), resource->name);
-			break;
-		case Resource::Type::BUFFER: 
-			// TODO:
-			// RenderContext::getLogicalDevice().setObjectName(VK_OBJECT_TYPE_BUFFER, VkBuffer(*resource->getAttachment()), resource->name);
-			break;
-		}
 		resource_map[resource->name] = resource.get();
 	}
 }
@@ -179,7 +165,7 @@ void RenderGraph::print() const
 		SK_TRACE("\t{}({}){}:", pass->name, pass->index, reads.size() ? std::format("[{}]", reads) : "");
 		for (size_t write : pass->writes)
 		{
-			const Resource& resource = *resources[write];
+			const AttachmentNode& resource = *resources[write];
 			SK_TRACE("\t\t{}({})", resource.name, resource.index);
 		}
 	}
@@ -188,8 +174,7 @@ void RenderGraph::print() const
 
 void RenderGraph::resize(const SwapChain& swap_chain)
 {
-	for (Pass* pass : sorted_passes)
-		pass->render_pass->resize(swap_chain);
+	render_pass->resize(swap_chain);
 }
 
 void RenderGraph::render()
@@ -206,51 +191,38 @@ void RenderGraph::render()
 	//QueryPool query(VK_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT | VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT | VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT);
 	//query.begin();
 
+	render_pass->begin();
+
+	uint32_t width = render_pass->getFramebuffer()->getWidth();
+	uint32_t height = render_pass->getFramebuffer()->getHeight();
+
+	VkViewport viewport = {};
+	viewport.x = 0.0f;
+	viewport.y = float(height);
+	viewport.width = float(width);
+	viewport.height = -float(height);
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	RenderContext::getCommandBuffer().setViewport({ viewport });
+
+	VkRect2D scissor = {};
+	scissor.offset = { 0, 0 };
+	scissor.extent = { width, height };
+	RenderContext::getCommandBuffer().setScissor({ scissor });
+
 	for (uint32_t pass_index = 0; pass_index < sorted_passes.size(); ++pass_index)
 	{
-		
 		auto& pass = *sorted_passes[pass_index];
-		auto& render_pass = *pass.render_pass;
-		uint32_t width = render_pass.getFramebuffer()->getWidth();
-		uint32_t height = render_pass.getFramebuffer()->getHeight();
-		
-		VkViewport viewport = {};
-		viewport.x = 0.0f;
-		viewport.y = float(height);
-		viewport.width = float(width);
-		viewport.height = -float(height);
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		RenderContext::getCommandBuffer().setViewport({ viewport });
-
-		VkRect2D scissor = {};
-		scissor.offset = { 0, 0 };
-		scissor.extent = { width, height };
-		RenderContext::getCommandBuffer().setScissor({ scissor });
-
-		render_pass.begin();
-		pass.render_callback(*this);
-		render_pass.end();
-		
-		if (pass_index < sorted_passes.size() - 1)
-			for (size_t read : passes[pass_index + 1]->reads)
-			{
-				const Resource& resource = *resources[read];
-				switch (resource.type)
-				{
-				case Resource::Type::ATTACHMENT:
-					resource.getAttachment()->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-					break;
-				case Resource::Type::BUFFER:
-					// TODO:
-					break;
-				}
-			}
+		pass.render_callback(*this); 
+		for (size_t write : pass.writes)
+			resources[write]->getAttachment()->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		render_pass->nextSubpass();
 	}
+	render_pass->end();
 
 	//query.end();
 
-	RenderContext::submit(previous_frame_finished.get(), { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { *swap_chain_image_available }, { *render_finished });
+	RenderContext::submit(previous_frame_finished.get(), { VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT }, { *swap_chain_image_available }, { *render_finished });
 
 	//std::vector<uint32_t> results = query.getResults(0, true);
 	//static Cooldown c = Cooldown(1.0f);
@@ -271,19 +243,19 @@ void RenderGraph::render()
 
 void RenderGraph::setClearColorValue(const char* attachment_name, const VkClearColorValue& color_clear_value)
 {
-	const Resource& attachment = *resource_map.at(attachment_name);
-	attachment.pass->getRenderPass()->setClearColorValue(attachment.render_pass_attachment_index, color_clear_value);
+	const AttachmentNode& attachment = *resource_map.at(attachment_name);
+	attachment.pass->getRenderPass()->setClearColorValue(attachment.attachment_index, color_clear_value);
 }
 
 void RenderGraph::setClearDepthStencilValue(const char* attachment_name, const VkClearDepthStencilValue& depth_stencil_clear_value)
 {
-	const Resource& attachment = *resource_map.at(attachment_name);
-	attachment.pass->getRenderPass()->setClearDepthStencilValue(attachment.render_pass_attachment_index, depth_stencil_clear_value);
+	const AttachmentNode& attachment = *resource_map.at(attachment_name);
+	attachment.pass->getRenderPass()->setClearDepthStencilValue(attachment.attachment_index, depth_stencil_clear_value);
 }
 
 void RenderGraph::buildNode(size_t resource_index)
 {
-	const Resource& resource = *resources[resource_index];
+	const AttachmentNode& resource = *resources[resource_index];
 	sorted_passes.push_back(resource.pass);
 	for (size_t read : resource.pass->reads)
 		buildNode(read);
