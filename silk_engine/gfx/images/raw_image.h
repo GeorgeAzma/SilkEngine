@@ -8,9 +8,10 @@ public:
 	void allocate() { pixels.resize(getPixelCount()); }
 	size_t getPixelCount() const { return width * height * channels; }
 	size_t getSize() const { return getPixelCount() * sizeof(T); }
-	const T& operator()(uint32_t x, uint32_t y) const { return pixels[width * y + x]; }
-	const T& operator()(uint32_t index) const { return pixels[index]; }
-	const T& operator[](uint32_t index) const { return pixels[index]; }
+	T& operator[](size_t index) { return pixels[index]; }
+	//T& operator[](size_t x, size_t y) { return pixels[width * y + x]; }
+	const T& operator[](size_t index) const { return pixels[index]; }
+	//const T& operator[](size_t x, size_t y) const { return pixels[width * y + x]; }
 
 public:
 	uint32_t width = 0;

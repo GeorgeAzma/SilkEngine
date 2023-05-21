@@ -47,47 +47,47 @@ CubeMesh::CubeMesh()
 	getVertex(34).position = { 1, 0, 1 };
 	getVertex(35).position = { 1, 0, 0 };
 
-	getVertex(0 ).texture_coordinate = { 0, 0 };
-	getVertex(1 ).texture_coordinate = { 1, 0 };
-	getVertex(2 ).texture_coordinate = { 0, 1 };
-	getVertex(3 ).texture_coordinate = { 0, 1 };
-	getVertex(4 ).texture_coordinate = { 1, 0 };
-	getVertex(5 ).texture_coordinate = { 1, 1 };
+	getVertex(0 ).uv = { 0, 0 };
+	getVertex(1 ).uv = { 1, 0 };
+	getVertex(2 ).uv = { 0, 1 };
+	getVertex(3 ).uv = { 0, 1 };
+	getVertex(4 ).uv = { 1, 0 };
+	getVertex(5 ).uv = { 1, 1 };
 
-	getVertex(6 ).texture_coordinate = { 0, 0 };
-	getVertex(7 ).texture_coordinate = { 1, 0 };
-	getVertex(8 ).texture_coordinate = { 0, 1 };
-	getVertex(9 ).texture_coordinate = { 0, 1 };
-	getVertex(10).texture_coordinate = { 1, 0 };
-	getVertex(11).texture_coordinate = { 1, 1 };
+	getVertex(6 ).uv = { 0, 0 };
+	getVertex(7 ).uv = { 1, 0 };
+	getVertex(8 ).uv = { 0, 1 };
+	getVertex(9 ).uv = { 0, 1 };
+	getVertex(10).uv = { 1, 0 };
+	getVertex(11).uv = { 1, 1 };
 
-	getVertex(12).texture_coordinate = { 0, 0 };
-	getVertex(13).texture_coordinate = { 1, 0 };
-	getVertex(14).texture_coordinate = { 0, 1 };
-	getVertex(15).texture_coordinate = { 0, 1 };
-	getVertex(16).texture_coordinate = { 1, 0 };
-	getVertex(17).texture_coordinate = { 1, 1 };
+	getVertex(12).uv = { 0, 0 };
+	getVertex(13).uv = { 1, 0 };
+	getVertex(14).uv = { 0, 1 };
+	getVertex(15).uv = { 0, 1 };
+	getVertex(16).uv = { 1, 0 };
+	getVertex(17).uv = { 1, 1 };
 
-	getVertex(18).texture_coordinate = { 0, 0 };
-	getVertex(19).texture_coordinate = { 1, 0 };
-	getVertex(20).texture_coordinate = { 0, 1 };
-	getVertex(21).texture_coordinate = { 0, 1 };
-	getVertex(22).texture_coordinate = { 1, 0 };
-	getVertex(23).texture_coordinate = { 1, 1 };
+	getVertex(18).uv = { 0, 0 };
+	getVertex(19).uv = { 1, 0 };
+	getVertex(20).uv = { 0, 1 };
+	getVertex(21).uv = { 0, 1 };
+	getVertex(22).uv = { 1, 0 };
+	getVertex(23).uv = { 1, 1 };
 
-	getVertex(24).texture_coordinate = { 0, 0 };
-	getVertex(25).texture_coordinate = { 1, 0 };
-	getVertex(26).texture_coordinate = { 0, 1 };
-	getVertex(27).texture_coordinate = { 0, 1 };
-	getVertex(28).texture_coordinate = { 1, 0 };
-	getVertex(29).texture_coordinate = { 1, 1 };
+	getVertex(24).uv = { 0, 0 };
+	getVertex(25).uv = { 1, 0 };
+	getVertex(26).uv = { 0, 1 };
+	getVertex(27).uv = { 0, 1 };
+	getVertex(28).uv = { 1, 0 };
+	getVertex(29).uv = { 1, 1 };
 
-	getVertex(30).texture_coordinate = { 0, 0 };
-	getVertex(31).texture_coordinate = { 1, 0 };
-	getVertex(32).texture_coordinate = { 0, 1 };
-	getVertex(33).texture_coordinate = { 0, 1 };
-	getVertex(34).texture_coordinate = { 1, 0 };
-	getVertex(35).texture_coordinate = { 1, 1 };
+	getVertex(30).uv = { 0, 0 };
+	getVertex(31).uv = { 1, 0 };
+	getVertex(32).uv = { 0, 1 };
+	getVertex(33).uv = { 0, 1 };
+	getVertex(34).uv = { 1, 0 };
+	getVertex(35).uv = { 1, 1 };
 
 	getVertex(0 ).normal = {  0,  0, -1 };
 	getVertex(1 ).normal = {  0,  0, -1 };

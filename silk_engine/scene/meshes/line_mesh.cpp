@@ -23,9 +23,9 @@ LineMesh::LineMesh(const std::vector<vec2>& points, float width, uint32_t edge_r
 	vec2 cross = math::cross2D(dir);
 	vec2 offset = cross * width;
 	getVertex(vertex).position = point + offset;
-	getVertex(vertex++).texture_coordinate = { 1, 0 };
+	getVertex(vertex++).uv = { 1, 0 };
 	getVertex(vertex).position = point - offset;
-	getVertex(vertex++).texture_coordinate = { 0, 0 };
+	getVertex(vertex++).uv = { 0, 0 };
 
 	for (size_t i = 1; i < points.size(); ++i)
 	{
@@ -35,9 +35,9 @@ LineMesh::LineMesh(const std::vector<vec2>& points, float width, uint32_t edge_r
 		vec2 cross = math::cross2D(dir);
 		vec2 offset = cross * width;
 		getVertex(vertex).position = point + offset;
-		getVertex(vertex++).texture_coordinate = { 1, 0 };
+		getVertex(vertex++).uv = { 1, 0 };
 		getVertex(vertex).position = point - offset;
-		getVertex(vertex++).texture_coordinate = { 0, 0 };
+		getVertex(vertex++).uv = { 0, 0 };
 	}
 
 	if (!tile_UVs)
@@ -54,8 +54,8 @@ LineMesh::LineMesh(const std::vector<vec2>& points, float width, uint32_t edge_r
 		for (size_t i = 0; i < lengths_sq.size(); ++i)
 		{
 			float t = lengths_sq[i] / length_sq;
-			getVertex(i + 0).texture_coordinate.y = t;
-			getVertex(i + 1).texture_coordinate.y = t;
+			getVertex(i + 0).uv.y = t;
+			getVertex(i + 1).uv.y = t;
 		}
 	}
 }

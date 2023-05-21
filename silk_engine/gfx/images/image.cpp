@@ -1,5 +1,6 @@
 #include "image.h"
 #include "raw_image.h"
+#include "image_view.h"
 #include "gfx/window/window.h"
 #include "gfx/render_context.h"
 #include "gfx/buffers/buffer.h"
@@ -7,7 +8,6 @@
 #include "gfx/devices/logical_device.h"
 #include "gfx/window/swap_chain.h"
 #include "gfx/buffers/command_buffer.h"
-#include "image_view.h"
 #include "gfx/allocators/allocator.h"
 
 VkImageType Image::getVulkanTypeFromType(Type type)
@@ -29,7 +29,7 @@ VkImageType Image::getVulkanTypeFromType(Type type)
 	return VK_IMAGE_TYPE_2D;
 }
 
-Image::Format Image::getFormatFromChannelCount(uint8_t channels)
+Image::Format Image::getFormatFromChannels(uint8_t channels)
 {
 	switch (channels)
 	{
@@ -67,7 +67,7 @@ VkImageAspectFlags Image::getFormatVulkanAspectFlags(Format format)
 	return (isColorFormat(format) * VK_IMAGE_ASPECT_COLOR_BIT) | (isStencilFormat(format) * VK_IMAGE_ASPECT_DEPTH_BIT) | (isStencilFormat(format) * VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
-uint8_t Image::getFormatChannelCount(Format format)
+uint8_t Image::getFormatChannels(Format format)
 {
 	switch (format)
 	{
@@ -98,6 +98,17 @@ Image::Image(const Props& props)
 	create();
 }
 
+Image::Image(const RawImage<uint8_t>& raw_image, const Props& props)
+	: props(props)
+{
+	this->props.width = raw_image.width;
+	this->props.height = raw_image.height;
+	this->props.format = getFormatFromChannels(raw_image.channels);
+	create();
+	setData(raw_image.pixels.data());
+	generateMipmaps();
+}
+
 Image::Image(uint32_t width, Format format)
 {
 	props.width = width;
@@ -114,17 +125,9 @@ Image::Image(uint32_t width, uint32_t height, Format format)
 	create();
 }
 
-Image::Image(const fs::path& file, const Props& p)
-	: props(p)
-{
-	RawImage raw(file);
-	props.width = raw.width;
-	props.height = raw.height;
-	props.format = getFormatFromChannelCount(raw.channels);
-	create();
-	setData(raw.pixels.data());
-	generateMipmaps();
-}
+Image::Image(const fs::path& file, const Props& props)
+	: Image(RawImage(file), props)
+{}
 
 Image::Image(uint32_t width, uint32_t height, Format format, VkImage img)
 {
@@ -137,43 +140,46 @@ Image::Image(uint32_t width, uint32_t height, Format format, VkImage img)
 	create();
 }
 
-Image::Image(const std::array<fs::path, 6>& files, const Props& p)
-	: props(p)
+Image::Image(const std::array<fs::path, 6>& files, const Props& props)
 {
-	RawImage raw(files);
-	props.width = raw.width;
-	props.height = raw.height;
-	props.format = getFormatFromChannelCount(raw.channels);
+	RawImage raw_image(files);
+	this->props.width = raw_image.width;
+	this->props.height = raw_image.height;
+	this->props.format = getFormatFromChannels(raw_image.channels);
+	this->props.type = Type::CUBE;
 	create();
-	setData(raw.pixels.data());
+	setData(raw_image.pixels.data());
 	generateMipmaps();
 }
 
-Image::Image(std::span<const fs::path> files, const Props& p)
-	: props(p)
+Image::Image(std::span<const fs::path> files, const Props& props)
 {
-	RawImage raw(files);
-	props.width = raw.width;
-	props.height = raw.height;
-	props.layers = files.size();
-	props.format = getFormatFromChannelCount(raw.channels);
+	RawImage raw_image(files);
+	this->props.width = raw_image.width;
+	this->props.height = raw_image.height;
+	this->props.layers = files.size();
+	this->props.format = getFormatFromChannels(raw_image.channels);
+	this->props.type = Type::_2D_ARRAY;
 	create();
-	setData(raw.pixels.data());
+	setData(raw_image.pixels.data());
 	generateMipmaps();
 }
 
-Image::Image(std::span<const std::array<fs::path, 6>> files, const Props& p)
-	: props(p)
+Image::Image(std::span<const std::array<fs::path, 6>> files, const Props& props)
+	: props(props)
 {
 	std::vector<fs::path> continous_files(files.size() * 6);
-	std::copy(files.front().begin(), files.back().end(), continous_files.begin());
-	RawImage raw(continous_files);
-	props.width = raw.width;
-	props.height = raw.height;
-	props.layers = files.size();
-	props.format = getFormatFromChannelCount(raw.channels);
+	for (size_t i = 0; i < files.size(); ++i)
+		continous_files.insert(continous_files.begin() + i * 6, files[i].begin(), files[i].end());
+
+	RawImage raw_image(continous_files);
+	this->props.width = raw_image.width;
+	this->props.height = raw_image.height;
+	this->props.layers = files.size();
+	this->props.format = getFormatFromChannels(raw_image.channels);
+	this->props.type = Type::CUBE_ARRAY;
 	create();
-	setData(raw.pixels.data());
+	setData(raw_image.pixels.data());
 	generateMipmaps();
 }
 
@@ -404,7 +410,7 @@ void Image::create()
 
 	// Determining if image should create ImageView based on usage (Note: this is probably correct, but not sure)
 	if (props.usage & (VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT))
-		view = makeUnique<ImageView>(*this);
+		view = makeShared<ImageView>(*this);
 }
 
 void Image::generateMipmaps()

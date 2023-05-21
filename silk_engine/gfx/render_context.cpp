@@ -118,7 +118,7 @@ void RenderContext::screenshot(const fs::path& file)
 
 	const fs::path folder = "res/images/screenshots";
 	fs::path file_path = folder / file;
-	stbi_write_png(file_path.string().c_str(), Window::getActive().getWidth(), Window::getActive().getHeight(), Image::getFormatChannelCount(Image::Format(Window::getActive().getSurface().getFormat())), data.data(), 0);
+	stbi_write_png(file_path.string().c_str(), Window::getActive().getWidth(), Window::getActive().getHeight(), Image::getFormatChannels(Image::Format(Window::getActive().getSurface().getFormat())), data.data(), 0);
 	SK_TRACE("Screenshot saved at {}", file_path);
 }
 

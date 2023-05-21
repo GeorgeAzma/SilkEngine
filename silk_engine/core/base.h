@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <cmath>
 #include <vector>
 #include <array>
 #include <string>
@@ -75,6 +74,11 @@ using ulong = unsigned long;
 using uint = unsigned int;
 using ushort = unsigned short;
 using uchar = unsigned char;
+
+#define scast static_cast
+#define ccast const_cast
+#define dcast dynamic_cast
+#define rcast reinterpret_cast
 
 namespace fs
 {
@@ -217,5 +221,3 @@ namespace std
 #include "utils/time.h"
 #include "utils/random.h"
 #include "core/log.h"
-#include "utils/debug_timer.h"
-#include "utils/cooldown.h"

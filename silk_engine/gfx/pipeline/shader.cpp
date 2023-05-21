@@ -2,6 +2,7 @@
 #include "io/file.h"
 #include "gfx/devices/logical_device.h"
 #include "gfx/debug_renderer.h"
+#include "utils/debug_timer.h"
 #include "gfx/instance.h"
 #define STB_INCLUDE_IMPLEMENTATION
 #include "stb_include.h"

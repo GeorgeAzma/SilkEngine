@@ -4,6 +4,8 @@
 #include "sampler.h"
 
 class ImageView;
+template <typename T>
+class RawImage;
 
 class Image : NoCopy
 {
@@ -49,9 +51,9 @@ public:
 		INPUT_ATTACHMENT = VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT
 	};
 
-	static Format getFormatFromChannelCount(uint8_t channels);
+	static Format getFormatFromChannels(uint8_t channels);
 	static VkImageAspectFlags getFormatVulkanAspectFlags(Format format);
-	static uint8_t getFormatChannelCount(Format format);
+	static uint8_t getFormatChannels(Format format);
 	static size_t getFormatSize(Format format);
 	static bool isStencilFormat(Format format)
 	{
@@ -98,13 +100,14 @@ public:
 		bool linear_tiling = false;
 		Type type = Type::_2D;
 
-		uint32_t getChannelCount() const { return getFormatChannelCount(format); }
+		uint32_t getChannels() const { return getFormatChannels(format); }
 		size_t getPixelCount() const { return width * height * depth * layers; }
 		size_t getSize() const { return getPixelCount() * getFormatSize(format); }
 	};
 
 public:
 	Image(const Props& props);
+	Image(const RawImage<uint8_t>& raw_image, const Props& props = {});
 	Image(uint32_t width, Format format = Format::BGRA); // 1D
 	Image(uint32_t width, uint32_t height, Format format = Format::BGRA); // 2D
 	Image(const fs::path& file, const Props& props = {}); // 2D
@@ -124,7 +127,7 @@ public:
 	Type getType() const { return props.type; }
 
 	bool isSampled() const { return props.usage == VK_IMAGE_USAGE_SAMPLED_BIT; }
-	uint32_t getChannelCount() const { return props.getChannelCount(); }
+	uint32_t getChannels() const { return props.getChannels(); }
 	size_t getPixelCount() const { return props.getPixelCount(); }
 	float getAspectRatio() const { return float(getWidth()) / getHeight(); }
 	size_t getSize() const { return props.getSize(); }
@@ -158,7 +161,7 @@ protected:
 protected:
 	VkImage image = nullptr;
 	shared<Sampler> sampler = nullptr;
-	unique<ImageView> view = nullptr;
+	shared<ImageView> view = nullptr;
 	VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
 	Allocation allocation{};
 	Props props = {};

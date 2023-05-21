@@ -19,16 +19,16 @@ TextMesh::TextMesh(std::string_view text, uint32_t size, shared<Font> font)
 		getIndex(indices_index++) = vertex_index + 2;
 
 		getVertex(vertex_index).position = vec2(c.position.x, c.position.y);
-		getVertex(vertex_index).texture_coordinate = vec2(c.texture_coordinate.x, c.texture_coordinate.w);
+		getVertex(vertex_index).uv = vec2(c.texture_coordinate.x, c.texture_coordinate.w);
 		++vertex_index;
 		getVertex(vertex_index).position = vec2(c.position.x, c.position.w);
-		getVertex(vertex_index).texture_coordinate = vec2(c.texture_coordinate.x, c.texture_coordinate.y);
+		getVertex(vertex_index).uv = vec2(c.texture_coordinate.x, c.texture_coordinate.y);
 		++vertex_index;
 		getVertex(vertex_index).position = vec2(c.position.z, c.position.w);
-		getVertex(vertex_index).texture_coordinate = vec2(c.texture_coordinate.z, c.texture_coordinate.y);
+		getVertex(vertex_index).uv = vec2(c.texture_coordinate.z, c.texture_coordinate.y);
 		++vertex_index;
 		getVertex(vertex_index).position = vec2(c.position.z, c.position.y);
-		getVertex(vertex_index).texture_coordinate = vec2(c.texture_coordinate.z, c.texture_coordinate.w);
+		getVertex(vertex_index).uv = vec2(c.texture_coordinate.z, c.texture_coordinate.w);
 		++vertex_index;
 	}
 }

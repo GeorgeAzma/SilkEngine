@@ -16,7 +16,7 @@ CircleMesh::CircleMesh(uint resolution)
 	}
 
 	for (size_t i = 0; i < vertices_count; ++i)
-		getVertex(i).texture_coordinate = (getVertex(i).position + vec2(1)) * vec2(0.5f);
+		getVertex(i).uv = (getVertex(i).position + vec2(1)) * vec2(0.5f);
 
 	size_t index = 0;
 	for (uint32_t i = 1; i < resolution; ++i)

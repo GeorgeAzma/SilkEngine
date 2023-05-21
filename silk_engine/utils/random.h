@@ -6,7 +6,6 @@ public:
 	static inline uint64_t seed = 3773452183ULL;
 
 public:
-
 	template <typename T>
 	static T get(uint64_t seed)
 	{

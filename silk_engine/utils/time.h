@@ -11,7 +11,7 @@ public:
         ++frame;
     }
 
-    //Gets time as double in seconds
+    // Gets time as double in seconds
     static double getTime()
     {
         return runtime;

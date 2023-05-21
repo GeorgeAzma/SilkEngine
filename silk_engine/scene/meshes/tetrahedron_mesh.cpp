@@ -12,9 +12,9 @@ TetrahedronMesh::TetrahedronMesh()
 	getVertex(1).normal = { 0, -1, 0 };
 	getVertex(2).normal = { 0, -1, 0 };
 
-	getVertex(0).texture_coordinate = { 0, 0 };
-	getVertex(1).texture_coordinate = { 1, 0 };
-	getVertex(2).texture_coordinate = { 0, 1 };
+	getVertex(0).uv = { 0, 0 };
+	getVertex(1).uv = { 1, 0 };
+	getVertex(2).uv = { 0, 1 };
 
 	//Tri-2
 	getVertex(3).position = { 0.815363f, -0.33287f, -0.47075f }; //A
@@ -25,9 +25,9 @@ TetrahedronMesh::TetrahedronMesh()
 	getVertex(4).normal = { 0, 0.70710678118f, -0.70710678118f };
 	getVertex(5).normal = { 0, 0.70710678118f, -0.70710678118f };
 
-	getVertex(3).texture_coordinate = { 0, 0 };
-	getVertex(4).texture_coordinate = { 1, 0 };
-	getVertex(5).texture_coordinate = { 0, 1 };
+	getVertex(3).uv = { 0, 0 };
+	getVertex(4).uv = { 1, 0 };
+	getVertex(5).uv = { 0, 1 };
 
 	//Tri-3
 	getVertex(6).position = { 0.815363f, -0.33287f, -0.47075f }; //A
@@ -38,9 +38,9 @@ TetrahedronMesh::TetrahedronMesh()
 	getVertex(7).normal = { 0.57735026919f, 0.57735026919f, 0.57735026919f };
 	getVertex(8).normal = { 0.57735026919f, 0.57735026919f, 0.57735026919f };
 
-	getVertex(6).texture_coordinate = { 0, 0 };
-	getVertex(7).texture_coordinate = { 1, 0 };
-	getVertex(8).texture_coordinate = { 0, 1 };
+	getVertex(6).uv = { 0, 0 };
+	getVertex(7).uv = { 1, 0 };
+	getVertex(8).uv = { 0, 1 };
 
 	//Tri-4
 	getVertex(9 ).position = { -0.815363f, -0.33287f, -0.47075f }; //D
@@ -51,9 +51,9 @@ TetrahedronMesh::TetrahedronMesh()
 	getVertex(10).normal = { -0.57735026919f, 0.57735026919f, 0.57735026919f };
 	getVertex(11).normal = { -0.57735026919f, 0.57735026919f, 0.57735026919f };
 
-	getVertex(9 ).texture_coordinate = { 0, 0 };
-	getVertex(10).texture_coordinate = { 1, 0 };
-	getVertex(11).texture_coordinate = { 0, 1 };
+	getVertex(9 ).uv = { 0, 0 };
+	getVertex(10).uv = { 1, 0 };
+	getVertex(11).uv = { 0, 1 };
 
 	getIndex(0) = 0; getIndex(1) = 1; getIndex(2) = 2;
 	getIndex(3) = 3; getIndex(4) = 4; getIndex(5) = 5;

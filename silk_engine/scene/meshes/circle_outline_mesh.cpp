@@ -16,7 +16,7 @@ CircleOutlineMesh::CircleOutlineMesh(uint resolution, float thickness)
 	}
 
 	for (size_t i = 0; i < vertices_count; ++i)
-		getVertex(i).texture_coordinate = (getVertex(i).position + vec2(1)) * vec2(0.5f);
+		getVertex(i).uv = (getVertex(i).position + vec2(1)) * vec2(0.5f);
 
 	id = 0;
 

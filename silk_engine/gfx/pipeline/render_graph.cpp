@@ -81,6 +81,7 @@ void RenderGraph::build()
 	// Reverse to get submission ordered passes
 	std::ranges::reverse(sorted_passes);
 
+	// Build render pass
 	render_pass = makeShared<RenderPass>();
 	for (Pass* pass : sorted_passes)
 	{
@@ -105,7 +106,6 @@ void RenderGraph::build()
 				render_pass->addInputAttachment(read_resource.attachment_index);
 			}
 
-
 			AttachmentProps props{};
 			props.format = write_resource.format;
 			if (Image::isDepthOnlyFormat(props.format))
@@ -124,8 +124,12 @@ void RenderGraph::build()
 			write_resource.attachment_index = render_pass->addAttachment(props);
 	
 		}
-		render_pass->build(); 
-		
+	}
+	render_pass->build();
+	
+	// Set render pass attachment clear values
+	for (Pass* pass : sorted_passes)
+	{
 		for (size_t write : pass->writes)
 		{
 			AttachmentNode& resource = *resources[write];

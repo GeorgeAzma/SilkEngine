@@ -77,7 +77,7 @@ RoundedRectangleMesh::RoundedRectangleMesh(uint resolution, float roundness_x, f
 		vec2& pos = getVertex(i).position;
 		pos += vec2{ roundness_x, roundness_y };
 		pos /= vec2{ 1.0f + roundness_x * 2.0f, 1.0f + roundness_y * 2.0f };
-		getVertex(i).texture_coordinate = pos;
+		getVertex(i).uv = pos;
 	}
 }
 

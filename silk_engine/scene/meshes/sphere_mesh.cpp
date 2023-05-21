@@ -41,22 +41,22 @@ SphereMesh::SphereMesh(uint32_t resolution)
 				switch (face)
 				{
 					case 0:
-						getVertex(offset + i).texture_coordinate = vec2(1.0f - dx, 1.0f - dy);
+						getVertex(offset + i).uv = vec2(1.0f - dx, 1.0f - dy);
 						break;
 					case 1:
-						getVertex(offset + i).texture_coordinate = vec2(1.0f - dx, 1.0f - dy);
+						getVertex(offset + i).uv = vec2(1.0f - dx, 1.0f - dy);
 						break;
 					case 2:
-						getVertex(offset + i).texture_coordinate = vec2(1.0f - dx, 1.0f - dy);
+						getVertex(offset + i).uv = vec2(1.0f - dx, 1.0f - dy);
 						break;
 					case 3:
-						getVertex(offset + i).texture_coordinate = vec2(1.0f - dx, 1.0f - dy);
+						getVertex(offset + i).uv = vec2(1.0f - dx, 1.0f - dy);
 						break;
 					case 4:
-						getVertex(offset + x * resolution + y).texture_coordinate = vec2(1.0f - dx, dy);
+						getVertex(offset + x * resolution + y).uv = vec2(1.0f - dx, dy);
 						break;
 					case 5:
-						getVertex(offset + x * resolution + y).texture_coordinate = vec2(dx, 1.0f - dy);
+						getVertex(offset + x * resolution + y).uv = vec2(dx, 1.0f - dy);
 						break;
 				}
 			}

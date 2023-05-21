@@ -4,9 +4,8 @@
 #include "gfx/images/image.h"
 
 Model::Model(const fs::path& file)
-{
-    *this = RawModel(file);
-}
+    : Model(RawModel(file))
+{}
 
 RawModel Model::load(const fs::path& file)
 {
@@ -15,11 +14,13 @@ RawModel Model::load(const fs::path& file)
 
 Model::Model(const RawModel& raw_model)
 {
+    file = raw_model.file;
+
+#if 0
     meshes.resize(raw_model.meshes.size());
 
-    for(size_t i = 0; i < meshes.size(); ++i)
+    for (size_t i = 0; i < meshes.size(); ++i)
         meshes[i] = makeShared<Mesh>(*raw_model.meshes[i]);
-    file = raw_model.file;
 
     Image::Props image_props{};
     auto white = Image::get("White");
@@ -130,11 +131,7 @@ Model::Model(const RawModel& raw_model)
         }
         else images.back().emplace_back(black);
     }
-}
-
-const std::vector<shared<Mesh>>& Model::getMeshes() const
-{
-    return meshes;
+#endif
 }
 
 const std::vector<std::vector<shared<Image>>>& Model::getImages() const

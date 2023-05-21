@@ -4,7 +4,7 @@ class RawModel;
 class Mesh;
 class Image;
 
-class Model
+class Model : NoCopy
 {
 public:
 	Model(const fs::path& file);
@@ -12,11 +12,10 @@ public:
 
 	static RawModel load(const fs::path& file);
 
-	const std::vector<shared<Mesh>>& getMeshes() const;
 	const std::vector<std::vector<shared<Image>>>& getImages() const;
 
 private:
-	std::vector<shared<Mesh>> meshes;
+	shared<Mesh> mesh;
 	std::vector<std::vector<shared<Image>>> images;
 	fs::path file;
 

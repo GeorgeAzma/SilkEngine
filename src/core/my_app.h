@@ -23,8 +23,8 @@ public:
     void onFramebufferResize(const FramebufferResizeEvent& e);
 
 private:
-    unique<Window> window = nullptr;
+    shared<Window> window = nullptr;
     shared<Scene> scene = nullptr;
     shared<Material> material = nullptr;
-    unique<RenderGraph> render_graph = nullptr;
+    shared<RenderGraph> render_graph = nullptr;
 };

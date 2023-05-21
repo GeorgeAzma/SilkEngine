@@ -81,7 +81,7 @@ struct CustomRawMesh : public RawMesh
 struct Vertex2D
 {
 	vec2 position = vec2(0);
-	vec2 texture_coordinate = vec2(0);
+	vec2 uv = vec2(0);
 	vec4 color = vec4(1);
 };
 
@@ -93,7 +93,7 @@ struct RawMesh2D : public CustomRawMesh<Vertex2D, uint32_t>
 struct Vertex3D
 {
 	vec3 position = vec3(0);
-	vec2 texture_coordinate = vec2(0);
+	vec2 uv = vec2(0);
 	vec3 normal = vec3(0);
 	vec4 color = vec4(1);
 };
