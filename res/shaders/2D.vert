@@ -4,13 +4,13 @@ layout(location = 2) in vec4 vertex_color;
 
 layout(location = 3) in mat4 instance_transform;
 layout(location = 7) in vec4 instance_color;
-layout(location = 8) in uint instance_image_index;
+layout(location = 8) in int instance_image_index;
 
 layout(location = 0) out VertexOutput 
 {
     vec2 uv;
     vec4 color;
-    flat uint instance_image_index;
+    flat int instance_image_index;
 } vertex_output;
 
 layout(set = 0, binding = 0) uniform GlobalUniform

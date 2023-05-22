@@ -23,13 +23,12 @@ void VertexArray::bind(uint32_t first, VkDeviceSize offset) const
 		cb.bindIndexBuffer(*buffer, vertices_size + offset, VkIndexType(index_type));
 }
 
-void VertexArray::draw() const
+void VertexArray::draw(uint32_t count, uint32_t instances, uint32_t first_index, uint32_t vertex_offset, uint32_t first_instance) const
 {
 	bind();
-
 	CommandBuffer& cb = RenderContext::getCommandBuffer();
 	if (isIndexed())
-		cb.drawIndexed(index_count, 1, 0, 0, 0);
+		cb.drawIndexed(count ? count : index_count, instances, first_index, vertex_offset, first_instance);
 	else
-		cb.draw(vertex_count, 1, 0, 0);
+		cb.draw(count ? count : vertex_count, instances, vertex_offset, first_instance);
 }

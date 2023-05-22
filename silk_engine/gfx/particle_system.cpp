@@ -4,9 +4,9 @@
 #include "scene/instance_images.h"
 #include "utils/thread_pool.h"
 #include "buffers/command_buffer.h"
-#include "debug_renderer.h"
 #include "scene/meshes/mesh.h"
 #include "material.h"
+#include "debug_renderer.h"
 #include "render_context.h"
 #include "buffers/buffer.h"
 #include "pipeline/graphics_pipeline.h"
@@ -59,8 +59,8 @@ void ParticleSystem::emit(const ParticleProps& props)
         props.size_begin,
         props.size_end,
         props.life_time,
-        props.life_time, 
-        instance_images->add({ props.image ? props.image : DebugRenderer::getWhiteImage()})
+        props.life_time,
+        props.image ? instance_images->add({ props.image }) : -1
     );
 }
 
@@ -121,7 +121,7 @@ void ParticleSystem::update()
                 m[2][2] = v[2][2];
                 m = math::rotate(math::scale(m, vec3(std::lerp(p.size_begin, p.size_end, life))), std::lerp(p.rotation_begin, p.rotation_end, life), { 0, 0, 1 });
                 particle_data[i].color = math::lerp(p.color_begin, p.color_end, life);
-                particle_data[i].texture_index = p.texture_index;
+                particle_data[i].iamge_index = p.iamge_index;
             });
     }
     instance_vbo->setData(particle_data.data(), particle_data.size() * sizeof(ParticleData));

@@ -96,6 +96,7 @@ struct Vertex3D
 	vec2 uv = vec2(0);
 	vec3 normal = vec3(0);
 	vec4 color = vec4(1);
+	vec4 tangent = vec4(0);
 };
 
 struct RawMesh3D : public CustomRawMesh<Vertex3D, uint32_t>

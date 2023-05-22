@@ -1,6 +1,7 @@
 #pragma once
 
-class RawModel;
+#include "raw_model.h"
+
 class Mesh;
 class Image;
 
@@ -12,11 +13,16 @@ public:
 
 	static RawModel load(const fs::path& file);
 
-	const std::vector<std::vector<shared<Image>>>& getImages() const;
+	const shared<Mesh>& getMesh() const { return mesh; }
+	const std::vector<shared<Image>>& getImages() const { return images; }
+	const std::vector<RawModel::Material>& getMaterials() const { return materials; }
+	const std::vector<RawModel::Node>& getNodes() const { return nodes; }
 
 private:
 	shared<Mesh> mesh;
-	std::vector<std::vector<shared<Image>>> images;
+	std::vector<shared<Image>> images;
+	std::vector<RawModel::Material> materials;
+	std::vector<RawModel::Node> nodes;
 	fs::path file;
 
 public:

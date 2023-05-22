@@ -16,7 +16,10 @@ public:
 	VertexArray(const RawMesh& raw_mesh);
 
 	void bind(uint32_t first = 0, VkDeviceSize offset = 0) const;
-	void draw() const;
+
+	// @param count is index_count in case of indexed draw and vertex_count otherwise
+	// @param vertex_offset is vertex_offset in case of indexed draw and first_vertex otherwise
+	void draw(uint32_t count = 0, uint32_t instances = 1, uint32_t first_index = 0, uint32_t vertex_offset = 0, uint32_t first_instance = 0) const;
 
 	bool isIndexed() const { return index_type != IndexType::NONE; }
 	VkDeviceSize getVerticesSize() const { return vertices_size; }

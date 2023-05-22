@@ -10,7 +10,6 @@ struct WindowResizeEvent;
 class Scene
 {
 	friend class Entity;
-	friend class SceneManager;
 
 public:
 	Scene();
@@ -25,7 +24,7 @@ public:
 
 	Camera* getMainCamera();
 
-private:
+public:
 	void init();
 	void update();
 	void destroy();

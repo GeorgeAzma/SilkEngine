@@ -48,7 +48,7 @@ class ParticleSystem
 		float size_end;
 		float life_time = 1.0f;
 		float life_remaining = 0;
-		uint32_t texture_index = 0;
+		uint32_t iamge_index = 0;
 	};
 
 	struct ParticleSpout
@@ -62,9 +62,9 @@ class ParticleSystem
 
 	struct ParticleData
 	{
-		mat4 model;
-		uint32_t texture_index;
-		vec4 color;
+		mat4 model = mat4(1);
+		vec4 color = vec4(1);
+		int32_t iamge_index = -1;
 	};
 
 public:

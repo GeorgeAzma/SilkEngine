@@ -29,7 +29,7 @@ void CameraController::onUpdate()
 	vec3 front2D(math::normalize(vec3(camera.direction.x, 0, camera.direction.z)));
 
 	auto old_position = camera.position;
-	float speed = 20.0f * Time::dt * (1 + Input::isKeyHeld(Key::LEFT_SHIFT) * 20);
+	float speed = 5.0f * Time::dt * (1 + Input::isKeyHeld(Key::LEFT_SHIFT) * 10);
 	
 	camera.position += float(Input::isKeyHeld(Key::W) - Input::isKeyHeld(Key::S)) * front2D * speed;
 	camera.position += float(Input::isKeyHeld(Key::A) - Input::isKeyHeld(Key::D)) * math::cross(front2D, math::UP) * speed;

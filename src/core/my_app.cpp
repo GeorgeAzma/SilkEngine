@@ -89,7 +89,7 @@ void MyApp::onUpdate()
 
     if (Scene::getActive())
     {
-        Scene::getActive()->onUpdate();
+        Scene::getActive()->update();
         DebugRenderer::update(Scene::getActive()->getMainCamera());
     }
 
@@ -107,6 +107,12 @@ void MyApp::onKeyPress(const KeyPressEvent& e)
         break;
     case Key::F11:
         e.window.setFullscreen(!e.window.isFullscreen());
+        break;
+    case Key::L:
+        if (e.window.getCursorMode() == CursorMode::LOCKED)
+            e.window.setCursorMode(CursorMode::NORMAL);
+        else if (e.window.getCursorMode() == CursorMode::NORMAL)
+            e.window.setCursorMode(CursorMode::LOCKED);
         break;
     }
 }

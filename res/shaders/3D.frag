@@ -1,7 +1,4 @@
-//TODO: Remove hardcoded materials
 #define AMBIENT 0.1
-#define METALLIC 0.0
-#define ROUGHNESS 0.3
 
 #define PI 3.1415926535897932384626433832795
 
@@ -11,7 +8,12 @@ layout(location = 0) in VertexOutput
     vec2 uv;
     vec3 normal;
     vec4 color;
-    flat uint instance_image_index;
+    vec3 tangent;
+    vec3 bitangent;
+    flat int instance_image_index;
+    flat float metallic;
+    flat float roughness;
+    flat vec3 emissive;
 } fragment_input;
 
 struct Light
@@ -52,10 +54,10 @@ vec3 PBR(Light light, vec3 normal, vec3 to_camera, vec3 albedo, float metallic, 
 {
    vec3 lighting = vec3(0);
 
-   vec3 to_light = normalize(light.position - world_position.xyz); //wi
+   vec3 to_light = normalize(light.position - world_position.xyz);
    vec3 halfway = normalize(to_camera + to_light);
    float attenuation = 1.0;
-   if(light.linear != 0 || light.quadratic != 0)
+   if(light.linear > 0.0001 || light.quadratic > 0.0001)
    {
        float distance_to_light = distance(light.position, world_position.xyz);
        attenuation = 1.0 / (1.0 + light.linear * distance_to_light + light.quadratic * (distance_to_light * distance_to_light));
@@ -107,28 +109,28 @@ vec3 aces(vec3 x)
 
 void main()
 {
-    vec4 albedo = texture(images[fragment_input.instance_image_index + DIFFUSE_TEXTURE], fragment_input.uv) * fragment_input.color;
+    vec4 albedo = fragment_input.color;
+    if (fragment_input.instance_image_index > -1)
+        albedo *= texture(images[fragment_input.instance_image_index], fragment_input.uv);
     color.a = albedo.a;
     if (color.a <= 0.01)
-        discard;
-    
-    //TODO: textures mapping (normal, roughness, metallic)
-    vec3 normal = fragment_input.normal;
-    
-    if (normal == vec3(0) || albedo.rgb == vec3(0))
+        discard;  
+        
+    if (fragment_input.normal == vec3(0) || albedo.rgb == vec3(0))
     {
         color.rgb = albedo.rgb;
         return;
     }
-    
-    normal = normalize(normal);
-    
-    float metallic = METALLIC;
-    
+        
+    vec3 normal = normalize(fragment_input.normal);
+    mat3 TBN = mat3(normalize(fragment_input.tangent), normalize(fragment_input.bitangent), normal);
+    vec3 local_normal = normalize(texture(images[fragment_input.instance_image_index + 2], fragment_input.uv).rgb * 2.0 - 1.0);
+    normal = normalize(TBN * local_normal);
+
     vec3 to_camera = normalize(global_uniform.camera_position - fragment_input.world_position.xyz);
-    vec3 F0 = mix(vec3(0.04), albedo.rgb, metallic);
+    vec3 F0 = mix(vec3(0.04), albedo.rgb, fragment_input.metallic);
     
-    vec3 ambient = vec3(AMBIENT) * albedo.rgb; // * ao
+    vec3 ambient = vec3(AMBIENT) * albedo.rgb * texture(images[fragment_input.instance_image_index + 1], fragment_input.uv).r; // * ao
     vec3 total_light = vec3(0);
     
     for(uint i = 0; i < MAX_LIGHTS; ++i)
@@ -137,7 +139,7 @@ void main()
         if (light.color == vec3(0))
             continue;
     
-        total_light += PBR(light, normal, to_camera, albedo.rgb, metallic, ROUGHNESS, F0, fragment_input.world_position.xyz);
+        total_light += PBR(light, normal, to_camera, albedo.rgb, fragment_input.metallic, fragment_input.roughness, F0, fragment_input.world_position.xyz);
     }
     color.rgb = aces(total_light + ambient.rgb);
 }

@@ -9,6 +9,7 @@ class Image;
 class Font;
 class Buffer;
 class Mesh;
+class Model;
 class GraphicsPipeline;
 class Material;
 
@@ -18,11 +19,22 @@ public:
 	static constexpr uint32_t MAX_IMAGE_SLOTS = 32;
 	static constexpr uint32_t MAX_LIGHTS = 32;
 
-	struct InstanceData
+	struct InstanceData2D
 	{
 		mat4 transform = mat4(1);
 		vec4 color = vec4(1);
-		uint32_t image_index = 0;
+		int32_t image_index = -1;
+	};
+
+	struct InstanceData3D
+	{
+		mat4 transform = mat4(1);
+		vec4 color = vec4(1);
+		int32_t image_index = -1;
+
+		float metallic = 1.0f;
+		float roughness = 1.0f;
+		vec3 emissive = vec3(0);
 	};
 
 	struct Renderable
@@ -104,6 +116,8 @@ private:
 
 		public:
 			shared<Mesh> mesh = nullptr;
+			uint32_t first_index = 0;
+			uint32_t index_count = 0;
 			std::vector<uint8_t> instance_data{};
 			InstanceImages instance_images{};
 			shared<Material> material = nullptr;
@@ -126,7 +140,9 @@ private:
 		void update();
 		void render();
 
-		Renderable createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset = 0, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
+		// @param first_index for indexed mesh otherwise first_index is first_vertex
+		// @param index_count for indexed mesh otherwise index_count is vertex_count
+		Renderable createInstance(const shared<Mesh>& mesh, uint32_t first_index, uint32_t index_count, const void* instance_data, size_t instance_data_size, size_t image_index_offset = 0, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
 		void updateInstance(const Renderable& instance, const void* instance_data)
 		{
 			instance_batches[instance.batch_index].setData(instance.data_offset, instance_data);
@@ -141,7 +157,7 @@ private:
 	class InstancedRenderer : public InstancedRendererBase
 	{
 	public:
-		shared<Renderable> createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset = 0, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
+		shared<Renderable> createInstance(const shared<Mesh>& mesh, uint32_t first_index, uint32_t index_count, const void* instance_data, size_t instance_data_size, size_t image_index_offset = 0, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
 		void destroyInstance(const Renderable& instance);
 
 	private:
@@ -160,7 +176,7 @@ private:
 			//instances.clear();
 		}
 
-		void createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset = 0, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
+		void createInstance(const shared<Mesh>& mesh, uint32_t first_index, uint32_t index_count, const void* instance_data, size_t instance_data_size, size_t image_index_offset = 0, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});
 
 	private:
 		std::vector<std::vector<Renderable>> instances;
@@ -211,6 +227,8 @@ public:
 	static void cuboid(float x, float y, float z, float width, float height, float depth);
 	static void sphere(float x, float y, float z, float radius);
 	static void ellipsoid(float x, float y, float z, float width, float height, float depth);
+	static void mesh(const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth);
+	static void model(const shared<Model>& model, float x, float y, float z, float width, float height, float depth);
 
 	// Slow function for quickly drawing stuff
 	static void draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const mat4& transform);
@@ -219,8 +237,9 @@ public:
 
 	static Light* addLight(const Light& light);
 
-	static shared<Renderable> createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, uint32_t image_index_offset = 0, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {}) { return render_context.createInstance(mesh, instance_data, instance_data_size, image_index_offset, pipeline, images); }
-	static shared<Renderable> createInstance(const shared<Mesh>& mesh, const InstanceData& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {}) { return createInstance(mesh, &instance_data, sizeof(instance_data), offsetof(instance_data, image_index), pipeline, images); }
+	static shared<Renderable> createInstance(const shared<Mesh>& mesh, uint32_t first_index, uint32_t index_count, const void* instance_data, size_t instance_data_size, uint32_t image_index_offset = 0, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {}) { return render_context.createInstance(mesh, first_index, index_count, instance_data, instance_data_size, image_index_offset, pipeline, images); }
+	static shared<Renderable> createInstance(const shared<Mesh>& mesh, uint32_t first_index, uint32_t index_count, const InstanceData2D& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {}) { return createInstance(mesh, first_index, index_count, &instance_data, sizeof(instance_data), offsetof(instance_data, image_index), pipeline, images); }
+	static shared<Renderable> createInstance(const shared<Mesh>& mesh, uint32_t first_index, uint32_t index_count, const InstanceData3D& instance_data, const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {}) { return createInstance(mesh, first_index, index_count, &instance_data, sizeof(instance_data), offsetof(instance_data, image_index), pipeline, images); }
 	static void updateInstance(const Renderable& instance, const void* instance_data) { render_context.updateInstance(instance, instance_data); }
 	static void destroyInstance(const Renderable& instance) { render_context.destroyInstance(instance); }
 

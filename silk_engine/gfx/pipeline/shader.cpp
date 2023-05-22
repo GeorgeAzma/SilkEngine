@@ -59,16 +59,11 @@ bool Shader::Stage::compile()
 	options.SetWarningsAsErrors();
 	options.SetGenerateDebugInfo();
 
-	// TODO: remove this, make this a parameter, or do something else
-	std::string source; // I am not using shaderc's pre processing because it's 30% slower
+	// TODO: remove this, make this a parameter, or do something else 
+	// NOTE: I am not using shaderc's pre processing because it's 30% slower
+	std::string source;
 	source += "#define MAX_IMAGE_SLOTS " + std::to_string(DebugRenderer::MAX_IMAGE_SLOTS) + '\n';
 	source += "#define MAX_LIGHTS " + std::to_string(DebugRenderer::MAX_LIGHTS) + '\n';
-	source += "#define DIFFUSE_TEXTURE 0\n";
-	source += "#define NORMAL_TEXTURE 1\n";
-	source += "#define AO_TEXTURE 2\n";
-	source += "#define HEIGHT_TEXTURE 3\n";
-	source += "#define SPECULAR_TEXTURE 4\n";
-	source += "#define EMMISIVE_TEXTURE 5\n";
 	source += stb_include_file((char*)file.string().c_str(), nullptr, nullptr, nullptr);
 
 	shaderc_shader_kind shaderc_type = (shaderc_shader_kind)0;

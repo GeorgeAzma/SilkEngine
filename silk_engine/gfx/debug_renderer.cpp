@@ -13,6 +13,7 @@
 #include "scene/meshes/quad_mesh.h"
 #include "scene/meshes/cube_mesh.h"
 #include "scene/meshes/sphere_mesh.h"
+#include "scene/model.h"
 #include "window/window.h"
 #include "material.h"
 #include "images/image.h"
@@ -56,7 +57,8 @@ void DebugRenderer::InstancedRendererBase::update()
 				RenderContext::getLogicalDevice().wait();
 			any_needs_update = true;
 			draw_commands[i].instanceCount = instance_batch.instance_count;
-			draw_commands[i].indexCount = instance_batch.mesh->getIndexCount();
+			draw_commands[i].firstIndex = instance_batch.first_index;
+			draw_commands[i].indexCount = instance_batch.index_count;
 			if (!instance_batch.instance_buffer->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size()))
 			{
 				instance_batch.instance_buffer->resize(instance_batch.instance_data.size() * 2);
@@ -80,9 +82,9 @@ void DebugRenderer::InstancedRendererBase::render()
 	}
 }
 
-DebugRenderer::Renderable DebugRenderer::InstancedRendererBase::createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
+DebugRenderer::Renderable DebugRenderer::InstancedRendererBase::createInstance(const shared<Mesh>& mesh, uint32_t first_index, uint32_t index_count, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
 {
-	size_t hash = size_t(mesh.get()) ^ size_t(pipeline.get());
+	size_t hash = size_t(mesh.get()) ^ size_t(pipeline.get()) ^ first_index ^ (size_t(index_count) << 32);
 	size_t instance_batch_index = instance_batches.size();
 	size_t instance_data_index = 0;
 	bool need_new_instance_batch = true;
@@ -100,8 +102,11 @@ DebugRenderer::Renderable DebugRenderer::InstancedRendererBase::createInstance(c
 
 	if (instance_batch_index == instance_batches.size())
 	{
-		instance_batches.emplace_back(mesh);
+		instance_batches.emplace_back();
 		auto& new_batch = instance_batches.back();
+		new_batch.mesh = mesh;
+		new_batch.first_index = first_index;
+		new_batch.index_count = index_count;
 		new_batch.data_size = instance_data_size;
 		new_batch.addData(instance_data);
 		new_batch.material = makeShared<Material>(pipeline);
@@ -121,9 +126,9 @@ DebugRenderer::Renderable DebugRenderer::InstancedRendererBase::createInstance(c
 	return Renderable(instance_data_index, instance_batch_index, image_index, images.size());
 }
 
-shared<DebugRenderer::Renderable> DebugRenderer::InstancedRenderer::createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
+shared<DebugRenderer::Renderable> DebugRenderer::InstancedRenderer::createInstance(const shared<Mesh>& mesh, uint32_t first_index, uint32_t index_count, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
 {
-	Renderable instance = DebugRenderer::InstancedRendererBase::createInstance(mesh, instance_data, instance_data_size, image_index_offset, pipeline, images);
+	Renderable instance = DebugRenderer::InstancedRendererBase::createInstance(mesh, first_index, index_count, instance_data, instance_data_size, image_index_offset, pipeline, images);
 	if (instance.batch_index >= instances.size())
 		instances.emplace_back();
 	auto& instance_vec = instances[instance.batch_index];
@@ -160,9 +165,9 @@ void DebugRenderer::InstancedRenderer::destroyInstance(const Renderable& instanc
 	instances[instance.batch_index].pop_back();
 }
 
-void DebugRenderer::ImmediateInstancedRenderer::createInstance(const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
+void DebugRenderer::ImmediateInstancedRenderer::createInstance(const shared<Mesh>& mesh, uint32_t first_index, uint32_t index_count, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
 {
-	Renderable instance = DebugRenderer::InstancedRendererBase::createInstance(mesh, instance_data, instance_data_size, image_index_offset, pipeline, images);
+	Renderable instance = DebugRenderer::InstancedRendererBase::createInstance(mesh, first_index, index_count, instance_data, instance_data_size, image_index_offset, pipeline, images);
 	if (instance.batch_index >= instances.size())
 		instances.emplace_back();
 	auto& instance_vec = instances[instance.batch_index];
@@ -383,6 +388,23 @@ void DebugRenderer::text(const std::string& text, float x, float y, float size)
 	draw(graphics_pipeline_2D, makeShared<Mesh>(TextMesh(text, 32, active.font)), x, y, size, size);
 }
 
+void DebugRenderer::image(const shared<Image>& image, float x, float y, float width, float height)
+{
+	active.images = { image };
+	draw(graphics_pipeline_2D, Mesh::get("Rectangle"), x, y, width, height);
+}
+
+void DebugRenderer::image(const shared<Image>& image, float x, float y, float size)
+{
+	active.images = { image };
+	draw(graphics_pipeline_2D, Mesh::get("Rectangle"), x, y, size, size);
+}
+
+void DebugRenderer::mesh(const shared<Mesh>& mesh, float x, float y, float width, float height)
+{
+	draw(graphics_pipeline_2D, mesh, x, y, width, height);
+}
+
 void DebugRenderer::tetrahedron(float x, float y, float z, float size)
 {
 	draw(graphics_pipeline_3D, Mesh::get("Tetrahedron"), x, y, z, size, size, size);
@@ -408,37 +430,51 @@ void DebugRenderer::ellipsoid(float x, float y, float z, float width, float heig
 	draw(graphics_pipeline_3D, Mesh::get("Sphere"), x, y, z, width, height, depth);
 }
 
-void DebugRenderer::image(const shared<Image>& image, float x, float y, float width, float height)
+void DebugRenderer::mesh(const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
 {
-	active.images = { image };
-	draw(graphics_pipeline_2D, Mesh::get("Rectangle"), x, y, width, height);
+	draw(graphics_pipeline_3D, mesh, x, y, z, width, height, depth);
 }
 
-void DebugRenderer::image(const shared<Image>& image, float x, float y, float size)
+void DebugRenderer::model(const shared<Model>& model, float x, float y, float z, float width, float height, float depth)
 {
-	active.images = { image };
-	draw(graphics_pipeline_2D, Mesh::get("Rectangle"), x, y, size, size);
-}
-
-void DebugRenderer::mesh(const shared<Mesh>& mesh, float x, float y, float width, float height)
-{
-	draw(graphics_pipeline_2D, mesh, x, y, width, height);
+	InstanceData3D data{};
+	mat4 transform = {
+		width, 0, 0, 0,
+		0, height, 0, 0,
+		0, 0, depth, 0,
+		x, y, z, 1
+	};
+	data.color = active.color;
+	if (active.transformed)
+		transform *= active.transform;
+	for (const auto& node : model->getNodes())
+	{
+		data.transform = transform * node.transform;
+		for (const auto& primitive : node.primitives)
+		{
+			const auto& material = model->getMaterials()[primitive.material_index];
+			data.metallic = material.metallic;
+			data.roughness = material.roughness;
+			data.emissive = material.emissive;
+			immediate_render_context.createInstance(model->getMesh(), primitive.first_index, primitive.index_count, &data, sizeof(data), offsetof(data, image_index), graphics_pipeline_3D, model->getImages());
+		}
+	}
 }
 #pragma endregion
 
 void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const mat4& transform)
 {
-	InstanceData data;
+	InstanceData3D data{};
 	data.transform = transform;
 	data.color = active.color;
 	if (active.transformed)
 		data.transform *= active.transform;
-	immediate_render_context.createInstance(mesh, &data, sizeof(data), offsetof(InstanceData, image_index), graphics_pipeline, active.images);
+	immediate_render_context.createInstance(mesh, 0, mesh->getIndexCount(), &data, sizeof(data), offsetof(data, image_index), graphics_pipeline, active.images);
 }
 
 void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
 {
-	InstanceData data;
+	InstanceData3D data{};
 	data.transform = {
 		width, 0, 0, 0,
 		0, height, 0, 0,
@@ -448,12 +484,12 @@ void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, cons
 	data.color = active.color;
 	if (active.transformed)
 		data.transform *= active.transform;
-	immediate_render_context.createInstance(mesh, &data, sizeof(data), offsetof(InstanceData, image_index), graphics_pipeline, active.images);
+	immediate_render_context.createInstance(mesh, 0, mesh->getIndexCount(), &data, sizeof(data), offsetof(data, image_index), graphics_pipeline, active.images);
 }
 
 void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float width, float height)
 {
-	InstanceData data;
+	InstanceData2D data{};
 	data.transform = {
 		width, 0, 0, 0,
 		0, height, 0, 0,
@@ -463,7 +499,7 @@ void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, cons
 	data.color = active.color;
 	if (active.transformed)
 		data.transform *= active.transform;
-	immediate_render_context.createInstance(mesh, &data, sizeof(data), offsetof(InstanceData, image_index), graphics_pipeline, active.images);
+	immediate_render_context.createInstance(mesh, 0, mesh->getIndexCount(), &data, sizeof(data), offsetof(data, image_index), graphics_pipeline, active.images);
 	active.depth -= 1e-10;
 }
 
