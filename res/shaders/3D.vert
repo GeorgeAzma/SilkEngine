@@ -36,7 +36,7 @@ void main()
     vertex_output.color = vertex_color * instance_color;
     vertex_output.normal  = normalize(vec3(instance_transform * vec4(vertex_normal, 0)));
     vertex_output.tangent = normalize(vec3(instance_transform * vec4(vertex_tangent.xyz, 0)));
-    //vertex_output.tangent = normalize(vertex_output.tangent - dot(vertex_output.tangent, vertex_output.normal) * vertex_output.normal); // Re-orthogonalize T with respect to N
+    vertex_output.tangent = normalize(vertex_output.tangent - dot(vertex_output.tangent, vertex_output.normal) * vertex_output.normal); // Re-orthogonalize T with respect to N
     vertex_output.bitangent = cross(vertex_output.normal, vertex_output.tangent.xyz) * vertex_tangent.w;
     vertex_output.instance_image_index = instance_image_index;
     vertex_output.metallic = instance_metallic;

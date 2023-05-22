@@ -123,12 +123,14 @@ void main()
     }
         
     vec3 normal = normalize(fragment_input.normal);
-    mat3 TBN = mat3(normalize(fragment_input.tangent), normalize(fragment_input.bitangent), normal);
-    vec3 local_normal = normalize(texture(images[fragment_input.instance_image_index + 2], fragment_input.uv).rgb * 2.0 - 1.0);
-    normal = normalize(TBN * local_normal);
 
     vec3 to_camera = normalize(global_uniform.camera_position - fragment_input.world_position.xyz);
     vec3 F0 = mix(vec3(0.04), albedo.rgb, fragment_input.metallic);
+
+
+    mat3 TBN = mat3(normalize(fragment_input.tangent), normalize(fragment_input.bitangent), normal);
+    vec3 local_normal = normalize(texture(images[fragment_input.instance_image_index + 2], fragment_input.uv).rgb * 2.0 - 1.0);
+    normal = mix(normal, normalize(TBN * local_normal), abs(dot(to_camera, normal))); // I do this mixing, because of weird artifact on critical angles
     
     vec3 ambient = vec3(AMBIENT) * albedo.rgb * texture(images[fragment_input.instance_image_index + 1], fragment_input.uv).r; // * ao
     vec3 total_light = vec3(0);
@@ -139,7 +141,7 @@ void main()
         if (light.color == vec3(0))
             continue;
     
-        total_light += PBR(light, normal, to_camera, albedo.rgb, fragment_input.metallic, fragment_input.roughness, F0, fragment_input.world_position.xyz);
+        total_light += PBR(light, normal, to_camera, albedo.rgb, fragment_input.metallic, fragment_input.roughness * 0.5, F0, fragment_input.world_position.xyz);
     }
     color.rgb = aces(total_light + ambient.rgb);
 }
