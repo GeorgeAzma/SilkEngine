@@ -14,7 +14,7 @@
 #include "silk_engine/gfx/pipeline/render_pass.h"
 #include "silk_engine/gfx/pipeline/graphics_pipeline.h"
 #include "silk_engine/gfx/devices/logical_device.h"
-#include "silk_engine/gfx/pipeline/render_graph.h"
+#include "silk_engine/gfx/pipeline/render_graph/render_graph.h"
 #include "silk_engine/gfx/pipeline/render_pass.h"
 
 #include "my_app.h"
@@ -29,16 +29,18 @@ MyApp::MyApp()
     window = makeShared<Window>();
 
     render_graph = makeShared<RenderGraph>();
-    auto& geometry = render_graph->addPass("Geometry");
-    auto& color = geometry.addAttachment("Color", Image::Format::BGRA, RenderContext::getPhysicalDevice().getMaxSampleCount(), VkClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f });
-    auto& depth = geometry.addAttachment("Depth", Image::Format::DEPTH24_STENCIL, RenderContext::getPhysicalDevice().getMaxSampleCount(), VkClearDepthStencilValue{ 1.0f, 0 });
+    auto& geometry = render_graph->addPass();
+    auto& color = geometry.addAttachment("Color", Image::Format::BGRA, RenderContext::getPhysicalDevice().getMaxSampleCount());
+    color.setClearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
+    auto& depth = geometry.addAttachment("Depth", Image::Format::DEPTH24_STENCIL, RenderContext::getPhysicalDevice().getMaxSampleCount());
+    depth.setClearDepthStencil({ 1.0f, 0 });
 
     geometry.setRenderCallback([&](const RenderGraph& render_graph)
         {
             DebugRenderer::render();
         });
 
-    auto& post_process = render_graph->addPass("Post Process");
+    auto& post_process = render_graph->addPass();
     auto& present_source = post_process.addAttachment("Present Source", Image::Format::BGRA, VK_SAMPLE_COUNT_1_BIT, { &color });
     post_process.setRenderCallback([&](const RenderGraph& render_graph)
         {
@@ -48,9 +50,7 @@ MyApp::MyApp()
             RenderContext::getCommandBuffer().draw(3);
         });
 
-    render_graph->addRoot(present_source);
-    render_graph->build();
-    render_graph->print();
+    render_graph->build("Present Source");
 
     shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
     graphics_pipeline->setShader(makeShared<Shader>(std::vector<std::string_view>{ "input", "input" }))

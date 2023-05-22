@@ -233,3 +233,7 @@ void RenderPass::resize(const SwapChain& swap_chain)
 {
     framebuffer = makeShared<Framebuffer>(swap_chain, *this, viewport.x ? viewport.x : swap_chain.getWidth(), viewport.y ? viewport.y : swap_chain.getHeight());
 }
+
+const std::vector<shared<Image>>& RenderPass::getAttachments() const { return framebuffer->getAttachments(); }
+uint32_t RenderPass::getWidth() const { return framebuffer->getWidth(); }
+uint32_t RenderPass::getHeight() const { return framebuffer->getHeight(); }

@@ -26,7 +26,7 @@ void MyScene::onStart()
     camera = createEntity();
     camera->add<CameraComponent>();
     camera->add<ScriptComponent>().bind<CameraController>();
-    camera->get<CameraComponent>().camera.position = vec3(0.0f, 0.0f, -2.0f);
+    camera->get<CameraComponent>().camera.position = vec3(0.0f, 0.0f, 50.0f);
 
     Image::add("Cursor", makeShared<Image>("cursors/cursor.png"));
     Image::get("Cursor")->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

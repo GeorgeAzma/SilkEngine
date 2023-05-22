@@ -64,6 +64,9 @@ public:
 	const std::vector<VkAttachmentDescription>& getAttachmentDescriptions() const { return attachment_descriptions; }
 	operator const VkRenderPass& () const { return render_pass; }
 	const shared<Framebuffer>& getFramebuffer() const { return framebuffer; }
+	const std::vector<shared<Image>>& getAttachments() const;
+	uint32_t getWidth() const;
+	uint32_t getHeight() const;
 
 private:
 	VkRenderPass render_pass = nullptr;

@@ -141,7 +141,7 @@ void main()
         if (light.color == vec3(0))
             continue;
     
-        total_light += PBR(light, normal, to_camera, albedo.rgb, fragment_input.metallic, fragment_input.roughness * 0.5, F0, fragment_input.world_position.xyz);
+        total_light += PBR(light, normal, to_camera, albedo.rgb, fragment_input.metallic, fragment_input.roughness, F0, fragment_input.world_position.xyz);
     }
     color.rgb = aces(total_light + ambient.rgb);
 }
