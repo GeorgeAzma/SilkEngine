@@ -1,26 +1,28 @@
 #include "debug_renderer.h"
 #include "pipeline/graphics_pipeline.h"
 #include "descriptors/descriptor_set.h"
-#include "scene/meshes/mesh.h"
-#include "scene/meshes/bezier_mesh.h"
-#include "scene/meshes/line_mesh.h"
-#include "scene/meshes/text_mesh.h"
-#include "scene/meshes/triangle_mesh.h"
-#include "scene/meshes/circle_mesh.h"
-#include "scene/meshes/circle_outline_mesh.h"
-#include "scene/meshes/rectangle_mesh.h"
-#include "scene/meshes/rounded_rectangle_mesh.h"
-#include "scene/meshes/quad_mesh.h"
-#include "scene/meshes/cube_mesh.h"
-#include "scene/meshes/sphere_mesh.h"
-#include "scene/model.h"
+#include "silk_engine/scene/meshes/mesh.h"
+#include "silk_engine/scene/meshes/bezier_mesh.h"
+#include "silk_engine/scene/meshes/line_mesh.h"
+#include "silk_engine/scene/meshes/text_mesh.h"
+#include "silk_engine/scene/meshes/triangle_mesh.h"
+#include "silk_engine/scene/meshes/circle_mesh.h"
+#include "silk_engine/scene/meshes/circle_outline_mesh.h"
+#include "silk_engine/scene/meshes/rectangle_mesh.h"
+#include "silk_engine/scene/meshes/rounded_rectangle_mesh.h"
+#include "silk_engine/scene/meshes/quad_mesh.h"
+#include "silk_engine/scene/meshes/cube_mesh.h"
+#include "silk_engine/scene/meshes/sphere_mesh.h"
+#include "silk_engine/scene/model.h"
 #include "window/window.h"
 #include "material.h"
 #include "images/image.h"
 #include "ui/font.h"
 #include "buffers/buffer.h"
 #include "render_context.h"
-#include "gfx/devices/logical_device.h"
+#include "devices/logical_device.h"
+#include "pipeline/render_graph/render_graph.h"
+#include "pipeline/render_pass.h"
 
 shared<Buffer> DebugRenderer::global_uniform_buffer = nullptr;
 std::array<Light, DebugRenderer::MAX_LIGHTS> DebugRenderer::lights{};
@@ -174,15 +176,18 @@ void DebugRenderer::ImmediateInstancedRenderer::createInstance(const shared<Mesh
 	instance_vec.emplace_back(std::move(instance));
 }
 
-void DebugRenderer::init(VkRenderPass render_pass)
+void DebugRenderer::init()
 {
 	render_context.init();
 	immediate_render_context.init();
 	global_uniform_buffer = makeShared<Buffer>(sizeof(GlobalUniformData), Buffer::UNIFORM | Buffer::TRANSFER_DST, Allocation::Props{ Allocation::MAPPED | Allocation::SEQUENTIAL_WRITE });
 
+	VkRenderPass render_pass = RenderContext::getRenderGraph().getPass("Geometry").getRenderPass();
+
 	graphics_pipeline_3D = makeShared<GraphicsPipeline>();
-	graphics_pipeline_3D->setShader(makeShared<Shader>("3D"))
-		.setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
+	graphics_pipeline_3D->setShader(makeShared<Shader>("3D", Shader::Defines { 
+		{ "MAX_IMAGE_SLOTS", std::to_string(DebugRenderer::MAX_IMAGE_SLOTS) }, 
+		{ "MAX_LIGHTS", std::to_string(DebugRenderer::MAX_LIGHTS) } }))
 		.setRenderPass(render_pass)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
@@ -192,8 +197,8 @@ void DebugRenderer::init(VkRenderPass render_pass)
 	GraphicsPipeline::add("3D", graphics_pipeline_3D);
 
 	graphics_pipeline_2D = makeShared<GraphicsPipeline>();
-	graphics_pipeline_2D->setShader(makeShared<Shader>("2D"))
-		.setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
+	graphics_pipeline_2D->setShader(makeShared<Shader>("2D", Shader::Defines {
+		{ "MAX_IMAGE_SLOTS", std::to_string(DebugRenderer::MAX_IMAGE_SLOTS) } }))
 		.setRenderPass(render_pass)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
@@ -239,7 +244,7 @@ void DebugRenderer::init(VkRenderPass render_pass)
 	Mesh::add("Cube", makeShared<Mesh>(CubeMesh()));
 	Mesh::add("Sphere", makeShared<Mesh>(SphereMesh()));
 
-	Font::add("Arial", makeShared<Font>("arial.ttf"));
+	Font::add("Arial", makeShared<Font>("res/fonts/arial.ttf"));
 
 	reset();
 }

@@ -1,6 +1,6 @@
 #include "input.h"
 #include "joystick.h"
-#include "gfx/window/window.h"
+#include "silk_engine/gfx/window/window.h"
 
 void Input::init()
 {

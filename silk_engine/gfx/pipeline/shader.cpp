@@ -1,13 +1,13 @@
 #include "shader.h"
-#include "io/file.h"
-#include "gfx/devices/logical_device.h"
-#include "gfx/debug_renderer.h"
-#include "utils/debug_timer.h"
-#include "gfx/instance.h"
+#include "silk_engine/io/file.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/debug_renderer.h"
+#include "silk_engine/utils/debug_timer.h"
+#include "silk_engine/gfx/instance.h"
 #define STB_INCLUDE_IMPLEMENTATION
 #include "stb_include.h"
-#include "gfx/render_context.h"
-#include "gfx/descriptors/descriptor_set_layout.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/descriptors/descriptor_set_layout.h"
 #include <spirv_cross/spirv_cross.hpp>
 #include <shaderc/shaderc.hpp>
 
@@ -31,7 +31,7 @@ Shader::Stage::~Stage()
 	RenderContext::getLogicalDevice().destroyShaderModule(module);
 }
 
-bool Shader::Stage::compile()
+bool Shader::Stage::compile(const Defines& defines)
 {
 	DebugTimer t(std::format("Compiling {}", file.filename()));
 	static shaderc::Compiler compiler;
@@ -61,9 +61,9 @@ bool Shader::Stage::compile()
 
 	// TODO: remove this, make this a parameter, or do something else 
 	// NOTE: I am not using shaderc's pre processing because it's 30% slower
-	std::string source;
-	source += "#define MAX_IMAGE_SLOTS " + std::to_string(DebugRenderer::MAX_IMAGE_SLOTS) + '\n';
-	source += "#define MAX_LIGHTS " + std::to_string(DebugRenderer::MAX_LIGHTS) + '\n';
+	std::string source = "";
+	for (const auto& define : defines)
+		source += std::string("#define ") + define.first.data() + ' ' + define.second.data() + '\n';
 	source += stb_include_file((char*)file.string().c_str(), nullptr, nullptr, nullptr);
 
 	shaderc_shader_kind shaderc_type = (shaderc_shader_kind)0;
@@ -121,7 +121,7 @@ fs::path Shader::Stage::getCachePath() const
 	return fs::path("res/cache/shaders") / (file.string() + ".spv");
 }
 
-Shader::Shader(std::string_view name)
+Shader::Shader(std::string_view name, const Defines& defines)
 {
 	std::vector<fs::path> source_files;
 	for (const auto& file : std::filesystem::directory_iterator("res/shaders"))
@@ -132,10 +132,10 @@ Shader::Shader(std::string_view name)
 	for (const auto& file : source_files)
 		stages.emplace_back(makeUnique<Stage>(file));
 	std::ranges::sort(stages);
-	compile();
+	compile(defines);
 }
 
-Shader::Shader(const std::vector<std::string_view>& names)
+Shader::Shader(const std::vector<std::string_view>& names, const Defines& defines)
 {
 	for (const auto& file : std::filesystem::directory_iterator("res/shaders"))
 		for (const auto& name : names)
@@ -146,14 +146,14 @@ Shader::Shader(const std::vector<std::string_view>& names)
 			}
 	SK_ASSERT(stages.size() == names.size(), "Couldn't find one of the shader stage files, make sure paths are correct");
 	std::ranges::sort(stages);
-	compile();
+	compile(defines);
 }
 
-void Shader::compile()
+void Shader::compile(const Defines& defines)
 {
 	bool compiled = true;
 	for (auto& stage : stages)
-		if (!stage->compile())
+		if (!stage->compile(defines))
 		{
 			compiled = false;
 			break;
@@ -208,6 +208,8 @@ void Shader::reflect()
 					if (existing_push_constant.offset + existing_push_constant.size >= active_range.offset && existing_push_constant.offset < active_range.offset + active_range.range)
 					{
 						existing_push_constant.stageFlags |= (VkShaderStageFlags)type;
+						existing_push_constant.offset = std::min(size_t(existing_push_constant.offset), active_range.offset);
+						existing_push_constant.size = std::max(size_t(existing_push_constant.offset + existing_push_constant.size), active_range.offset + active_range.range) - existing_push_constant.offset;
 						found_push_constant = true;
 						break;
 					}

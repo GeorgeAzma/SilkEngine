@@ -4,7 +4,7 @@ project(${ENGINE_NAME} VERSION 1.0.0 LANGUAGES CXX)
 
 file(GLOB_RECURSE SILK_ENGINE_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 add_library(${ENGINE_NAME} STATIC ${SILK_ENGINE_SOURCES})
-target_include_directories(${ENGINE_NAME} PUBLIC ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${ENGINE_NAME} PUBLIC ${INCLUDE_DIRS})
 if(DEPENDENCIES_TO_ADD)
 	add_dependencies(${ENGINE_NAME} ${DEPENDENCIES_TO_ADD})
 endif()
@@ -20,7 +20,7 @@ target_compile_definitions(${ENGINE_NAME} PRIVATE "SK_CORE")
 target_compile_definitions(${ENGINE_NAME} INTERFACE "SK_CLIENT")
 
 #Precompile headers
-target_precompile_headers(${ENGINE_NAME} PUBLIC [["core/base.h"]])
+target_precompile_headers(${ENGINE_NAME} PUBLIC [["silk_engine/core/base.h"]])
 set(CMAKE_PCH_INSTANTIATE_TEMPLATES ON)
 
 #Link

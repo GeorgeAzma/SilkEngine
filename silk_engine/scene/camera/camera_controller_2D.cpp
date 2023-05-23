@@ -1,9 +1,9 @@
 #include "camera_controller_2D.h"
-#include "gfx/window/window.h"
-#include "scene/components.h"
-#include "utils/math.h"
-#include "core/input/input.h"
-#include "utils/time.h"
+#include "silk_engine/gfx/window/window.h"
+#include "silk_engine/scene/components.h"
+#include "silk_engine/utils/math.h"
+#include "silk_engine/core/input/input.h"
+#include "silk_engine/utils/time.h"
 
 void CameraController2D::onCreate()
 {

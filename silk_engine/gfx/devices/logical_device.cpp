@@ -1,8 +1,8 @@
 #include "logical_device.h"
-#include "gfx/render_context.h"
-#include "gfx/queue.h"
-#include "gfx/window/surface.h"
-#include "gfx/instance.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/queue.h"
+#include "silk_engine/gfx/window/surface.h"
+#include "silk_engine/gfx/instance.h"
 
 LogicalDevice::LogicalDevice(const PhysicalDevice& physical_device, const std::vector<PhysicalDevice::Feature>& features)
 	: physical_device(physical_device)

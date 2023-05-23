@@ -10,21 +10,19 @@
 // Support different texture map indices, currently they are hardcoded, so only some models will work properly
 
 RawModel::RawModel(const fs::path& file)
+    : file(file)
 {
-    fs::path file_path = fs::path("res/models") / file;
-    this->file = file_path;
     directory = file.string().substr(0, file.string().find_last_of('/'));
 
-    //const aiScene* scene = importer.ReadFile(file_path.string(), aiProcess_Triangulate | aiProcess_ImproveCacheLocality | aiProcess_JoinIdenticalVertices | aiProcess_OptimizeGraph | aiProcess_OptimizeMeshes);
     tinygltf::Model model;
     std::string err;
     std::string warn;
 
     static tinygltf::TinyGLTF loader;
     if (file.extension() == ".glb")
-        loader.LoadBinaryFromFile(&model, &err, &warn, file_path.string());
+        loader.LoadBinaryFromFile(&model, &err, &warn, file.string());
     else if (file.extension() == ".gltf")
-        loader.LoadASCIIFromFile(&model, &err, &warn, file_path.string());
+        loader.LoadASCIIFromFile(&model, &err, &warn, file.string());
     else SK_ERROR("Unsupported file extension: {} (supported extensions: gltf, glb)", file.extension());
 
     SK_VERIFY(err.empty(), err);

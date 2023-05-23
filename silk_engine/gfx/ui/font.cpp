@@ -1,5 +1,5 @@
 #include "font.h"
-#include "gfx/images/raw_image.h"
+#include "silk_engine/gfx/images/raw_image.h"
 
 void Font::init()
 {
@@ -14,7 +14,7 @@ void Font::destroy()
 }
 
 Font::Font(const fs::path& file, uint32_t size)
-	: characters(MAX_CHARACTER_COUNT), size(size), file(fs::path("res/fonts") / file)
+	: characters(MAX_CHARACTER_COUNT), size(size), file(file)
 {
 	FT_Error result = FT_New_Face(free_type_library, this->file.string().c_str(), 0, &face);
 	SK_VERIFY(!result, "FreeType: Couldn't create new face: {}", this->file.string());

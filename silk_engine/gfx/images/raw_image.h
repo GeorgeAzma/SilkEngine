@@ -26,10 +26,10 @@ class RawImage : public IRawImage<T>
 public:
 	RawImage() = default;
 	RawImage(const fs::path& file, int align_channels = 0) {}
-	RawImage(std::span<const fs::path> files, int align_channels = 0) {} //Files must have same width/height/channels
+	RawImage(std::span<const fs::path> files, int align_channels = 0) {} // Files must have same width/height/channels
 	
 	void load(const fs::path& file, int align_channels = 0) {}
-	void load(std::span<const fs::path> files, int align_channels = 0) {} //Files must have same width/height/channels
+	void load(std::span<const fs::path> files, int align_channels = 0) {} // Files must have same width/height/channels
 	void save(const fs::path& file) {} //Save as BMP
 	void savePNG(const fs::path& file) {}
 };
@@ -40,10 +40,10 @@ class RawImage<uint8_t> : public IRawImage<uint8_t>
 public:
 	RawImage() = default;
 	RawImage(const fs::path& file, int align_channels = 0);
-	RawImage(std::span<const fs::path> files, int align_channels = 0); //Files must have same width/height/channels
+	RawImage(std::span<const fs::path> files, int align_channels = 0); // Files must have same width/height/channels
 
 	void load(const fs::path& file, int align_channels = 0);
-	void load(std::span<const fs::path> files, int align_channels = 0); //Files must have same width/height/channels
+	void load(std::span<const fs::path> files, int align_channels = 0); // Files must have same width/height/channels
 	void save(const fs::path& file); //Save as BMP
 	void savePNG(const fs::path& file);
 };

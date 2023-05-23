@@ -1,9 +1,9 @@
 #include "framebuffer.h"
-#include "gfx/render_context.h"
-#include "gfx/window/window.h"
-#include "gfx/window/swap_chain.h"
-#include "gfx/devices/logical_device.h"
-#include "gfx/pipeline/render_pass.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/window/window.h"
+#include "silk_engine/gfx/window/swap_chain.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/pipeline/render_pass.h"
 
 Framebuffer::Framebuffer(const SwapChain& swap_chain, const RenderPass& render_pass, uint32_t width, uint32_t height, bool imageless) :
     swap_chain(swap_chain),

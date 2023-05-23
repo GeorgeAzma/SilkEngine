@@ -1,6 +1,6 @@
 #include "vertex_array.h"
-#include "gfx/render_context.h"
-#include "scene/meshes/raw_mesh.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/scene/meshes/raw_mesh.h"
 #include "command_buffer.h"
 #include "buffer.h"
 

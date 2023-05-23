@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gfx/buffers/vertex_array.h"
+#include "silk_engine/gfx/buffers/vertex_array.h"
 
 struct RawMesh;
 

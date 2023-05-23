@@ -1,7 +1,7 @@
 #include "model.h"
 #include "raw_model.h"
 #include "meshes/mesh.h"
-#include "gfx/images/image.h"
+#include "silk_engine/gfx/images/image.h"
 
 Model::Model(const fs::path& file)
     : Model(RawModel(file))

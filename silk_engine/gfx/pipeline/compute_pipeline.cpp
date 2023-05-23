@@ -1,8 +1,8 @@
 #include "compute_pipeline.h"
 #include "pipeline_cache.h"
-#include "gfx/render_context.h"
-#include "gfx/devices/logical_device.h"
-#include "gfx/buffers/command_buffer.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/buffers/command_buffer.h"
 
 ComputePipeline::ComputePipeline(const shared<Shader>& shader, const std::vector<Constant>& constants)
 {

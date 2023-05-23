@@ -1,10 +1,10 @@
 #include "command_buffer.h"
-#include "gfx/render_context.h"
-#include "gfx/queue.h"
-#include "gfx/devices/logical_device.h"
-#include "gfx/allocators/command_pool.h"
-#include "gfx/fence.h"
-#include "gfx/instance.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/queue.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/allocators/command_pool.h"
+#include "silk_engine/gfx/fence.h"
+#include "silk_engine/gfx/instance.h"
 
 // TODO: Doesn't account for: "Any primary command buffer that is in the recording or executable state and has resetting command buffer recorded into it, becomes invalid."
 
@@ -90,6 +90,7 @@ void CommandBuffer::endRenderPass()
 	active.render_area = { { None<int32_t>(), None<int32_t>() }, { None<uint32_t>(), None<uint32_t>() } };
 }
 
+#ifdef SK_ENABLE_DEBUG_OUTPUT
 void CommandBuffer::beginLabel(const char* name, vec4 color)
 {
 	static auto vkCmdBeginDebugUtilsLabelEXT = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetInstanceProcAddr(RenderContext::getInstance(), "vkCmdBeginDebugUtilsLabelEXT");
@@ -134,6 +135,7 @@ void CommandBuffer::endLabel()
 
 	vkCmdEndDebugUtilsLabelEXT(command_buffer);
 }
+#endif
 
 #pragma endregion
 

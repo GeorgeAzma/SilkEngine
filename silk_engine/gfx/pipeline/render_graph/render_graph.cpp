@@ -1,10 +1,16 @@
 #include "render_graph.h"
-#include "gfx/pipeline/render_pass.h"
-#include "gfx/window/window.h"
-#include "gfx/window/swap_chain.h"
-#include "gfx/render_context.h"
-#include "gfx/fence.h"
-#include "gfx/semaphore.h"
+#include "silk_engine/gfx/pipeline/render_pass.h"
+#include "silk_engine/gfx/window/window.h"
+#include "silk_engine/gfx/window/swap_chain.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/fence.h"
+#include "silk_engine/gfx/semaphore.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+
+RenderGraph::~RenderGraph()
+{
+	RenderContext::getLogicalDevice().wait();
+}
 
 void RenderGraph::build(const char* backbuffer)
 {
@@ -18,15 +24,16 @@ void RenderGraph::build(const char* backbuffer)
 	{
 		for (auto& pass2 : passes)
 		{
-			if (pass == pass2)
-				continue;
 			bool should_remove = false;
-			for (const auto& input : pass->getInputs())
+			if (pass != pass2)
 			{
-				if (&input->getPass() == pass2.get())
+				for (const auto& input : pass->getInputs())
 				{
-					should_remove = true;
-					break;
+					if (&input->getPass() == pass2.get())
+					{
+						should_remove = true;
+						break;
+					}
 				}
 			}
 			if (!should_remove)

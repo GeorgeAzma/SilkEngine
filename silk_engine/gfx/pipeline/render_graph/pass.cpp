@@ -12,7 +12,7 @@ Resource& Pass::addAttachment(const char* name, Image::Format format, VkSampleCo
 	return resource;
 }
 
-const shared<RenderPass>& Pass::getRenderPass() const
+const RenderPass& Pass::getRenderPass() const
 {
 	return render_graph.getRenderPass();
 }

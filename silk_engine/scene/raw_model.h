@@ -1,7 +1,7 @@
 #pragma once
 
 #include "meshes/raw_mesh.h"
-#include "gfx/images/raw_image.h"
+#include "silk_engine/gfx/images/raw_image.h"
 
 namespace tinygltf
 {

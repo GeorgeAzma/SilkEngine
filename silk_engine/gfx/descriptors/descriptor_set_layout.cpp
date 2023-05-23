@@ -1,6 +1,6 @@
 #include "descriptor_set_layout.h"
-#include "gfx/render_context.h"
-#include "gfx/devices/logical_device.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/devices/logical_device.h"
 
 DescriptorSetLayout::DescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {

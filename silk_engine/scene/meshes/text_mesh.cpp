@@ -1,5 +1,5 @@
 #include "text_mesh.h"
-#include "gfx/ui/font.h"
+#include "silk_engine/gfx/ui/font.h"
 
 TextMesh::TextMesh(std::string_view text, uint32_t size, shared<Font> font)
 {

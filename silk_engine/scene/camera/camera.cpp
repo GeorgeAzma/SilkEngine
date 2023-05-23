@@ -1,6 +1,6 @@
 #include "camera.h"
-#include "utils/math.h"
-#include "gfx/window/window.h"
+#include "silk_engine/utils/math.h"
+#include "silk_engine/gfx/window/window.h"
 
 Camera::Camera()
 {

@@ -1,6 +1,6 @@
 #include "descriptor_pool.h"
-#include "gfx/render_context.h"
-#include "gfx/devices/logical_device.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/devices/logical_device.h"
 
 DescriptorPool::DescriptorPool(uint32_t max_sets, const std::vector<VkDescriptorPoolSize>& sizes)
 {

@@ -1,7 +1,7 @@
 #include "sampler.h"
-#include "gfx/render_context.h"
-#include "gfx/devices/physical_device.h"
-#include "gfx/devices/logical_device.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/devices/physical_device.h"
+#include "silk_engine/gfx/devices/logical_device.h"
 
 Sampler::Sampler(const Props& props)
 {

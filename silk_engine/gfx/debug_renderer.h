@@ -1,9 +1,9 @@
 #pragma once
 
-#include "utils/color.h"
-#include "scene/light.h"
-#include "scene/instance_images.h"
-#include "scene/camera/camera.h"
+#include "silk_engine/utils/color.h"
+#include "silk_engine/scene/light.h"
+#include "silk_engine/scene/instance_images.h"
+#include "silk_engine/scene/camera/camera.h"
 
 class Image;
 class Font;
@@ -183,7 +183,7 @@ private:
 	};
 
 public:
-	static void init(VkRenderPass render_pass);
+	static void init();
 	static void destroy();
 	static void reset();
 	static void update(Camera* camera);

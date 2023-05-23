@@ -11,14 +11,18 @@ class Semaphore;
 class RenderGraph
 {
 public:
-	Pass& addPass() 
-	{ 
-		passes.emplace_back(makeUnique<Pass>(Pass::Type::RENDER, *this)); 
+	~RenderGraph();
+
+	Pass& addPass(const char* name) 
+	{
+		passes.emplace_back(makeUnique<Pass>(name, Pass::Type::RENDER, *this));
+		passes_map.emplace(name, passes.back().get());
 		return *passes.back(); 
 	}
-	Pass& addComputePass()
+	Pass& addComputePass(const char* name)
 	{
-		passes.emplace_back(makeUnique<Pass>(Pass::Type::COMPUTE, *this));
+		passes.emplace_back(makeUnique<Pass>(name, Pass::Type::COMPUTE, *this));
+		passes_map.emplace(name, passes.back().get());
 		return *passes.back();
 	}
 	Resource& addResource(unique<Resource>&& resource) 
@@ -33,10 +37,12 @@ public:
 	void resize(const SwapChain& swap_chain);
 
 	const shared<Image>& getAttachment(std::string_view resource_name) const;
-	const shared<RenderPass>& getRenderPass() const { return render_pass; }
+	const Pass& getPass(std::string_view name) const { return *passes_map.at(name); }
+	const RenderPass& getRenderPass() const { return *render_pass; }
 
-public:
+private:
 	std::vector<unique<Pass>> passes;
+	std::unordered_map<std::string_view, const Pass*> passes_map;
 	std::vector<Pass*> sorted_passes;
 	shared<RenderPass> render_pass = nullptr;
 	std::vector<unique<Resource>> resources;

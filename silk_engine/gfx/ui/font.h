@@ -2,7 +2,7 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H  
-#include "gfx/images/image.h"
+#include "silk_engine/gfx/images/image.h"
 
 class Font
 {

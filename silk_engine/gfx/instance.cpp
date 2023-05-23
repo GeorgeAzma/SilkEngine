@@ -1,8 +1,8 @@
 #include "instance.h"
 #include "render_context.h"
 #include "debug_messenger.h"
-#include "gfx/devices/physical_device.h"
-#include "gfx/devices/logical_device.h"
+#include "silk_engine/gfx/devices/physical_device.h"
+#include "silk_engine/gfx/devices/logical_device.h"
 
 Instance::Instance(std::string_view app_name)
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gfx/buffers/command_buffer.h"
+#include "silk_engine/gfx/buffers/command_buffer.h"
 
 class CommandPool;
 

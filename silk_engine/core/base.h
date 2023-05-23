@@ -111,7 +111,7 @@ static constexpr auto makeArray(T&&... values) -> std::array<typename std::decay
     return std::array<typename std::decay<typename std::common_type<T...>::type>::type, sizeof...(T)>{std::forward<T>(values)...};
 }
 
-#include "utils/math.h"
+#include "silk_engine/utils/math.h"
 
 namespace std
 {
@@ -217,7 +217,7 @@ namespace std
     };
 }
 
-#include "platform.h"
-#include "utils/time.h"
-#include "utils/random.h"
-#include "core/log.h"
+#include "silk_engine/core/platform.h"
+#include "silk_engine/utils/time.h"
+#include "silk_engine/utils/random.h"
+#include "silk_engine/core/log.h"

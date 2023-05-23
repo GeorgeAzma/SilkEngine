@@ -1,6 +1,6 @@
 #include "buffer.h"
-#include "gfx/allocators/allocator.h"
-#include "gfx/render_context.h"
+#include "silk_engine/gfx/allocators/allocator.h"
+#include "silk_engine/gfx/render_context.h"
 #include "command_buffer.h"
 
 Buffer::Buffer(VkDeviceSize size, Usage usage, const Allocation::Props& allocation_props) :

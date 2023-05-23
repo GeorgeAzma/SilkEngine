@@ -1,7 +1,7 @@
 #pragma once
 
-#include "scene/entity.h"
-#include "utils/delta.h"
+#include "silk_engine/scene/entity.h"
+#include "silk_engine/utils/delta.h"
 
 class CameraController2D : public ScriptableEntity
 {

@@ -1,7 +1,7 @@
 #include "command_pool.h"
-#include "gfx/render_context.h"
-#include "gfx/devices/physical_device.h"
-#include "gfx/devices/logical_device.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/devices/physical_device.h"
+#include "silk_engine/gfx/devices/logical_device.h"
 
 CommandPool::CommandPool(VkCommandPoolCreateFlags flags, std::optional<uint32_t> queue_family_index)
 	: flags(flags)

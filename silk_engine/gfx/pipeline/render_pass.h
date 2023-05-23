@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gfx/images/image.h"
+#include "silk_engine/gfx/images/image.h"
 
 class Framebuffer;
 class SwapChain;

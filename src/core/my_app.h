@@ -7,8 +7,6 @@ struct WindowCloseEvent;
 struct FramebufferResizeEvent;
 class Window;
 class Scene;
-class Material;
-class RenderGraph;
 
 class MyApp : public Application
 {
@@ -25,6 +23,4 @@ public:
 private:
     shared<Window> window = nullptr;
     shared<Scene> scene = nullptr;
-    shared<Material> material = nullptr;
-    shared<RenderGraph> render_graph = nullptr;
 };

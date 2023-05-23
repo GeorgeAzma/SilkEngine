@@ -1,6 +1,6 @@
 #include "instance_images.h"
-#include "gfx/images/image.h"
-#include "gfx/debug_renderer.h"
+#include "silk_engine/gfx/images/image.h"
+#include "silk_engine/gfx/debug_renderer.h"
 
 InstanceImages::InstanceImages(uint32_t max_images)
 {

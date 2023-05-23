@@ -1,10 +1,10 @@
 #include "physical_device.h"
 #include "logical_device.h"
-#include "gfx/window/swap_chain.h"
-#include "gfx/render_context.h"
-#include "gfx/window/surface.h"
-#include "gfx/window/window.h"
-#include "gfx/instance.h"
+#include "silk_engine/gfx/window/swap_chain.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/window/surface.h"
+#include "silk_engine/gfx/window/window.h"
+#include "silk_engine/gfx/instance.h"
 
 PhysicalDevice::PhysicalDevice(const Instance& instance, VkPhysicalDevice physical_device)
 	: instance(instance), physical_device(physical_device)

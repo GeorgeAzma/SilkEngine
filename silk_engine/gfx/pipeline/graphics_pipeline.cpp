@@ -1,10 +1,10 @@
 #include "graphics_pipeline.h"
 #include "pipeline_cache.h"
-#include "gfx/render_context.h"
-#include "gfx/window/swap_chain.h"
-#include "gfx/devices/logical_device.h"
-#include "gfx/buffers/command_buffer.h"
-#include "gfx/pipeline/render_pass.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/window/swap_chain.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/buffers/command_buffer.h"
+#include "silk_engine/gfx/pipeline/render_pass.h"
 
 GraphicsPipeline::GraphicsPipeline()
 {

@@ -1,8 +1,8 @@
 #include "command_queue.h"
-#include "gfx/render_context.h"
-#include "gfx/devices/logical_device.h"
-#include "gfx/devices/physical_device.h"
-#include "gfx/allocators/command_pool.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/devices/physical_device.h"
+#include "silk_engine/gfx/allocators/command_pool.h"
 
 CommandQueue::CommandQueue(std::optional<uint32_t> queue_family_index, VkQueueFlagBits queue_type)
 	: queue_type(queue_type), command_pool(makeShared<CommandPool>(VkCommandPoolCreateFlags{}, queue_family_index)), command_buffers({ makeShared<CommandBuffer>(*command_pool) }), index(0)

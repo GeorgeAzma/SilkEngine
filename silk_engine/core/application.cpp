@@ -1,11 +1,10 @@
 #include "application.h"
-#include "time.h"
-#include "gfx/render_context.h"
-#include "gfx/window/window.h"
-#include "core/input/input.h"
-#include "scene/scene.h"
-#include "gfx/devices/logical_device.h"
-#include "scene/camera/camera.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/window/window.h"
+#include "silk_engine/core/input/input.h"
+#include "silk_engine/scene/scene.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/scene/camera/camera.h"
 
 Application::Application()
 {

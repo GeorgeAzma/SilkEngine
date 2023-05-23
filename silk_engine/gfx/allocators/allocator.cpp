@@ -1,9 +1,9 @@
 #include "allocator.h"
 #include "allocation.h"
-#include "gfx/render_context.h"
-#include "gfx/instance.h"
-#include "gfx/devices/logical_device.h"
-#include "gfx/devices/physical_device.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/instance.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/devices/physical_device.h"
 
 Allocator::Allocator(const LogicalDevice& logical_device)
 {

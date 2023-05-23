@@ -18,6 +18,8 @@ namespace shaderc
 class Shader : NoCopy
 {
 public:
+	using Defines = std::vector<std::pair<std::string_view, std::string_view>>;
+
 	struct Stage : NoCopy
 	{
 	public:
@@ -35,7 +37,7 @@ public:
 		Stage(const fs::path& file);
 		~Stage();
 
-		bool compile();
+		bool compile(const Defines& defines = {});
 
 		void loadCache();
 		void saveCache() const;
@@ -92,10 +94,10 @@ public:
 	};
 
 public:
-    Shader(std::string_view name);
-	Shader(const std::vector<std::string_view>& names);
+    Shader(std::string_view name, const Defines& defines = {});
+	Shader(const std::vector<std::string_view>& names, const Defines& defines = {});
 
-	void compile();
+	void compile(const Defines& defines = {});
 	void reflect();
 
 	ResourceLocation getLocation(std::string_view resource_name) const;

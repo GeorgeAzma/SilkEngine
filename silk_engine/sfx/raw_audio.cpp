@@ -32,10 +32,8 @@ AudioFormat RawAudio::getFormat(uint8_t num_channels, uint8_t bit_depth)
 
 void RawAudio::load(const fs::path& file)
 {
-	fs::path file_path = fs::path("res/audio") / file;
-
-	std::ifstream wav_file(file_path, std::ios::binary);
-	SK_VERIFY(wav_file.is_open(), "Couldn't open WAV file: {}", file_path);
+	std::ifstream wav_file(file, std::ios::binary);
+	SK_VERIFY(wav_file.is_open(), "Couldn't open WAV file: {}", file);
 
 	char id[4];
 	uint32_t block_align = 1;

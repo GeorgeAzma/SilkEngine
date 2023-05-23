@@ -1,8 +1,8 @@
 #include "surface.h"
-#include "gfx/render_context.h"
-#include "gfx/devices/logical_device.h"
-#include "gfx/devices/physical_device.h"
-#include "gfx/instance.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/devices/physical_device.h"
+#include "silk_engine/gfx/instance.h"
 #include "window.h"
 
 Surface::Surface(const Window& window)

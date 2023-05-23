@@ -1,10 +1,10 @@
 #include "swap_chain.h"
-#include "gfx/devices/physical_device.h"
-#include "gfx/render_context.h"
-#include "gfx/window/window.h"
-#include "gfx/window/surface.h"
-#include "gfx/devices/logical_device.h"
-#include "gfx/queue.h"
+#include "silk_engine/gfx/devices/physical_device.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/window/window.h"
+#include "silk_engine/gfx/window/surface.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/queue.h"
 
 SwapChain::SwapChain(const Surface& surface, bool vsync)
 	: surface(surface)

@@ -1,14 +1,14 @@
 #include "image.h"
 #include "raw_image.h"
 #include "image_view.h"
-#include "gfx/window/window.h"
-#include "gfx/render_context.h"
-#include "gfx/buffers/buffer.h"
-#include "gfx/devices/physical_device.h"
-#include "gfx/devices/logical_device.h"
-#include "gfx/window/swap_chain.h"
-#include "gfx/buffers/command_buffer.h"
-#include "gfx/allocators/allocator.h"
+#include "silk_engine/gfx/window/window.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/buffers/buffer.h"
+#include "silk_engine/gfx/devices/physical_device.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/window/swap_chain.h"
+#include "silk_engine/gfx/buffers/command_buffer.h"
+#include "silk_engine/gfx/allocators/allocator.h"
 
 VkImageType Image::getVulkanTypeFromType(Type type)
 {
@@ -64,7 +64,7 @@ size_t Image::getFormatSize(Format format)
 
 VkImageAspectFlags Image::getFormatVulkanAspectFlags(Format format)
 {
-	return (isColorFormat(format) * VK_IMAGE_ASPECT_COLOR_BIT) | (isStencilFormat(format) * VK_IMAGE_ASPECT_DEPTH_BIT) | (isStencilFormat(format) * VK_IMAGE_ASPECT_STENCIL_BIT);
+	return (isColorFormat(format) * VK_IMAGE_ASPECT_COLOR_BIT) | (isDepthFormat(format) * VK_IMAGE_ASPECT_DEPTH_BIT) | (isStencilFormat(format) * VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 uint8_t Image::getFormatChannels(Format format)
@@ -141,6 +141,7 @@ Image::Image(uint32_t width, uint32_t height, Format format, VkImage img)
 }
 
 Image::Image(const std::array<fs::path, 6>& files, const Props& props)
+	: props(props)
 {
 	RawImage raw_image(files);
 	this->props.width = raw_image.width;
@@ -153,6 +154,7 @@ Image::Image(const std::array<fs::path, 6>& files, const Props& props)
 }
 
 Image::Image(std::span<const fs::path> files, const Props& props)
+	: props(props)
 {
 	RawImage raw_image(files);
 	this->props.width = raw_image.width;
@@ -161,7 +163,7 @@ Image::Image(std::span<const fs::path> files, const Props& props)
 	this->props.format = getFormatFromChannels(raw_image.channels);
 	this->props.type = Type::_2D_ARRAY;
 	create();
-	setData(raw_image.pixels.data());
+	setData(raw_image.pixels.data(), 0, 0);
 	generateMipmaps();
 }
 
@@ -179,7 +181,7 @@ Image::Image(std::span<const std::array<fs::path, 6>> files, const Props& props)
 	this->props.format = getFormatFromChannels(raw_image.channels);
 	this->props.type = Type::CUBE_ARRAY;
 	create();
-	setData(raw_image.pixels.data());
+	setData(raw_image.pixels.data(), 0, 0);
 	generateMipmaps();
 }
 
@@ -206,6 +208,8 @@ void Image::setData(const void* data, uint32_t base_layer, uint32_t layers)
 {
 	if (!data)
 		return;
+
+	layers = layers ? layers : props.layers - base_layer;
 
 	if (VmaAllocation(allocation) && allocation.isHostVisible())
 	{
@@ -334,7 +338,7 @@ void Image::copyFromBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers
 	region.imageSubresource.aspectMask = getFormatVulkanAspectFlags(props.format);
 	region.imageSubresource.mipLevel = 0;
 	region.imageSubresource.baseArrayLayer = base_layer;
-	region.imageSubresource.layerCount = layers;
+	region.imageSubresource.layerCount = layers ? layers : props.layers - base_layer;
 	region.imageOffset = VkOffset3D(0, 0, 0);
 	region.imageExtent = VkExtent3D(props.width, props.height, props.depth);
 	RenderContext::getCommandBuffer().copyBufferToImage(buffer, image, layout, { region });
@@ -355,7 +359,7 @@ void Image::copyToBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers)
 	region.bufferRowLength = props.width;
 	region.imageSubresource.aspectMask = getFormatVulkanAspectFlags(props.format);
 	region.imageSubresource.baseArrayLayer = base_layer;
-	region.imageSubresource.layerCount = layers;
+	region.imageSubresource.layerCount = layers ? layers : props.layers - base_layer;
 	region.imageSubresource.mipLevel = 0;
 	RenderContext::getCommandBuffer().copyImageToBuffer(image, layout, buffer, { region });
 

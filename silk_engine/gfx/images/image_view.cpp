@@ -1,7 +1,7 @@
 #include "image_view.h"
 #include "image.h"
-#include "gfx/render_context.h"
-#include "gfx/devices/logical_device.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/devices/logical_device.h"
 
 ImageView::ImageView(VkImage image, Image::Format format, size_t base_mip_level, uint32_t mip_levels, size_t base_layer, size_t layers, Image::Type image_type, VkComponentMapping components)
 {

@@ -1,8 +1,7 @@
 #include "query_pool.h"
-#include "gfx/render_context.h"
-#include "utils/math.h"
-#include "gfx/devices/logical_device.h"
-#include "gfx/command_queue.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/command_queue.h"
 
 QueryPool::QueryPool(VkQueryType query_type, uint32_t query_count)
 	: query_type(query_type), queries(query_count, false)

@@ -1,6 +1,6 @@
 #include "window.h"
-#include "core/event.h"
-#include "gfx/images/raw_image.h"
+#include "silk_engine/core/event.h"
+#include "silk_engine/gfx/images/raw_image.h"
 #include "monitor.h"
 #include "surface.h"
 #include "swap_chain.h"

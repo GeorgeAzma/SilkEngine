@@ -1,5 +1,5 @@
 #include "joystick.h"
-#include "core/event.h"
+#include "silk_engine/core/event.h"
 
 Joystick Joystick::active_joystick = Joystick(-1);
 

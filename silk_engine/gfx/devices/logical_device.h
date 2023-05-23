@@ -75,8 +75,8 @@ public:
 	VkResult setObjectName(VkObjectType object_type, const void* handle, std::string_view name) const;
 	VkResult setObjectTag(VkObjectType object_type, const void* handle, uint64_t name, size_t tag_size, const void* tag) const;
 #else
-	VkResult setObjectName(VkObjectType object_type, const void* handle, std::string_view name) const {}
-	VkResult setObjectTag(VkObjectType object_type, const void* handle, uint64_t name, size_t tag_size, const void* tag) const {}
+	VkResult setObjectName(VkObjectType object_type, const void* handle, std::string_view name) const { return VK_ERROR_EXTENSION_NOT_PRESENT; }
+	VkResult setObjectTag(VkObjectType object_type, const void* handle, uint64_t name, size_t tag_size, const void* tag) const { return VK_ERROR_EXTENSION_NOT_PRESENT; }
 #endif
 
 	const Queue& getGraphicsQueue() const;

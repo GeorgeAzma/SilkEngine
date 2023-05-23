@@ -1,8 +1,8 @@
 #ifdef SK_ENABLE_DEBUG_MESSENGER
 
 #include "debug_messenger.h"
-#include "gfx/render_context.h"
-#include "gfx/instance.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/instance.h"
 
 VKAPI_ATTR VkBool32 VKAPI_CALL DebugMessenger::debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

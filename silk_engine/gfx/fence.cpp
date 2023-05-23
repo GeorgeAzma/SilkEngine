@@ -1,6 +1,6 @@
 #include "fence.h"
-#include "gfx/render_context.h"
-#include "gfx/devices/logical_device.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/devices/logical_device.h"
 
 Fence::Fence(bool signaled) 
 	: signaled(signaled)

@@ -16,46 +16,40 @@ RawImage<uint8_t>::RawImage(std::span<const fs::path> files, int align_channels)
 
 void RawImage<uint8_t>::load(const fs::path& file, int align_channels)
 {
-	fs::path file_path = fs::path("res/images") / file;
-
 	stbi_set_flip_vertically_on_load(true);
-	stbi_uc* pixel_data = stbi_load(file_path.string().c_str(), (int*)&width, (int*)&height, (int*)&channels, align_channels);
-	SK_VERIFY(pixel_data, "Failed to load image: {}", file_path);
+	stbi_uc* pixel_data = stbi_load(file.string().c_str(), (int*)&width, (int*)&height, (int*)&channels, align_channels);
+	SK_VERIFY(pixel_data, "Failed to load image: {}", file);
 
 	allocate();
 	memcpy(pixels.data(), pixel_data, pixels.size() * sizeof(uint8_t));
 
 	stbi_image_free(pixel_data);
 
-	SK_TRACE("Image Loaded: {}", file_path);
+	SK_TRACE("Image Loaded: {}", file);
 }
 
 void RawImage<uint8_t>::load(std::span<const fs::path> files, int align_channels)
 {
 	SK_VERIFY(files.size(), "You have to specify at least one filepath for loading images");
 
-	std::vector<fs::path> paths(files.begin(), files.end());
-	for (auto& file_path : paths)
-		file_path = fs::path("res/images") / file_path;
-
 	RawImage<uint8_t> image_data{};
-	image_data.load(paths[0], align_channels);
+	image_data.load(files[0], align_channels);
 
 	size_t size = image_data.getSize();
 	width = image_data.width;
 	height = image_data.height;
 	channels = image_data.channels;
-	pixels.resize(size * paths.size());
+	pixels.resize(size * files.size());
 	memcpy(pixels.data(), image_data.pixels.data(), size * sizeof(uint8_t));
 
-	for (size_t i = 1; i < paths.size(); ++i)
+	for (size_t i = 1; i < files.size(); ++i)
 	{
-		image_data.load(paths[i], align_channels);
+		image_data.load(files[i], align_channels);
 
 		SK_VERIFY(image_data.width == width
 				  && image_data.height == height
 				  && image_data.channels == channels,
-				  "Error while loading images, couldn't load image at {0}. width, height and channel count should match in all the images", files[i]);
+				  "Error while loading images, couldn't load image at {}. width, height and channel count should match in all the images", files[i]);
 
 		memcpy(pixels.data() + i * size, image_data.pixels.data(), size * sizeof(uint8_t));
 	}

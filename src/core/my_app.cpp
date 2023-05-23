@@ -28,39 +28,6 @@ MyApp::MyApp()
 
     window = makeShared<Window>();
 
-    render_graph = makeShared<RenderGraph>();
-    auto& geometry = render_graph->addPass();
-    auto& color = geometry.addAttachment("Color", Image::Format::BGRA, RenderContext::getPhysicalDevice().getMaxSampleCount());
-    color.setClearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
-    auto& depth = geometry.addAttachment("Depth", Image::Format::DEPTH24_STENCIL, RenderContext::getPhysicalDevice().getMaxSampleCount());
-    depth.setClearDepthStencil({ 1.0f, 0 });
-
-    geometry.setRenderCallback([&](const RenderGraph& render_graph)
-        {
-            DebugRenderer::render();
-        });
-
-    auto& post_process = render_graph->addPass();
-    auto& present_source = post_process.addAttachment("Present Source", Image::Format::BGRA, VK_SAMPLE_COUNT_1_BIT, { &color });
-    post_process.setRenderCallback([&](const RenderGraph& render_graph)
-        {
-            auto& attachment = render_graph.getAttachment("Color");
-            material->set("attachment", *attachment);
-            material->bind();
-            RenderContext::getCommandBuffer().draw(3);
-        });
-
-    render_graph->build("Present Source");
-
-    shared<GraphicsPipeline> graphics_pipeline = makeShared<GraphicsPipeline>();
-    graphics_pipeline->setShader(makeShared<Shader>(std::vector<std::string_view>{ "input", "input" }))
-        .setRenderPass(*post_process.getRenderPass())
-        .setSubpass(post_process.getSubpass())
-        .build();
-    material = makeShared<Material>(graphics_pipeline);
-    
-    DebugRenderer::init(*geometry.getRenderPass());
-
     scene = makeShared<MyScene>();
     Scene::setActive(scene.get());
 
@@ -92,8 +59,6 @@ void MyApp::onUpdate()
         Scene::getActive()->update();
         DebugRenderer::update(Scene::getActive()->getMainCamera());
     }
-
-    render_graph->render();
 
     RenderContext::update();
 }

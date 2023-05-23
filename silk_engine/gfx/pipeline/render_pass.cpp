@@ -1,8 +1,8 @@
 #include "render_pass.h"
-#include "gfx/render_context.h"
-#include "gfx/devices/logical_device.h"
-#include "gfx/buffers/framebuffer.h"
-#include "gfx/window/swap_chain.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/buffers/framebuffer.h"
+#include "silk_engine/gfx/window/swap_chain.h"
 
 // TODO:
 // figure stuff out with VK_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT

@@ -1,5 +1,5 @@
 #include "render_context.h"
-#include "core/application.h"
+#include "silk_engine/core/application.h"
 #include "instance.h"
 #include "devices/physical_device.h"
 #include "devices/logical_device.h"
@@ -12,13 +12,13 @@
 #include "window/surface.h"
 #include "buffers/buffer.h"
 #include "descriptors/descriptor_set_layout.h"
-#include "gfx/pipeline/shader.h"
-#include "gfx/pipeline/graphics_pipeline.h"
-#include "gfx/pipeline/compute_pipeline.h"
-#include "gfx/buffers/command_buffer.h"
-#include "scene/meshes/mesh.h"
-#include "scene/model.h"
-#include "gfx/material.h"
+#include "silk_engine/gfx/pipeline/shader.h"
+#include "silk_engine/gfx/pipeline/graphics_pipeline.h"
+#include "silk_engine/gfx/pipeline/compute_pipeline.h"
+#include "silk_engine/gfx/buffers/command_buffer.h"
+#include "silk_engine/scene/meshes/mesh.h"
+#include "silk_engine/scene/model.h"
+#include "silk_engine/gfx/material.h"
 #include <stb_image_write.h>
 
 void RenderContext::init(std::string_view app_name)
@@ -43,18 +43,9 @@ void RenderContext::init(std::string_view app_name)
 			PIPELINE_STATISTICS_QUERY
 		});
 
-	for (size_t i = 0; i < 3; ++i)
-		command_queues.emplace_back(makeShared<CommandQueue>(physical_device->getGraphicsQueue(), VK_QUEUE_GRAPHICS_BIT));
-	
-	if (physical_device->getComputeQueue() != physical_device->getGraphicsQueue())
-		for (size_t i = 0; i < 3; ++i)
-			compute_command_queues.emplace_back(makeShared<CommandQueue>(physical_device->getComputeQueue(), VK_QUEUE_COMPUTE_BIT));
-	else compute_command_queues = command_queues;
-
-	if (physical_device->getComputeQueue() != physical_device->getGraphicsQueue())
-		for (size_t i = 0; i < 3; ++i)
-			transfer_command_queues.emplace_back(makeShared<CommandQueue>(physical_device->getTransferQueue(), VK_QUEUE_TRANSFER_BIT));
-	else transfer_command_queues = command_queues;
+	getCommandQueues();
+	getComputeCommandQueues();
+	getTransferCommandQueues();
 
 	allocator = new Allocator(*logical_device);
 	pipeline_cache = new PipelineCache();
@@ -83,12 +74,21 @@ void RenderContext::destroy()
 
 void RenderContext::update()
 {
-	command_queues[(int64_t(frame) - 1) >= 0 ? (frame - 1) : 2]->reset();
+	uint32_t last_frame = (int64_t(frame) - 1) >= 0 ? (frame - 1) : 2;
+
+	for (auto&& [tid, command_queue] : command_queues)
+		command_queue[last_frame]->reset();
+
 	if (physical_device->getComputeQueue() != -1)
-	compute_command_queues[(int64_t(frame) - 1) >= 0 ? (frame - 1) : 2]->reset(); 
+		for (auto&& [tid, command_queue] : compute_command_queues)
+			command_queue[last_frame]->reset();
+
 	if (physical_device->getTransferQueue() != -1)
-		transfer_command_queues[(int64_t(frame) - 1) >= 0 ? (frame - 1) : 2]->reset();
+		for (auto&& [tid, command_queue] : transfer_command_queues)
+			command_queue[last_frame]->reset();
+
 	DescriptorAllocator::reset();
+
 	frame = (frame + 1) % 3;
 }
 
@@ -185,3 +185,38 @@ std::string RenderContext::stringifyResult(VkResult result)
 }
 
 const PhysicalDevice& RenderContext::getPhysicalDevice() { return logical_device->getPhysicalDevice(); }
+
+const std::vector<shared<CommandQueue>>& RenderContext::getCommandQueues()
+{
+	auto it = command_queues.emplace(std::this_thread::get_id(), std::vector<shared<CommandQueue>>{});
+	if (it.second)
+		for (size_t i = 0; i < 3; ++i)
+			it.first->second.emplace_back(makeShared<CommandQueue>(physical_device->getGraphicsQueue(), VK_QUEUE_GRAPHICS_BIT));
+	return it.first->second;
+}
+
+const std::vector<shared<CommandQueue>>& RenderContext::getComputeCommandQueues()
+{
+	auto it = compute_command_queues.emplace(std::this_thread::get_id(), std::vector<shared<CommandQueue>>{});
+	if (it.second)
+	{
+		if (physical_device->getComputeQueue() != physical_device->getGraphicsQueue())
+			for (size_t i = 0; i < 3; ++i)
+				it.first->second.emplace_back(makeShared<CommandQueue>(physical_device->getComputeQueue(), VK_QUEUE_COMPUTE_BIT));
+		else it.first->second = getCommandQueues();
+	}
+	return it.first->second;
+}
+
+const std::vector<shared<CommandQueue>>& RenderContext::getTransferCommandQueues()
+{
+	auto it = transfer_command_queues.emplace(std::this_thread::get_id(), std::vector<shared<CommandQueue>>{});
+	if (it.second)
+	{
+		if (physical_device->getTransferQueue() != physical_device->getGraphicsQueue())
+			for (size_t i = 0; i < 3; ++i)
+				it.first->second.emplace_back(makeShared<CommandQueue>(physical_device->getTransferQueue(), VK_QUEUE_TRANSFER_BIT));
+		else it.first->second = getCommandQueues();
+	}
+	return it.first->second;
+}

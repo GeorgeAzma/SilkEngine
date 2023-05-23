@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/type_info.h"
+#include "silk_engine/utils/type_info.h"
 #include <entt/entt.hpp>
 
 class Entity;

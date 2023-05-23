@@ -1,9 +1,9 @@
 #include "descriptor_set.h"
 #include "descriptor_allocator.h"
-#include "gfx/render_context.h"
-#include "gfx/devices/logical_device.h"
-#include "gfx/descriptors/descriptor_pool.h"
-#include "gfx/buffers/command_buffer.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/descriptors/descriptor_pool.h"
+#include "silk_engine/gfx/buffers/command_buffer.h"
 
 DescriptorSet::DescriptorSet(const DescriptorSetLayout& layout) 
 	: layout(layout), pool(DescriptorAllocator::allocate(descriptor_set, layout))

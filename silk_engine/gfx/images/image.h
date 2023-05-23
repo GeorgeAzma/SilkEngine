@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gfx/allocators/allocation.h"
+#include "silk_engine/gfx/allocators/allocation.h"
 #include "sampler.h"
 
 class ImageView;
