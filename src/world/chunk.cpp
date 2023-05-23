@@ -11,16 +11,22 @@ void Chunk::allocate()
 void Chunk::generate()
 {
 	empty = true;
-	for (int32_t z = 0; z < Z; ++z)
+    std::vector<int32_t> height_map;
+    height_map.resize(AREA, 0);
+    for (int32_t z = 0; z < SIZE; ++z)
+        for (int32_t x = 0; x < SIZE; ++x)
+            height_map[z * SIZE + x] = 32.0f * Random::fbm(4, float(position.x * SIZE + x) * 0.005f, float(position.z * SIZE + z) * 0.005f, 2.0f, 0.5f);
+
+	for (int32_t y = 0; y < SIZE; ++y)
 	{
-		for (int32_t x = 0; x < X; ++x)
-		{
-			int height_map = 32.0f * Random::fbm(4, float(position.x * X + x) * 0.005f, float(position.z * Z + z) * 0.005f, 2.0f, 0.5f);
-			for (int32_t y = 0; y < Y; ++y)
-			{
+        int32_t level = (position.y * SIZE + y);
+        for (int32_t z = 0; z < SIZE; ++z)
+        {
+            for (int32_t x = 0; x < SIZE; ++x)
+            {
 				Block& block = at(x, y, z);
-				int level = (position.y * Y + y);
-				if (level < height_map)
+                int32_t height = height_map[z * SIZE + x];
+				if (level < height)
 				{
 					block = Block::GRASS;
 					empty = false;
@@ -42,34 +48,143 @@ void Chunk::generateMesh()
 	vertices.clear();
 	if (empty)
 		return;
-	for (uint32_t y = 0; y < Y; ++y)
+    vertex_buffer_dirty = true;
+
+	static constexpr Chunk::Coord ao_table[6 * 4 * 3] =
+    {
+        ////////////////////////// FACE = X- //////////////////////
+        // CORNER = [X-][Y-]
+        { -1, -1, 00 }, // Side 1
+        { -1, 00, -1 }, // Side 2
+        { -1, -1, -1 }, // Corner
+        // CORNER = [X+][Y-]
+        { -1, +1, 00 }, // Side 1
+        { -1, 00, -1 }, // Side 2
+        { -1, +1, -1 }, // Corner
+        // CORNER = [X-][Y+]
+        { -1, +1, 00 }, // Side 1
+        { -1, 00, +1 }, // Side 2
+        { -1, +1, +1 }, // Corner
+        // CORNER = [X+][Y+]
+        { -1, 00, +1 }, // Side 1
+        { -1, -1, 00 }, // Side 2
+        { -1, -1, +1 }, // Corner
+
+        ////////////////////////// FACE = X+ //////////////////////
+        // CORNER = [X+][Y-]
+        { +1, -1, 00 }, // Side 1
+        { +1, 00, +1 }, // Side 2
+        { +1, -1, +1 }, // Corner
+        // CORNER = [X-][Y-]
+        { +1, -1, 00 }, // Side 1
+        { +1, 00, -1 }, // Side 2
+        { +1, -1, -1 }, // Corner
+        // CORNER = [X+][Y+]
+        { +1, +1, 00 }, // Side 1
+        { +1, 00, +1 }, // Side 2
+        { +1, +1, +1 }, // Corner
+        // CORNER = [X-][Y+]
+        { +1, +1, 00 }, // Side 1
+        { +1, 00, -1 }, // Side 2
+        { +1, +1, -1 }, // Corner
+
+        ////////////////////////// FACE = Y- //////////////////////
+        // CORNER = [X-][Y-]
+        { -1, -1, -1 }, // Side 1
+        { 00, -1, -1 }, // Side 2
+        { -1, -1, 00 }, // Corner
+        // CORNER = [X+][Y-]
+        { +1, -1, -1 }, // Side 1
+        { 00, -1, -1 }, // Side 2
+        { +1, -1, 00 }, // Corner
+        // CORNER = [X-][Y+]
+        { +1, -1, -1 }, // Side 1
+        { 00, -1, +1 }, // Side 2
+        { +1, -1, +1 }, // Corner
+        // CORNER = [X+][Y+]
+        { -1, -1, +1 }, // Side 1
+        { -1, -1, 00 }, // Side 2
+        { 00, -1, +1 }, // Corner
+
+        ////////////////////////// FACE = Y+ //////////////////////
+        // CORNER = [X-][Y+]
+        { -1, +1, +1 }, // Side 1
+        { 00, +1, -1 }, // Side 2
+        { -1, +1, -1 }, // Corner
+        // CORNER = [X+][Y+]
+        { +1, +1, +1 }, // Side 1
+        { 00, +1, -1 }, // Side 2
+        { +1, +1, -1 }, // Corner
+        // CORNER = [X-][Y-]
+        { +1, +1, +1 }, // Side 1
+        { 00, +1, +1 }, // Side 2
+        { +1, +1, 00 }, // Corner
+        // CORNER = [X+][Y-]
+        { -1, +1, -1 }, // Side 1
+        { -1, +1, 00 }, // Side 2
+        { 00, +1, -1 }, // Corner
+
+        ////////////////////////// FACE = Z- //////////////////////
+        // CORNER = [X-][Y-]
+        { -1, 00, -1 }, // Side 1
+        { 00, -1, -1 }, // Side 2
+        { -1, -1, -1 }, // Corner
+        // CORNER = [X+][Y-]
+        { +1, 00, -1 }, // Side 1
+        { 00, -1, -1 }, // Side 2
+        { +1, -1, -1 }, // Corner
+        // CORNER = [X-][Y+]
+        { +1, 00, -1 }, // Side 1
+        { 00, +1, -1 }, // Side 2
+        { +1, +1, -1 }, // Corner
+        // CORNER = [X+][Y+]
+        { -1, -1, -1 }, // Side 1
+        { -1, 00, -1 }, // Side 2
+        { 00, +1, -1 }, // Corner
+
+        ////////////////////////// FACE = Z+ //////////////////////
+        // CORNER = [X-][Y-]
+        { -1, -1, +1 }, // Side 1
+        { 00, -1, +1 }, // Side 2
+        { -1, 00, +1 }, // Corner
+        // CORNER = [X+][Y-]
+        { +1, -1, +1 }, // Side 1
+        { 00, -1, +1 }, // Side 2
+        { +1, 00, +1 }, // Corner
+        // CORNER = [X-][Y+]
+        { +1, -1, +1 }, // Side 1
+        { 00, +1, +1 }, // Side 2
+        { +1, +1, +1 }, // Corner
+        // CORNER = [X+][Y+]
+        { -1, 00, +1 }, // Side 1
+        { -1, -1, +1 }, // Side 2
+        { 00, +1, +1 } // Corner
+    };
+	
+	for (uint32_t y = 0; y < SIZE; ++y)
 	{
-		for (uint32_t z = 0; z < Z; ++z)
+		for (uint32_t z = 0; z < SIZE; ++z)
 		{
-			for (uint32_t x = 0; x < X; ++x)
+			for (uint32_t x = 0; x < SIZE; ++x)
 			{
-				uint32_t i = idx(x, y, z);
+				size_t i = idx(x, y, z);
 				Block& block = blocks[i]; 
 				if (block == Block::AIR)
 					continue;
-				
-				const Block neighbor_blocks[6]
-				{
-					(y != EDGE_Y) ? blocks[i + X] : (neighbors[0] ? neighbors[0]->at(x, 0, z) : Block::AIR),
-					(y != 0) ? blocks[i - X] : (neighbors[1] ? neighbors[1]->at(x, EDGE_Y, z) : Block::AIR),
-					(x != 0) ? blocks[i - 1] : (neighbors[2] ? neighbors[2]->at(EDGE_X, y, z) : Block::AIR),
-					(x != EDGE_X) ? blocks[i + 1] : (neighbors[3] ? neighbors[3]->at(0, y, z) : Block::AIR),
-					(z != 0) ? blocks[i - AREA] : (neighbors[4] ? neighbors[4]->at(x, y, EDGE_Z) : Block::AIR),
-					(z != EDGE_Z) ? blocks[i + AREA] : (neighbors[5] ? neighbors[5]->at(x, y, 0) : Block::AIR)
-				};
+                
+                Chunk::Coord position = Chunk::Coord(x, y, z);
+                const auto& neighboring_blocks = getAdjacentNeighborBlocks(position);
 				for (uint32_t face = 0; face < 6; ++face)
 				{
-					if (neighbor_blocks[face] == Block::AIR)
+					if (!BlockInfo::isSolid(neighboring_blocks[face]))
 					{
 						for (uint32_t vert = 0; vert < 4; ++vert)
 						{
-							vertices.emplace_back(x | (y << 5) | (z << 10) | (vert << 15) | (face << 17) |
-								(block_data[size_t(block)].texture_indices[face] << 20));
+                            //const Chunk::Coord& side1_off  = position + ao_table[face * 4 * 3 + vert * 3 + 0];
+                            //const Chunk::Coord& side2_off  = position + ao_table[face * 4 * 3 + vert * 3 + 1];
+                            //const Chunk::Coord& corner_off = position + ao_table[face * 4 * 3 + vert * 3 + 2];
+                            //uint32_t ao = getAO(BlockInfo::isSolid(at(side1_off)), BlockInfo::isSolid(at(side2_off)), BlockInfo::isSolid(at(corner_off)));
+							vertices.emplace_back(x | (y << 6) | (z << 12) | (vert << 18) | (face << 20) | (BlockInfo::getTextureIndex(block, face) << 23));
 						}
 					}
 				}
@@ -85,11 +200,22 @@ void Chunk::buildVertexBuffer()
 	vertex_buffer_dirty = false;
 	if (vertices.size())
 	{
-		if (!(vertex_buffer && vertices.size() * sizeof(uint32_t) == vertex_buffer->getSize()))
-			vertex_buffer = makeShared<Buffer>(vertices.size() * sizeof(uint32_t), Buffer::VERTEX | Buffer::TRANSFER_DST | Buffer::TRANSFER_SRC);
+		if (!(vertex_buffer && vertices.size() * sizeof(vertices[0]) == vertex_buffer->getSize()))
+			vertex_buffer = makeShared<Buffer>(vertices.size() * sizeof(vertices[0]), Buffer::VERTEX | Buffer::TRANSFER_DST | Buffer::TRANSFER_SRC);
 		vertex_buffer->setData(vertices.data());
 	}
 	else vertex_buffer = nullptr;
+}
+
+Block Chunk::atSafe(const Chunk::Coord& position) const
+{
+    Chunk::Coord chunk_pos = World::toChunkCoord(position);
+    if (chunk_pos == Chunk::Coord(0))
+        return at(position);
+    Chunk* neighbor = neighbors[getIndexFromCoord(chunk_pos)];
+    if (neighbor)
+        return neighbor->at(position - chunk_pos * DIM);
+    return Block::AIR;
 }
 
 uint32_t Chunk::getVertexCount() const { return vertex_buffer->getSize() / sizeof(uint32_t); }

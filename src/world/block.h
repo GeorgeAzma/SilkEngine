@@ -14,30 +14,44 @@ enum class Block : uint8_t
 	SNOW
 };
 
-struct BlockData
-{
-	bool culled;
-	std::array<uint32_t, 6> texture_indices; // Top, Bottom, Left, Right, Front, Back
-};
+static inline constexpr auto block_solid = makeArray<bool>
+(
+	/* AIR		 */  false,
+	/* STONE	 */  true,
+	/* GRASS	 */  true,
+	/* DIRT		 */  true,
+	/* SAND		 */  true,
+	/* SANDSTONE */  true,
+	/* WATER	 */  false,
+	/* LEAF		 */  false,
+	/* OAK_LOG	 */  true,
+	/* SNOW		 */  true
+);
 
-constexpr std::array<uint32_t, 6> TEX(uint32_t x)
+static constexpr std::array<uint32_t, 6> TEX(uint32_t x)
 {
 	return { x, x, x, x, x, x };
 }
 
-static inline const auto block_data = makeArray<BlockData>
+static inline constexpr auto block_texture_indices = makeArray<std::array<uint32_t, 6>>
 (
-	 /* AIR			*/   BlockData{ false, TEX(0) },						  
-	 /* STONE		*/   BlockData{ false, TEX(1) },						  
-	 /* GRASS		*/   BlockData{ false, { 2, 4, 3, 3, 3, 3 } },		  
-	 /* DIRT		*/   BlockData{ false, TEX(4) },						  
-	 /* SAND		*/   BlockData{ false, TEX(5) },						  
-	 /* SANDSTONE   */   BlockData{ false, { 7, 6, 6, 6, 6, 6 } },		  
-	 /* WATER		*/   BlockData{ false, TEX(8) },						  
-	 /* LEAF		*/   BlockData{ false, TEX(9) },						  
-	 /* OAK_LOG		*/   BlockData{ false, { 11, 11, 10, 10, 10, 10 } },	  
-	 /* SNOW		*/   BlockData{ false, TEX(12) }					  
+	/* AIR		 */  std::array<uint32_t, 6> { TEX(0) },
+	/* STONE	 */  std::array<uint32_t, 6> { TEX(1) },
+	/* GRASS	 */  std::array<uint32_t, 6> { { 4, 3, 3, 3, 3, 2 } },
+	/* DIRT		 */  std::array<uint32_t, 6> { TEX(4) },
+	/* SAND		 */  std::array<uint32_t, 6> { TEX(5) },
+	/* SANDSTONE */  std::array<uint32_t, 6> { { 6, 6, 6, 6, 6, 7 } },
+	/* WATER	 */  std::array<uint32_t, 6> { TEX(8) },
+	/* LEAF		 */  std::array<uint32_t, 6> { TEX(9) },
+	/* OAK_LOG	 */  std::array<uint32_t, 6> { { 11, 10, 10, 10, 10, 11 } },
+	/* SNOW		 */  std::array<uint32_t, 6> { TEX(12) }
 );
+
+struct BlockInfo
+{
+	static bool isSolid(Block block) { return block_solid[size_t(block)]; }
+	static uint32_t getTextureIndex(Block block, size_t face) { return block_texture_indices[size_t(block)][face]; }
+};
 
 static inline const auto block_textures = makeArray<fs::path>
 (

@@ -15,7 +15,7 @@ public:
 
 	struct PushConstantData
 	{
-		ivec4 chunk_position;
+		vec4 chunk_position;
 		vec4 light_position;
 		vec4 light_color;
 	};
@@ -24,9 +24,9 @@ public:
 	static Chunk::Coord toChunkCoord(const World::Coord& position) 
 	{ 
 		return glm::ivec3(
-			(position.x < 0) ? ((position.x + 1 - Chunk::X) / Chunk::X) : (position.x / Chunk::X),
-			(position.y < 0) ? ((position.y + 1 - Chunk::Y) / Chunk::Y) : (position.y / Chunk::Y),
-			(position.z < 0) ? ((position.z + 1 - Chunk::Z) / Chunk::Z) : (position.z / Chunk::Z)
+			(position.x < 0) ? ((position.x + 1 - Chunk::SIZE) / Chunk::SIZE) : (position.x / Chunk::SIZE),
+			(position.y < 0) ? ((position.y + 1 - Chunk::SIZE) / Chunk::SIZE) : (position.y / Chunk::SIZE),
+			(position.z < 0) ? ((position.z + 1 - Chunk::SIZE) / Chunk::SIZE) : (position.z / Chunk::SIZE)
 		); 
 	}
 	static Chunk::Coord toBlockCoord(const World::Coord& position) { return (Chunk::DIM + (position % Chunk::DIM)) % Chunk::DIM; }

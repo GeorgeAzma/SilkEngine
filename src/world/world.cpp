@@ -9,6 +9,7 @@
 #include "silk_engine/gfx/devices/logical_device.h"
 #include "silk_engine/scene/camera/camera_controller.h"
 #include "silk_engine/scene/components.h"
+#include "silk_engine/utils/debug_timer.h"
 
 World::World()
 {
@@ -20,9 +21,7 @@ World::World()
 	VkRenderPass render_pass = RenderContext::getRenderGraph().getPass("Geometry").getRenderPass();
 	shared<GraphicsPipeline> chunk_pipeline = makeShared<GraphicsPipeline>();
 	chunk_pipeline->setShader(makeShared<Shader>("chunk", Shader::Defines{ 
-		{ "X", std::to_string(Chunk::X) }, 
-		{ "Y", std::to_string(Chunk::Y) }, 
-		{ "Z", std::to_string(Chunk::Z) } }))
+		{ "SIZE", std::to_string(Chunk::SIZE) }}))
 		.setRenderPass(render_pass)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
@@ -47,7 +46,9 @@ World::World()
 	}
 	index_buffer->setData(indices.data());
 }
-#include "silk_engine/utils/debug_timer.h"
+
+#define MULTITHREAD 0
+
 void World::update()
 {
 	DebugTimer t;
@@ -55,26 +56,38 @@ void World::update()
 	const Chunk::Coord& chunk_origin = toChunkCoord((World::Coord)round(origin));
 
 	// Build chunks and regenerate chunks with new neighbors
+#if MULTITHREAD
 	pool.forEach(chunks.size(), [&](size_t i) { chunks[i]->generateMesh(); });
 	RenderContext::getLogicalDevice().wait();
 	for (const auto& chunk : chunks)
 		chunk->buildVertexBuffer();
+#else
+	RenderContext::getLogicalDevice().wait();
+	for (const auto& chunk : chunks)
+	{
+		chunk->generateMesh();
+		chunk->buildVertexBuffer();
+	}
+#endif
 
-	constexpr size_t max_chunks = 8192;
+	constexpr size_t max_chunks = 1024;
 	if (chunks.size() >= max_chunks)
 		return;
 
 	// Queue up to be generated chunks
 	std::vector<Chunk::Coord> old_queued_chunks(queued_chunks.begin(), queued_chunks.end());
-	std::ranges::sort(old_queued_chunks, [&](const Chunk::Coord& lhs, const Chunk::Coord& rhs) { return distance2(vec3(chunk_origin), vec3(lhs)) < distance2(vec3(chunk_origin), vec3(rhs)); });
+	std::ranges::sort(old_queued_chunks, [&](const Chunk::Coord& lhs, const Chunk::Coord& rhs) { 
+		constexpr vec3 modifier = vec3(1, 1, 1);
+		return distance2(vec3(chunk_origin) * modifier, vec3(lhs) * modifier) < distance2(vec3(chunk_origin) * modifier, vec3(rhs) * modifier);
+	});
 	queued_chunks.clear();
 	if (!findChunk(chunk_origin))
 		queued_chunks.emplace(chunk_origin);
-	constexpr size_t max_queued_chunks = 8;
+	constexpr size_t max_queued_chunks = 6;
 	for (size_t i = 0; i < old_queued_chunks.size(); ++i)
 	{
 		const auto& old_queued_chunk = old_queued_chunks[i];
-		std::array<Chunk::Coord, 6> neighbors = Chunk::getNeighborCoords(old_queued_chunk);
+		std::array<Chunk::Coord, 6> neighbors = Chunk::getAdjacentNeighborCoords(old_queued_chunk);
 		for (const auto& neighbor : neighbors)
 		{
 			if (findChunk(neighbor))
@@ -88,14 +101,26 @@ void World::update()
 	}
 
 	std::vector<Chunk::Coord> new_queued_chunks(queued_chunks.begin(), queued_chunks.end());
+#if MULTITHREAD
 	for (const auto& chunk : new_queued_chunks)
 	{
 		chunks.emplace_back(makeUnique<Chunk>(chunk));
-		std::array<Chunk::Coord, 6> neighbors = Chunk::getNeighborCoords(chunk);
+		std::array<Chunk::Coord, 26> neighbors = Chunk::getNeighborCoords(chunk);
 		for (size_t i = 0; i < neighbors.size(); ++i)
 			chunks.back()->addNeighbor(i, findChunk(neighbors[i]));
 	}
 	pool.forEach(new_queued_chunks.size(), [this](size_t i) { chunks[chunks.size() - 1 - i]->allocate(); chunks[chunks.size() - 1 - i]->generate(); });
+#else
+	for (const auto& chunk : new_queued_chunks)
+	{
+		chunks.emplace_back(makeUnique<Chunk>(chunk));
+		std::array<Chunk::Coord, 26> neighbors = Chunk::getNeighborCoords(chunk);
+		for (size_t i = 0; i < neighbors.size(); ++i)
+			chunks.back()->addNeighbor(i, findChunk(neighbors[i])); 
+		chunks.back()->allocate(); 
+		chunks.back()->generate();
+	}
+#endif
 }
 
 void World::render()
