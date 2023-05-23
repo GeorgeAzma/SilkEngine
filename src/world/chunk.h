@@ -80,6 +80,7 @@ public:
 public:
 	Chunk(const Coord& position)
 		: position(position) {}
+	~Chunk();
 
 	void allocate();
 	void generate();
@@ -93,6 +94,16 @@ public:
 		neighbors[index] = neighbor;
 		dirty = true;
 		neighbor->addNeighbor(getIndexFromCoord(position - neighbor->getPosition()), this);
+	}
+
+	std::vector<Chunk::Coord> getMissingNeighborLocations() const
+	{
+		std::vector<Chunk::Coord> missing_neighbors;
+		std::array<Chunk::Coord, 6> adjacent = getAdjacentNeighborCoords(position);
+		for (size_t i = 0; i < adjacent.size(); ++i)
+			if (!neighbors[getIndexFromCoord(adjacent[i])])
+				missing_neighbors.emplace_back(adjacent[i]);
+		return missing_neighbors;
 	}
 
 	Block& at(int32_t x, int32_t y, int32_t z) { return blocks[idx(x, y, z)]; }
@@ -132,6 +143,7 @@ private:
 	Coord position = Coord(0);
 	std::vector<Block> blocks = {}; 
 	std::vector<uint64_t> vertices = {};
+	std::vector<int16_t> height_map = {};
 	shared<Buffer> vertex_buffer = nullptr;
 	std::array<Chunk*, 26> neighbors = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 	bool dirty = true;

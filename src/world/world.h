@@ -47,7 +47,10 @@ public:
 	}
 
 private:
-	std::vector<unique<Chunk>> chunks;
+	bool isChunkVisible(const Chunk::Coord& position) const;
+
+private:
+	std::vector<shared<Chunk>> chunks;
 	struct Hash
 	{
 		size_t operator()(const Chunk::Coord& coord) const { return ((int64_t(coord.x) << 32) | coord.z) ^ (int64_t(coord.y) << 16); }

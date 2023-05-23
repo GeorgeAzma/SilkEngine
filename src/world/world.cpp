@@ -47,7 +47,7 @@ World::World()
 	index_buffer->setData(indices.data());
 }
 
-#define MULTITHREAD 0
+#define MULTITHREAD 1
 
 void World::update()
 {
@@ -55,22 +55,38 @@ void World::update()
 	const vec3& origin = camera->get<CameraComponent>().camera.position;
 	const Chunk::Coord& chunk_origin = toChunkCoord((World::Coord)round(origin));
 
+	// Delete far chunks
+	RenderContext::getLogicalDevice().wait();
+	constexpr float max_chunk_distance = 8;
+	for (size_t i = 0; i < chunks.size(); ++i)
+	{
+		auto& chunk = chunks[i];
+		if (distance2(vec3(chunk->getPosition()), vec3(chunk_origin)) > max_chunk_distance * max_chunk_distance)
+		{
+			std::swap(chunk, chunks.back());
+			chunks.pop_back();
+		}
+	}
+
 	// Build chunks and regenerate chunks with new neighbors
 #if MULTITHREAD
-	pool.forEach(chunks.size(), [&](size_t i) { chunks[i]->generateMesh(); });
-	RenderContext::getLogicalDevice().wait();
-	for (const auto& chunk : chunks)
-		chunk->buildVertexBuffer();
-#else
-	RenderContext::getLogicalDevice().wait();
+	pool.forEach(chunks.size(), [&](size_t i) {
+		if (!isChunkVisible(chunks[i]->getPosition()))
+			return;
+		chunks[i]->generateMesh(); 
+	});
+#endif
 	for (const auto& chunk : chunks)
 	{
+		if (!isChunkVisible(chunk->getPosition()))
+			continue;
+#if !MULTITHREAD
 		chunk->generateMesh();
+#endif
 		chunk->buildVertexBuffer();
 	}
-#endif
 
-	constexpr size_t max_chunks = 1024;
+	constexpr size_t max_chunks = 2048;
 	if (chunks.size() >= max_chunks)
 		return;
 
@@ -78,19 +94,22 @@ void World::update()
 	std::vector<Chunk::Coord> old_queued_chunks(queued_chunks.begin(), queued_chunks.end());
 	std::ranges::sort(old_queued_chunks, [&](const Chunk::Coord& lhs, const Chunk::Coord& rhs) { 
 		constexpr vec3 modifier = vec3(1, 1, 1);
-		return distance2(vec3(chunk_origin) * modifier, vec3(lhs) * modifier) < distance2(vec3(chunk_origin) * modifier, vec3(rhs) * modifier);
+		return distance(vec3(chunk_origin) * modifier, vec3(lhs) * modifier) < distance(vec3(chunk_origin) * modifier, vec3(rhs) * modifier);
 	});
 	queued_chunks.clear();
 	if (!findChunk(chunk_origin))
 		queued_chunks.emplace(chunk_origin);
-	constexpr size_t max_queued_chunks = 6;
+	constexpr size_t max_queued_chunks = 3;
 	for (size_t i = 0; i < old_queued_chunks.size(); ++i)
 	{
-		const auto& old_queued_chunk = old_queued_chunks[i];
-		std::array<Chunk::Coord, 6> neighbors = Chunk::getAdjacentNeighborCoords(old_queued_chunk);
+		const Chunk::Coord& old_queued_chunk = old_queued_chunks[i];
+		std::array<Chunk::Coord, 6> neighbors_arr = Chunk::getAdjacentNeighborCoords(old_queued_chunk);
+		std::vector<Chunk::Coord> neighbors(neighbors_arr.begin(), neighbors_arr.end());
+		static Random rand;
+		std::shuffle(neighbors.begin(), neighbors.end(), rand);
 		for (const auto& neighbor : neighbors)
 		{
-			if (findChunk(neighbor))
+			if (findChunk(neighbor) || !isChunkVisible(neighbor))
 				continue;
 			queued_chunks.emplace(neighbor);
 			if (queued_chunks.size() >= max_queued_chunks)
@@ -104,7 +123,7 @@ void World::update()
 #if MULTITHREAD
 	for (const auto& chunk : new_queued_chunks)
 	{
-		chunks.emplace_back(makeUnique<Chunk>(chunk));
+		chunks.emplace_back(makeShared<Chunk>(chunk));
 		std::array<Chunk::Coord, 26> neighbors = Chunk::getNeighborCoords(chunk);
 		for (size_t i = 0; i < neighbors.size(); ++i)
 			chunks.back()->addNeighbor(i, findChunk(neighbors[i]));
@@ -131,14 +150,19 @@ void World::render()
 	index_buffer->bindIndex();
 	PushConstantData push_constant_data{};
 	push_constant_data.light_position =  vec4(1000, 3000, -2000, 0);
-	push_constant_data.light_color = vec4(1.0);
+	push_constant_data.light_color = vec4(0.8);
 	for (const auto& chunk : chunks)
 	{
-		if (!chunk->getVertexBuffer() || !camera->get<CameraComponent>().camera.frustum.isBoxVisible(toWorldCoord(chunk->getPosition()), toWorldCoord(chunk->getPosition()) + Chunk::DIM))
+		if (!chunk->getVertexBuffer() || !isChunkVisible(chunk->getPosition()))
 			continue;
 		push_constant_data.chunk_position = ivec4(chunk->getPosition(), 0);
 		RenderContext::getCommandBuffer().pushConstants(Shader::Stage::VERTEX, 0, sizeof(PushConstantData), &push_constant_data);
 		chunk->getVertexBuffer()->bindVertex();
 		RenderContext::getCommandBuffer().drawIndexed(chunk->getIndexCount());
 	}
+}
+
+bool World::isChunkVisible(const Chunk::Coord& position) const
+{
+	return camera->get<CameraComponent>().camera.frustum.isBoxVisible(toWorldCoord(position), toWorldCoord(position) + Chunk::DIM);
 }

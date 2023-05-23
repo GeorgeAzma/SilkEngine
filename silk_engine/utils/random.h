@@ -23,6 +23,16 @@ public:
         return get<size_t>();
     }
 
+    static size_t min()
+    {
+        return std::numeric_limits<size_t>::min();
+    }
+
+    static size_t max()
+    {
+        return std::numeric_limits<size_t>::max();
+    }
+
     static float noise(float x)
     {
         float n0, n1;

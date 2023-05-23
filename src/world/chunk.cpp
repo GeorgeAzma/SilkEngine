@@ -3,15 +3,27 @@
 #include "silk_engine/utils/random.h"
 #include "world.h"
 
+Chunk::~Chunk()
+{
+    for (Chunk* neighbor : neighbors)
+    {
+        if (neighbor)
+        {
+            neighbor->neighbors[getIndexFromCoord(position - neighbor->getPosition())] = nullptr;
+            neighbor->dirty = true;
+        }
+    }
+}
+
 void Chunk::allocate()
 {
 	blocks.resize(VOLUME, Block::AIR);
+    height_map.resize(AREA, 0);
 }
 
 void Chunk::generate()
 {
 	empty = true;
-    std::vector<int32_t> height_map;
     height_map.resize(AREA, 0);
     for (int32_t z = 0; z < SIZE; ++z)
         for (int32_t x = 0; x < SIZE; ++x)
@@ -26,9 +38,15 @@ void Chunk::generate()
             {
 				Block& block = at(x, y, z);
                 int32_t height = height_map[z * SIZE + x];
-				if (level < height)
+                int32_t delta = height - level;
+				if (level <= height)
 				{
-					block = Block::GRASS;
+                    if (delta <= 1)
+                        block = Block::GRASS;
+                    else if (delta <= 3)
+                        block = Block::DIRT;
+                    else
+                        block = Block::STONE;
 					empty = false;
 				}
 				else

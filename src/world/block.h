@@ -11,7 +11,9 @@ enum class Block : uint8_t
 	WATER,
 	LEAF,
 	OAK_LOG,
-	SNOW
+	SNOW,
+
+	LAST
 };
 
 static inline constexpr auto block_solid = makeArray<bool>
@@ -28,29 +30,24 @@ static inline constexpr auto block_solid = makeArray<bool>
 	/* SNOW		 */  true
 );
 
-static constexpr std::array<uint32_t, 6> TEX(uint32_t x)
-{
-	return { x, x, x, x, x, x };
-}
-
-static inline constexpr auto block_texture_indices = makeArray<std::array<uint32_t, 6>>
+static inline constexpr auto block_texture_indices = makeArray<int>
 (
-	/* AIR		 */  std::array<uint32_t, 6> { TEX(0) },
-	/* STONE	 */  std::array<uint32_t, 6> { TEX(1) },
-	/* GRASS	 */  std::array<uint32_t, 6> { { 4, 3, 3, 3, 3, 2 } },
-	/* DIRT		 */  std::array<uint32_t, 6> { TEX(4) },
-	/* SAND		 */  std::array<uint32_t, 6> { TEX(5) },
-	/* SANDSTONE */  std::array<uint32_t, 6> { { 6, 6, 6, 6, 6, 7 } },
-	/* WATER	 */  std::array<uint32_t, 6> { TEX(8) },
-	/* LEAF		 */  std::array<uint32_t, 6> { TEX(9) },
-	/* OAK_LOG	 */  std::array<uint32_t, 6> { { 11, 10, 10, 10, 10, 11 } },
-	/* SNOW		 */  std::array<uint32_t, 6> { TEX(12) }
+	/* AIR		 */  0, 0, 0, 0, 0, 0,
+	/* STONE	 */  1, 1, 1, 1, 1, 1,
+	/* GRASS	 */  4, 3, 3, 3, 3, 2,
+	/* DIRT		 */  4, 4, 4, 4, 4, 4,
+	/* SAND		 */  5, 5, 5, 5, 5, 5,
+	/* SANDSTONE */  6, 6, 6, 6, 6, 7,
+	/* WATER	 */  8, 8, 8, 8, 8, 8,
+	/* LEAF		 */  9, 9, 9, 9, 9, 9,
+	/* OAK_LOG	 */  11, 10, 10, 10, 10, 11,
+	/* SNOW		 */  12, 12, 12, 12, 12, 12
 );
 
 struct BlockInfo
 {
 	static bool isSolid(Block block) { return block_solid[size_t(block)]; }
-	static uint32_t getTextureIndex(Block block, size_t face) { return block_texture_indices[size_t(block)][face]; }
+	static uint32_t getTextureIndex(Block block, size_t face) { return block_texture_indices[size_t(block) *  6 + face]; }
 };
 
 static inline const auto block_textures = makeArray<fs::path>
