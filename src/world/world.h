@@ -7,6 +7,7 @@ class Material;
 class Image;
 class Buffer;
 class Entity;
+class Camera;
 
 class World
 {
@@ -55,10 +56,10 @@ private:
 	{
 		size_t operator()(const Chunk::Coord& coord) const { return ((int64_t(coord.x) << 32) | coord.z) ^ (int64_t(coord.y) << 16); }
 	};
-	std::unordered_set<Chunk::Coord, Hash> queued_chunks;
 	shared<Material> material = nullptr;
 	shared<Image> texture_atlas = nullptr;
 	shared<Buffer> index_buffer = nullptr;
-	shared<Entity> camera = nullptr;
+	shared<Entity> player = nullptr;
+	Camera* camera = nullptr;
 	ThreadPool pool = ThreadPool();
 };

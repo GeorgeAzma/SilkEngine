@@ -25,15 +25,6 @@ const vec2 uvs[4] = vec2[4](
     vec2(0, 1)
 );
 
-const vec3 normals[6] = vec3[6](
-    vec3( 0, -1,  0),  
-    vec3( 0,  0, -1), 
-    vec3(-1,  0,  0), 
-    vec3( 1,  0,  0), 
-    vec3( 0,  0,  1),  
-    vec3( 0,  1,  0) 
-);
-
 const vec3 positions[24] = vec3[24](
     // Y-
     vec3(0, 0, 0),  
@@ -67,29 +58,25 @@ const vec3 positions[24] = vec3[24](
     vec3(1, 1, 1)
 );
 
-const uint indices[6] = uint[6]
-(
-    2, 1, 3,
-	3, 1, 0
-);
-
 void main()
 {
     uint vert_id = (vertex.x >> 18) & 3;
     uint face_id = (vertex.x >> 20) & 7;
 
-    vec3 local_pos = vec3(vertex.x & (SIZE - 1), (vertex.x >> 6) & (SIZE - 1), (vertex.x >> 12) & (SIZE - 1)) + positions[face_id * 4 + vert_id];
+    uint idx = vertex.x & (VOLUME - 1);
+    vec3 local_pos = vec3(idx % SIZE, idx / AREA, idx % AREA / SIZE) + positions[face_id * 4 + vert_id];
     vec3 world_pos = local_pos + chunk_position.xyz * vec3(SIZE);
 
     vertex_output.uv = vec3(uvs[vert_id], (vertex >> 23) & 255);
     
-	const vec3 light2_position = vec3(-3000, 2000, 1000);
-	const vec3 light3_position = vec3(1000, -1000, 2000);
+    vec3 normal = cross(positions[face_id * 4 + 2] - positions[face_id * 4 + 0], positions[face_id * 4 + 1] - positions[face_id * 4 + 0]);
+	const vec3 light2_position = vec3(-300000, 200000, 100000);
+	const vec3 light3_position = vec3(100000, -100000, 200000);
     //float ao = float((vertex.x >> 28) & 3) / 3.0;
     vertex_output.light = vec3(0.07);
-    vertex_output.light += max(dot(normalize(light_position.xyz - world_pos),  normals[face_id]), 0.0);
-    vertex_output.light += max(dot(normalize(light2_position.xyz - world_pos), normals[face_id]), 0.0);
-    vertex_output.light += max(dot(normalize(light3_position.xyz - world_pos), normals[face_id]), 0.0);
+    vertex_output.light += max(dot(normalize(light_position.xyz),  normal), 0.0);
+    vertex_output.light += max(dot(normalize(light2_position.xyz), normal), 0.0);
+    vertex_output.light += max(dot(normalize(light3_position.xyz), normal), 0.0);
     vertex_output.light *= light_color.rgb;
 
     gl_Position = global_uniform.projection_view * vec4(world_pos, 1.0);

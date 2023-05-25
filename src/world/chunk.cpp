@@ -1,6 +1,7 @@
 #include "chunk.h"
 #include "silk_engine/gfx/buffers/buffer.h"
 #include "silk_engine/utils/random.h"
+#include "silk_engine/utils/debug_timer.h"
 #include "world.h"
 
 Chunk::~Chunk()
@@ -23,11 +24,15 @@ void Chunk::allocate()
 
 void Chunk::generate()
 {
-	empty = true;
+	fill = Block::AIR;
     height_map.resize(AREA, 0);
     for (int32_t z = 0; z < SIZE; ++z)
         for (int32_t x = 0; x < SIZE; ++x)
-            height_map[z * SIZE + x] = 32.0f * Random::fbm(4, float(position.x * SIZE + x) * 0.005f, float(position.z * SIZE + z) * 0.005f, 2.0f, 0.5f);
+        {
+            float h = Random::fbm(4, float(position.x * SIZE + x) * 0.005f, float(position.z * SIZE + z) * 0.005f, 2.0f, 0.5f) * 0.5f + 0.5f;
+            h *= h;
+            height_map[z * SIZE + x] = 64.0f * h;
+        }
 
 	for (int32_t y = 0; y < SIZE; ++y)
 	{
@@ -47,7 +52,7 @@ void Chunk::generate()
                         block = Block::DIRT;
                     else
                         block = Block::STONE;
-					empty = false;
+					fill = Block::NONE;
 				}
 				else
 				{
@@ -63,10 +68,9 @@ void Chunk::generateMesh()
 	if (!dirty)
 		return;
 	dirty = false;
-	vertices.clear();
-	if (empty)
+	if (fill == Block::AIR)
 		return;
-    vertex_buffer_dirty = true;
+    vertex_count = 0;
 
 	static constexpr Chunk::Coord ao_table[6 * 4 * 3] =
     {
@@ -178,51 +182,50 @@ void Chunk::generateMesh()
         { -1, -1, +1 }, // Side 2
         { 00, +1, +1 } // Corner
     };
-	
-	for (uint32_t y = 0; y < SIZE; ++y)
-	{
-		for (uint32_t z = 0; z < SIZE; ++z)
-		{
-			for (uint32_t x = 0; x < SIZE; ++x)
-			{
-				size_t i = idx(x, y, z);
-				Block& block = blocks[i]; 
-				if (block == Block::AIR)
-					continue;
-                
-                Chunk::Coord position = Chunk::Coord(x, y, z);
-                const auto& neighboring_blocks = getAdjacentNeighborBlocks(position);
-				for (uint32_t face = 0; face < 6; ++face)
-				{
-					if (!BlockInfo::isSolid(neighboring_blocks[face]))
-					{
-						for (uint32_t vert = 0; vert < 4; ++vert)
-						{
-                            //const Chunk::Coord& side1_off  = position + ao_table[face * 4 * 3 + vert * 3 + 0];
-                            //const Chunk::Coord& side2_off  = position + ao_table[face * 4 * 3 + vert * 3 + 1];
-                            //const Chunk::Coord& corner_off = position + ao_table[face * 4 * 3 + vert * 3 + 2];
-                            //uint32_t ao = getAO(BlockInfo::isSolid(at(side1_off)), BlockInfo::isSolid(at(side2_off)), BlockInfo::isSolid(at(corner_off)));
-							vertices.emplace_back(x | (y << 6) | (z << 12) | (vert << 18) | (face << 20) | (BlockInfo::getTextureIndex(block, face) << 23));
-						}
-					}
-				}
-			}
-		}
-	}
-}
 
-void Chunk::buildVertexBuffer()
-{
-	if (!vertex_buffer_dirty)
-		return;
-	vertex_buffer_dirty = false;
-	if (vertices.size())
-	{
-		if (!(vertex_buffer && vertices.size() * sizeof(vertices[0]) == vertex_buffer->getSize()))
-			vertex_buffer = makeShared<Buffer>(vertices.size() * sizeof(vertices[0]), Buffer::VERTEX | Buffer::TRANSFER_DST | Buffer::TRANSFER_SRC);
-		vertex_buffer->setData(vertices.data());
-	}
-	else vertex_buffer = nullptr;
+    static thread_local std::vector<uint64_t> vertices(Chunk::MAX_VERTICES);
+    for(uint32_t y = 0; y < SIZE; ++y)
+    {
+        for (uint32_t z = 0; z < SIZE; ++z)
+        {
+            for (uint32_t x = 0; x < SIZE; ++x)
+            {
+                uint32_t i = idx(x, y, z);
+                Block& block = blocks[i];
+                if (block == Block::AIR)
+                    continue;
+    
+                Block neighboring_blocks[6] =
+                {
+                    (y != 0) ? blocks[i - AREA] : (neighbors[4] ? neighbors[4]->at(x, EDGE, z) : Block::AIR),
+                    (z != 0) ? blocks[i - SIZE] : (neighbors[10] ? neighbors[10]->at(x, y, EDGE) : Block::AIR),
+                    (x != 0) ? blocks[i - 1] : (neighbors[12] ? neighbors[12]->at(EDGE, y, z) : Block::AIR),
+                    (x != EDGE) ? blocks[i + 1] : (neighbors[13] ? neighbors[13]->at(0, y, z) : Block::AIR),
+                    (z != EDGE) ? blocks[i + SIZE] : (neighbors[15] ? neighbors[15]->at(x, y, 0) : Block::AIR),
+                    (y != EDGE) ? blocks[i + AREA] : (neighbors[21] ? neighbors[21]->at(x, 0, z) : Block::AIR)
+                };
+                for (uint32_t face = 0; face < 6; ++face)
+                {
+                    if (!BlockInfo::isSolid(neighboring_blocks[face]))
+                    {
+                        uint32_t face_data = (face << 20) | (BlockInfo::getTextureIndex(block, face) << 23);
+                        for (uint32_t vert = 0; vert < 4; ++vert)
+                            vertices[vertex_count++] = i | (vert << 18) | face_data;
+                    }
+                }
+            }
+        }
+    }
+
+    if (vertex_count)
+    {
+        static std::mutex mux;
+        std::scoped_lock lock(mux);
+        if (!(vertex_buffer && vertex_count * VERTEX_SIZE == vertex_buffer->getSize()))
+            vertex_buffer = makeShared<Buffer>(vertex_count * VERTEX_SIZE, Buffer::VERTEX | Buffer::TRANSFER_DST | Buffer::TRANSFER_SRC);
+        vertex_buffer->setData(vertices.data());
+    }
+    else vertex_buffer = nullptr;
 }
 
 Block Chunk::atSafe(const Chunk::Coord& position) const
@@ -235,5 +238,3 @@ Block Chunk::atSafe(const Chunk::Coord& position) const
         return neighbor->at(position - chunk_pos * DIM);
     return Block::AIR;
 }
-
-uint32_t Chunk::getVertexCount() const { return vertex_buffer->getSize() / sizeof(uint32_t); }

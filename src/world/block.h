@@ -13,10 +13,11 @@ enum class Block : uint8_t
 	OAK_LOG,
 	SNOW,
 
-	LAST
+	LAST,
+	NONE = std::numeric_limits<uint8_t>::max()
 };
 
-static inline constexpr auto block_solid = makeArray<bool>
+static constexpr auto block_solid = makeArray<bool>
 (
 	/* AIR		 */  false,
 	/* STONE	 */  true,
@@ -30,7 +31,7 @@ static inline constexpr auto block_solid = makeArray<bool>
 	/* SNOW		 */  true
 );
 
-static inline constexpr auto block_texture_indices = makeArray<int>
+static constexpr auto block_texture_indices = makeArray<int>
 (
 	/* AIR		 */  0, 0, 0, 0, 0, 0,
 	/* STONE	 */  1, 1, 1, 1, 1, 1,

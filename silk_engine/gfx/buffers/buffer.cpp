@@ -74,7 +74,7 @@ bool Buffer::setData(const void* data, VkDeviceSize size, VkDeviceSize offset)
 	Buffer sb(size ? size : ci.size, Buffer::TRANSFER_SRC, { Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
 	sb.setData(data);
 	sb.copy(buffer, size ? size : ci.size, offset);
-	RenderContext::executeTransfer();
+	RenderContext::execute();
 	return true;
 }
 
@@ -115,5 +115,5 @@ void Buffer::copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDe
 	copy_region.srcOffset = src_offset;
 	copy_region.dstOffset = dst_offset;
 	copy_region.size = size;
-	RenderContext::getTransferCommandBuffer().copyBuffer(source, destination, { copy_region });
+	RenderContext::getCommandBuffer().copyBuffer(source, destination, { copy_region });
 }

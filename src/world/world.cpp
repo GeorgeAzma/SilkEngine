@@ -13,15 +13,18 @@
 
 World::World()
 {
-	camera = Scene::getActive()->createEntity();
-	camera->add<CameraComponent>();
-	camera->add<ScriptComponent>().bind<CameraController>();
-	camera->get<CameraComponent>().camera.position = vec3(0.0f, 0.0f, 8.0f);
+	player = Scene::getActive()->createEntity();
+	player->add<CameraComponent>();
+	player->add<ScriptComponent>().bind<CameraController>();
+	player->get<CameraComponent>().camera.position = vec3(0.0f, 0.0f, 8.0f);
+	camera = &player->get<CameraComponent>().camera;
 
 	VkRenderPass render_pass = RenderContext::getRenderGraph().getPass("Geometry").getRenderPass();
 	shared<GraphicsPipeline> chunk_pipeline = makeShared<GraphicsPipeline>();
 	chunk_pipeline->setShader(makeShared<Shader>("chunk", Shader::Defines{ 
-		{ "SIZE", std::to_string(Chunk::SIZE) }}))
+		{ "SIZE", std::to_string(Chunk::SIZE) },
+		{ "AREA", std::to_string(Chunk::AREA) },
+		{ "VOLUME", std::to_string(Chunk::VOLUME) } }))
 		.setRenderPass(render_pass)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
@@ -34,7 +37,7 @@ World::World()
 	props.sampler_props.min_filter = VK_FILTER_NEAREST;
 	texture_atlas = makeShared<Image>(block_textures, props);
 	texture_atlas->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-	std::vector<uint32_t> indices(Chunk::VOLUME * 6 * 6);
+	std::vector<uint32_t> indices(Chunk::MAX_INDICES);
 	index_buffer = makeShared<Buffer>(indices.size() * sizeof(uint32_t), Buffer::INDEX | Buffer::TRANSFER_DST | Buffer::TRANSFER_SRC);
 	constexpr uint32_t ind[6] = { 2, 1, 3, 3, 1, 0 };
 	uint32_t index_offset = 0;
@@ -52,66 +55,61 @@ World::World()
 void World::update()
 {
 	DebugTimer t;
-	const vec3& origin = camera->get<CameraComponent>().camera.position;
+	const vec3& origin = camera->position;
 	const Chunk::Coord& chunk_origin = toChunkCoord((World::Coord)round(origin));
 
 	// Delete far chunks
 	RenderContext::getLogicalDevice().wait();
 	constexpr float max_chunk_distance = 8;
-	for (size_t i = 0; i < chunks.size(); ++i)
+	for (int32_t i = 0; i < chunks.size(); ++i)
 	{
-		auto& chunk = chunks[i];
-		if (distance2(vec3(chunk->getPosition()), vec3(chunk_origin)) > max_chunk_distance * max_chunk_distance)
+		if (distance2(vec3(chunks[i]->getPosition()), vec3(chunk_origin)) > max_chunk_distance * max_chunk_distance)
 		{
-			std::swap(chunk, chunks.back());
-			chunks.pop_back();
+			//std::swap(chunks[i], chunks.back());
+			//chunks.pop_back();
+			//--i;
 		}
 	}
 
 	// Build chunks and regenerate chunks with new neighbors
 #if MULTITHREAD
 	pool.forEach(chunks.size(), [&](size_t i) {
+#else
+	for (size_t i = 0; i < chunks.size(); ++i)
+#endif
 		if (!isChunkVisible(chunks[i]->getPosition()))
 			return;
-		chunks[i]->generateMesh(); 
-	});
-#endif
-	for (const auto& chunk : chunks)
-	{
-		if (!isChunkVisible(chunk->getPosition()))
-			continue;
-#if !MULTITHREAD
-		chunk->generateMesh();
-#endif
-		chunk->buildVertexBuffer();
+		chunks[i]->generateMesh();
 	}
+#if MULTITHREAD
+	);
+#endif
 
 	constexpr size_t max_chunks = 2048;
 	if (chunks.size() >= max_chunks)
 		return;
 
 	// Queue up to be generated chunks
-	std::vector<Chunk::Coord> old_queued_chunks(queued_chunks.begin(), queued_chunks.end());
-	std::ranges::sort(old_queued_chunks, [&](const Chunk::Coord& lhs, const Chunk::Coord& rhs) { 
+	std::ranges::sort(chunks, [&](const shared<Chunk>& lhs, const shared<Chunk>& rhs) {
 		constexpr vec3 modifier = vec3(1, 1, 1);
-		return distance(vec3(chunk_origin) * modifier, vec3(lhs) * modifier) < distance(vec3(chunk_origin) * modifier, vec3(rhs) * modifier);
+		return distance(vec3(chunk_origin) * modifier, vec3(lhs->getPosition()) * modifier) * ((lhs->getFill() != Block::NONE) * 4 + 1) < 
+			   distance(vec3(chunk_origin) * modifier, vec3(rhs->getPosition()) * modifier) * ((rhs->getFill() != Block::NONE) * 4 + 1);
 	});
-	queued_chunks.clear();
+
+	std::vector<Chunk::Coord> queued_chunks;
 	if (!findChunk(chunk_origin))
-		queued_chunks.emplace(chunk_origin);
-	constexpr size_t max_queued_chunks = 3;
-	for (size_t i = 0; i < old_queued_chunks.size(); ++i)
+		queued_chunks.emplace_back(chunk_origin);
+	constexpr size_t max_queued_chunks = 1;
+	for (const auto& chunk : chunks)
 	{
-		const Chunk::Coord& old_queued_chunk = old_queued_chunks[i];
-		std::array<Chunk::Coord, 6> neighbors_arr = Chunk::getAdjacentNeighborCoords(old_queued_chunk);
-		std::vector<Chunk::Coord> neighbors(neighbors_arr.begin(), neighbors_arr.end());
-		static Random rand;
-		std::shuffle(neighbors.begin(), neighbors.end(), rand);
-		for (const auto& neighbor : neighbors)
+		if (!isChunkVisible(chunk->getPosition()))
+			continue;
+		const std::vector<Chunk::Coord> missing_neighbors = chunk->getMissingNeighborLocations();
+		for (const auto& missing : missing_neighbors)
 		{
-			if (findChunk(neighbor) || !isChunkVisible(neighbor))
+			if (findChunk(chunk->getPosition() + missing))
 				continue;
-			queued_chunks.emplace(neighbor);
+			queued_chunks.emplace_back(chunk->getPosition() + missing);
 			if (queued_chunks.size() >= max_queued_chunks)
 				break;
 		}
@@ -119,23 +117,16 @@ void World::update()
 			break;
 	}
 
-	std::vector<Chunk::Coord> new_queued_chunks(queued_chunks.begin(), queued_chunks.end());
-#if MULTITHREAD
-	for (const auto& chunk : new_queued_chunks)
+	for (const auto& chunk : queued_chunks)
 	{
 		chunks.emplace_back(makeShared<Chunk>(chunk));
-		std::array<Chunk::Coord, 26> neighbors = Chunk::getNeighborCoords(chunk);
+		std::array<Chunk::Coord, 26> neighbors = Chunk::getNeighborCoords();
 		for (size_t i = 0; i < neighbors.size(); ++i)
-			chunks.back()->addNeighbor(i, findChunk(neighbors[i]));
+			chunks.back()->addNeighbor(i, findChunk(chunk + neighbors[i]));
+#if MULTITHREAD
 	}
-	pool.forEach(new_queued_chunks.size(), [this](size_t i) { chunks[chunks.size() - 1 - i]->allocate(); chunks[chunks.size() - 1 - i]->generate(); });
+	pool.forEach(queued_chunks.size(), [this](size_t i) { chunks[chunks.size() - 1 - i]->allocate(); chunks[chunks.size() - 1 - i]->generate(); });
 #else
-	for (const auto& chunk : new_queued_chunks)
-	{
-		chunks.emplace_back(makeUnique<Chunk>(chunk));
-		std::array<Chunk::Coord, 26> neighbors = Chunk::getNeighborCoords(chunk);
-		for (size_t i = 0; i < neighbors.size(); ++i)
-			chunks.back()->addNeighbor(i, findChunk(neighbors[i])); 
 		chunks.back()->allocate(); 
 		chunks.back()->generate();
 	}
@@ -149,7 +140,7 @@ void World::render()
 	material->bind();
 	index_buffer->bindIndex();
 	PushConstantData push_constant_data{};
-	push_constant_data.light_position =  vec4(1000, 3000, -2000, 0);
+	push_constant_data.light_position =  vec4(100000, 300000, -200000, 0);
 	push_constant_data.light_color = vec4(0.8);
 	for (const auto& chunk : chunks)
 	{
@@ -164,5 +155,5 @@ void World::render()
 
 bool World::isChunkVisible(const Chunk::Coord& position) const
 {
-	return camera->get<CameraComponent>().camera.frustum.isBoxVisible(toWorldCoord(position), toWorldCoord(position) + Chunk::DIM);
+	return camera->frustum.isBoxVisible(toWorldCoord(position), toWorldCoord(position) + Chunk::DIM);
 }
