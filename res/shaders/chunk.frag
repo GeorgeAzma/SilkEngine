@@ -10,7 +10,7 @@ layout(location = 0) out vec4 color;
 
 void main()
 {
-    color = texture(texture_atlas, fragment_input.uv);
+    color = texelFetch(texture_atlas, ivec3(textureSize(texture_atlas, 0).xy * fragment_input.uv.xy, fragment_input.uv.z), 0);
     if (color.a < 0.01)
         discard;
 
