@@ -14,13 +14,6 @@ class World
 public:
 	using Coord = ivec3;
 
-	struct PushConstantData
-	{
-		vec4 chunk_position;
-		vec4 light_position;
-		vec4 light_color;
-	};
-
 public:
 	static Chunk::Coord toChunkCoord(const World::Coord& position) 
 	{ 

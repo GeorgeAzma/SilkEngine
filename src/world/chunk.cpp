@@ -1,5 +1,7 @@
 #include "chunk.h"
+#include "silk_engine/gfx/render_context.h"
 #include "silk_engine/gfx/buffers/buffer.h"
+#include "silk_engine/gfx/pipeline/shader.h"
 #include "silk_engine/utils/random.h"
 #include "silk_engine/utils/debug_timer.h"
 #include "world.h"
@@ -226,6 +228,26 @@ void Chunk::generateMesh()
         vertex_buffer->setData(vertices.data());
     }
     else vertex_buffer = nullptr;
+}
+
+void Chunk::render() const
+{
+    if (!vertex_buffer)
+        return;
+
+    struct PushConstantData
+    {
+        vec4 chunk_position;
+        vec4 light_position;
+        vec4 light_color;
+    };
+    PushConstantData push_constant_data{};
+    push_constant_data.light_position = vec4(100000, 300000, -200000, 0);
+    push_constant_data.light_color = vec4(0.8);
+    push_constant_data.chunk_position = vec4(position, 0);
+    RenderContext::getCommandBuffer().pushConstants(Shader::Stage::VERTEX, 0, sizeof(PushConstantData), &push_constant_data);
+    vertex_buffer->bindVertex();
+    RenderContext::getCommandBuffer().drawIndexed(getIndexCount());
 }
 
 Block Chunk::atSafe(const Chunk::Coord& position) const

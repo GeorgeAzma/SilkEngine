@@ -139,17 +139,11 @@ void World::render()
 	material->set("texture_atlas", *texture_atlas);
 	material->bind();
 	index_buffer->bindIndex();
-	PushConstantData push_constant_data{};
-	push_constant_data.light_position =  vec4(100000, 300000, -200000, 0);
-	push_constant_data.light_color = vec4(0.8);
 	for (const auto& chunk : chunks)
 	{
-		if (!chunk->getVertexBuffer() || !isChunkVisible(chunk->getPosition()))
+		if (!isChunkVisible(chunk->getPosition()))
 			continue;
-		push_constant_data.chunk_position = ivec4(chunk->getPosition(), 0);
-		RenderContext::getCommandBuffer().pushConstants(Shader::Stage::VERTEX, 0, sizeof(PushConstantData), &push_constant_data);
-		chunk->getVertexBuffer()->bindVertex();
-		RenderContext::getCommandBuffer().drawIndexed(chunk->getIndexCount());
+		chunk->render();
 	}
 }
 

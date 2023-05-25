@@ -89,6 +89,7 @@ public:
 	void allocate();
 	void generate();
 	void generateMesh();
+	void render() const;
 
 	void addNeighbor(size_t index, Chunk* neighbor) 
 	{ 
