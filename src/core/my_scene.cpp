@@ -13,9 +13,9 @@ void MyScene::onStart()
 
     render_graph = makeShared<RenderGraph>();
     auto& geometry = render_graph->addPass("Geometry");
-    auto& color = geometry.addAttachment("Color", Image::Format::BGRA);
+    auto& color = geometry.addAttachment("Color", Image::Format::BGRA, RenderContext::getPhysicalDevice().getMaxSampleCount());
     color.setClearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
-    auto& depth = geometry.addAttachment("Depth", Image::Format::DEPTH24_STENCIL);
+    auto& depth = geometry.addAttachment("Depth", Image::Format::DEPTH24_STENCIL, RenderContext::getPhysicalDevice().getMaxSampleCount());
     depth.setClearDepthStencil({ 1.0f, 0 });
     geometry.setRenderCallback([&](const RenderGraph& render_graph) 
     { 

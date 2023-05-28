@@ -20,6 +20,7 @@ public:
 	static constexpr int32_t MAX_VERTICES = VOLUME * 4 * 6;
 	static constexpr int32_t MAX_INDICES = VOLUME * 6 * 6;
 	static constexpr size_t VERTEX_SIZE = sizeof(uint64_t);
+	static constexpr size_t INDEX_SIZE = sizeof(uint32_t);
 
 public:
 	Chunk(const Coord& position, const shared<Pipeline>& pipeline);
@@ -49,6 +50,7 @@ public:
 		return missing_neighbors;
 	}
 
+	bool isInside(const Chunk::Coord& position) const { return position.x >= 0 && position.y >= 0 && position.z >= 0 && position.x < SIZE && position.y < SIZE && position.z < SIZE; }
 	Block& at(uint32_t idx) { return blocks[idx]; }
 	Block& at(uint32_t x, uint32_t y, uint32_t z) { return blocks[idx(x, y, z)]; }
 	Block& at(const Chunk::Coord& position) { return blocks[idx(position)]; }
@@ -59,7 +61,7 @@ public:
 	const Coord& getPosition() const { return position; }
 	const shared<Buffer>& getVertexBuffer() const { return vertex_buffer; }
 	uint32_t getVertexCount() const { return vertex_count; }
-	uint32_t getIndexCount() const { return vertex_count / 4 * 6; }
+	uint32_t getIndexCount() const { return index_count; }
 	Block getFill() const { return fill; }
 
 	bool operator==(const Chunk& other) const { return position == other.position; }
@@ -128,7 +130,7 @@ public:
 	}
 
 private:
-	static uint32_t getAO(uint32_t side1, uint32_t side2, uint32_t corner)
+	static uint64_t getAO(uint32_t side1, uint32_t side2, uint32_t corner)
 	{
 		return (side1 && side2) ? 3 : (side1 + side2 + corner);
 	}
@@ -137,8 +139,10 @@ private:
 	Coord position = Coord(0);
 	std::vector<Block> blocks = {}; 
 	size_t vertex_count = 0;
+	size_t index_count = 0;
 	std::vector<int16_t> height_map = {};
 	shared<Buffer> vertex_buffer = nullptr;
+	shared<Buffer> index_buffer = nullptr;
 	shared<Material> material = nullptr;
 	std::array<Chunk*, 26> neighbors = {};
 	bool dirty = true;

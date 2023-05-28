@@ -76,12 +76,14 @@ void main()
     vec3 normal = cross(positions[face_id * 4 + 2] - positions[face_id * 4 + 0], positions[face_id * 4 + 1] - positions[face_id * 4 + 0]);
 	const vec3 light2_position = vec3(-300000, 200000, 100000);
 	const vec3 light3_position = vec3(100000, -100000, 200000);
-    //float ao = float((vertex.x >> 28) & 3) / 3.0;
+    float ao = 1.0 - float(vertex.y & 3) / 3.0;
     vertex_output.light = vec3(0.07);
     vertex_output.light += max(dot(normalize(light_position.xyz),  normal), 0.0);
     vertex_output.light += max(dot(normalize(light2_position.xyz), normal), 0.0);
     vertex_output.light += max(dot(normalize(light3_position.xyz), normal), 0.0);
     vertex_output.light *= light_color.rgb;
-
+    //vertex_output.light = max(normal, vec3(0)) * 0.5 + abs(normal) * 0.5;
+    vertex_output.light *= ao;
+ 
     gl_Position = global_uniform.projection_view * vec4(world_pos, 1.0);
 }

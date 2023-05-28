@@ -16,9 +16,10 @@ enum class Block : uint8_t
 	LAST,
 	NONE = std::numeric_limits<uint8_t>::max()
 };
+static constexpr size_t TOTAL_BLOCKS = ecast(Block::LAST);
 
-static constexpr auto block_solid = makeArray<bool>
-(
+static constexpr bool block_solid[TOTAL_BLOCKS]
+{
 	/* AIR		 */  false,
 	/* STONE	 */  true,
 	/* GRASS	 */  true,
@@ -29,10 +30,10 @@ static constexpr auto block_solid = makeArray<bool>
 	/* LEAF		 */  false,
 	/* OAK_LOG	 */  true,
 	/* SNOW		 */  true
-);
+};
 
-static constexpr auto block_texture_indices = makeArray<int>
-(
+static constexpr int block_texture_indices[TOTAL_BLOCKS * 6]
+{
 	/* AIR		 */  0, 0, 0, 0, 0, 0,
 	/* STONE	 */  1, 1, 1, 1, 1, 1,
 	/* GRASS	 */  4, 3, 3, 3, 3, 2,
@@ -43,12 +44,12 @@ static constexpr auto block_texture_indices = makeArray<int>
 	/* LEAF		 */  9, 9, 9, 9, 9, 9,
 	/* OAK_LOG	 */  11, 10, 10, 10, 10, 11,
 	/* SNOW		 */  12, 12, 12, 12, 12, 12
-);
+};
 
 struct BlockInfo
 {
-	static bool isSolid(Block block) { return block_solid[size_t(block)]; }
-	static uint32_t getTextureIndex(Block block, size_t face) { return block_texture_indices[size_t(block) *  6 + face]; }
+	static bool isSolid(Block block) { return block_solid[ecast(block)]; }
+	static uint32_t getTextureIndex(Block block, size_t face) { return block_texture_indices[size_t(block) * 6 + face]; }
 };
 
 static inline const auto block_textures = makeArray<fs::path>

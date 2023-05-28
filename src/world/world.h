@@ -5,7 +5,6 @@
 
 class Material;
 class Image;
-class Buffer;
 class Entity;
 class Camera;
 
@@ -17,7 +16,7 @@ public:
 public:
 	static Chunk::Coord toChunkCoord(const World::Coord& position) 
 	{ 
-		return glm::ivec3(
+		return Chunk::Coord(
 			(position.x < 0) ? ((position.x + 1 - Chunk::SIZE) / Chunk::SIZE) : (position.x / Chunk::SIZE),
 			(position.y < 0) ? ((position.y + 1 - Chunk::SIZE) / Chunk::SIZE) : (position.y / Chunk::SIZE),
 			(position.z < 0) ? ((position.z + 1 - Chunk::SIZE) / Chunk::SIZE) : (position.z / Chunk::SIZE)
@@ -51,7 +50,6 @@ private:
 	};
 	shared<Material> material = nullptr;
 	shared<Image> texture_atlas = nullptr;
-	shared<Buffer> index_buffer = nullptr;
 	shared<Entity> player = nullptr;
 	Camera* camera = nullptr;
 	ThreadPool pool = ThreadPool();

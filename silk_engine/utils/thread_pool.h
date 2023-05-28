@@ -42,17 +42,22 @@ public:
     template<typename Fn>
     void forEach(size_t count, Fn&& func)
     {
+        if (!count)
+            return;
         size_t length = count / threads.size();
         size_t remain = count % threads.size();
         size_t index = 0u;
         for (size_t i = 0u; i < threads.size(); ++i)
         {
-            const size_t invocations = length + (i < remain);
-            submit([invocations, index, func] {
-                for (size_t i = 0u; i < invocations; ++i)
-                    func(index + i);
-                });
-            index += invocations;
+            size_t invocations = length + (i < remain);
+            if (invocations)
+            {
+                submit([invocations, index, &func] {
+                    for (size_t i = 0u; i < invocations; ++i)
+                        func(index + i);
+                    });
+                index += invocations;
+            }
         }
         wait();
     }

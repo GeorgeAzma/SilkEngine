@@ -38,8 +38,8 @@ void Chunk::generate()
         for (int32_t x = 0; x < SIZE; ++x)
         {
             float h = Random::fbm(4, float(position.x * SIZE + x) * 0.005f, float(position.z * SIZE + z) * 0.005f, 2.0f, 0.5f) * 0.5f + 0.5f;
-            h *= h;
-            height_map[z * SIZE + x] = 64.0f * h;
+            h *= h * h * h;
+            height_map[z * SIZE + x] = 256.0f * h;
         }
 
 	for (int32_t y = 0; y < SIZE; ++y)
@@ -49,17 +49,17 @@ void Chunk::generate()
         {
             for (int32_t x = 0; x < SIZE; ++x)
             {
-				Block& block = at(x, y, z);
+                Block& block = at(x, y, z);
                 int32_t height = height_map[z * SIZE + x];
                 int32_t delta = height - level;
 				if (level <= height)
 				{
-                    if (delta <= 1)
-                        block = Block::GRASS;
-                    else if (delta <= 3)
-                        block = Block::DIRT;
+                    if (delta == 1)
+                        block = Block::SNOW;
+                    else if (delta <= 2)
+                        block = Block::SNOW;
                     else
-                        block = Block::STONE;
+                        block = Block::SNOW;
 					fill = Block::NONE;
 				}
 				else
@@ -79,125 +79,125 @@ void Chunk::generateMesh()
 	if (fill == Block::AIR)
 		return;
     vertex_count = 0;
-
+    index_count = 0;
+    
 	static constexpr Chunk::Coord ao_table[6 * 4 * 3] =
     {
-        ////////////////////////// FACE = X- //////////////////////
-        // CORNER = [X-][Y-]
+        ////////////////////////// FACE = Y- //////////////////////
         { -1, -1, 00 }, // Side 1
-        { -1, 00, -1 }, // Side 2
+        { 00, -1, -1 }, // Side 2
         { -1, -1, -1 }, // Corner
-        // CORNER = [X+][Y-]
-        { -1, +1, 00 }, // Side 1
-        { -1, 00, -1 }, // Side 2
-        { -1, +1, -1 }, // Corner
-        // CORNER = [X-][Y+]
-        { -1, +1, 00 }, // Side 1
-        { -1, 00, +1 }, // Side 2
-        { -1, +1, +1 }, // Corner
-        // CORNER = [X+][Y+]
-        { -1, 00, +1 }, // Side 1
-        { -1, -1, 00 }, // Side 2
+
+        { -1, -1, 00 }, // Side 1
+        { 00, -1, +1 }, // Side 2
         { -1, -1, +1 }, // Corner
 
-        ////////////////////////// FACE = X+ //////////////////////
-        // CORNER = [X+][Y-]
         { +1, -1, 00 }, // Side 1
-        { +1, 00, +1 }, // Side 2
-        { +1, -1, +1 }, // Corner
-        // CORNER = [X-][Y-]
-        { +1, -1, 00 }, // Side 1
-        { +1, 00, -1 }, // Side 2
-        { +1, -1, -1 }, // Corner
-        // CORNER = [X+][Y+]
-        { +1, +1, 00 }, // Side 1
-        { +1, 00, +1 }, // Side 2
-        { +1, +1, +1 }, // Corner
-        // CORNER = [X-][Y+]
-        { +1, +1, 00 }, // Side 1
-        { +1, 00, -1 }, // Side 2
-        { +1, +1, -1 }, // Corner
-
-        ////////////////////////// FACE = Y- //////////////////////
-        // CORNER = [X-][Y-]
-        { -1, -1, -1 }, // Side 1
-        { 00, -1, -1 }, // Side 2
-        { -1, -1, 00 }, // Corner
-        // CORNER = [X+][Y-]
-        { +1, -1, -1 }, // Side 1
-        { 00, -1, -1 }, // Side 2
-        { +1, -1, 00 }, // Corner
-        // CORNER = [X-][Y+]
-        { +1, -1, -1 }, // Side 1
         { 00, -1, +1 }, // Side 2
         { +1, -1, +1 }, // Corner
-        // CORNER = [X+][Y+]
-        { -1, -1, +1 }, // Side 1
-        { -1, -1, 00 }, // Side 2
-        { 00, -1, +1 }, // Corner
 
-        ////////////////////////// FACE = Y+ //////////////////////
-        // CORNER = [X-][Y+]
-        { -1, +1, +1 }, // Side 1
-        { 00, +1, -1 }, // Side 2
-        { -1, +1, -1 }, // Corner
-        // CORNER = [X+][Y+]
-        { +1, +1, +1 }, // Side 1
-        { 00, +1, -1 }, // Side 2
-        { +1, +1, -1 }, // Corner
-        // CORNER = [X-][Y-]
-        { +1, +1, +1 }, // Side 1
-        { 00, +1, +1 }, // Side 2
-        { +1, +1, 00 }, // Corner
-        // CORNER = [X+][Y-]
-        { -1, +1, -1 }, // Side 1
-        { -1, +1, 00 }, // Side 2
-        { 00, +1, -1 }, // Corner
+        { +1, -1, 00 }, // Side 1
+        { 00, -1, -1 }, // Side 2
+        { +1, -1, -1 }, // Corner
 
         ////////////////////////// FACE = Z- //////////////////////
-        // CORNER = [X-][Y-]
+        { -1, 00, -1 }, // Side 1
+        { 00, +1, -1 }, // Side 2
+        { -1, +1, -1 }, // Corner
+
         { -1, 00, -1 }, // Side 1
         { 00, -1, -1 }, // Side 2
         { -1, -1, -1 }, // Corner
-        // CORNER = [X+][Y-]
+
         { +1, 00, -1 }, // Side 1
         { 00, -1, -1 }, // Side 2
         { +1, -1, -1 }, // Corner
-        // CORNER = [X-][Y+]
+
         { +1, 00, -1 }, // Side 1
         { 00, +1, -1 }, // Side 2
         { +1, +1, -1 }, // Corner
-        // CORNER = [X+][Y+]
-        { -1, -1, -1 }, // Side 1
+
+        ////////////////////////// FACE = X- //////////////////////
+        { -1, +1, 00 }, // Side 1
+        { -1, 00, +1 }, // Side 2
+        { -1, +1, +1 }, // Corner
+
+        { -1, -1, 00 }, // Side 1
+        { -1, 00, +1 }, // Side 2
+        { -1, -1, +1 }, // Corner
+
+        { -1, -1, 00 }, // Side 1
         { -1, 00, -1 }, // Side 2
-        { 00, +1, -1 }, // Corner
+        { -1, -1, -1 }, // Corner
+
+        { -1, +1, 00 }, // Side 1
+        { -1, 00, -1 }, // Side 2
+        { -1, +1, -1 }, // Corner
+
+        ////////////////////////// FACE = X+ //////////////////////
+        { +1, +1, 00 }, // Side 1
+        { +1, 00, -1 }, // Side 2
+        { +1, +1, -1 }, // Corner
+
+        { +1, -1, 00 }, // Side 1
+        { +1, 00, -1 }, // Side 2
+        { +1, -1, -1 }, // Corner
+
+        { +1, -1, 00 }, // Side 1
+        { +1, 00, +1 }, // Side 2
+        { +1, -1, +1 }, // Corner
+
+        { +1, +1, 00 }, // Side 1
+        { +1, 00, +1 }, // Side 2
+        { +1, +1, +1 }, // Corner
 
         ////////////////////////// FACE = Z+ //////////////////////
-        // CORNER = [X-][Y-]
-        { -1, -1, +1 }, // Side 1
-        { 00, -1, +1 }, // Side 2
-        { -1, 00, +1 }, // Corner
-        // CORNER = [X+][Y-]
-        { +1, -1, +1 }, // Side 1
-        { 00, -1, +1 }, // Side 2
-        { +1, 00, +1 }, // Corner
-        // CORNER = [X-][Y+]
-        { +1, -1, +1 }, // Side 1
+        { +1, 00, +1 }, // Side 1
         { 00, +1, +1 }, // Side 2
         { +1, +1, +1 }, // Corner
-        // CORNER = [X+][Y+]
+
+        { +1, 00, +1 }, // Side 1
+        { 00, -1, +1 }, // Side 2
+        { +1, -1, +1 }, // Corner
+
         { -1, 00, +1 }, // Side 1
-        { -1, -1, +1 }, // Side 2
-        { 00, +1, +1 } // Corner
+        { 00, -1, +1 }, // Side 2
+        { -1, -1, +1 }, // Corner
+
+        { -1, 00, +1 }, // Side 1
+        { 00, +1, +1 }, // Side 2
+        { -1, +1, +1 }, // Corner
+
+        ////////////////////////// FACE = Y+ //////////////////////
+        { -1, +1, 00 }, // Side 1
+        { 00, +1, +1 }, // Side 2
+        { -1, +1, +1 }, // Corner
+
+        { -1, +1, 00 }, // Side 1
+        { 00, +1, -1 }, // Side 2
+        { -1, +1, -1 }, // Corner
+
+        { +1, +1, 00 }, // Side 1
+        { 00, +1, -1 }, // Side 2
+        { +1, +1, -1 }, // Corner
+
+        { +1, +1, 00 }, // Side 1
+        { 00, +1, +1 }, // Side 2
+        { +1, +1, +1 } // Corner
     };
 
     static thread_local std::vector<uint64_t> vertices(Chunk::MAX_VERTICES);
+    static thread_local std::vector<uint32_t> indices(Chunk::MAX_INDICES);
+
+    static DebugTimer t;
+    t.reset();
     for (uint32_t y = 0; y < SIZE; ++y)
     {
         for (uint32_t z = 0; z < SIZE; ++z)
         {
             for (uint32_t x = 0; x < SIZE; ++x)
             {
+                Chunk::Coord position(x, y, z);
                 uint32_t i = idx(x, y, z);
                 Block& block = blocks[i];
                 if (block == Block::AIR)
@@ -217,23 +217,75 @@ void Chunk::generateMesh()
                     if (!BlockInfo::isSolid(neighboring_blocks[face]))
                     {
                         uint32_t face_data = (face << 20) | (BlockInfo::getTextureIndex(block, face) << 23);
-                        for (uint32_t vert = 0; vert < 4; ++vert)
-                            vertices[vertex_count++] = i | (vert << 18) | face_data;
+                        uint32_t face12 = face * 12;
+                        
+                        uint64_t ao0 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 0])),
+                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 1])),
+                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 2])));
+                       
+                        uint64_t ao1 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 3])),
+                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 4])),
+                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 5])));
+                        
+                        uint64_t ao2 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 6])),
+                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 7])),
+                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 8])));
+                        
+                        uint64_t ao3 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 9])),
+                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 10])),
+                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 11])));
+ 
+                        bool not_flipped = ao1 + ao3 < ao0 + ao2;
+                        if (not_flipped)
+                        {
+                            indices[index_count++] = 2 + vertex_count;
+                            indices[index_count++] = 1 + vertex_count;
+                            indices[index_count++] = 3 + vertex_count;
+                            indices[index_count++] = 3 + vertex_count;
+                            indices[index_count++] = 1 + vertex_count;
+                            indices[index_count++] = 0 + vertex_count;
+                        }
+                        else
+                        {
+                            indices[index_count++] = 2 + vertex_count;
+                            indices[index_count++] = 1 + vertex_count;
+                            indices[index_count++] = 0 + vertex_count;
+                            indices[index_count++] = 0 + vertex_count;
+                            indices[index_count++] = 3 + vertex_count;
+                            indices[index_count++] = 2 + vertex_count;
+                        }
+
+                        vertices[vertex_count++] = i | (0 << 18) | face_data | (ao0 << 32);
+                        vertices[vertex_count++] = i | (1 << 18) | face_data | (ao1 << 32);
+                        vertices[vertex_count++] = i | (2 << 18) | face_data | (ao2 << 32);
+                        vertices[vertex_count++] = i | (3 << 18) | face_data | (ao3 << 32);
                     }
                 }
             }
         }
     }
-
+    t.sample(64);
+    
     if (vertex_count)
     {
         static std::mutex mux;
         std::scoped_lock lock(mux);
-        if (!(vertex_buffer && vertex_count * VERTEX_SIZE == vertex_buffer->getSize()))
-            vertex_buffer = makeShared<Buffer>(vertex_count * VERTEX_SIZE, Buffer::STORAGE | Buffer::TRANSFER_DST | Buffer::TRANSFER_SRC);
+
+        size_t vertices_size = vertex_count * VERTEX_SIZE;
+        if (!(vertex_buffer && vertices_size == vertex_buffer->getSize()))
+            vertex_buffer = makeShared<Buffer>(vertices_size, Buffer::STORAGE | Buffer::TRANSFER_DST | Buffer::TRANSFER_SRC);
         vertex_buffer->setData(vertices.data());
+
+        size_t indices_size = index_count * INDEX_SIZE;
+        if (!(index_buffer && indices_size == index_buffer->getSize()))
+            index_buffer = makeShared<Buffer>(indices_size, Buffer::INDEX | Buffer::TRANSFER_DST | Buffer::TRANSFER_SRC);
+        index_buffer->setData(indices.data());
     }
-    else vertex_buffer = nullptr;
+    else
+    {
+        vertex_buffer = nullptr;
+        index_buffer = nullptr;
+    }
 }
 
 void Chunk::render() const
@@ -254,16 +306,17 @@ void Chunk::render() const
     RenderContext::getCommandBuffer().pushConstants(Shader::Stage::VERTEX, 0, sizeof(PushConstantData), &push_constant_data);
     material->set("Vertices", *vertex_buffer);
     material->bind();
+    index_buffer->bindIndex();
     RenderContext::getCommandBuffer().drawIndexed(getIndexCount());
 }
 
 Block Chunk::atSafe(const Chunk::Coord& position) const
 {
-    Chunk::Coord chunk_pos = World::toChunkCoord(position);
-    if (chunk_pos == Chunk::Coord(0))
+    if (isInside(position))
         return at(position);
-    Chunk* neighbor = neighbors[getIndexFromCoord(chunk_pos)];
+    Chunk::Coord neighbor_pos = World::toChunkCoord(position);
+    Chunk* neighbor = neighbors[getIndexFromCoord(neighbor_pos)];
     if (neighbor)
-        return neighbor->at(position - chunk_pos * DIM);
+        return neighbor->at(position - neighbor_pos * DIM);
     return Block::AIR;
 }

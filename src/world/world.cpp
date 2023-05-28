@@ -5,7 +5,6 @@
 #include "silk_engine/gfx/pipeline/render_graph/render_graph.h"
 #include "silk_engine/gfx/pipeline/render_pass.h"
 #include "silk_engine/gfx/debug_renderer.h"
-#include "silk_engine/gfx/buffers/buffer.h"
 #include "silk_engine/gfx/devices/logical_device.h"
 #include "silk_engine/scene/camera/camera_controller.h"
 #include "silk_engine/scene/components.h"
@@ -21,11 +20,12 @@ World::World()
 
 	VkRenderPass render_pass = RenderContext::getRenderGraph().getPass("Geometry").getRenderPass();
 	shared<GraphicsPipeline> chunk_pipeline = makeShared<GraphicsPipeline>();
-	chunk_pipeline->setShader(makeShared<Shader>("chunk", Shader::Defines{ 
+	chunk_pipeline->setShader(makeShared<Shader>("chunk", Shader::Defines{
 		{ "SIZE", std::to_string(Chunk::SIZE) },
 		{ "AREA", std::to_string(Chunk::AREA) },
 		{ "VOLUME", std::to_string(Chunk::VOLUME) } }))
 		.setRenderPass(render_pass)
+		.setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
 		.setCullMode(GraphicsPipeline::CullMode::FRONT)
@@ -37,34 +37,24 @@ World::World()
 	props.sampler_props.min_filter = VK_FILTER_NEAREST;
 	texture_atlas = makeShared<Image>(block_textures, props);
 	texture_atlas->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-	std::vector<uint32_t> indices(Chunk::MAX_INDICES);
-	index_buffer = makeShared<Buffer>(indices.size() * sizeof(uint32_t), Buffer::INDEX | Buffer::TRANSFER_DST | Buffer::TRANSFER_SRC);
-	constexpr uint32_t ind[6] = { 2, 1, 3, 3, 1, 0 };
-	uint32_t index_offset = 0;
-	for (uint32_t i = 0; i < Chunk::VOLUME * 6; ++i)
-	{
-		for (uint32_t j = 0; j < 6; ++j)
-			indices[i * 6 + j] = ind[j] + index_offset;
-		index_offset += 4;
-	}
-	index_buffer->setData(indices.data());
 }
 
-#define MULTITHREAD 1
+#define MULTITHREAD 0
 
 void World::update()
 {
-	DebugTimer t;
 	const vec3& origin = camera->position;
 	const Chunk::Coord& chunk_origin = toChunkCoord((World::Coord)round(origin));
 
 	// Delete far chunks
 	RenderContext::getLogicalDevice().wait();
 	constexpr float max_chunk_distance = 8;
+	constexpr float max_chunk_distance2 = max_chunk_distance * max_chunk_distance;
 	for (int32_t i = 0; i < chunks.size(); ++i)
 	{
-		if (distance2(vec3(chunks[i]->getPosition()), vec3(chunk_origin)) > max_chunk_distance * max_chunk_distance)
+		if (distance2(vec3(chunks[i]->getPosition()), vec3(chunk_origin)) > max_chunk_distance2)
 		{
+			// TODO: When removing chunk, other chunks neighbors are made invalid, fix that
 			//std::swap(chunks[i], chunks.back());
 			//chunks.pop_back();
 			//--i;
@@ -93,9 +83,10 @@ void World::update()
 
 	// Queue up to be generated chunks
 	std::ranges::sort(chunks, [&](const shared<Chunk>& lhs, const shared<Chunk>& rhs) {
-		constexpr vec3 modifier = vec3(1, 1, 1);
-		return distance(vec3(chunk_origin) * modifier, vec3(lhs->getPosition()) * modifier) * ((lhs->getFill() != Block::NONE) * 4 + 1) < 
-			   distance(vec3(chunk_origin) * modifier, vec3(rhs->getPosition()) * modifier) * ((rhs->getFill() != Block::NONE) * 4 + 1);
+		vec3 modifier_lhs = vec3(1, 2, 1) * ((lhs->getFill() != Block::NONE) * 16.0f + 1.0f);
+		vec3 modifier_rhs = vec3(1, 2, 1) * ((rhs->getFill() != Block::NONE) * 16.0f + 1.0f);
+		return distance2(vec3(chunk_origin) * modifier_lhs, vec3(lhs->getPosition()) * modifier_lhs) <
+			   distance2(vec3(chunk_origin) * modifier_rhs, vec3(rhs->getPosition()) * modifier_rhs);
 	});
 
 	std::vector<Chunk::Coord> queued_chunks;
@@ -104,7 +95,7 @@ void World::update()
 	constexpr size_t max_queued_chunks = 1;
 	for (const auto& chunk : chunks)
 	{
-		if (!isChunkVisible(chunk->getPosition()))
+		if (distance2(vec3(chunk_origin), vec3(chunk->getPosition())) > max_chunk_distance2 || !isChunkVisible(chunk->getPosition()))
 			continue;
 		const std::vector<Chunk::Coord> missing_neighbors = chunk->getMissingNeighborLocations();
 		for (const auto& missing : missing_neighbors)
@@ -146,7 +137,6 @@ void World::render()
 	material->set("GlobalUniform", *DebugRenderer::getGlobalUniformBuffer());
 	material->set("texture_atlas", *texture_atlas);
 	material->bind();
-	index_buffer->bindIndex();
 	for (const auto& chunk : chunks)
 	{
 		if (!isChunkVisible(chunk->getPosition()))
