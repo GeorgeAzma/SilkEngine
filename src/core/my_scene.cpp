@@ -1,4 +1,5 @@
 #include "silk_engine/gfx/window/window.h"
+#include "silk_engine/core/input/input.h"
 #include "silk_engine/gfx/debug_renderer.h"
 #include "silk_engine/utils/cooldown.h"
 #include "silk_engine/gfx/render_context.h"
@@ -32,7 +33,7 @@ void MyScene::onStart()
 
 void MyScene::onUpdate()
 {
-    if (Window::getActive().isKeyPressed(Key::F2))
+    if (Input::isKeyPressed(Key::F2))
         RenderContext::screenshot("screenshot.png");
 
     static Cooldown c(100ms);

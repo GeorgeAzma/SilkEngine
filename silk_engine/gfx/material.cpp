@@ -80,6 +80,11 @@ void Material::bind()
 		descriptor_set->bind(set);
 }
 
+void Material::dispatch(uint32_t global_invocation_count_x, uint32_t global_invocation_count_y, uint32_t global_invocation_count_z)
+{
+	std::dynamic_pointer_cast<ComputePipeline>(pipeline)->dispatch(global_invocation_count_x, global_invocation_count_y, global_invocation_count_z);
+}
+
 const shared<DescriptorSet>& Material::getDescriptorSet(uint32_t set)
 {
 	if (auto it = descriptor_sets.find(set); it != descriptor_sets.end())

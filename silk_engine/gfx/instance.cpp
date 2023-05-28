@@ -85,7 +85,7 @@ Instance::~Instance()
 
 bool Instance::checkVulkanVersionSupport(VulkanVersion minimum_version) const
 {
-    return uint32_t(minimum_version) < uint32_t(vulkan_version);
+    return ecast(minimum_version) <= ecast(vulkan_version);
 }
 
 void Instance::destroySurface(VkSurfaceKHR surface) const

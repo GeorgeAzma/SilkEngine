@@ -4,12 +4,35 @@
 #include "silk_engine/gfx/debug_renderer.h"
 #include "silk_engine/utils/debug_timer.h"
 #include "silk_engine/gfx/instance.h"
-#define STB_INCLUDE_IMPLEMENTATION
-#include "stb_include.h"
 #include "silk_engine/gfx/render_context.h"
 #include "silk_engine/gfx/descriptors/descriptor_set_layout.h"
 #include <spirv_cross/spirv_cross.hpp>
 #include <shaderc/shaderc.hpp>
+
+class Includer : public shaderc::CompileOptions::IncluderInterface
+{
+	shaderc_include_result* GetInclude(const char* requested_source, shaderc_include_type type, const char* requesting_source, size_t include_depth) override
+	{
+		std::string requested_path = std::string("res/shaders") + '/' + requested_source;
+		auto container = new std::array<std::string, 2>;
+		(*container)[0] = std::string(requested_source);
+		(*container)[1] = File::read(requested_path, std::ios::binary);
+
+		auto data = new shaderc_include_result;
+		data->user_data = container;
+		data->source_name = (*container)[0].data();
+		data->source_name_length = (*container)[0].size();
+		data->content = (*container)[1].data();
+		data->content_length = (*container)[1].size();
+		return data;
+	}
+
+	void ReleaseInclude(shaderc_include_result* data) override
+	{
+		delete static_cast<std::array<std::string, 2>*>(data->user_data);
+		delete data;
+	}
+};
 
 Shader::Stage::Stage(const fs::path& file)
 	: file(file)
@@ -58,14 +81,11 @@ bool Shader::Stage::compile(const Defines& defines)
 	options.SetSourceLanguage(shaderc_source_language_glsl);
 	options.SetWarningsAsErrors();
 	options.SetGenerateDebugInfo();
+	options.SetIncluder(makeUnique<Includer>());
+	for (auto&& [define, value] : defines)
+		options.AddMacroDefinition(define, value);
 
-	// TODO: remove this, make this a parameter, or do something else 
-	// NOTE: I am not using shaderc's pre processing because it's 30% slower
-	std::string source = "";
-	for (const auto& define : defines)
-		source += std::string("#define ") + define.first.data() + ' ' + define.second.data() + '\n';
-	source += stb_include_file((char*)file.string().c_str(), nullptr, nullptr, nullptr);
-
+	std::string source = File::read(file, std::ios::binary);
 	shaderc_shader_kind shaderc_type = (shaderc_shader_kind)0;
 	using enum Type;
 	switch (type)
@@ -78,14 +98,24 @@ bool Shader::Stage::compile(const Defines& defines)
 	case TESSELATION_EVALUATION: shaderc_type = shaderc_tess_evaluation_shader; break;
 	}
 
-	auto compilation_result = compiler.CompileGlslToSpv(source.data(), shaderc_type, file.string().c_str(), options);
+	auto preprocess_result = compiler.PreprocessGlsl(source, shaderc_type, file.string().c_str(), options);
+	if (preprocess_result.GetCompilationStatus() != shaderc_compilation_status_success)
+	{
+		SK_ERROR("Preprocess error in {}: {}", file, preprocess_result.GetErrorMessage());
+		return false;
+	}
+	if (preprocess_result.GetNumWarnings())
+		SK_WARN("Preprocess warning in {}: {}", file, preprocess_result.GetErrorMessage());
+	source = std::string(preprocess_result.cbegin(), preprocess_result.cend());
+	
+	auto compilation_result = compiler.CompileGlslToSpv(source, shaderc_type, file.string().c_str(), options);
 	if (compilation_result.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
-		SK_ERROR("Error in {}: {}", file, compilation_result.GetErrorMessage());
+		SK_ERROR("Compilation error in {}: {}", file, compilation_result.GetErrorMessage());
 		return false;
 	}
 	if (compilation_result.GetNumWarnings())
-		SK_WARN("Warning in {}: {}", file, compilation_result.GetErrorMessage());
+		SK_WARN("Compilation warning in {}: {}", file, compilation_result.GetErrorMessage());
 
 	binary = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend());
 
@@ -125,7 +155,7 @@ Shader::Shader(std::string_view name, const Defines& defines)
 {
 	std::vector<fs::path> source_files;
 	for (const auto& file : std::filesystem::directory_iterator("res/shaders"))
-		if (file.path().stem() == name)
+		if (file.path().stem() == name && file.path().extension() != ".glsl")
 			source_files.push_back(file);
 	SK_VERIFY(source_files.size(), "Shader {} does not exist", name);
 	stages.reserve(source_files.size());
@@ -139,7 +169,7 @@ Shader::Shader(const std::vector<std::string_view>& names, const Defines& define
 {
 	for (const auto& file : std::filesystem::directory_iterator("res/shaders"))
 		for (const auto& name : names)
-			if (file.path().stem() == name)
+			if (file.path().stem() == name && file.path().extension() != ".glsl")
 			{
 				stages.emplace_back(makeUnique<Stage>(file));
 				break;
@@ -384,11 +414,6 @@ Shader::ResourceLocation Shader::getLocation(std::string_view resource_name) con
 	if (auto resource_location = reflection_data.resource_locations.find(resource_name); resource_location != reflection_data.resource_locations.end())
 		return resource_location->second;
 	return ResourceLocation{};
-}
-
-void Shader::pushConstant(const void* data, Stage::Type stages, uint32_t size, uint32_t offset) const
-{
-	RenderContext::getCommandBuffer().pushConstants((VkPipelineStageFlags)stages, offset, size, data);
 }
 
 void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, Stage::Type stage, VkDescriptorType type)

@@ -7,7 +7,9 @@ Buffer::Buffer(VkDeviceSize size, Usage usage, const Allocation::Props& allocati
 	ci(VkBufferCreateInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, .size = size, .usage = (VkBufferUsageFlags)usage, .sharingMode = VK_SHARING_MODE_EXCLUSIVE }),
 	alloc_ci(VmaAllocationCreateInfo{ .flags = allocation_props.flags, .usage = (VmaMemoryUsage)allocation_props.preferred_device, .priority = allocation_props.priority }),
 	allocation(RenderContext::getAllocator().allocateBuffer(ci, alloc_ci, buffer))
-{} 
+{
+	SK_ASSERT(size > 0, "Buffer size can't be 0");
+} 
 
 Buffer::~Buffer()
 {
@@ -33,12 +35,9 @@ void Buffer::reallocate(VkDeviceSize size)
 	setData(data.data(), data.size());
 }
 
-bool Buffer::copy(VkBuffer destination, VkDeviceSize size, VkDeviceSize offset, VkDeviceSize dst_offset) const
+void Buffer::copy(VkBuffer destination, VkDeviceSize size, VkDeviceSize offset, VkDeviceSize dst_offset) const
 {
-	if (size + offset > ci.size)
-		return false;
-	copy(destination, buffer, size ? size : ci.size, dst_offset, offset);
-	return true;
+	copy(destination, buffer, size ? size : (ci.size - offset), dst_offset, offset);
 }
 
 void Buffer::bindVertex(uint32_t first, VkDeviceSize offset)
@@ -65,29 +64,39 @@ bool Buffer::setData(const void* data, VkDeviceSize size, VkDeviceSize offset)
 {
 	if (size + offset > ci.size)
 		return false;
+	VkDeviceSize max_size = size ? size : (ci.size - offset);
 	if (VmaAllocation(allocation) && allocation.isHostVisible())
 	{
-		allocation.setData(data, size ? size : ci.size, offset);
+		allocation.setData(data, max_size, offset);
 		return true;
 	}
-	
-	Buffer sb(size ? size : ci.size, Buffer::TRANSFER_SRC, { Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
-	sb.setData(data);
-	sb.copy(buffer, size ? size : ci.size, offset);
+
+	Buffer sb(max_size, Buffer::TRANSFER_SRC, { Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
+	sb.setData(data, max_size);
+	sb.copy(buffer, max_size, offset);
 	RenderContext::executeTransfer();
 	return true;
 }
 
-void Buffer::getData(void* data, VkDeviceSize size) const
+void Buffer::getData(void* data, VkDeviceSize size, VkDeviceSize offset) const
+{
+	getDataRanges({ { data, size, offset } });
+}
+
+void Buffer::getDataRanges(const std::vector<Range>& ranges) const
 {
 	if (VmaAllocation(allocation) && allocation.isHostVisible())
-		allocation.getData(data, size ? size : ci.size);
+		for (const auto& range : ranges)
+			allocation.getData(range.data, range.size ? range.size : (ci.size - range.offset), range.offset);
 	else
 	{
-		Buffer sb(size ? size : ci.size, Buffer::TRANSFER_DST, { Allocation::RANDOM_ACCESS | Allocation::MAPPED });
-		copy(sb, sb.getSize());
+		VkDeviceSize max_size = 0;
+		for (const auto& range : ranges)
+			max_size = max(max_size, range.size ? range.size + range.offset : ci.size);
+		Buffer sb(max_size, Buffer::TRANSFER_DST, { Allocation::RANDOM_ACCESS | Allocation::MAPPED });
+		copy(sb, max_size);
 		RenderContext::executeTransfer();
-		sb.getData(data);
+		sb.getDataRanges(ranges);
 	}
 }
 

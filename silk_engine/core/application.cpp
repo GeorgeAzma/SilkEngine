@@ -2,6 +2,7 @@
 #include "silk_engine/gfx/render_context.h"
 #include "silk_engine/gfx/window/window.h"
 #include "silk_engine/core/input/input.h"
+#include "silk_engine/core/input/joystick.h"
 #include "silk_engine/scene/scene.h"
 #include "silk_engine/gfx/devices/logical_device.h"
 #include "silk_engine/scene/camera/camera.h"
@@ -17,9 +18,12 @@ void Application::run()
         if (Window::getActive().isMinimized())
             glfwWaitEvents();
         else
-            Input::update();
+            glfwPollEvents();
             
         update();
+
+        Window::getActive().update();
+        Joystick::getActive().update();
     }
     RenderContext::getLogicalDevice().wait();
 }

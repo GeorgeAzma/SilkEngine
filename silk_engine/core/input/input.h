@@ -26,7 +26,6 @@ class Input
 {
 public:
 	static void init();
-	static void update();
 
 	static void setKeyBind(std::string_view name, int key) { bindings.keys[name] = key; }
 	static void setMouseButtonBind(std::string_view name, int button) { bindings.mouse_buttons[name] = button; }

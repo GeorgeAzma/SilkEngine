@@ -38,7 +38,7 @@ public:
 private:
 	float fov = 80.0f;
 	float near = 0.05f;
-	float far = 1000.0f;
+	float far = 10000.0f;
 
 	Camera::Type type = Camera::Type::PERSPECTIVE;
 };

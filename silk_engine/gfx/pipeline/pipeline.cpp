@@ -17,11 +17,6 @@ void Pipeline::recreate(const std::vector<Constant>& constants)
 	create();
 }
 
-void Pipeline::pushConstant(const void* data, Shader::Stage::Type stages, uint32_t size, uint32_t offset) const
-{
-	shader->pushConstant(data, stages, size, offset);
-}
-
 void Pipeline::setShader(const shared<Shader>& shader, const std::vector<Constant>& constants)
 {
 	this->shader = shader;

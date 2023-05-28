@@ -1,6 +1,6 @@
 #pragma once
 
-enum class Block : uint8_t
+enum class Block : uint32_t
 {
 	AIR = 0,
 	STONE,
@@ -14,9 +14,23 @@ enum class Block : uint8_t
 	SNOW,
 
 	LAST,
-	NONE = std::numeric_limits<uint8_t>::max()
+	NONE = std::numeric_limits<std::underlying_type_t<Block>>::max()
 };
 static constexpr size_t TOTAL_BLOCKS = ecast(Block::LAST);
+
+static constexpr const char* block_names[TOTAL_BLOCKS]
+{
+	"AIR",
+	"STONE",
+	"GRASS",
+	"DIRT",
+	"SAND",
+	"SANDSTONE",
+	"WATER",
+	"LEAF",
+	"OAK_LOG",
+	"SNOW"
+};
 
 static constexpr bool block_solid[TOTAL_BLOCKS]
 {
@@ -32,7 +46,7 @@ static constexpr bool block_solid[TOTAL_BLOCKS]
 	/* SNOW		 */  true
 };
 
-static constexpr int block_texture_indices[TOTAL_BLOCKS * 6]
+static constexpr uint32_t block_texture_indices[TOTAL_BLOCKS * 6]
 {
 	/* AIR		 */  0, 0, 0, 0, 0, 0,
 	/* STONE	 */  1, 1, 1, 1, 1, 1,

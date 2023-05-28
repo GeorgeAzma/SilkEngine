@@ -126,7 +126,7 @@ public:
 	VkSampleCountFlagBits getSamples() const { return props.samples; }
 	Type getType() const { return props.type; }
 
-	bool isSampled() const { return props.usage == VK_IMAGE_USAGE_SAMPLED_BIT; }
+	bool isSampled() const { return props.usage & VK_IMAGE_USAGE_SAMPLED_BIT; }
 	uint32_t getChannels() const { return props.getChannels(); }
 	size_t getPixelCount() const { return props.getPixelCount(); }
 	float getAspectRatio() const { return float(getWidth()) / getHeight(); }

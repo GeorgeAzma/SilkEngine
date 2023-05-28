@@ -32,6 +32,7 @@ public:
 	void set(std::string_view name, const std::vector<VkBufferView>& buffer_views);
 
 	void bind();
+	void dispatch(uint32_t global_invocation_count_x, uint32_t global_invocation_count_y = 1, uint32_t global_invocation_count_z = 1);
 
 	const shared<Pipeline>& getPipeline() const { return pipeline; }
 	const std::unordered_map<uint32_t, shared<DescriptorSet>>& getDescriptorSets() const { return descriptor_sets; }

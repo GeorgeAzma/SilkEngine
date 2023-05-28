@@ -40,7 +40,7 @@ LogicalDevice::LogicalDevice(const PhysicalDevice& physical_device, const std::v
 	{
 		if (!physical_device.supportsFeature(feature))
 			return nullptr;
-		constexpr size_t off = (sizeof(VkStructureType) + sizeof(void*)) / sizeof(VkBool32);
+		constexpr size_t off = 4;
 		if (feature <= PhysicalDevice::Feature::VULKAN10_LAST)
 			return ((VkBool32*)&physical_device_features) + ecast(feature);
 		if (feature <= PhysicalDevice::Feature::VULKAN11_LAST)

@@ -237,7 +237,7 @@ void Image::setData(const void* data, uint32_t base_layer, uint32_t layers)
 	}
 	else
 	{
-		Buffer sb(props.width * props.height * props.depth * getFormatSize(props.format) * layers, Buffer::TRANSFER_SRC, { Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
+		Buffer sb(getSize(), Buffer::TRANSFER_SRC, { Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
 		sb.setData(data);
 		copyFromBuffer(sb, base_layer, layers);
 		RenderContext::execute();
@@ -246,7 +246,7 @@ void Image::setData(const void* data, uint32_t base_layer, uint32_t layers)
 
 void Image::getData(void* data, uint32_t base_layer, uint32_t layers)
 {
-	size_t layer_size = props.width * props.height * props.depth * getFormatSize(props.format);
+	size_t layer_size = getSize() / layers;
 	if (VmaAllocation(allocation) && allocation.isHostVisible())
 	{
 		void* buffer_data;
@@ -277,16 +277,14 @@ bool Image::copyToImage(Image& destination)
 		supports_blit = false;
 	}
 
-	//Do the actual blit from the swapchain image to our host visible destination image.
-	CommandBuffer& cb = RenderContext::getCommandBuffer();
-
+	// Do the actual blit from the swapchain image to our host visible destination image.
 	VkImageLayout last_destination_layout = destination.getLayout();
 	destination.transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
 	VkImageLayout last_layout = getLayout();
 	transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
-	//If source and destination support blit we'll blit as this also does automatic format conversion (e.g. from BGR to RGB).
+	// If source and destination support blit we'll blit as this also does automatic format conversion (e.g. from BGR to RGB).
 	if (supports_blit)
 	{
 		VkImageBlit blit{};
@@ -302,11 +300,11 @@ bool Image::copyToImage(Image& destination)
 		blit.dstSubresource.layerCount = 1;
 		blit.dstOffsets[0] = VkOffset3D(0, 0, 0);
 		blit.dstOffsets[1] = VkOffset3D((int32_t)props.width, (int32_t)props.height, (int32_t)props.depth);
-		cb.blitImage(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { blit }, VK_FILTER_NEAREST);
+		RenderContext::getCommandBuffer().blitImage(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { blit }, VK_FILTER_NEAREST);
 	}
 	else
 	{
-		//Otherwise use image copy (requires us to manually flip components).
+		// Otherwise use image copy (requires us to manually flip components).
 		VkImageCopy region{};
 		region.srcSubresource.aspectMask = getAspectFlags();
 		region.srcSubresource.mipLevel = 0;
@@ -317,7 +315,7 @@ bool Image::copyToImage(Image& destination)
 		region.dstSubresource.baseArrayLayer = 0;
 		region.dstSubresource.layerCount = 1;
 		region.extent = VkExtent3D(props.width, props.height, props.depth);
-		cb.copyImage(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { region });
+		RenderContext::getCommandBuffer().copyImage(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, destination, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { region });
 	}
 
 	destination.transitionLayout(last_destination_layout);
@@ -413,7 +411,7 @@ void Image::create()
 	}
 
 	// Determining if image should create ImageView based on usage (Note: this is probably correct, but not sure)
-	if (props.usage & (VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT))
+	if (props.usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT))
 		view = makeShared<ImageView>(*this);
 }
 

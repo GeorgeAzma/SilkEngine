@@ -7,13 +7,6 @@ void Input::init()
     Joystick::init();
 }
 
-void Input::update()
-{
-    glfwPollEvents();
-    Window::getActive().update();
-    Joystick::getActive().update();
-}
-
 std::string Input::getClipboardString()
 {
     return glfwGetClipboardString(NULL);

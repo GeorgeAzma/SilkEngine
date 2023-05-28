@@ -4,7 +4,6 @@
 
 class Buffer;
 class Material;
-class Pipeline;
 
 class Chunk : NoCopy
 {
@@ -12,21 +11,20 @@ public:
 	using Coord = ivec3;
 
 public:
-	static constexpr int32_t SIZE = 64;
+	static constexpr int32_t SIZE = 32;
 	static constexpr int32_t EDGE = SIZE - 1;
-	static constexpr Coord DIM = Coord(SIZE);
 	static constexpr int32_t AREA = SIZE * SIZE;
 	static constexpr int32_t VOLUME = SIZE * AREA;
-	static constexpr int32_t MAX_VERTICES = VOLUME * 4 * 6;
-	static constexpr int32_t MAX_INDICES = VOLUME * 6 * 6;
+	static constexpr Coord DIM = Coord(SIZE);
+	static constexpr size_t MAX_VERTICES = VOLUME * 4 * 6;
+	static constexpr size_t MAX_INDICES = VOLUME * 6 * 6;
 	static constexpr size_t VERTEX_SIZE = sizeof(uint64_t);
 	static constexpr size_t INDEX_SIZE = sizeof(uint32_t);
 
 public:
-	Chunk(const Coord& position, const shared<Pipeline>& pipeline);
+	Chunk(const Coord& position);
 	~Chunk();
 
-	void allocate();
 	void generate();
 	void generateMesh();
 	void render() const;
@@ -140,10 +138,12 @@ private:
 	std::vector<Block> blocks = {}; 
 	size_t vertex_count = 0;
 	size_t index_count = 0;
-	std::vector<int16_t> height_map = {};
+	shared<Buffer> blocks_buffer = nullptr;
 	shared<Buffer> vertex_buffer = nullptr;
 	shared<Buffer> index_buffer = nullptr;
 	shared<Material> material = nullptr;
+	shared<Material> gen_material = nullptr;
+	shared<Material> mesh_gen_material = nullptr;
 	std::array<Chunk*, 26> neighbors = {};
 	bool dirty = true;
 	Block fill = Block::AIR;

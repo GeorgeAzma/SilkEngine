@@ -18,7 +18,7 @@ namespace shaderc
 class Shader : NoCopy
 {
 public:
-	using Defines = std::vector<std::pair<std::string_view, std::string_view>>;
+	using Defines = std::vector<std::pair<std::string, std::string>>;
 
 	struct Stage : NoCopy
 	{
@@ -101,7 +101,6 @@ public:
 	void reflect();
 
 	ResourceLocation getLocation(std::string_view resource_name) const;
-	void pushConstant(const void* data, Stage::Type stages, uint32_t size, uint32_t offset = 0) const;
 
 	const std::vector<unique<Stage>>& getStages() const { return stages; }
 	const ReflectionData& getReflectionData() const { return reflection_data; }

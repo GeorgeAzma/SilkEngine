@@ -20,13 +20,20 @@ public:
 		SHADER_DEVICE_ADDRESS = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
 	};
 
+	struct Range
+	{
+		void* data = nullptr; 
+		VkDeviceSize size = 0;
+		VkDeviceSize offset = 0;
+	};
+
 public:
 	Buffer(VkDeviceSize size, Usage usage, const Allocation::Props& allocation_props = {});
 	virtual ~Buffer();
 
 	void resize(VkDeviceSize size);
 	void reallocate(VkDeviceSize size);
-	bool copy(VkBuffer destination, VkDeviceSize size = 0, VkDeviceSize offset = 0, VkDeviceSize dst_offset = 0) const;
+	void copy(VkBuffer destination, VkDeviceSize size = 0, VkDeviceSize offset = 0, VkDeviceSize dst_offset = 0) const;
 
 	void bindVertex(uint32_t first = 0, VkDeviceSize offset = 0);
 	void bindIndex(VkIndexType index_type = VK_INDEX_TYPE_UINT32, VkDeviceSize offset = 0);
@@ -39,7 +46,8 @@ public:
 	operator const VkBuffer& () const { return buffer; }
 
 	bool setData(const void* data, VkDeviceSize size = 0, VkDeviceSize offset = 0);
-	void getData(void* data, VkDeviceSize size = 0) const;
+	void getData(void* data, VkDeviceSize size = 0, VkDeviceSize offset = 0) const;
+	void getDataRanges(const std::vector<Range>& ranges) const;
 
 	void insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDeviceSize offset = 0, VkDeviceSize size = 0) const;
 

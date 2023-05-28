@@ -34,8 +34,6 @@ public:
 
 	virtual void bind() = 0;
 
-	void pushConstant(const void* data, Shader::Stage::Type stages, uint32_t size, uint32_t offset = 0) const;
-
 	const shared<Shader>& getShader() const { return shader; }
 	const VkPipelineLayout& getLayout() const { return layout; }
 	operator const VkPipeline& () const { return pipeline; }

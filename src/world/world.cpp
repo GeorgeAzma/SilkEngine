@@ -1,6 +1,7 @@
 #include "world.h"
 #include "silk_engine/gfx/material.h"
 #include "silk_engine/gfx/pipeline/graphics_pipeline.h"
+#include "silk_engine/gfx/pipeline/compute_pipeline.h"
 #include "silk_engine/gfx/render_context.h"
 #include "silk_engine/gfx/pipeline/render_graph/render_graph.h"
 #include "silk_engine/gfx/pipeline/render_pass.h"
@@ -18,12 +19,19 @@ World::World()
 	player->get<CameraComponent>().camera.position = vec3(0.0f, 0.0f, 8.0f);
 	camera = &player->get<CameraComponent>().camera;
 
+	Shader::Defines chunk_defines{};
+	chunk_defines.emplace_back("SIZE", std::to_string(Chunk::SIZE));
+	chunk_defines.emplace_back("EDGE", std::to_string(Chunk::EDGE));
+	chunk_defines.emplace_back("AREA", std::to_string(Chunk::AREA));
+	chunk_defines.emplace_back("VOLUME", std::to_string(Chunk::VOLUME));
+	chunk_defines.emplace_back("DIM", std::format("ivec3({}, {}, {})", std::to_string(Chunk::DIM.x), std::to_string(Chunk::DIM.y), std::to_string(Chunk::DIM.z)));
+	for (size_t i = 0; i < TOTAL_BLOCKS; ++i)
+		chunk_defines.emplace_back(block_names[i], std::to_string(i));
+	chunk_defines.emplace_back("NONE", std::to_string(uint32_t(Block::NONE)));
+
 	VkRenderPass render_pass = RenderContext::getRenderGraph().getPass("Geometry").getRenderPass();
 	shared<GraphicsPipeline> chunk_pipeline = makeShared<GraphicsPipeline>();
-	chunk_pipeline->setShader(makeShared<Shader>("chunk", Shader::Defines{
-		{ "SIZE", std::to_string(Chunk::SIZE) },
-		{ "AREA", std::to_string(Chunk::AREA) },
-		{ "VOLUME", std::to_string(Chunk::VOLUME) } }))
+	chunk_pipeline->setShader(makeShared<Shader>("chunk", chunk_defines))
 		.setRenderPass(render_pass)
 		.setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
@@ -31,24 +39,29 @@ World::World()
 		.setCullMode(GraphicsPipeline::CullMode::FRONT)
 		.setDepthCompareOp(GraphicsPipeline::CompareOp::LESS);
 	chunk_pipeline->build();
+	GraphicsPipeline::add("Chunk", chunk_pipeline);
 	material = makeShared<Material>(chunk_pipeline);
+
 	Image::Props props{};
 	props.sampler_props.mag_filter = VK_FILTER_NEAREST;
 	props.sampler_props.min_filter = VK_FILTER_NEAREST;
 	texture_atlas = makeShared<Image>(block_textures, props);
 	texture_atlas->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+	ComputePipeline::add("Chunk Gen", makeShared<ComputePipeline>(makeShared<Shader>("chunk_gen", chunk_defines)));
+	ComputePipeline::add("Chunk Mesh Gen", makeShared<ComputePipeline>(makeShared<Shader>("chunk_mesh_gen", chunk_defines)));
 }
 
-#define MULTITHREAD 0
+#define MULTITHREAD 1
 
 void World::update()
 {
 	const vec3& origin = camera->position;
-	const Chunk::Coord& chunk_origin = toChunkCoord((World::Coord)round(origin));
+	const Chunk::Coord& chunk_origin = toChunkCoord((Chunk::Coord)round(origin));
 
 	// Delete far chunks
 	RenderContext::getLogicalDevice().wait();
-	constexpr float max_chunk_distance = 8;
+	constexpr float max_chunk_distance = 64;
 	constexpr float max_chunk_distance2 = max_chunk_distance * max_chunk_distance;
 	for (int32_t i = 0; i < chunks.size(); ++i)
 	{
@@ -62,6 +75,8 @@ void World::update()
 	}
 
 	// Build chunks and regenerate chunks with new neighbors
+	static DebugTimer t;
+	t.reset();
 #if MULTITHREAD
 	pool.forEach(chunks.size(), [&](size_t i) {
 		if (!isChunkVisible(chunks[i]->getPosition()))
@@ -83,16 +98,15 @@ void World::update()
 
 	// Queue up to be generated chunks
 	std::ranges::sort(chunks, [&](const shared<Chunk>& lhs, const shared<Chunk>& rhs) {
-		vec3 modifier_lhs = vec3(1, 2, 1) * ((lhs->getFill() != Block::NONE) * 16.0f + 1.0f);
-		vec3 modifier_rhs = vec3(1, 2, 1) * ((rhs->getFill() != Block::NONE) * 16.0f + 1.0f);
-		return distance2(vec3(chunk_origin) * modifier_lhs, vec3(lhs->getPosition()) * modifier_lhs) <
-			   distance2(vec3(chunk_origin) * modifier_rhs, vec3(rhs->getPosition()) * modifier_rhs);
+		constexpr vec3 modifier = vec3(1, 1, 1);
+		return ((100.0f + distance2(vec3(chunk_origin) * modifier, vec3(lhs->getPosition()) * modifier)) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f)) <
+			   ((100.0f + distance2(vec3(chunk_origin) * modifier, vec3(rhs->getPosition()) * modifier)) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f));
 	});
 
-	std::vector<Chunk::Coord> queued_chunks;
+	std::unordered_set<Chunk::Coord> queued_chunks;
 	if (!findChunk(chunk_origin))
-		queued_chunks.emplace_back(chunk_origin);
-	constexpr size_t max_queued_chunks = 1;
+		queued_chunks.emplace(chunk_origin);
+	constexpr size_t max_queued_chunks = 4;
 	for (const auto& chunk : chunks)
 	{
 		if (distance2(vec3(chunk_origin), vec3(chunk->getPosition())) > max_chunk_distance2 || !isChunkVisible(chunk->getPosition()))
@@ -102,34 +116,23 @@ void World::update()
 		{
 			if (findChunk(chunk->getPosition() + missing))
 				continue;
-			queued_chunks.emplace_back(chunk->getPosition() + missing);
+			queued_chunks.emplace(chunk->getPosition() + missing);
 			if (queued_chunks.size() >= max_queued_chunks)
 				break;
 		}
 		if (queued_chunks.size() >= max_queued_chunks)
 			break;
 	}
-
-#if MULTITHREAD
+	
 	for (const auto& chunk : queued_chunks)
 	{
-		chunks.emplace_back(makeShared<Chunk>(chunk, material->getPipeline()));
+		chunks.emplace_back(makeShared<Chunk>(chunk));
 		std::array<Chunk::Coord, 26> neighbors = Chunk::getNeighborCoords();
 		for (size_t i = 0; i < neighbors.size(); ++i)
 			chunks.back()->addNeighbor(i, findChunk(chunk + neighbors[i]));
-	}
-	pool.forEach(queued_chunks.size(), [this](size_t i) { chunks[chunks.size() - 1 - i]->allocate(); chunks[chunks.size() - 1 - i]->generate(); });
-#else
-	for (const auto& chunk : queued_chunks)
-	{
-		chunks.emplace_back(makeShared<Chunk>(chunk, material->getPipeline()));
-		std::array<Chunk::Coord, 26> neighbors = Chunk::getNeighborCoords();
-		for (size_t i = 0; i < neighbors.size(); ++i)
-			chunks.back()->addNeighbor(i, findChunk(chunk + neighbors[i]));
-		chunks.back()->allocate(); 
 		chunks.back()->generate();
 	}
-#endif
+	t.sample(32);
 }
 
 void World::render()

@@ -2,13 +2,16 @@
 #include "silk_engine/gfx/render_context.h"
 #include "silk_engine/gfx/buffers/buffer.h"
 #include "silk_engine/gfx/pipeline/shader.h"
+#include "silk_engine/gfx/pipeline/graphics_pipeline.h"
+#include "silk_engine/gfx/pipeline/compute_pipeline.h"
 #include "silk_engine/gfx/material.h"
 #include "silk_engine/utils/random.h"
 #include "silk_engine/utils/debug_timer.h"
 #include "world.h"
 
-Chunk::Chunk(const Coord& position, const shared<Pipeline>& pipeline)
-    : position(position), material(makeShared<Material>(pipeline))
+Chunk::Chunk(const Coord& position)
+    : position(position), material(makeShared<Material>(GraphicsPipeline::get("Chunk"))), 
+      gen_material(makeShared<Material>(ComputePipeline::get("Chunk Gen"))), mesh_gen_material(makeShared<Material>(ComputePipeline::get("Chunk Mesh Gen")))
 {
 }
 
@@ -24,16 +27,13 @@ Chunk::~Chunk()
     }
 }
 
-void Chunk::allocate()
-{
-	blocks.resize(VOLUME, Block::AIR);
-    height_map.resize(AREA, 0);
-}
-
 void Chunk::generate()
 {
-	fill = Block::AIR;
+    fill = Block::AIR;
+#if 0
+    std::vector<uint32_t> height_map;
     height_map.resize(AREA, 0);
+    blocks.resize(VOLUME, Block::AIR);
     for (int32_t z = 0; z < SIZE; ++z)
         for (int32_t x = 0; x < SIZE; ++x)
         {
@@ -42,8 +42,8 @@ void Chunk::generate()
             height_map[z * SIZE + x] = 256.0f * h;
         }
 
-	for (int32_t y = 0; y < SIZE; ++y)
-	{
+    for (int32_t y = 0; y < SIZE; ++y)
+    {
         int32_t level = (position.y * SIZE + y);
         for (int32_t z = 0; z < SIZE; ++z)
         {
@@ -52,23 +52,36 @@ void Chunk::generate()
                 Block& block = at(x, y, z);
                 int32_t height = height_map[z * SIZE + x];
                 int32_t delta = height - level;
-				if (level <= height)
-				{
+                if (level <= height)
+                {
                     if (delta == 1)
                         block = Block::SNOW;
                     else if (delta <= 2)
                         block = Block::SNOW;
                     else
                         block = Block::SNOW;
-					fill = Block::NONE;
-				}
-				else
-				{
-					block = Block::AIR;
-				}
-			}
-		}
-	}
+                    fill = Block::NONE;
+                }
+                else
+                {
+                    block = Block::AIR;
+                }
+            }
+        }
+    }
+#else
+    blocks_buffer = makeShared<Buffer>(VOLUME * sizeof(Block) + sizeof(fill), Buffer::STORAGE | Buffer::TRANSFER_SRC);
+
+    gen_material->set("Blocks", *blocks_buffer);
+    gen_material->bind();
+    ivec4 push_constant = ivec4(position, 0);
+    RenderContext::getCommandBuffer().pushConstants(Shader::Stage::COMPUTE, 0, sizeof(push_constant), &push_constant);
+    gen_material->dispatch(SIZE, SIZE, SIZE);
+    RenderContext::executeCompute();
+
+    blocks.resize(VOLUME, Block::AIR);
+    blocks_buffer->getDataRanges({ { blocks.data(), VOLUME * sizeof(Block) }, { &fill, sizeof(fill), VOLUME * sizeof(Block) } });
+#endif
 }
 
 void Chunk::generateMesh()
@@ -189,15 +202,12 @@ void Chunk::generateMesh()
     static thread_local std::vector<uint64_t> vertices(Chunk::MAX_VERTICES);
     static thread_local std::vector<uint32_t> indices(Chunk::MAX_INDICES);
 
-    static DebugTimer t;
-    t.reset();
     for (uint32_t y = 0; y < SIZE; ++y)
     {
         for (uint32_t z = 0; z < SIZE; ++z)
         {
             for (uint32_t x = 0; x < SIZE; ++x)
             {
-                Chunk::Coord position(x, y, z);
                 uint32_t i = idx(x, y, z);
                 Block& block = blocks[i];
                 if (block == Block::AIR)
@@ -212,13 +222,15 @@ void Chunk::generateMesh()
                     (z != EDGE) ? blocks[i + SIZE] : (neighbors[15] ? neighbors[15]->at(x, y, 0) : Block::AIR),
                     (y != EDGE) ? blocks[i + AREA] : (neighbors[21] ? neighbors[21]->at(x, 0, z) : Block::AIR)
                 };
+                
                 for (uint32_t face = 0; face < 6; ++face)
                 {
                     if (!BlockInfo::isSolid(neighboring_blocks[face]))
                     {
-                        uint32_t face_data = (face << 20) | (BlockInfo::getTextureIndex(block, face) << 23);
+                        uint32_t face_data = i | (face << 17) | (BlockInfo::getTextureIndex(block, face) << 20);
+                       
                         uint32_t face12 = face * 12;
-                        
+                        Chunk::Coord position(x, y, z);
                         uint64_t ao0 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 0])),
                                              BlockInfo::isSolid(atSafe(position + ao_table[face12 + 1])),
                                              BlockInfo::isSolid(atSafe(position + ao_table[face12 + 2])));
@@ -235,8 +247,7 @@ void Chunk::generateMesh()
                                              BlockInfo::isSolid(atSafe(position + ao_table[face12 + 10])),
                                              BlockInfo::isSolid(atSafe(position + ao_table[face12 + 11])));
  
-                        bool not_flipped = ao1 + ao3 < ao0 + ao2;
-                        if (not_flipped)
+                        if (ao1 + ao3 < ao0 + ao2)
                         {
                             indices[index_count++] = 2 + vertex_count;
                             indices[index_count++] = 1 + vertex_count;
@@ -255,16 +266,15 @@ void Chunk::generateMesh()
                             indices[index_count++] = 2 + vertex_count;
                         }
 
-                        vertices[vertex_count++] = i | (0 << 18) | face_data | (ao0 << 32);
-                        vertices[vertex_count++] = i | (1 << 18) | face_data | (ao1 << 32);
-                        vertices[vertex_count++] = i | (2 << 18) | face_data | (ao2 << 32);
-                        vertices[vertex_count++] = i | (3 << 18) | face_data | (ao3 << 32);
+                        vertices[vertex_count++] = (0 << 15) | face_data | (ao0 << 28);
+                        vertices[vertex_count++] = (1 << 15) | face_data | (ao1 << 28);
+                        vertices[vertex_count++] = (2 << 15) | face_data | (ao2 << 28);
+                        vertices[vertex_count++] = (3 << 15) | face_data | (ao3 << 28);
                     }
                 }
             }
         }
     }
-    t.sample(64);
     
     if (vertex_count)
     {
