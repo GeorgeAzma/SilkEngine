@@ -14,10 +14,10 @@ public:
 	void write(uint32_t binding, const std::vector<VkBufferView>& buffer_views, uint32_t array_index = 0);
 	void write(uint32_t binding, const VkDescriptorBufferInfo& buffer_info, uint32_t array_index = 0);
 	void write(uint32_t binding, const VkDescriptorImageInfo& image_info, uint32_t array_index = 0);
-	void write(uint32_t binding, const VkBufferView& buffer_view, uint32_t array_index = 0);
+	void write(uint32_t binding, const VkBufferView& buffer_view, uint32_t array_index = 0); 
 	void update();
-
-	void bind(size_t first = 0, const std::vector<uint32_t> dynamic_offsets = {});
+	
+	void bind(size_t first = 0, const std::vector<uint32_t>& dynamic_offsets = {});
 
 	const VkDescriptorSetLayout& getLayout() const { return layout; }
 	operator const VkDescriptorSet& () const { return descriptor_set; }

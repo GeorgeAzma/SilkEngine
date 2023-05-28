@@ -13,18 +13,19 @@ CommandBuffer::CommandBuffer(CommandPool& command_pool, VkCommandBufferLevel lev
 	is_primary(level == VK_COMMAND_BUFFER_LEVEL_PRIMARY)
 {
 	command_buffer = command_pool.allocate(level);
-	state = State::INITIAL;
+	*state = State::INITIAL;
 }
 
 CommandBuffer::~CommandBuffer()
 {
+	*state = State::INVALID;
 	command_pool.deallocate(command_buffer);
 }
 
 #pragma region Begin/End
 void CommandBuffer::begin(VkCommandBufferUsageFlags usage)
 {
-	if (state == State::RECORDING)
+	if (*state == State::RECORDING)
 		return;
 
 	//TODO: Inheritance info and secondary command buffers
@@ -33,17 +34,16 @@ void CommandBuffer::begin(VkCommandBufferUsageFlags usage)
 	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	begin_info.flags = usage;
 	vkBeginCommandBuffer(command_buffer, &begin_info);
-	state = State::RECORDING;
-	active = {};
+	*state = State::RECORDING;
 }
 
 void CommandBuffer::end()
 {
-	if (state != State::RECORDING)
+	if (*state != State::RECORDING)
 		return;
 
 	vkEndCommandBuffer(command_buffer);
-	state = State::EXECUTABLE;
+	*state = State::EXECUTABLE;
 }
 
 void CommandBuffer::beginQuery(VkQueryPool query_pool, uint32_t query, VkQueryControlFlags flags)
@@ -509,10 +509,10 @@ void CommandBuffer::drawIndexedIndirect(VkBuffer indirect_buffer, uint32_t offse
 }
 #pragma endregion
 
-void CommandBuffer::submit(VkQueueFlagBits queue_type, const Fence* fence, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
+void CommandBuffer::submit(VkQueueFlagBits queue_type, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
 {
 	end();
-	if (state != State::EXECUTABLE)
+	if (*state != State::EXECUTABLE)
 		return;
 
 	VkSubmitInfo submit_info{};
@@ -527,27 +527,37 @@ void CommandBuffer::submit(VkQueueFlagBits queue_type, const Fence* fence, const
 	submit_info.signalSemaphoreCount = signal_semaphores.size();
 	submit_info.pSignalSemaphores = signal_semaphores.data();
 	
-	RenderContext::getLogicalDevice().getQueue(queue_type).submit(submit_info, fence ? *fence : nullptr);
-	state = State::PENDING;
+	if (!fence)
+		fence = makeShared<Fence>();
+	RenderContext::getLogicalDevice().getQueue(queue_type).submit(submit_info, *fence);
+	*state = State::PENDING;
 }
 
 void CommandBuffer::execute(VkQueueFlagBits queue_type, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
 {
 	end();
-	if (state != State::EXECUTABLE)
+	if (*state != State::EXECUTABLE)
 		return;
 
-	Fence fence;
-	submit(queue_type, &fence, wait_stages, wait_semaphores, signal_semaphores);
-	fence.wait();
-	state = State::INVALID;
+	submit(queue_type, wait_stages, wait_semaphores, signal_semaphores);
+	wait();
+}	
+
+void CommandBuffer::wait()
+{
+	if (!fence)
+		fence = makeShared<Fence>(true);
+	fence->wait();
+	fence->reset();
+	*state = State::INVALID;
+	active = {};
 }
 
 void CommandBuffer::reset(bool free)
 {
-	if (state == State::INITIAL)
+	if (*state == State::INITIAL)
 		return;
 	if (command_pool.getFlags() & VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
 		vkResetCommandBuffer(command_buffer, free * VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-	state = State::INITIAL;
+	*state = State::INITIAL;
 }

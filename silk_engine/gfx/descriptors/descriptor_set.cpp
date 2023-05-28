@@ -89,7 +89,7 @@ void DescriptorSet::update()
 	writes.clear();
 }
 
-void DescriptorSet::bind(size_t first, const std::vector<uint32_t> dynamic_offsets)
+void DescriptorSet::bind(size_t first, const std::vector<uint32_t>& dynamic_offsets)
 {
 	SK_ASSERT(dynamic_offsets.size() == layout.getDynamicDescriptorCount());
 	update();

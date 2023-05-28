@@ -74,18 +74,20 @@ void World::update()
 	// Build chunks and regenerate chunks with new neighbors
 #if MULTITHREAD
 	pool.forEach(chunks.size(), [&](size_t i) {
-#else
-	for (size_t i = 0; i < chunks.size(); ++i)
-#endif
 		if (!isChunkVisible(chunks[i]->getPosition()))
 			return;
 		chunks[i]->generateMesh();
+	});
+#else
+	for (size_t i = 0; i < chunks.size(); ++i)
+	{
+		if (!isChunkVisible(chunks[i]->getPosition()))
+			continue;
+		chunks[i]->generateMesh();
 	}
-#if MULTITHREAD
-	);
 #endif
 
-	constexpr size_t max_chunks = 2048;
+	constexpr size_t max_chunks = 16 * 16 * 16; // 4096
 	if (chunks.size() >= max_chunks)
 		return;
 
@@ -117,16 +119,22 @@ void World::update()
 			break;
 	}
 
+#if MULTITHREAD
 	for (const auto& chunk : queued_chunks)
 	{
-		chunks.emplace_back(makeShared<Chunk>(chunk));
+		chunks.emplace_back(makeShared<Chunk>(chunk, material->getPipeline()));
 		std::array<Chunk::Coord, 26> neighbors = Chunk::getNeighborCoords();
 		for (size_t i = 0; i < neighbors.size(); ++i)
 			chunks.back()->addNeighbor(i, findChunk(chunk + neighbors[i]));
-#if MULTITHREAD
 	}
 	pool.forEach(queued_chunks.size(), [this](size_t i) { chunks[chunks.size() - 1 - i]->allocate(); chunks[chunks.size() - 1 - i]->generate(); });
 #else
+	for (const auto& chunk : queued_chunks)
+	{
+		chunks.emplace_back(makeShared<Chunk>(chunk, material->getPipeline()));
+		std::array<Chunk::Coord, 26> neighbors = Chunk::getNeighborCoords();
+		for (size_t i = 0; i < neighbors.size(); ++i)
+			chunks.back()->addNeighbor(i, findChunk(chunk + neighbors[i]));
 		chunks.back()->allocate(); 
 		chunks.back()->generate();
 	}

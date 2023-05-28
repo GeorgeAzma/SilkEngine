@@ -12,7 +12,7 @@ CommandQueue::CommandQueue(std::optional<uint32_t> queue_family_index, VkQueueFl
 CommandBuffer& CommandQueue::getCommandBuffer(bool begin)
 {
 	shared<CommandBuffer> command_buffer = command_buffers[index];
-	if (command_buffer->getState() != CommandBuffer::State::INITIAL && command_buffer->getState() != CommandBuffer::State::RECORDING)
+	if (*command_buffer->getState() != CommandBuffer::State::INITIAL && *command_buffer->getState() != CommandBuffer::State::RECORDING)
 	{
 		++index;
 		if (index >= command_buffers.size())
@@ -25,9 +25,10 @@ CommandBuffer& CommandQueue::getCommandBuffer(bool begin)
 }
 
 
-void CommandQueue::submit(const Fence* fence, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
+const shared<CommandBuffer>& CommandQueue::submit(const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
 {
-	command_buffers[index]->submit(queue_type, fence, wait_stages, wait_semaphores, signal_semaphores);
+	command_buffers[index]->submit(queue_type, wait_stages, wait_semaphores, signal_semaphores);
+	return command_buffers[index];
 }
 
 void CommandQueue::execute(const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
@@ -39,7 +40,7 @@ void CommandQueue::reset()
 {
 	bool needs_rest = false;
 	for (const auto& command_buffer : command_buffers)
-		if (command_buffer->getState() != CommandBuffer::State::INITIAL)
+		if (*command_buffer->getState() != CommandBuffer::State::INITIAL)
 		{
 			needs_rest = true;
 			break;

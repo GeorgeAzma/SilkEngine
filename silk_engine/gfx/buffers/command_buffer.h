@@ -97,12 +97,13 @@ public:
 	void drawIndirect(VkBuffer indirect_buffer, uint32_t offset, uint32_t draw_count, uint32_t stride) const;
 	void drawIndexedIndirect(VkBuffer indirect_buffer, uint32_t offset, uint32_t draw_count, uint32_t stride) const;
 
-	void submit(VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT, const Fence* fence = nullptr, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
+	void submit(VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
 	void execute(VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
+	void wait();
 	void reset(bool free = false);
 
 	bool isPrimary() const { return is_primary; }
-	State getState() const { return state; }
+	const shared<State>& getState() const { return state; }
 
 	operator const VkCommandBuffer& () const { return command_buffer; }
 
@@ -110,8 +111,9 @@ private:
 	VkCommandBuffer command_buffer;
 	VkCommandBufferLevel level;
 	CommandPool& command_pool;
-	State state = State::INITIAL;
+	shared<State> state = makeShared<State>(State::INITIAL);
 	bool is_primary = false;
+	shared<Fence> fence = nullptr;
 
 	struct Active
 	{

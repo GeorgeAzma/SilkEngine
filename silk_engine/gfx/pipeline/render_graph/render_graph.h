@@ -5,8 +5,8 @@
 
 class RenderPass;
 class SwapChain;
-class Fence;
 class Semaphore;
+class CommandBuffer;
 
 class RenderGraph
 {
@@ -47,7 +47,7 @@ private:
 	shared<RenderPass> render_pass = nullptr;
 	std::vector<unique<Resource>> resources;
 	std::unordered_map<std::string_view, const Resource*> resources_map;
-	shared<Fence> previous_frame_finished = nullptr;
+	shared<CommandBuffer> command_buffer = nullptr;
 	shared<Semaphore> render_finished = nullptr;
 	shared<Semaphore> swap_chain_image_available = nullptr;
 };

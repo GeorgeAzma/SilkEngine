@@ -46,6 +46,8 @@ public:
 	static bool isMousePressed(MouseButton button);
 	static bool isMouseReleased(MouseButton button);
 
+	static vec2 getMouse();
+
 	static Joystick& getActiveJoystick();
 
 	static float getJoystickAxis(int axis);

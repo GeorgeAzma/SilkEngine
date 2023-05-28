@@ -10,6 +10,8 @@ class Buffer;
 class Material : NoCopy
 {
 public:
+	Material(const shared<Pipeline>& pipeline)
+		: pipeline(pipeline) {}
 	Material(const shared<GraphicsPipeline>& graphics_pipeline);
 	Material(const shared<ComputePipeline>& compute_pipeline);
 
@@ -33,6 +35,9 @@ public:
 
 	const shared<Pipeline>& getPipeline() const { return pipeline; }
 	const std::unordered_map<uint32_t, shared<DescriptorSet>>& getDescriptorSets() const { return descriptor_sets; }
+
+private:
+	const shared<DescriptorSet>& getDescriptorSet(uint32_t set);
 
 private:
 	shared<Pipeline> pipeline;

@@ -3,6 +3,8 @@
 #include "block.h"
 
 class Buffer;
+class Material;
+class Pipeline;
 
 class Chunk : NoCopy
 {
@@ -20,70 +22,7 @@ public:
 	static constexpr size_t VERTEX_SIZE = sizeof(uint64_t);
 
 public:
-	static constexpr uint32_t idx(uint32_t x, uint32_t y, uint32_t z) { return z * SIZE + y * AREA + x; }
-	static constexpr uint32_t idx(const Chunk::Coord& position) { return idx(position.x, position.y, position.z); }
-	static constexpr Chunk::Coord getCoordFromIdx(uint32_t idx) { return { idx % SIZE, idx / AREA, idx % AREA / SIZE  }; }
-	static std::array<Chunk::Coord, 6> getAdjacentNeighborCoords()
-	{
-		return 
-		{
-			Chunk::Coord(00, -1, 00),
-			Chunk::Coord(00, 00, -1),
-			Chunk::Coord(-1, 00, 00),
-			Chunk::Coord(+1, 00, 00),
-			Chunk::Coord(00, 00, +1),
-			Chunk::Coord(00, +1, 00)
-		};
-	}
-	
-	static std::array<Coord, 26> getNeighborCoords()
-	{
-		return 
-		{
-			Chunk::Coord(-1, -1, -1), //  0
-			Chunk::Coord(00, -1, -1), //  1
-			Chunk::Coord(+1, -1, -1), //  2
-			Chunk::Coord(-1, -1, 00), //  3
-			Chunk::Coord(00, -1, 00), //  4 *
-			Chunk::Coord(+1, -1, 00), //  5
-			Chunk::Coord(-1, -1, +1), //  6
-			Chunk::Coord(00, -1, +1), //  7
-			Chunk::Coord(+1, -1, +1), //  8
-			Chunk::Coord(-1, 00, -1), //  9
-			Chunk::Coord(00, 00, -1), // 10 *
-			Chunk::Coord(+1, 00, -1), // 11
-			Chunk::Coord(-1, 00, 00), // 12 *
-			Chunk::Coord(+1, 00, 00), // 13 *
-			Chunk::Coord(-1, 00, +1), // 14
-			Chunk::Coord(00, 00, +1), // 15 *
-			Chunk::Coord(+1, 00, +1), // 16
-			Chunk::Coord(-1, +1, -1), // 17
-			Chunk::Coord(00, +1, -1), // 18
-			Chunk::Coord(+1, +1, -1), // 19
-			Chunk::Coord(-1, +1, 00), // 20
-			Chunk::Coord(00, +1, 00), // 21 *
-			Chunk::Coord(+1, +1, 00), // 22
-			Chunk::Coord(-1, +1, +1), // 23
-			Chunk::Coord(00, +1, +1), // 24
-			Chunk::Coord(+1, +1, +1)  // 25
-		};
-	}
-
-	static uint32_t getIndexFromCoord(const Chunk::Coord& position)
-	{
-		uint32_t index = (position.x + 1) + (position.y + 1) * 9 + (position.z + 1) * 3;
-		return index - (index >= 13); // Excluding self
-	}
-
-	static Chunk::Coord getCoordFromIndex(uint32_t index)
-	{
-		index += index >= 13;
-		return { index % 3 - 1, index / 9 - 1, index % 9 / 3 - 1 };
-	}
-
-public:
-	Chunk(const Coord& position)
-		: position(position) {}
+	Chunk(const Coord& position, const shared<Pipeline>& pipeline);
 	~Chunk();
 
 	void allocate();
@@ -126,6 +65,68 @@ public:
 	bool operator==(const Chunk& other) const { return position == other.position; }
 	bool operator==(const Chunk::Coord& chunk_coord) const { return position == chunk_coord; }
 
+public:
+	static constexpr uint32_t idx(uint32_t x, uint32_t y, uint32_t z) { return z * SIZE + y * AREA + x; }
+	static constexpr uint32_t idx(const Chunk::Coord& position) { return idx(position.x, position.y, position.z); }
+	static constexpr Chunk::Coord getCoordFromIdx(uint32_t idx) { return { idx % SIZE, idx / AREA, idx % AREA / SIZE }; }
+	static std::array<Chunk::Coord, 6> getAdjacentNeighborCoords()
+	{
+		return
+		{
+			Chunk::Coord(00, -1, 00),
+			Chunk::Coord(00, 00, -1),
+			Chunk::Coord(-1, 00, 00),
+			Chunk::Coord(+1, 00, 00),
+			Chunk::Coord(00, 00, +1),
+			Chunk::Coord(00, +1, 00)
+		};
+	}
+
+	static std::array<Coord, 26> getNeighborCoords()
+	{
+		return
+		{
+			Chunk::Coord(-1, -1, -1), //  0
+			Chunk::Coord(00, -1, -1), //  1
+			Chunk::Coord(+1, -1, -1), //  2
+			Chunk::Coord(-1, -1, 00), //  3
+			Chunk::Coord(00, -1, 00), //  4 *
+			Chunk::Coord(+1, -1, 00), //  5
+			Chunk::Coord(-1, -1, +1), //  6
+			Chunk::Coord(00, -1, +1), //  7
+			Chunk::Coord(+1, -1, +1), //  8
+			Chunk::Coord(-1, 00, -1), //  9
+			Chunk::Coord(00, 00, -1), // 10 *
+			Chunk::Coord(+1, 00, -1), // 11
+			Chunk::Coord(-1, 00, 00), // 12 *
+			Chunk::Coord(+1, 00, 00), // 13 *
+			Chunk::Coord(-1, 00, +1), // 14
+			Chunk::Coord(00, 00, +1), // 15 *
+			Chunk::Coord(+1, 00, +1), // 16
+			Chunk::Coord(-1, +1, -1), // 17
+			Chunk::Coord(00, +1, -1), // 18
+			Chunk::Coord(+1, +1, -1), // 19
+			Chunk::Coord(-1, +1, 00), // 20
+			Chunk::Coord(00, +1, 00), // 21 *
+			Chunk::Coord(+1, +1, 00), // 22
+			Chunk::Coord(-1, +1, +1), // 23
+			Chunk::Coord(00, +1, +1), // 24
+			Chunk::Coord(+1, +1, +1)  // 25
+		};
+	}
+
+	static uint32_t getIndexFromCoord(const Chunk::Coord& position)
+	{
+		uint32_t index = (position.x + 1) + (position.y + 1) * 9 + (position.z + 1) * 3;
+		return index - (index >= 13); // Excluding self
+	}
+
+	static Chunk::Coord getCoordFromIndex(uint32_t index)
+	{
+		index += index >= 13;
+		return { index % 3 - 1, index / 9 - 1, index % 9 / 3 - 1 };
+	}
+
 private:
 	static uint32_t getAO(uint32_t side1, uint32_t side2, uint32_t corner)
 	{
@@ -138,6 +139,7 @@ private:
 	size_t vertex_count = 0;
 	std::vector<int16_t> height_map = {};
 	shared<Buffer> vertex_buffer = nullptr;
+	shared<Material> material = nullptr;
 	std::array<Chunk*, 26> neighbors = {};
 	bool dirty = true;
 	Block fill = Block::AIR;

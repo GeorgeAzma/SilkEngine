@@ -14,7 +14,6 @@ RenderGraph::~RenderGraph()
 
 void RenderGraph::build(const char* backbuffer)
 {
-	previous_frame_finished = makeShared<Fence>(true);
 	render_finished = makeShared<Semaphore>();
 	swap_chain_image_available = makeShared<Semaphore>();
 
@@ -126,8 +125,8 @@ void RenderGraph::build(const char* backbuffer)
 
 void RenderGraph::render()
 {
-	previous_frame_finished->wait();
-	previous_frame_finished->reset();
+	if (command_buffer)
+		command_buffer->wait();
 
 	if (!Window::getActive().getSwapChain().acquireNextImage(*swap_chain_image_available))
 	{
@@ -163,7 +162,7 @@ void RenderGraph::render()
 	}
 	render_pass->end();
 
-	RenderContext::submit(previous_frame_finished.get(), { VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT }, { *swap_chain_image_available }, { *render_finished });
+	command_buffer = RenderContext::submit({ VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT }, { *swap_chain_image_available }, { *render_finished });
 
 	if (!Window::getActive().getSwapChain().present(*render_finished))
 	{

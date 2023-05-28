@@ -14,7 +14,7 @@ void CameraController::onUpdate()
 	auto& camera = get<CameraComponent>().camera;
 
 	float sensitivity = 0.003f;
-	vec2 dm = delta_mouse(Window::getActive().getMouse()) * sensitivity;
+	vec2 dm = delta_mouse(Input::getMouse()) * sensitivity;
 	dm.x *= -1;
 	bool rotated = math::length2(dm) > 0.0f;
 	if (rotated)
@@ -36,9 +36,7 @@ void CameraController::onUpdate()
 	camera.position.y += (Input::isKeyHeld(Key::SPACE) - Input::isKeyHeld(Key::LEFT_CONTROL)) * speed;
 
 	if (old_position != camera.position || rotated)
-	{
 		camera.updateProjectionView();
-	}
 }
 
 void CameraController::onDestroy()

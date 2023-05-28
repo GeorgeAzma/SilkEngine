@@ -2,9 +2,15 @@
 #include "silk_engine/gfx/render_context.h"
 #include "silk_engine/gfx/buffers/buffer.h"
 #include "silk_engine/gfx/pipeline/shader.h"
+#include "silk_engine/gfx/material.h"
 #include "silk_engine/utils/random.h"
 #include "silk_engine/utils/debug_timer.h"
 #include "world.h"
+
+Chunk::Chunk(const Coord& position, const shared<Pipeline>& pipeline)
+    : position(position), material(makeShared<Material>(pipeline))
+{
+}
 
 Chunk::~Chunk()
 {
@@ -186,7 +192,7 @@ void Chunk::generateMesh()
     };
 
     static thread_local std::vector<uint64_t> vertices(Chunk::MAX_VERTICES);
-    for(uint32_t y = 0; y < SIZE; ++y)
+    for (uint32_t y = 0; y < SIZE; ++y)
     {
         for (uint32_t z = 0; z < SIZE; ++z)
         {
@@ -224,7 +230,7 @@ void Chunk::generateMesh()
         static std::mutex mux;
         std::scoped_lock lock(mux);
         if (!(vertex_buffer && vertex_count * VERTEX_SIZE == vertex_buffer->getSize()))
-            vertex_buffer = makeShared<Buffer>(vertex_count * VERTEX_SIZE, Buffer::VERTEX | Buffer::TRANSFER_DST | Buffer::TRANSFER_SRC);
+            vertex_buffer = makeShared<Buffer>(vertex_count * VERTEX_SIZE, Buffer::STORAGE | Buffer::TRANSFER_DST | Buffer::TRANSFER_SRC);
         vertex_buffer->setData(vertices.data());
     }
     else vertex_buffer = nullptr;
@@ -246,7 +252,8 @@ void Chunk::render() const
     push_constant_data.light_color = vec4(0.8);
     push_constant_data.chunk_position = vec4(position, 0);
     RenderContext::getCommandBuffer().pushConstants(Shader::Stage::VERTEX, 0, sizeof(PushConstantData), &push_constant_data);
-    vertex_buffer->bindVertex();
+    material->set("Vertices", *vertex_buffer);
+    material->bind();
     RenderContext::getCommandBuffer().drawIndexed(getIndexCount());
 }
 

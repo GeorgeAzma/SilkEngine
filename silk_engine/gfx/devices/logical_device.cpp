@@ -295,6 +295,7 @@ std::vector<VkDescriptorSet> LogicalDevice::allocateDescriptorSets(const VkDescr
 	vkAllocateDescriptorSets(logical_device, nullptr, descriptor_sets.data());
 	return descriptor_sets;
 }
+
 VkResult LogicalDevice::allocateDescriptorSets(const VkDescriptorSetAllocateInfo& alloc_info, VkDescriptorSet& descriptor_set) const
 {
 	return vkAllocateDescriptorSets(logical_device, &alloc_info, &descriptor_set);

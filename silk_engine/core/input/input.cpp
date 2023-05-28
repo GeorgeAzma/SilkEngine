@@ -32,6 +32,8 @@ bool Input::isMouseHeld(MouseButton button) { return Window::getActive().isMouse
 bool Input::isMousePressed(MouseButton button) { return Window::getActive().isMousePressed(button); }
 bool Input::isMouseReleased(MouseButton button) { return Window::getActive().isMouseReleased(button); }
 
+vec2 Input::getMouse() { return Window::getActive().getMouse(); }
+
 Joystick& Input::getActiveJoystick() { return Joystick::getActive(); }
 
 float Input::getJoystickAxis(int axis) { return Joystick::getActive().getAxis(axis); }
