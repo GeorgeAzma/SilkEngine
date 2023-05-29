@@ -10,6 +10,7 @@
 #include "silk_engine/scene/camera/camera_controller.h"
 #include "silk_engine/scene/components.h"
 #include "silk_engine/utils/debug_timer.h"
+#include "silk_engine/gfx/window/window.h"
 
 World::World()
 {
@@ -49,7 +50,6 @@ World::World()
 	texture_atlas->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 	ComputePipeline::add("Chunk Gen", makeShared<ComputePipeline>(makeShared<Shader>("chunk_gen", chunk_defines)));
-	ComputePipeline::add("Chunk Mesh Gen", makeShared<ComputePipeline>(makeShared<Shader>("chunk_mesh_gen", chunk_defines)));
 }
 
 #define MULTITHREAD 1
@@ -61,7 +61,7 @@ void World::update()
 
 	// Delete far chunks
 	RenderContext::getLogicalDevice().wait();
-	constexpr float max_chunk_distance = 64;
+	constexpr float max_chunk_distance = 8;
 	constexpr float max_chunk_distance2 = max_chunk_distance * max_chunk_distance;
 	for (int32_t i = 0; i < chunks.size(); ++i)
 	{
@@ -109,7 +109,7 @@ void World::update()
 	constexpr size_t max_queued_chunks = 4;
 	for (const auto& chunk : chunks)
 	{
-		if (distance2(vec3(chunk_origin), vec3(chunk->getPosition())) > max_chunk_distance2 || !isChunkVisible(chunk->getPosition()))
+		if (distance2(vec3(chunk_origin), vec3(chunk->getPosition())) > (max_chunk_distance2 - 1.0f) || !isChunkVisible(chunk->getPosition()))
 			continue;
 		const std::vector<Chunk::Coord> missing_neighbors = chunk->getMissingNeighborLocations();
 		for (const auto& missing : missing_neighbors)
@@ -142,10 +142,13 @@ void World::render()
 	material->bind();
 	for (const auto& chunk : chunks)
 	{
-		if (!isChunkVisible(chunk->getPosition()))
+		if (chunk->getIndexCount() == 0 || !isChunkVisible(chunk->getPosition()))
 			continue;
 		chunk->render();
 	}
+
+	DebugRenderer::color(Colors::RED);
+	DebugRenderer::line(500.0f, 500.0f, 200.0f, 200.0f, 2.0f);
 }
 
 bool World::isChunkVisible(const Chunk::Coord& position) const

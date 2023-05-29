@@ -10,8 +10,7 @@
 #include "world.h"
 
 Chunk::Chunk(const Coord& position)
-    : position(position), material(makeShared<Material>(GraphicsPipeline::get("Chunk"))), 
-      gen_material(makeShared<Material>(ComputePipeline::get("Chunk Gen"))), mesh_gen_material(makeShared<Material>(ComputePipeline::get("Chunk Mesh Gen")))
+    : position(position), gen_material(makeShared<Material>(ComputePipeline::get("Chunk Gen")))
 {
 }
 
@@ -89,10 +88,10 @@ void Chunk::generateMesh()
 	if (!dirty)
 		return;
 	dirty = false;
-	if (fill == Block::AIR)
-		return;
     vertex_count = 0;
     index_count = 0;
+    if (fill == Block::AIR)
+        return;
     
 	static constexpr Chunk::Coord ao_table[6 * 4 * 3] =
     {
@@ -212,7 +211,7 @@ void Chunk::generateMesh()
                 Block& block = blocks[i];
                 if (block == Block::AIR)
                     continue;
-    
+
                 Block neighboring_blocks[6] =
                 {
                     (y != 0) ? blocks[i - AREA] : (neighbors[4] ? neighbors[4]->at(x, EDGE, z) : Block::AIR),
@@ -222,31 +221,31 @@ void Chunk::generateMesh()
                     (z != EDGE) ? blocks[i + SIZE] : (neighbors[15] ? neighbors[15]->at(x, y, 0) : Block::AIR),
                     (y != EDGE) ? blocks[i + AREA] : (neighbors[21] ? neighbors[21]->at(x, 0, z) : Block::AIR)
                 };
-                
+
                 for (uint32_t face = 0; face < 6; ++face)
                 {
                     if (!BlockInfo::isSolid(neighboring_blocks[face]))
                     {
                         uint32_t face_data = i | (face << 17) | (BlockInfo::getTextureIndex(block, face) << 20);
-                       
+
                         uint32_t face12 = face * 12;
                         Chunk::Coord position(x, y, z);
                         uint64_t ao0 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 0])),
-                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 1])),
-                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 2])));
-                       
+                            BlockInfo::isSolid(atSafe(position + ao_table[face12 + 1])),
+                            BlockInfo::isSolid(atSafe(position + ao_table[face12 + 2])));
+
                         uint64_t ao1 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 3])),
-                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 4])),
-                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 5])));
-                        
+                            BlockInfo::isSolid(atSafe(position + ao_table[face12 + 4])),
+                            BlockInfo::isSolid(atSafe(position + ao_table[face12 + 5])));
+
                         uint64_t ao2 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 6])),
-                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 7])),
-                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 8])));
-                        
+                            BlockInfo::isSolid(atSafe(position + ao_table[face12 + 7])),
+                            BlockInfo::isSolid(atSafe(position + ao_table[face12 + 8])));
+
                         uint64_t ao3 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 9])),
-                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 10])),
-                                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 11])));
- 
+                            BlockInfo::isSolid(atSafe(position + ao_table[face12 + 10])),
+                            BlockInfo::isSolid(atSafe(position + ao_table[face12 + 11])));
+
                         if (ao1 + ao3 < ao0 + ao2)
                         {
                             indices[index_count++] = 2 + vertex_count;
@@ -275,7 +274,7 @@ void Chunk::generateMesh()
             }
         }
     }
-    
+
     if (vertex_count)
     {
         static std::mutex mux;
@@ -283,7 +282,7 @@ void Chunk::generateMesh()
 
         size_t vertices_size = vertex_count * VERTEX_SIZE;
         if (!(vertex_buffer && vertices_size == vertex_buffer->getSize()))
-            vertex_buffer = makeShared<Buffer>(vertices_size, Buffer::STORAGE | Buffer::TRANSFER_DST | Buffer::TRANSFER_SRC);
+            vertex_buffer = makeShared<Buffer>(vertices_size, Buffer::VERTEX | Buffer::TRANSFER_DST | Buffer::TRANSFER_SRC);
         vertex_buffer->setData(vertices.data());
 
         size_t indices_size = index_count * INDEX_SIZE;
@@ -314,10 +313,9 @@ void Chunk::render() const
     push_constant_data.light_color = vec4(0.8);
     push_constant_data.chunk_position = vec4(position, 0);
     RenderContext::getCommandBuffer().pushConstants(Shader::Stage::VERTEX, 0, sizeof(PushConstantData), &push_constant_data);
-    material->set("Vertices", *vertex_buffer);
-    material->bind();
+    vertex_buffer->bindVertex();
     index_buffer->bindIndex();
-    RenderContext::getCommandBuffer().drawIndexed(getIndexCount());
+    RenderContext::getCommandBuffer().drawIndexed(index_count);
 }
 
 Block Chunk::atSafe(const Chunk::Coord& position) const

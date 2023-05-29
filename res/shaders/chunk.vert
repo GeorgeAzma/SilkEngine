@@ -1,7 +1,4 @@
-layout(set = 1, binding = 0) buffer Vertices
-{
-    uvec2 vertices[];
-};
+layout(location = 0) in uvec2 vertex;
 
 layout(location = 0) out VertexOutput 
 {
@@ -63,7 +60,6 @@ const vec3 positions[24] = vec3[24](
 
 void main()
 {
-    uvec2 vertex = vertices[gl_VertexIndex];
     uint vert_id = (vertex.x >> 15) & 3;
     uint face_id = (vertex.x >> 17) & 7;
 

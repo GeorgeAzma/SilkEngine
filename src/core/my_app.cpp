@@ -68,6 +68,7 @@ void MyApp::onKeyPress(const KeyPressEvent& e)
     switch (e.key)
     {
     case Key::ESCAPE:
+        e.window.close();
         Dispatcher<WindowCloseEvent>::post(e.window);
         break;
     case Key::F11:
@@ -84,7 +85,8 @@ void MyApp::onKeyPress(const KeyPressEvent& e)
 
 void MyApp::onWindowClose(const WindowCloseEvent& e)
 {
-    stop();
+    if (Window::getWindows().empty())
+        stop();
 }
 
 void MyApp::onFramebufferResize(const FramebufferResizeEvent& e)

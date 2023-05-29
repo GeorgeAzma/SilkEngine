@@ -5,6 +5,16 @@
 Camera::Camera()
 {
 	direction = math::FRONT;
+	if (type == Camera::Type::PERSPECTIVE)
+	{
+		near = 0.05f;
+		far = 10000.0f;
+	}
+	else
+	{
+		near = 0.0f;
+		far = 1.0f;
+	}
 	onViewportResize();
 }
 
@@ -13,15 +23,10 @@ void Camera::onViewportResize()
 	if (Window::getActive().isMinimized())
 		return;
 
-	switch (type)
-	{
-	case Camera::Type::PERSPECTIVE:
+	if (type == Camera::Type::PERSPECTIVE)
 		projection = math::perspective(math::radians(fov), Window::getActive().getAspectRatio(), near, far);
-		break;
-	case Camera::Type::ORTHOGRAPHIC:
-		projection = math::ortho(0.0f, (float)Window::getActive().getWidth(), 0.0f, (float)Window::getActive().getHeight(), 0.0f, 1.0f);
-		break;
-	}
+	else
+		projection = math::ortho(0.0f, (float)Window::getActive().getWidth(), 0.0f, (float)Window::getActive().getHeight(), near, far);
 
 	updateProjectionView();
 }
@@ -34,18 +39,14 @@ void Camera::setFOV(float fov)
 
 void Camera::setNear(float near)
 {
-	SK_VERIFY(type == Camera::Type::PERSPECTIVE, "Only perspective cameras have near variable");
 	this->near = near;
-	projection = math::perspective(math::radians(fov), Window::getActive().getAspectRatio(), near, far);
-	updateProjectionView();
+	onViewportResize();
 }
 
 void Camera::setFar(float far)
 {
-	SK_VERIFY(type == Camera::Type::PERSPECTIVE, "Only perspective cameras have far variable");
 	this->far = far;
-	projection = math::perspective(math::radians(fov), Window::getActive().getAspectRatio(), near, far);
-	updateProjectionView();
+	onViewportResize();
 }
 
 void Camera::updateProjectionView()

@@ -32,18 +32,24 @@ static constexpr const char* block_names[TOTAL_BLOCKS]
 	"SNOW"
 };
 
-static constexpr bool block_solid[TOTAL_BLOCKS]
+struct BlockFlag
 {
-	/* AIR		 */  false,
-	/* STONE	 */  true,
-	/* GRASS	 */  true,
-	/* DIRT		 */  true,
-	/* SAND		 */  true,
-	/* SANDSTONE */  true,
-	/* WATER	 */  false,
-	/* LEAF		 */  false,
-	/* OAK_LOG	 */  true,
-	/* SNOW		 */  true
+	uint32_t solid : 1;
+};
+
+// SOLID
+static constexpr uint32_t block_flags[TOTAL_BLOCKS]
+{
+	/* AIR		 */  0,
+	/* STONE	 */  1,
+	/* GRASS	 */  1,
+	/* DIRT		 */  1,
+	/* SAND		 */  1,
+	/* SANDSTONE */  1,
+	/* WATER	 */  0,
+	/* LEAF		 */  0,
+	/* OAK_LOG	 */  1,
+	/* SNOW		 */  1
 };
 
 static constexpr uint32_t block_texture_indices[TOTAL_BLOCKS * 6]
@@ -62,8 +68,8 @@ static constexpr uint32_t block_texture_indices[TOTAL_BLOCKS * 6]
 
 struct BlockInfo
 {
-	static bool isSolid(Block block) { return block_solid[ecast(block)]; }
-	static uint32_t getTextureIndex(Block block, size_t face) { return block_texture_indices[size_t(block) * 6 + face]; }
+	static constexpr uint32_t isSolid(Block block) { return block_flags[ecast(block)] & 1; }
+	static constexpr uint32_t getTextureIndex(Block block, uint32_t face) { return block_texture_indices[ecast(block) * 6 + face]; }
 };
 
 static inline const auto block_textures = makeArray<fs::path>

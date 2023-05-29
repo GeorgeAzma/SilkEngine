@@ -185,8 +185,8 @@ void DebugRenderer::init()
 	VkRenderPass render_pass = RenderContext::getRenderGraph().getPass("Geometry").getRenderPass();
 
 	graphics_pipeline_3D = makeShared<GraphicsPipeline>();
-	graphics_pipeline_3D->setShader(makeShared<Shader>("3D", Shader::Defines { 
-		{ "MAX_IMAGE_SLOTS", std::to_string(DebugRenderer::MAX_IMAGE_SLOTS) }, 
+	graphics_pipeline_3D->setShader(makeShared<Shader>("3D", Shader::Defines{
+		{ "MAX_IMAGE_SLOTS", std::to_string(DebugRenderer::MAX_IMAGE_SLOTS) },
 		{ "MAX_LIGHTS", std::to_string(DebugRenderer::MAX_LIGHTS) } }))
 		.setRenderPass(render_pass)
 		.setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
@@ -205,7 +205,7 @@ void DebugRenderer::init()
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
 		.enableTag(GraphicsPipeline::EnableTag::BLEND)
-		.setDepthCompareOp(GraphicsPipeline::CompareOp::LESS_OR_EQUAL)
+		.setDepthCompareOp(GraphicsPipeline::CompareOp::GREATER_OR_EQUAL)
 		.build();
 	GraphicsPipeline::add("2D", graphics_pipeline_2D);
 
@@ -507,7 +507,7 @@ void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, cons
 	if (active.transformed)
 		data.transform *= active.transform;
 	immediate_render_context.createInstance(mesh, 0, mesh->getIndexCount(), &data, sizeof(data), offsetof(data, image_index), graphics_pipeline, active.images);
-	active.depth -= 1e-10;
+	active.depth += std::numeric_limits<float>::epsilon();
 }
 
 Light* DebugRenderer::addLight(const Light& light)

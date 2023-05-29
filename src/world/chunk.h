@@ -7,6 +7,8 @@ class Material;
 
 class Chunk : NoCopy
 {
+	friend class World;
+
 public:
 	using Coord = ivec3;
 
@@ -136,14 +138,12 @@ private:
 private:
 	Coord position = Coord(0);
 	std::vector<Block> blocks = {}; 
-	size_t vertex_count = 0;
-	size_t index_count = 0;
+	uint32_t vertex_count = 0;
+	uint32_t index_count = 0;
 	shared<Buffer> blocks_buffer = nullptr;
 	shared<Buffer> vertex_buffer = nullptr;
 	shared<Buffer> index_buffer = nullptr;
-	shared<Material> material = nullptr;
 	shared<Material> gen_material = nullptr;
-	shared<Material> mesh_gen_material = nullptr;
 	std::array<Chunk*, 26> neighbors = {};
 	bool dirty = true;
 	Block fill = Block::AIR;

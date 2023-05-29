@@ -43,7 +43,7 @@ private:
 	std::vector<shared<Chunk>> chunks;
 	struct Hash
 	{
-		size_t operator()(const Chunk::Coord& coord) const { return ((int64_t(coord.x) << 32) | coord.z) ^ (int64_t(coord.y) << 16); }
+		size_t operator()(const Chunk::Coord& coord) const { return ((int64_t(coord.x) << 32) | int64_t(coord.z)) ^ (int64_t(coord.y) << 16); }
 	};
 	shared<Material> material = nullptr;
 	shared<Image> texture_atlas = nullptr;

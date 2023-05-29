@@ -196,10 +196,14 @@ public:
 
     uint32_t getWidth() const { return data.width; }
     uint32_t getHeight() const { return data.height; }
+	uint32_t getFramebufferWidth() const { return data.framebuffer_width; }
+	uint32_t getFramebufferHeight() const { return data.framebuffer_height; }
     uvec2 getSize() const { return { data.width, data.height }; }
     int32_t getX() const { return data.x; }
     int32_t getY() const { return data.y; }
     float getAspectRatio() const { return (float)data.width / data.height; }
+	float getContentScaleX() const { return data.content_scale_x; }
+	float getContentScaleY() const { return data.content_scale_y; }
     vec2 getMouse() const { return data.mouse; }
     const Surface& getSurface() const { return *surface; }
     const SwapChain& getSwapChain() const { return *swap_chain; }
@@ -259,6 +263,7 @@ public:
     void maximize();
     void restore();
     void requestAttention();
+	void close();
 
     operator GLFWwindow* () const { return window; }
 
@@ -272,6 +277,10 @@ private:
         int y = 0;
         uint32_t width = 1280;
         uint32_t height = 720;
+		uint32_t framebuffer_width = 1280;
+		uint32_t framebuffer_height = 720;
+		float content_scale_x = 1.0f;
+		float content_scale_y = 1.0f;
         std::string title = "Window";
         bool fullscreen = false;
         int mouse_pressed = -1;
@@ -316,8 +325,10 @@ private:
 
 public:
     static Window& getActive() { return *active_window; }
-    static void setActive(Window* window) { active_window = window; }
+	static const std::unordered_set<Window*>& getWindows() { return windows; }
+	static void setActive(Window* window);
 
 private:
     static inline Window* active_window = nullptr;
+	static inline std::unordered_set<Window*> windows = {};
 };

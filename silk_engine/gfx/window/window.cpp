@@ -8,8 +8,8 @@
 Window::Window()
 {
     data.window = this;
-    if(!active_window)
-        active_window = this;
+    if (!active_window)
+        setActive(this);
 
     // Initializing input related stuff
     data.keys.resize(GLFW_KEY_LAST + 1);
@@ -48,8 +48,8 @@ Window::Window()
         {
             SK_INFO("Framebuffer resized: {}x{}", width, height);
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
-            data.width = width;
-            data.height = height;
+            data.framebuffer_width = width;
+            data.framebuffer_height = height;
             Dispatcher<FramebufferResizeEvent>::post(*data.window, width, height);
         });
 
@@ -104,6 +104,8 @@ Window::Window()
         {
             SK_INFO("Window content scaled: ({}, {})", x, y);
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
+            data.content_scale_x = x;
+            data.content_scale_y = y;
             Dispatcher<WindowContentScaleEvent>::post(*data.window, x, y);
             data.dpi = { x, y };
         });
@@ -113,6 +115,7 @@ Window::Window()
         {
             SK_INFO("Window closed");
             UserPointer& data = *(UserPointer*)glfwGetWindowUserPointer(window);
+            data.window->close();
             Dispatcher<WindowCloseEvent>::post(*data.window);
         });
 
@@ -582,4 +585,38 @@ void Window::restore()
 void Window::requestAttention()
 {
     glfwRequestWindowAttention(window);
+}
+
+void Window::close()
+{
+    windows.erase(this);
+    Dispatcher<WindowCloseEvent>::post(*this);
+}
+
+void Window::setActive(Window* window)
+{
+    if (window == active_window)
+        return;
+
+    if (!active_window)
+        active_window = window;
+    
+    Dispatcher<WindowEvent>::post(*window);
+    if (active_window->getWidth() != window->getWidth() || active_window->getHeight() != window->getHeight())
+        Dispatcher<WindowResizeEvent>::post(*window, window->getWidth(), window->getHeight());
+    if (active_window->getFramebufferWidth() != window->getFramebufferWidth() || active_window->getFramebufferHeight() != window->getFramebufferHeight())
+        Dispatcher<FramebufferResizeEvent>::post(*window, window->getFramebufferWidth(), window->getFramebufferHeight());
+    if (active_window->isMaximized() != window->isMaximized())
+        Dispatcher<WindowMaximizeEvent>::post(*window, window->isMaximized());
+    if (active_window->isFocused() != window->isFocused())
+        Dispatcher<WindowFocusEvent>::post(*window, window->isFocused());
+    if (active_window->isMinimized() != window->isMinimized())
+        Dispatcher<WindowMinimizeEvent>::post(*window, window->isMinimized());
+    if (active_window->getX() != window->getX() || active_window->getY() != window->getY())
+        Dispatcher<WindowMoveEvent>::post(*window, window->getX(), window->getY());
+    if (active_window->getContentScaleX() != window->getContentScaleX() || active_window->getContentScaleY() != window->getContentScaleY())
+        Dispatcher<WindowContentScaleEvent>::post(*window, window->getContentScaleX(), window->getContentScaleY());
+
+    active_window = window;
+    windows.emplace(active_window);
 }

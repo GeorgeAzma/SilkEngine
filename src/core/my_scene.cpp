@@ -20,8 +20,8 @@ void MyScene::onStart()
     depth.setClearDepthStencil({ 1.0f, 0 });
     geometry.setRenderCallback([&](const RenderGraph& render_graph) 
     { 
-        DebugRenderer::render(); 
         world->render();
+        DebugRenderer::render(); 
     });
     render_graph->build("Color");
     RenderContext::setRenderGraph(render_graph);

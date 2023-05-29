@@ -11,7 +11,7 @@ enum class JoystickButton : uint8_t;
 enum class GamepadButton : uint8_t;
 enum class GamepadAxis : uint8_t;
 
-//WINDOW EVENTS
+// WINDOW EVENTS
 struct WindowEvent
 {
     WindowEvent(Window& window) 
