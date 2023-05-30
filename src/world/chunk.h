@@ -101,6 +101,15 @@ public:
 	Block at(uint32_t idx) const { return blocks[idx]; }
 	Block at(uint32_t x, uint32_t y, uint32_t z) const { return blocks[y * AREA + z * SIZE + x]; }
 	Block at(const Chunk::Coord& position) const { return blocks[position.y * AREA + position.z * SIZE + position.x]; }
+	Block atSafe(const Chunk::Coord& position) const
+	{
+		if (isInside(position))
+			return at(position);
+		Chunk::Coord neighbor_pos = toChunkCoord(position);
+		if (const Chunk* neighbor = neighbors[getNeighborIndexFromCoord(neighbor_pos)])
+			return neighbor->at(position - neighbor_pos * DIM);
+		return Block::AIR;
+	}
 	const Coord& getPosition() const { return position; }
 	const shared<Buffer>& getVertexBuffer() const { return vertex_buffer; }
 	uint32_t getVertexCount() const { return vertex_count; }

@@ -98,28 +98,28 @@ void Chunk::generateMesh()
 	static constexpr int32_t ao_table[6 * 4 * 3] =
     {
         -1 - SHARED_AREA,
-        - SHARED_AREA - SHARED_SIZE,
+         -SHARED_AREA - SHARED_SIZE,
         -1 - SHARED_AREA - SHARED_SIZE,
         -1 - SHARED_AREA,
-        - SHARED_AREA + SHARED_SIZE,
+         -SHARED_AREA + SHARED_SIZE,
         -1 - SHARED_AREA + SHARED_SIZE,
         1 - SHARED_AREA,
-        - SHARED_AREA + SHARED_SIZE,
+         -SHARED_AREA + SHARED_SIZE,
         1 - SHARED_AREA + SHARED_SIZE,
         1 - SHARED_AREA,
-        - SHARED_AREA - SHARED_SIZE,
+         -SHARED_AREA - SHARED_SIZE,
         1 - SHARED_AREA - SHARED_SIZE,
         -1 - SHARED_SIZE,
-        + SHARED_AREA - SHARED_SIZE,
+         +SHARED_AREA - SHARED_SIZE,
         -1 + SHARED_AREA - SHARED_SIZE,
         -1 - SHARED_SIZE,
-        - SHARED_AREA - SHARED_SIZE,
+         -SHARED_AREA - SHARED_SIZE,
         -1 - SHARED_AREA - SHARED_SIZE,
         1 - SHARED_SIZE,
-        - SHARED_AREA - SHARED_SIZE,
+         -SHARED_AREA - SHARED_SIZE,
         1 - SHARED_AREA - SHARED_SIZE,
         1 - SHARED_SIZE,
-        + SHARED_AREA - SHARED_SIZE,
+         +SHARED_AREA - SHARED_SIZE,
         1 + SHARED_AREA - SHARED_SIZE,
         -1 + SHARED_AREA,
         -1 + SHARED_SIZE,
@@ -146,28 +146,29 @@ void Chunk::generateMesh()
         1 + SHARED_SIZE,
         1 + SHARED_AREA + SHARED_SIZE,
         1 + SHARED_SIZE,
-        + SHARED_AREA + SHARED_SIZE,
+         +SHARED_AREA + SHARED_SIZE,
         1 + SHARED_AREA + SHARED_SIZE,
         1 + SHARED_SIZE,
-        - SHARED_AREA + SHARED_SIZE,
+         -SHARED_AREA + SHARED_SIZE,
         1 - SHARED_AREA + SHARED_SIZE,
         -1 + SHARED_SIZE,
-        - SHARED_AREA + SHARED_SIZE,
+         -SHARED_AREA + SHARED_SIZE,
         -1 - SHARED_AREA + SHARED_SIZE,
         -1 + SHARED_SIZE,
-        + SHARED_AREA + SHARED_SIZE,
-        -1 + SHARED_AREA,
-        + SHARED_AREA + SHARED_SIZE,
+         +SHARED_AREA + SHARED_SIZE,
         -1 + SHARED_AREA + SHARED_SIZE,
         -1 + SHARED_AREA,
-        + SHARED_AREA - SHARED_SIZE,
+         +SHARED_AREA + SHARED_SIZE,
+        -1 + SHARED_AREA + SHARED_SIZE,
+        -1 + SHARED_AREA,
+         +SHARED_AREA - SHARED_SIZE,
         -1 + SHARED_AREA - SHARED_SIZE,
         1 + SHARED_AREA,
-        + SHARED_AREA - SHARED_SIZE,
+         +SHARED_AREA - SHARED_SIZE,
         1 + SHARED_AREA - SHARED_SIZE,
         1 + SHARED_AREA,
-        + SHARED_AREA + SHARED_SIZE,
-        1 + SHARED_AREA + SHARED_SIZE 
+         +SHARED_AREA + SHARED_SIZE,
+        1 + SHARED_AREA + SHARED_SIZE,
     };
 
     static thread_local std::vector<Vertex> vertices(Chunk::MAX_VERTICES);
@@ -255,22 +256,20 @@ void Chunk::generateMesh()
                 {
                     if (BlockInfo::isSolid(neighboring_blocks[face]))
                         continue;
+
                     uint32_t face_data = idx | (face << 17) | (BlockInfo::getTextureIndex(block, face) << 20);
-
                     uint32_t face12 = face * 12;
-                    Vertex ao0 = getAO(BlockInfo::isSolid(shared_blocks[i + ao_table[face12 + 0]]),
-                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 + 1]]),
-                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 + 2]]));
-
-                    Vertex ao1 = getAO(BlockInfo::isSolid(shared_blocks[i + ao_table[face12 + 3]]),
-                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 + 4]]),
-                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 + 5]]));
-
-                    Vertex ao2 = getAO(BlockInfo::isSolid(shared_blocks[i + ao_table[face12 + 6]]),
-                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 + 7]]),
-                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 + 8]]));
-
-                    Vertex ao3 = getAO(BlockInfo::isSolid(shared_blocks[i + ao_table[face12 + 9]]),
+                    Chunk::Coord position(x, y, z);
+                    Vertex ao0 = getAO(BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  0]]),
+                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  1]]),
+                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  2]]));
+                    Vertex ao1 = getAO(BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  3]]),
+                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  4]]),
+                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  5]]));
+                    Vertex ao2 = getAO(BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  6]]),
+                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  7]]),
+                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  8]]));
+                    Vertex ao3 = getAO(BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  9]]),
                                        BlockInfo::isSolid(shared_blocks[i + ao_table[face12 + 10]]),
                                        BlockInfo::isSolid(shared_blocks[i + ao_table[face12 + 11]]));
 
@@ -297,6 +296,7 @@ void Chunk::generateMesh()
                     vertices[vertex_count++] = (1 << 15) | face_data | (ao1 << 28);
                     vertices[vertex_count++] = (2 << 15) | face_data | (ao2 << 28);
                     vertices[vertex_count++] = (3 << 15) | face_data | (ao3 << 28);
+                    
                 }
             }
         }
