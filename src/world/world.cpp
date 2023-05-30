@@ -38,7 +38,7 @@ World::World()
 		.setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
-		.setCullMode(GraphicsPipeline::CullMode::FRONT)
+		//.setCullMode(GraphicsPipeline::CullMode::FRONT)
 		.setDepthCompareOp(GraphicsPipeline::CompareOp::LESS);
 	chunk_pipeline->build();
 	GraphicsPipeline::add("Chunk", chunk_pipeline);

@@ -1,4 +1,4 @@
-layout(location = 0) in uint vertex;
+layout(location = 0) in uvec2 vertex;
 
 layout(location = 0) out VertexOutput 
 {
@@ -60,22 +60,22 @@ const vec3 positions[24] = vec3[24](
 
 void main()
 {
-    const uint vert_id = (vertex >> 15) & 3;
-    const uint face_id = (vertex >> 17) & 7;
-    const uint idx = vertex & (VOLUME - 1);
+    const uint vert_id = (vertex.x >> 15) & 3;
+    const uint face_id = (vertex.x >> 17) & 7;
+    const uint idx = vertex.x & (VOLUME - 1);
 
     const vec3 local_pos = vec3(idx % SIZE, idx / AREA, idx % AREA / SIZE) + positions[face_id * 4 + vert_id];
     const vec3 world_pos = local_pos + chunk_position.xyz * vec3(SIZE);
 
-    vertex_output.uv = vec3(uvs[vert_id], (vertex >> 20) & 255);
+    vertex_output.uv = vec3(uvs[vert_id], (vertex.x >> 20) & 255);
     
     const vec3 normal = cross(positions[face_id * 4 + 2] - positions[face_id * 4 + 0], positions[face_id * 4 + 1] - positions[face_id * 4 + 0]);
-    const float ao = 1.0 - float((vertex >> 28) & 3) / 3.0;
+    const float ao = float((vertex.x >> 28) & 3) * 0.3333;
     vertex_output.light = vec3(0.07);
     vertex_output.light += max(dot(normalize(light_position.xyz),  normal), 0.0);
-    vertex_output.light += max(dot(vec3(-0.801783725737, 0.534522483825, 0.267261241912), normal), 0.0);
-    vertex_output.light += max(dot(vec3(0.408248290464, -0.408248290464, 0.816496580928), normal), 0.0);
-    vertex_output.light *= light_color.rgb * ao;
+    vertex_output.light += max(dot(vec3(-0.8017, 0.5345, 0.2672), normal), 0.0);
+    vertex_output.light += max(dot(vec3(0.4082, -0.4082, 0.8164), normal), 0.0);
+    vertex_output.light *= light_color.rgb * (ao * 0.75 + 0.25);
     //vertex_output.light = max(normal, vec3(0)) * 0.5 + abs(normal) * 0.5;
  
     gl_Position = global_uniform.projection_view * vec4(world_pos, 1.0);
