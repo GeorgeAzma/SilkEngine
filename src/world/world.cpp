@@ -27,6 +27,11 @@ World::World()
 	chunk_defines.emplace_back("AREA", std::to_string(Chunk::AREA));
 	chunk_defines.emplace_back("VOLUME", std::to_string(Chunk::VOLUME));
 	chunk_defines.emplace_back("DIM", std::format("ivec3({}, {}, {})", std::to_string(Chunk::DIM.x), std::to_string(Chunk::DIM.y), std::to_string(Chunk::DIM.z)));
+	chunk_defines.emplace_back("SHARED_SIZE", std::to_string(Chunk::SHARED_SIZE));
+	chunk_defines.emplace_back("SHARED_EDGE", std::to_string(Chunk::SHARED_EDGE));
+	chunk_defines.emplace_back("SHARED_AREA", std::to_string(Chunk::SHARED_AREA));
+	chunk_defines.emplace_back("SHARED_VOLUME", std::to_string(Chunk::SHARED_VOLUME));
+	chunk_defines.emplace_back("SHARED_DIM", std::format("ivec3({}, {}, {})", std::to_string(Chunk::SHARED_DIM.x), std::to_string(Chunk::SHARED_DIM.y), std::to_string(Chunk::SHARED_DIM.z)));
 	for (size_t i = 0; i < TOTAL_BLOCKS; ++i)
 		chunk_defines.emplace_back(block_names[i], std::to_string(i));
 	chunk_defines.emplace_back("NONE", std::to_string(uint32_t(Block::NONE)));
@@ -38,7 +43,7 @@ World::World()
 		.setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
-		//.setCullMode(GraphicsPipeline::CullMode::FRONT)
+		.setCullMode(GraphicsPipeline::CullMode::FRONT)
 		.setDepthCompareOp(GraphicsPipeline::CompareOp::LESS);
 	chunk_pipeline->build();
 	GraphicsPipeline::add("Chunk", chunk_pipeline);
@@ -53,7 +58,7 @@ World::World()
 	ComputePipeline::add("Chunk Gen", makeShared<ComputePipeline>(makeShared<Shader>("chunk_gen", chunk_defines)));
 }
 
-#define MULTITHREAD 1
+#define MULTITHREAD 0
 
 void World::update()
 {

@@ -69,7 +69,7 @@ void Chunk::generate()
         }
     }
 #else
-    static shared<Buffer> blocks_buffer = makeShared<Buffer>(VOLUME * sizeof(Block) + sizeof(fill), Buffer::STORAGE | Buffer::TRANSFER_SRC);
+    static shared<Buffer> blocks_buffer = makeShared<Buffer>(SHARED_VOLUME * sizeof(Block) + sizeof(fill), Buffer::STORAGE | Buffer::TRANSFER_SRC);
 
     gen_material->set("Blocks", *blocks_buffer);
     gen_material->bind();
@@ -78,8 +78,8 @@ void Chunk::generate()
     gen_material->dispatch(SIZE, SIZE, SIZE);
     RenderContext::executeCompute(); // TODO: defer this wait
 
-    blocks.resize(VOLUME, Block::AIR);
-    blocks_buffer->getDataRanges({ { blocks.data(), VOLUME * sizeof(Block) }, { &fill, sizeof(fill), VOLUME * sizeof(Block) } });
+    blocks.resize(SHARED_VOLUME, Block::AIR);
+    blocks_buffer->getDataRanges({ { blocks.data(), SHARED_VOLUME * sizeof(Block) }, { &fill, sizeof(fill), SHARED_VOLUME * sizeof(Block) } });
 #endif
     if (fill != Block::NONE)
         blocks.clear();
@@ -87,15 +87,15 @@ void Chunk::generate()
 
 void Chunk::generateMesh()
 {
-	if (!dirty)
-		return;
-	dirty = false;
+    if (!dirty)
+        return;
+    dirty = false;
     vertex_count = 0;
     index_count = 0;
-    if (fill == Block::AIR)
+    if (fill != Block::NONE)
         return;
-    
-	static constexpr int32_t ao_table[6 * 4 * 3] =
+
+    static constexpr int32_t ao_table[6 * 4 * 3] =
     {
         -1 - SHARED_AREA,
          -SHARED_AREA - SHARED_SIZE,
@@ -173,63 +173,57 @@ void Chunk::generateMesh()
 
     static thread_local std::vector<Vertex> vertices(Chunk::MAX_VERTICES);
     static thread_local std::vector<Index> indices(Chunk::MAX_INDICES);
-    
-    std::vector<Block> shared_blocks;
-    shared_blocks.resize(SHARED_VOLUME, Block::AIR);
-    for (uint32_t y = 0; y < SIZE; ++y)
-        for (uint32_t z = 0; z < SIZE; ++z)
-            memcpy(&shared_blocks[(y + 1) * SHARED_AREA + (z + 1) * SHARED_SIZE + 1], &blocks[y * AREA + z * SIZE], SIZE * sizeof(Block));
 
     // Sides
     if (neighbors[4]) // (00, -1, 00)
         for (uint32_t z = 0; z < SIZE; ++z)
             for (uint32_t x = 0; x < SIZE; ++x)
-                shared_blocks[(z + 1) * SHARED_SIZE + (x + 1)] = neighbors[4]->at(x, EDGE, z);
+                blocks[(z + 1) * SHARED_SIZE + (x + 1)] = neighbors[4]->at(x, EDGE, z);
     if (neighbors[10]) // (00, 00, -1)
         for (uint32_t y = 0; y < SIZE; ++y)
             for (uint32_t x = 0; x < SIZE; ++x)
-                shared_blocks[(y + 1) * SHARED_AREA + (x + 1)] = neighbors[10]->at(x, y, EDGE);
+                blocks[(y + 1) * SHARED_AREA + (x + 1)] = neighbors[10]->at(x, y, EDGE);
     if (neighbors[12]) // (-1, 00, 00)
         for (uint32_t y = 0; y < SIZE; ++y)
             for (uint32_t z = 0; z < SIZE; ++z)
-                shared_blocks[(y + 1) * SHARED_AREA + (z + 1) * SHARED_SIZE] = neighbors[12]->at(EDGE, y, z);
+                blocks[(y + 1) * SHARED_AREA + (z + 1) * SHARED_SIZE] = neighbors[12]->at(EDGE, y, z);
     if (neighbors[13]) // (+1, 00, 00)
         for (uint32_t y = 0; y < SIZE; ++y)
             for (uint32_t z = 0; z < SIZE; ++z)
-                shared_blocks[(y + 1) * SHARED_AREA + (z + 1) * SHARED_SIZE + SHARED_EDGE] = neighbors[13]->at(0, y, z);
+                blocks[(y + 1) * SHARED_AREA + (z + 1) * SHARED_SIZE + SHARED_EDGE] = neighbors[13]->at(0, y, z);
     if (neighbors[15]) // (00, 00, +1)
         for (uint32_t y = 0; y < SIZE; ++y)
             for (uint32_t x = 0; x < SIZE; ++x)
-                shared_blocks[(y + 1) * SHARED_AREA + SHARED_EDGE * SHARED_SIZE + (x + 1)] = neighbors[15]->at(x, y, 0);
+                blocks[(y + 1) * SHARED_AREA + SHARED_EDGE * SHARED_SIZE + (x + 1)] = neighbors[15]->at(x, y, 0);
     if (neighbors[21]) // (00, +1, 00)
         for (uint32_t z = 0; z < SIZE; ++z)
             for (uint32_t x = 0; x < SIZE; ++x)
-                shared_blocks[SHARED_EDGE * SHARED_AREA + (z + 1) * SHARED_SIZE + (x + 1)] = neighbors[21]->at(x, 0, z);
-    
+                blocks[SHARED_EDGE * SHARED_AREA + (z + 1) * SHARED_SIZE + (x + 1)] = neighbors[21]->at(x, 0, z);
+
     // Edges
-    /* (00, -1, -1) */ if (neighbors[ 1]) for (uint32_t x = 0; x < SIZE; ++x) shared_blocks[SHARED_EDGE * SHARED_AREA + SHARED_EDGE * SHARED_SIZE +     (x + 1)] = neighbors[ 1]->at(x, 0, 0);
-    /* (-1, -1, 00) */ if (neighbors[ 3]) for (uint32_t z = 0; z < SIZE; ++z) shared_blocks[SHARED_EDGE * SHARED_AREA +     (z + 1) * SHARED_SIZE + SHARED_EDGE] = neighbors[ 3]->at(0, 0, z);
-    /* (+1, -1, 00) */ if (neighbors[ 5]) for (uint32_t z = 0; z < SIZE; ++z) shared_blocks[SHARED_EDGE * SHARED_AREA +     (z + 1) * SHARED_SIZE              ] = neighbors[ 5]->at(EDGE, 0, z);
-    /* (00, -1, +1) */ if (neighbors[ 7]) for (uint32_t x = 0; x < SIZE; ++x) shared_blocks[SHARED_EDGE * SHARED_AREA +                                 (x + 1)] = neighbors[ 7]->at(x, 0, EDGE);
-    /* (-1, 00, -1) */ if (neighbors[ 9]) for (uint32_t y = 0; y < SIZE; ++y) shared_blocks[    (y + 1) * SHARED_AREA + SHARED_EDGE * SHARED_SIZE + SHARED_EDGE] = neighbors[ 9]->at(0, y, 0);
-    /* (+1, 00, -1) */ if (neighbors[11]) for (uint32_t y = 0; y < SIZE; ++y) shared_blocks[    (y + 1) * SHARED_AREA + SHARED_EDGE * SHARED_SIZE              ] = neighbors[11]->at(EDGE, y, 0);
-    /* (-1, 00, +1) */ if (neighbors[14]) for (uint32_t y = 0; y < SIZE; ++y) shared_blocks[    (y + 1) * SHARED_AREA +                             SHARED_EDGE] = neighbors[14]->at(0, y, EDGE);
-    /* (+1, 00, +1) */ if (neighbors[16]) for (uint32_t y = 0; y < SIZE; ++y) shared_blocks[    (y + 1) * SHARED_AREA                                          ] = neighbors[16]->at(EDGE, y, EDGE);
-    /* (00, +1, -1) */ if (neighbors[18]) for (uint32_t x = 0; x < SIZE; ++x) shared_blocks[                            SHARED_EDGE * SHARED_SIZE +     (x + 1)] = neighbors[18]->at(x, EDGE, 0);
-    /* (-1, +1, 00) */ if (neighbors[20]) for (uint32_t z = 0; z < SIZE; ++z) shared_blocks[                                (z + 1) * SHARED_SIZE + SHARED_EDGE] = neighbors[20]->at(0, EDGE, z);
-    /* (+1, +1, 00) */ if (neighbors[22]) for (uint32_t z = 0; z < SIZE; ++z) shared_blocks[                                (z + 1) * SHARED_SIZE              ] = neighbors[22]->at(EDGE, EDGE, z);
-    /* (00, +1, +1) */ if (neighbors[24]) for (uint32_t x = 0; x < SIZE; ++x) shared_blocks[                                                      +     (x + 1)] = neighbors[24]->at(x, EDGE, EDGE);
+    /* (00, -1, -1) */ if (neighbors[ 1]) for (uint32_t x = 0; x < SIZE; ++x) blocks[SHARED_EDGE * SHARED_AREA + SHARED_EDGE * SHARED_SIZE + (x + 1)] = neighbors[1]->at(x, 0, 0);
+    /* (-1, -1, 00) */ if (neighbors[ 3]) for (uint32_t z = 0; z < SIZE; ++z) blocks[SHARED_EDGE * SHARED_AREA + (z + 1) * SHARED_SIZE + SHARED_EDGE] = neighbors[3]->at(0, 0, z);
+    /* (+1, -1, 00) */ if (neighbors[ 5]) for (uint32_t z = 0; z < SIZE; ++z) blocks[SHARED_EDGE * SHARED_AREA + (z + 1) * SHARED_SIZE] = neighbors[5]->at(EDGE, 0, z);
+    /* (00, -1, +1) */ if (neighbors[ 7]) for (uint32_t x = 0; x < SIZE; ++x) blocks[SHARED_EDGE * SHARED_AREA + (x + 1)] = neighbors[7]->at(x, 0, EDGE);
+    /* (-1, 00, -1) */ if (neighbors[ 9]) for (uint32_t y = 0; y < SIZE; ++y) blocks[(y + 1) * SHARED_AREA + SHARED_EDGE * SHARED_SIZE + SHARED_EDGE] = neighbors[9]->at(0, y, 0);
+    /* (+1, 00, -1) */ if (neighbors[11]) for (uint32_t y = 0; y < SIZE; ++y) blocks[(y + 1) * SHARED_AREA + SHARED_EDGE * SHARED_SIZE] = neighbors[11]->at(EDGE, y, 0);
+    /* (-1, 00, +1) */ if (neighbors[14]) for (uint32_t y = 0; y < SIZE; ++y) blocks[(y + 1) * SHARED_AREA + SHARED_EDGE] = neighbors[14]->at(0, y, EDGE);
+    /* (+1, 00, +1) */ if (neighbors[16]) for (uint32_t y = 0; y < SIZE; ++y) blocks[(y + 1) * SHARED_AREA] = neighbors[16]->at(EDGE, y, EDGE);
+    /* (00, +1, -1) */ if (neighbors[18]) for (uint32_t x = 0; x < SIZE; ++x) blocks[SHARED_EDGE * SHARED_SIZE + (x + 1)] = neighbors[18]->at(x, EDGE, 0);
+    /* (-1, +1, 00) */ if (neighbors[20]) for (uint32_t z = 0; z < SIZE; ++z) blocks[(z + 1) * SHARED_SIZE + SHARED_EDGE] = neighbors[20]->at(0, EDGE, z);
+    /* (+1, +1, 00) */ if (neighbors[22]) for (uint32_t z = 0; z < SIZE; ++z) blocks[(z + 1) * SHARED_SIZE] = neighbors[22]->at(EDGE, EDGE, z);
+    /* (00, +1, +1) */ if (neighbors[24]) for (uint32_t x = 0; x < SIZE; ++x) blocks[+(x + 1)] = neighbors[24]->at(x, EDGE, EDGE);
 
     // Corners
-    /* (-1, -1, -1) */ if (neighbors[ 0]) shared_blocks[0] = neighbors[0]->at(VOLUME - 1);
-    /* (+1, -1, -1) */ if (neighbors[ 2]) shared_blocks[SHARED_EDGE] = neighbors[2]->at(0, EDGE, EDGE);
-    /* (-1, -1, +1) */ if (neighbors[ 6]) shared_blocks[SHARED_EDGE * SHARED_SIZE] = neighbors[6]->at(EDGE, EDGE, 0);
-    /* (+1, -1, +1) */ if (neighbors[ 8]) shared_blocks[SHARED_EDGE + SHARED_EDGE * SHARED_SIZE] = neighbors[8]->at(0, EDGE, 0);
-    /* (-1, +1, -1) */ if (neighbors[17]) shared_blocks[SHARED_EDGE * SHARED_AREA] = neighbors[17]->at(EDGE, 0, EDGE);
-    /* (+1, +1, -1) */ if (neighbors[19]) shared_blocks[SHARED_EDGE + SHARED_EDGE * SHARED_AREA] = neighbors[19]->at(0, 0, EDGE);
-    /* (-1, +1, +1) */ if (neighbors[23]) shared_blocks[SHARED_EDGE * SHARED_AREA + SHARED_EDGE * SHARED_SIZE] = neighbors[23]->at(EDGE, 0, 0);
-    /* (+1, +1, +1) */ if (neighbors[25]) shared_blocks[SHARED_VOLUME - 1] = neighbors[25]->at(0);
-  
+    /* (-1, -1, -1) */ if (neighbors[ 0]) blocks[0] = neighbors[0]->at(EDGE, EDGE, EDGE);
+    /* (+1, -1, -1) */ if (neighbors[ 2]) blocks[SHARED_EDGE] = neighbors[2]->at(0, EDGE, EDGE);
+    /* (-1, -1, +1) */ if (neighbors[ 6]) blocks[SHARED_EDGE * SHARED_SIZE] = neighbors[6]->at(EDGE, EDGE, 0);
+    /* (+1, -1, +1) */ if (neighbors[ 8]) blocks[SHARED_EDGE + SHARED_EDGE * SHARED_SIZE] = neighbors[8]->at(0, EDGE, 0);
+    /* (-1, +1, -1) */ if (neighbors[17]) blocks[SHARED_EDGE * SHARED_AREA] = neighbors[17]->at(EDGE, 0, EDGE);
+    /* (+1, +1, -1) */ if (neighbors[19]) blocks[SHARED_EDGE + SHARED_EDGE * SHARED_AREA] = neighbors[19]->at(0, 0, EDGE);
+    /* (-1, +1, +1) */ if (neighbors[23]) blocks[SHARED_EDGE * SHARED_AREA + SHARED_EDGE * SHARED_SIZE] = neighbors[23]->at(EDGE, 0, 0);
+    /* (+1, +1, +1) */ if (neighbors[25]) blocks[SHARED_VOLUME - 1] = neighbors[25]->at(0, 0, 0);
+
     for (uint32_t y = 0; y < SIZE; ++y)
     {
         for (uint32_t z = 0; z < SIZE; ++z)
@@ -237,18 +231,18 @@ void Chunk::generateMesh()
             for (uint32_t x = 0; x < SIZE; ++x)
             {
                 uint32_t i = (y + 1) * SHARED_AREA + (z + 1) * SHARED_SIZE + (x + 1);
-                Block& block = shared_blocks[i];
+                Block& block = blocks[i];
                 if (block == Block::AIR)
                     continue;
 
                 Block neighboring_blocks[6] =
                 {
-                    shared_blocks[i - SHARED_AREA],
-                    shared_blocks[i - SHARED_SIZE],
-                    shared_blocks[i - 1],
-                    shared_blocks[i + 1],  
-                    shared_blocks[i + SHARED_SIZE],
-                    shared_blocks[i + SHARED_AREA]
+                    blocks[i - SHARED_AREA],
+                    blocks[i - SHARED_SIZE],
+                    blocks[i - 1],
+                    blocks[i + 1],
+                    blocks[i + SHARED_SIZE],
+                    blocks[i + SHARED_AREA]
                 };
 
                 uint32_t idx = y * AREA + z * SIZE + x;
@@ -257,21 +251,20 @@ void Chunk::generateMesh()
                     if (BlockInfo::isSolid(neighboring_blocks[face]))
                         continue;
 
-                    uint32_t face_data = idx | (face << 17) | (BlockInfo::getTextureIndex(block, face) << 20);
+                    uint64_t face_data = idx | (face << 17) | (BlockInfo::getTextureIndex(block, face) << 20);
                     uint32_t face12 = face * 12;
-                    Chunk::Coord position(x, y, z);
-                    Vertex ao0 = getAO(BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  0]]),
-                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  1]]),
-                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  2]]));
-                    Vertex ao1 = getAO(BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  3]]),
-                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  4]]),
-                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  5]]));
-                    Vertex ao2 = getAO(BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  6]]),
-                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  7]]),
-                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  8]]));
-                    Vertex ao3 = getAO(BlockInfo::isSolid(shared_blocks[i + ao_table[face12 +  9]]),
-                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 + 10]]),
-                                       BlockInfo::isSolid(shared_blocks[i + ao_table[face12 + 11]]));
+                    Vertex ao0 = getAO(BlockInfo::isSolid(blocks[i + ao_table[face12 +  0]]),
+                                       BlockInfo::isSolid(blocks[i + ao_table[face12 +  1]]),
+                                       BlockInfo::isSolid(blocks[i + ao_table[face12 +  2]]));
+                    Vertex ao1 = getAO(BlockInfo::isSolid(blocks[i + ao_table[face12 +  3]]),
+                                       BlockInfo::isSolid(blocks[i + ao_table[face12 +  4]]),
+                                       BlockInfo::isSolid(blocks[i + ao_table[face12 +  5]]));
+                    Vertex ao2 = getAO(BlockInfo::isSolid(blocks[i + ao_table[face12 +  6]]),
+                                       BlockInfo::isSolid(blocks[i + ao_table[face12 +  7]]),
+                                       BlockInfo::isSolid(blocks[i + ao_table[face12 +  8]]));
+                    Vertex ao3 = getAO(BlockInfo::isSolid(blocks[i + ao_table[face12 +  9]]),
+                                       BlockInfo::isSolid(blocks[i + ao_table[face12 + 10]]),
+                                       BlockInfo::isSolid(blocks[i + ao_table[face12 + 11]]));
 
                     if (ao1 + ao3 > ao0 + ao2)
                     {
@@ -296,7 +289,7 @@ void Chunk::generateMesh()
                     vertices[vertex_count++] = (1 << 15) | face_data | (ao1 << 28);
                     vertices[vertex_count++] = (2 << 15) | face_data | (ao2 << 28);
                     vertices[vertex_count++] = (3 << 15) | face_data | (ao3 << 28);
-                    
+
                 }
             }
         }

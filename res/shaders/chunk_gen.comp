@@ -2,7 +2,7 @@ layout(local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
 
 layout(set = 0, binding = 0) writeonly buffer Blocks
 {
-    uint blocks[VOLUME];
+    uint blocks[SHARED_VOLUME];
     uint fill;
 };
 
@@ -15,18 +15,6 @@ layout(push_constant) uniform PushConstant
 
 float rand(vec2 n) { return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453); }
 
-#if 0
-float noise(vec2 p)
-{
-    vec2 ip = floor(p);
-    vec2 u = fract(p);
-    u = u*u*(3.0-2.0*u);
-    float res = mix(
-        mix(rand(ip),rand(ip+vec2(1.0,0.0)),u.x),
-        mix(rand(ip+vec2(0.0,1.0)),rand(ip+vec2(1.0,1.0)),u.x),u.y);
-    return res*res;
-}
-#else
 const int perm[256] =
 {
     151, 160, 137, 91, 90, 15,
@@ -104,7 +92,6 @@ float noise(vec2 p)
     }
     return 45.23065f * (n0 + n1 + n2);
 }
-#endif
 
 float fbm(vec2 p, int octaves)
 {
