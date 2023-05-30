@@ -6,6 +6,7 @@
 #include "silk_engine/gfx/fence.h"
 #include "silk_engine/gfx/semaphore.h"
 #include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/allocators/query_pool.h"
 
 RenderGraph::~RenderGraph()
 {
@@ -120,20 +121,24 @@ void RenderGraph::build(const char* backbuffer)
 		}
 	}
 
-	resize(Window::getActive().getSwapChain());
+	resize(Window::get().getSwapChain());
+
+	query_pool = makeShared<QueryPool>(QueryPool::VERTEX_SHADER_INVOCATIONS | QueryPool::FRAGMENT_SHADER_INVOCATIONS | QueryPool::COMPUTE_SHADER_INVOCATIONS);
 }
 
-void RenderGraph::render()
+void RenderGraph::render(Statistics* statistics)
 {
 	if (command_buffer)
 		command_buffer->wait();
 
-	if (!Window::getActive().getSwapChain().acquireNextImage(*swap_chain_image_available))
+	if (!Window::get().getSwapChain().acquireNextImage(*swap_chain_image_available))
 	{
-		Window::getActive().recreate();
-		resize(Window::getActive().getSwapChain());
+		Window::get().recreate();
+		resize(Window::get().getSwapChain());
 	}
 
+	if (statistics)
+		query_pool->begin();
 	render_pass->begin();
 
 	uint32_t width = render_pass->getWidth();
@@ -161,13 +166,21 @@ void RenderGraph::render()
 		render_pass->nextSubpass();
 	}
 	render_pass->end();
+	if (statistics)
+		query_pool->end();
 
 	command_buffer = RenderContext::submit({ VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT }, { *swap_chain_image_available }, { *render_finished });
 
-	if (!Window::getActive().getSwapChain().present(*render_finished))
+	if (statistics)
 	{
-		Window::getActive().recreate();
-		resize(Window::getActive().getSwapChain());
+		std::vector<uint32_t> results = query_pool->getResults(0, true);
+		memcpy(statistics, results.data(), results.size() * sizeof(uint32_t));
+	}
+
+	if (!Window::get().getSwapChain().present(*render_finished))
+	{
+		Window::get().recreate();
+		resize(Window::get().getSwapChain());
 	}
 }
 

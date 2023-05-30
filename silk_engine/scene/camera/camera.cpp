@@ -20,13 +20,13 @@ Camera::Camera()
 
 void Camera::onViewportResize()
 {
-	if (Window::getActive().isMinimized())
+	if (Window::get().isMinimized())
 		return;
 
 	if (type == Camera::Type::PERSPECTIVE)
-		projection = math::perspective(math::radians(fov), Window::getActive().getAspectRatio(), near, far);
+		projection = math::perspective(math::radians(fov), Window::get().getAspectRatio(), near, far);
 	else
-		projection = math::ortho(0.0f, (float)Window::getActive().getWidth(), 0.0f, (float)Window::getActive().getHeight(), near, far);
+		projection = math::ortho(0.0f, (float)Window::get().getWidth(), 0.0f, (float)Window::get().getHeight(), near, far);
 
 	updateProjectionView();
 }

@@ -124,6 +124,7 @@ void ParticleSystem::update()
                 particle_data[i].color = math::lerp(p.color_begin, p.color_end, life);
                 particle_data[i].iamge_index = p.iamge_index;
             });
+        thread_pool->wait();
     }
     instance_vbo->setData(particle_data.data(), particle_data.size() * sizeof(ParticleData));
 }

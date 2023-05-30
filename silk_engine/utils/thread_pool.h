@@ -52,14 +52,13 @@ public:
             size_t invocations = length + (i < remain);
             if (invocations)
             {
-                submit([invocations, index, &func] {
+                submit([invocations, index, func] {
                     for (size_t i = 0u; i < invocations; ++i)
                         func(index + i);
                     });
                 index += invocations;
             }
         }
-        wait();
     }
 
     void wait();

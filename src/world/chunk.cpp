@@ -69,18 +69,20 @@ void Chunk::generate()
         }
     }
 #else
-    blocks_buffer = makeShared<Buffer>(VOLUME * sizeof(Block) + sizeof(fill), Buffer::STORAGE | Buffer::TRANSFER_SRC);
+    static shared<Buffer> blocks_buffer = makeShared<Buffer>(VOLUME * sizeof(Block) + sizeof(fill), Buffer::STORAGE | Buffer::TRANSFER_SRC);
 
     gen_material->set("Blocks", *blocks_buffer);
     gen_material->bind();
     ivec4 push_constant = ivec4(position, 0);
     RenderContext::getCommandBuffer().pushConstants(Shader::Stage::COMPUTE, 0, sizeof(push_constant), &push_constant);
     gen_material->dispatch(SIZE, SIZE, SIZE);
-    RenderContext::executeCompute();
+    RenderContext::executeCompute(); // TODO: defer this wait
 
     blocks.resize(VOLUME, Block::AIR);
     blocks_buffer->getDataRanges({ { blocks.data(), VOLUME * sizeof(Block) }, { &fill, sizeof(fill), VOLUME * sizeof(Block) } });
 #endif
+    if (fill != Block::NONE)
+        blocks.clear();
 }
 
 void Chunk::generateMesh()
@@ -198,8 +200,8 @@ void Chunk::generateMesh()
         { +1, +1, +1 } // Corner
     };
 
-    static thread_local std::vector<uint64_t> vertices(Chunk::MAX_VERTICES);
-    static thread_local std::vector<uint32_t> indices(Chunk::MAX_INDICES);
+    static thread_local std::vector<Vertex> vertices(Chunk::MAX_VERTICES);
+    static thread_local std::vector<Index> indices(Chunk::MAX_INDICES);
 
     for (uint32_t y = 0; y < SIZE; ++y)
     {
@@ -230,19 +232,19 @@ void Chunk::generateMesh()
 
                         uint32_t face12 = face * 12;
                         Chunk::Coord position(x, y, z);
-                        uint64_t ao0 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 0])),
+                        Vertex ao0 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 0])),
                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 1])),
                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 2])));
 
-                        uint64_t ao1 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 3])),
+                        Vertex ao1 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 3])),
                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 4])),
                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 5])));
 
-                        uint64_t ao2 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 6])),
+                        Vertex ao2 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 6])),
                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 7])),
                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 8])));
 
-                        uint64_t ao3 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 9])),
+                        Vertex ao3 = getAO(BlockInfo::isSolid(atSafe(position + ao_table[face12 + 9])),
                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 10])),
                             BlockInfo::isSolid(atSafe(position + ao_table[face12 + 11])));
 
@@ -279,13 +281,12 @@ void Chunk::generateMesh()
     {
         static std::mutex mux;
         std::scoped_lock lock(mux);
-
-        size_t vertices_size = vertex_count * VERTEX_SIZE;
+        size_t vertices_size = vertex_count * sizeof(Vertex);
         if (!(vertex_buffer && vertices_size == vertex_buffer->getSize()))
             vertex_buffer = makeShared<Buffer>(vertices_size, Buffer::VERTEX | Buffer::TRANSFER_DST | Buffer::TRANSFER_SRC);
         vertex_buffer->setData(vertices.data());
 
-        size_t indices_size = index_count * INDEX_SIZE;
+        size_t indices_size = index_count * sizeof(Index);
         if (!(index_buffer && indices_size == index_buffer->getSize()))
             index_buffer = makeShared<Buffer>(indices_size, Buffer::INDEX | Buffer::TRANSFER_DST | Buffer::TRANSFER_SRC);
         index_buffer->setData(indices.data());
@@ -316,15 +317,4 @@ void Chunk::render() const
     vertex_buffer->bindVertex();
     index_buffer->bindIndex();
     RenderContext::getCommandBuffer().drawIndexed(index_count);
-}
-
-Block Chunk::atSafe(const Chunk::Coord& position) const
-{
-    if (isInside(position))
-        return at(position);
-    Chunk::Coord neighbor_pos = World::toChunkCoord(position);
-    Chunk* neighbor = neighbors[getIndexFromCoord(neighbor_pos)];
-    if (neighbor)
-        return neighbor->at(position - neighbor_pos * DIM);
-    return Block::AIR;
 }

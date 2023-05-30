@@ -10,7 +10,7 @@
 
 void MyScene::onStart()
 {
-    Window::getActive().setSize({ 1280, 720 });
+    Window::get().setSize({ 1280, 720 });
 
     render_graph = makeShared<RenderGraph>();
     auto& geometry = render_graph->addPass("Geometry");
@@ -38,12 +38,22 @@ void MyScene::onUpdate()
 
     static Cooldown c(100ms);
     if (c())
-        Window::getActive().setTitle(std::format("Vulkan - {} FPS ({:.4} ms) | {}x{}", int(1.0 / Time::dt), (Time::dt * 1000), Window::getActive().getWidth(), Window::getActive().getHeight()));
+        Window::get().setTitle(std::format("Vulkan - {} FPS ({:.4} ms) | {}x{}", int(1.0 / Time::dt), (Time::dt * 1000), Window::get().getWidth(), Window::get().getHeight()));
 
+    static RenderGraph::Statistics stats{};
+
+    DebugRenderer::reset();
     world->update();
-    render_graph->render();
+    DebugRenderer::color(Colors::WHITE);
+    DebugRenderer::text(std::string("Vertex Invocations: ") + std::to_string(stats.vertex_invocations), 16.0f, 64.0f, 24.0f);
+    DebugRenderer::text(std::string("Fragment Invocations: ") + std::to_string(stats.fragment_invocations), 16.0f, 100.0f, 24.0f);
+    DebugRenderer::text(std::string("Compute Invocations: ") + std::to_string(stats.compute_invocations), 16.0f, 136.0f, 24.0f);
+    render_graph->render(&stats);
+    DebugRenderer::update(Scene::getActive()->getMainCamera());
 }
 
 void MyScene::onStop()
 {
+    DebugRenderer::destroy();
+    render_graph = nullptr;
 }

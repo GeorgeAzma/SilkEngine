@@ -10,9 +10,7 @@ layout(location = 0) out vec4 color;
 
 void main()
 {
-    color = texture(texture_atlas, fragment_input.uv);
+    color = texture(texture_atlas, fragment_input.uv) * vec4(fragment_input.light, 1.0);
     if (color.a < 0.01)
         discard;
-
-    color.rgb *= fragment_input.light;
 }

@@ -8,6 +8,7 @@
 #include "silk_engine/gfx/debug_renderer.h"
 #include "silk_engine/gfx/devices/logical_device.h"
 #include "silk_engine/scene/camera/camera_controller.h"
+#include "silk_engine/scene/camera/camera.h"
 #include "silk_engine/scene/components.h"
 #include "silk_engine/utils/debug_timer.h"
 #include "silk_engine/gfx/window/window.h"
@@ -57,7 +58,7 @@ World::World()
 void World::update()
 {
 	const vec3& origin = camera->position;
-	const Chunk::Coord& chunk_origin = toChunkCoord((Chunk::Coord)round(origin));
+	const Chunk::Coord& chunk_origin = Chunk::toChunkCoord((Chunk::Coord)round(origin));
 
 	// Delete far chunks
 	RenderContext::getLogicalDevice().wait();
@@ -83,6 +84,7 @@ void World::update()
 			return;
 		chunks[i]->generateMesh();
 	});
+	pool.wait();
 #else
 	for (size_t i = 0; i < chunks.size(); ++i)
 	{
@@ -93,46 +95,59 @@ void World::update()
 #endif
 
 	constexpr size_t max_chunks = 16 * 16 * 16; // 4096
-	if (chunks.size() >= max_chunks)
-		return;
-
-	// Queue up to be generated chunks
-	std::ranges::sort(chunks, [&](const shared<Chunk>& lhs, const shared<Chunk>& rhs) {
-		constexpr vec3 modifier = vec3(1, 1, 1);
-		return ((100.0f + distance2(vec3(chunk_origin) * modifier, vec3(lhs->getPosition()) * modifier)) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f)) <
-			   ((100.0f + distance2(vec3(chunk_origin) * modifier, vec3(rhs->getPosition()) * modifier)) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f));
-	});
-
-	std::unordered_set<Chunk::Coord> queued_chunks;
-	if (!findChunk(chunk_origin))
-		queued_chunks.emplace(chunk_origin);
-	constexpr size_t max_queued_chunks = 4;
-	for (const auto& chunk : chunks)
+	if (chunks.size() < max_chunks)
 	{
-		if (distance2(vec3(chunk_origin), vec3(chunk->getPosition())) > (max_chunk_distance2 - 1.0f) || !isChunkVisible(chunk->getPosition()))
-			continue;
-		const std::vector<Chunk::Coord> missing_neighbors = chunk->getMissingNeighborLocations();
-		for (const auto& missing : missing_neighbors)
+		// Queue up to be generated chunks
+		std::ranges::sort(chunks, [&](const shared<Chunk>& lhs, const shared<Chunk>& rhs) {
+			constexpr vec3 modifier = vec3(1, 1, 1);
+			return ((100.0f + distance2(vec3(chunk_origin) * modifier, vec3(lhs->getPosition()) * modifier)) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f)) <
+				((100.0f + distance2(vec3(chunk_origin) * modifier, vec3(rhs->getPosition()) * modifier)) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f));
+			});
+
+		std::unordered_set<Chunk::Coord> queued_chunks;
+		if (!findChunk(chunk_origin))
+			queued_chunks.emplace(chunk_origin);
+		constexpr size_t max_queued_chunks = 4;
+		for (const auto& chunk : chunks)
 		{
-			if (findChunk(chunk->getPosition() + missing))
+			if (distance2(vec3(chunk_origin), vec3(chunk->getPosition())) > (max_chunk_distance2 - 1.0f) || !isChunkVisible(chunk->getPosition()))
 				continue;
-			queued_chunks.emplace(chunk->getPosition() + missing);
+			const std::vector<Chunk::Coord> missing_neighbors = chunk->getMissingNeighborLocations();
+			for (const auto& missing : missing_neighbors)
+			{
+				if (findChunk(chunk->getPosition() + missing))
+					continue;
+				queued_chunks.emplace(chunk->getPosition() + missing);
+				if (queued_chunks.size() >= max_queued_chunks)
+					break;
+			}
 			if (queued_chunks.size() >= max_queued_chunks)
 				break;
 		}
-		if (queued_chunks.size() >= max_queued_chunks)
-			break;
-	}
-	
-	for (const auto& chunk : queued_chunks)
-	{
-		chunks.emplace_back(makeShared<Chunk>(chunk));
-		std::array<Chunk::Coord, 26> neighbors = Chunk::getNeighborCoords();
-		for (size_t i = 0; i < neighbors.size(); ++i)
-			chunks.back()->addNeighbor(i, findChunk(chunk + neighbors[i]));
-		chunks.back()->generate();
+
+		for (const auto& chunk : queued_chunks)
+		{
+			chunks.emplace_back(makeShared<Chunk>(chunk));
+			for (size_t i = 0; i < 26; ++i)
+				chunks.back()->addNeighbor(i, findChunk(chunk + Chunk::NEIGHBORS[i]));
+			chunks.back()->generate();
+		}
 	}
 	t.sample(32);
+	float w = float(Window::get().getWidth()) * 0.5f;
+	float h = float(Window::get().getHeight()) * 0.5f;
+	float s = 24.0f;
+	const vec4& d = vec4(camera->direction, 0.0);
+	const mat4& v = camera->view;
+	vec4 dx = v * vec4(1, 0, 0, 0);
+	vec4 dy = v * vec4(0, 1, 0, 0);
+	vec4 dz = v * vec4(0, 0, 1, 0);
+	DebugRenderer::color({ 1.0f, 0.2f, 0.2f, 0.7f });
+	DebugRenderer::line(w, h, w + dx.x * s, h + dx.y * s, 2.0f);
+	DebugRenderer::color({ 0.2f, 1.0f, 0.2f, 0.7f });
+	DebugRenderer::line(w, h, w + dy.x * s, h + dy.y * s, 2.0f);
+	DebugRenderer::color({ 0.2f, 0.5f, 1.0f, 0.7f });
+	DebugRenderer::line(w, h, w + dz.x * s, h + dz.y * s, 2.0f);
 }
 
 void World::render()
@@ -146,12 +161,9 @@ void World::render()
 			continue;
 		chunk->render();
 	}
-
-	DebugRenderer::color(Colors::RED);
-	DebugRenderer::line(500.0f, 500.0f, 200.0f, 200.0f, 2.0f);
 }
 
 bool World::isChunkVisible(const Chunk::Coord& position) const
 {
-	return camera->frustum.isBoxVisible(toWorldCoord(position), toWorldCoord(position) + Chunk::DIM);
+	return camera->frustum.isBoxVisible(Chunk::toWorldCoord(position), Chunk::toWorldCoord(position) + Chunk::DIM);
 }

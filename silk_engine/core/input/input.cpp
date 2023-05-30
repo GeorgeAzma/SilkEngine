@@ -17,15 +17,15 @@ void Input::setClipboardString(std::string_view str)
     glfwSetClipboardString(NULL, str.data());
 }
 
-bool Input::isKeyHeld(Key key) { return Window::getActive().isKeyHeld(key); }
-bool Input::isKeyPressed(Key key) { return Window::getActive().isKeyPressed(key); }
-bool Input::isKeyReleased(Key key) { return Window::getActive().isKeyReleased(key); }
+bool Input::isKeyHeld(Key key) { return Window::get().isKeyHeld(key); }
+bool Input::isKeyPressed(Key key) { return Window::get().isKeyPressed(key); }
+bool Input::isKeyReleased(Key key) { return Window::get().isKeyReleased(key); }
 
-bool Input::isMouseHeld(MouseButton button) { return Window::getActive().isMouseHeld(button); }
-bool Input::isMousePressed(MouseButton button) { return Window::getActive().isMousePressed(button); }
-bool Input::isMouseReleased(MouseButton button) { return Window::getActive().isMouseReleased(button); }
+bool Input::isMouseHeld(MouseButton button) { return Window::get().isMouseHeld(button); }
+bool Input::isMousePressed(MouseButton button) { return Window::get().isMousePressed(button); }
+bool Input::isMouseReleased(MouseButton button) { return Window::get().isMouseReleased(button); }
 
-vec2 Input::getMouse() { return Window::getActive().getMouse(); }
+vec2 Input::getMouse() { return Window::get().getMouse(); }
 
 Joystick& Input::getActiveJoystick() { return Joystick::getActive(); }
 

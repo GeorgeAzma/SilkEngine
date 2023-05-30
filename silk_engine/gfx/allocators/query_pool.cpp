@@ -3,24 +3,24 @@
 #include "silk_engine/gfx/devices/logical_device.h"
 #include "silk_engine/gfx/command_queue.h"
 
-QueryPool::QueryPool(VkQueryType query_type, uint32_t query_count)
+QueryPool::QueryPool(QueryType query_type, uint32_t query_count)
 	: query_type(query_type), queries(query_count, false)
 {
 	VkQueryPoolCreateInfo ci{};
 	ci.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
-	ci.queryType = query_type;
+	ci.queryType = VkQueryType(query_type);
 	ci.queryCount = query_count;
 	query_pool = RenderContext::getLogicalDevice().createQueryPool(ci);
 }
 
-QueryPool::QueryPool(VkQueryPipelineStatisticFlags pipeline_statistic_flags, uint32_t query_count)
-	: query_type(VK_QUERY_TYPE_PIPELINE_STATISTICS), pipeline_statistic_flags(pipeline_statistic_flags), queries(query_count, false)
+QueryPool::QueryPool(PipelineStatistics pipeline_statistics, uint32_t query_count)
+	: query_type(PIPELINE_STATISTICS), pipeline_statistics(pipeline_statistics), queries(query_count, false)
 {
 	VkQueryPoolCreateInfo ci{};
 	ci.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
-	ci.queryType = query_type;
+	ci.queryType = VkQueryType(query_type);
 	ci.queryCount = query_count;
-	ci.pipelineStatistics = pipeline_statistic_flags;
+	ci.pipelineStatistics = VkQueryPipelineStatisticFlags(pipeline_statistics);
 	query_pool = RenderContext::getLogicalDevice().createQueryPool(ci);
 }
 
@@ -34,7 +34,7 @@ void QueryPool::begin(uint32_t index)
 	if (queries[index])
 		return;
 	RenderContext::getCommandBuffer().resetQueryPool(query_pool, index, 1);
-	RenderContext::getCommandBuffer().beginQuery(query_pool, index, query_type == VK_QUERY_TYPE_OCCLUSION ? VK_QUERY_CONTROL_PRECISE_BIT : 0);
+	RenderContext::getCommandBuffer().beginQuery(query_pool, index, query_type == OCCLUSION ? VK_QUERY_CONTROL_PRECISE_BIT : 0);
 	queries[index] = true;
 }
 
@@ -59,12 +59,12 @@ std::vector<uint32_t> QueryPool::getResults(uint32_t index, bool wait)
 	size_t data_count = 1;
 	switch (query_type)
 	{
-	case VK_QUERY_TYPE_OCCLUSION:
-	case VK_QUERY_TYPE_TIMESTAMP:
+	case OCCLUSION:
+	case TIMESTAMP:
 		data_count = 1;
 		break;
-	case VK_QUERY_TYPE_PIPELINE_STATISTICS:
-		data_count = std::popcount((const VkQueryPipelineStatisticFlags&)pipeline_statistic_flags);
+	case PIPELINE_STATISTICS:
+		data_count = std::popcount((const VkQueryPipelineStatisticFlags&)pipeline_statistics);
 		break;
 	}
 	uint32_t data_size = data_count * sizeof(uint32_t);

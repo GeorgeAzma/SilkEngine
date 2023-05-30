@@ -6,5 +6,5 @@ class Font;
 
 struct TextMesh : public RawMesh2D
 {
-	TextMesh(std::string_view text, uint32_t size = 32, shared<Font> font = nullptr);
+	TextMesh(std::string_view text, const shared<Font>& font = nullptr);
 };

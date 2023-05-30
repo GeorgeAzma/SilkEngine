@@ -1,7 +1,7 @@
 #include "text_mesh.h"
 #include "silk_engine/gfx/ui/font.h"
 
-TextMesh::TextMesh(std::string_view text, uint32_t size, shared<Font> font)
+TextMesh::TextMesh(std::string_view text, const shared<Font>& font)
 {
 	auto layout = font->getCharacterLayout(text);
 
@@ -13,10 +13,10 @@ TextMesh::TextMesh(std::string_view text, uint32_t size, shared<Font> font)
 	{
 		getIndex(indices_index++) = vertex_index + 2;
 		getIndex(indices_index++) = vertex_index + 1;
-		getIndex(indices_index++) = vertex_index + 0;
-		getIndex(indices_index++) = vertex_index + 0;
 		getIndex(indices_index++) = vertex_index + 3;
-		getIndex(indices_index++) = vertex_index + 2;
+		getIndex(indices_index++) = vertex_index + 3;
+		getIndex(indices_index++) = vertex_index + 1;
+		getIndex(indices_index++) = vertex_index + 0;
 
 		getVertex(vertex_index).position = vec2(c.position.x, c.position.y);
 		getVertex(vertex_index).uv = vec2(c.texture_coordinate.x, c.texture_coordinate.w);

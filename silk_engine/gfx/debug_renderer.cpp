@@ -55,17 +55,15 @@ void DebugRenderer::InstancedRendererBase::update()
 		if (instance_batch.needs_update && instance_batch.instance_count)
 		{
 			instance_batch.needs_update = false;
-			if (!any_needs_update)
-				RenderContext::getLogicalDevice().wait();
+			//if (!any_needs_update)
+			//	RenderContext::getLogicalDevice().wait();
 			any_needs_update = true;
 			draw_commands[i].instanceCount = instance_batch.instance_count;
 			draw_commands[i].firstIndex = instance_batch.first_index;
 			draw_commands[i].indexCount = instance_batch.index_count;
-			if (!instance_batch.instance_buffer->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size()))
-			{
+			if (instance_batch.instance_data.size() > instance_batch.instance_buffer->getSize())
 				instance_batch.instance_buffer->resize(instance_batch.instance_data.size() * 2);
-				instance_batch.instance_buffer->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size());
-			}
+			instance_batch.instance_buffer->setData(instance_batch.instance_data.data(), instance_batch.instance_data.size());
 		}
 	}
 
@@ -86,7 +84,7 @@ void DebugRenderer::InstancedRendererBase::render()
 
 DebugRenderer::Renderable DebugRenderer::InstancedRendererBase::createInstance(const shared<Mesh>& mesh, uint32_t first_index, uint32_t index_count, const void* instance_data, size_t instance_data_size, size_t image_index_offset, const shared<GraphicsPipeline>& pipeline, const std::vector<shared<Image>>& images)
 {
-	size_t hash = size_t(mesh.get()) ^ size_t(pipeline.get()) ^ first_index ^ (size_t(index_count) << 32);
+	size_t hash = size_t(mesh.get()) ^ size_t(pipeline.get()) ^ size_t(first_index) ^ (size_t(index_count) << 32);
 	size_t instance_batch_index = instance_batches.size();
 	size_t instance_data_index = 0;
 	bool need_new_instance_batch = true;
@@ -118,7 +116,7 @@ DebugRenderer::Renderable DebugRenderer::InstancedRendererBase::createInstance(c
 	}
 
 	uint32_t image_index = 0;
-	if (images.size())
+	if (image_index_offset != std::numeric_limits<size_t>::max() && images.size())
 	{
 		image_index = instance_batches[instance_batch_index].instance_images.add(images);
 		SK_VERIFY(image_index != UINT32_MAX, "Instance has too much images");
@@ -280,11 +278,11 @@ void DebugRenderer::update(Camera* camera)
 		global_uniform_data.camera_position = camera->position;
 		global_uniform_data.camera_direction = camera->direction;
 	}
-	global_uniform_data.projection_view2D = math::ortho(0.0f, (float)Window::getActive().getWidth(), 0.0f, (float)Window::getActive().getHeight(), 0.0f, 1.0f);
+	global_uniform_data.projection_view2D = math::ortho(0.0f, (float)Window::get().getWidth(), 0.0f, (float)Window::get().getHeight(), 0.0f, 1.0f);
 	global_uniform_data.delta_time = Time::dt;
 	global_uniform_data.time = Time::runtime;
 	global_uniform_data.frame = Time::frame;
-	global_uniform_data.resolution = uvec2(Window::getActive().getWidth(), Window::getActive().getHeight());
+	global_uniform_data.resolution = uvec2(Window::get().getWidth(), Window::get().getHeight());
 	global_uniform_data.lights = lights;
 	global_uniform_buffer->setData(&global_uniform_data, sizeof(GlobalUniformData));
 
@@ -302,7 +300,7 @@ void DebugRenderer::render()
 
 void DebugRenderer::triangle(float x, float y, float width, float height)
 {
-	draw(graphics_pipeline_2D, Mesh::get("Triangle"), x, y, width, height);
+	draw2D(Mesh::get("Triangle"), x, y, width, height);
 }
 
 void DebugRenderer::triangle(float x, float y, float size)
@@ -312,17 +310,17 @@ void DebugRenderer::triangle(float x, float y, float size)
 
 void DebugRenderer::triangle(float x1, float y1, float x2, float y2, float x3, float y3)
 {
-	draw(graphics_pipeline_2D, makeShared<Mesh>(TriangleMesh(x1, y1, x2, y2, x3, y3)), 0, 0, 1, 1);
+	draw2D(makeShared<Mesh>(TriangleMesh(x1, y1, x2, y2, x3, y3)), 0, 0, 1, 1);
 }
 
 void DebugRenderer::rectangle(float x, float y, float width, float height)
 {
-	draw(graphics_pipeline_2D, Mesh::get("Rectangle"), x, y, width, height);
+	draw2D(Mesh::get("Rectangle"), x, y, width, height);
 }
 
 void DebugRenderer::roundedRectangle(float x, float y, float width, float height)
 {
-	draw(graphics_pipeline_2D, Mesh::get("Rounded Rectangle"), x, y, width, height);
+	draw2D(Mesh::get("Rounded Rectangle"), x, y, width, height);
 }
 
 void DebugRenderer::square(float x, float y, float size)
@@ -332,17 +330,17 @@ void DebugRenderer::square(float x, float y, float size)
 
 void DebugRenderer::roundedSquare(float x, float y, float size)
 {
-	draw(graphics_pipeline_2D, Mesh::get("Rounded Rectangle"), x, y, size, size);
+	draw2D(Mesh::get("Rounded Rectangle"), x, y, size, size);
 }
 
 void DebugRenderer::ellipse(float x, float y, float width, float height)
 {
-	draw(graphics_pipeline_2D, Mesh::get("Circle"), x, y, width, height);
+	draw2D(Mesh::get("Circle"), x, y, width, height);
 }
 
 void DebugRenderer::ellipseOutline(float x, float y, float width, float height)
 {
-	draw(graphics_pipeline_2D, Mesh::get("Circle Outline"), x, y, width, height);
+	draw2D(Mesh::get("Circle Outline"), x, y, width, height);
 }
 
 void DebugRenderer::circle(float x, float y, float radius)
@@ -357,7 +355,7 @@ void DebugRenderer::circleOutline(float x, float y, float radius)
 
 void DebugRenderer::line(const std::vector<vec2>& points, float width)
 {
-	draw(graphics_pipeline_2D, makeShared<Mesh>(LineMesh(points, width)), 0, 0, 1, 1);
+	draw2D(makeShared<Mesh>(LineMesh(points, width)), 0, 0, 1, 1);
 }
 
 void DebugRenderer::line(float x1, float y1, float x2, float y2, float width)
@@ -365,7 +363,7 @@ void DebugRenderer::line(float x1, float y1, float x2, float y2, float width)
 	float l = sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 	float dx = (x2 - x1) / l;
 	float dy = (y2 - y1) / l;
-	draw(graphics_pipeline_2D, Mesh::get("Rectangle"), {
+	draw2D(Mesh::get("Rectangle"), {
 			dx * l, dy * l, 0, 0,
 			-dy * width, dx * width, 0, 0,
 			0, 0, 1, 0,
@@ -375,71 +373,71 @@ void DebugRenderer::line(float x1, float y1, float x2, float y2, float width)
 
 void DebugRenderer::bezier(float x1, float y1, float px, float py, float x2, float y2, float width)
 {
-	draw(graphics_pipeline_2D, makeShared<Mesh>(BezierMesh(x1, y1, px, py, x2, y2, 64u, width)), 0, 0, 1, 1);
+	draw2D(makeShared<Mesh>(BezierMesh(x1, y1, px, py, x2, y2, 64u, width)), 0, 0, 1, 1);
 }
 
 void DebugRenderer::bezier(float x1, float y1, float px1, float py1, float px2, float py2, float x2, float y2, float width)
 {
-	draw(graphics_pipeline_2D, makeShared<Mesh>(BezierMesh(x1, y1, px1, py1, px2, py2, x2, y2, 64u, width)), 0, 0, 1, 1);
+	draw2D(makeShared<Mesh>(BezierMesh(x1, y1, px1, py1, px2, py2, x2, y2, 64u, width)), 0, 0, 1, 1);
 }
 
 void DebugRenderer::text(const std::string& text, float x, float y, float width, float height)
 {
 	active.images = { active.font->getAtlas() };
-	draw(graphics_pipeline_2D, makeShared<Mesh>(TextMesh(text, 64, active.font)), x, y, width, height);
+	draw2D(makeShared<Mesh>(TextMesh(text, active.font)), x, y, width, height);
 }
 
 void DebugRenderer::text(const std::string& text, float x, float y, float size)
 {
 	active.images = { active.font->getAtlas() };
-	draw(graphics_pipeline_2D, makeShared<Mesh>(TextMesh(text, 32, active.font)), x, y, size, size);
+	draw2D(makeShared<Mesh>(TextMesh(text, active.font)), x, y, size, size);
 }
 
 void DebugRenderer::image(const shared<Image>& image, float x, float y, float width, float height)
 {
 	active.images = { image };
-	draw(graphics_pipeline_2D, Mesh::get("Rectangle"), x, y, width, height);
+	draw2D(Mesh::get("Rectangle"), x, y, width, height);
 }
 
 void DebugRenderer::image(const shared<Image>& image, float x, float y, float size)
 {
 	active.images = { image };
-	draw(graphics_pipeline_2D, Mesh::get("Rectangle"), x, y, size, size);
+	draw2D(Mesh::get("Rectangle"), x, y, size, size);
 }
 
 void DebugRenderer::mesh(const shared<Mesh>& mesh, float x, float y, float width, float height)
 {
-	draw(graphics_pipeline_2D, mesh, x, y, width, height);
+	draw2D(mesh, x, y, width, height);
 }
 
 void DebugRenderer::tetrahedron(float x, float y, float z, float size)
 {
-	draw(graphics_pipeline_3D, Mesh::get("Tetrahedron"), x, y, z, size, size, size);
+	draw3D(Mesh::get("Tetrahedron"), x, y, z, size, size, size);
 }
 
 void DebugRenderer::cube(float x, float y, float z, float size)
 {
-	draw(graphics_pipeline_3D, Mesh::get("Cube"), x, y, z, size, size, size);
+	draw3D(Mesh::get("Cube"), x, y, z, size, size, size);
 }
 
 void DebugRenderer::cuboid(float x, float y, float z, float width, float height, float depth)
 {
-	draw(graphics_pipeline_3D, Mesh::get("Cube"), x, y, z, width, height, depth);
+	draw3D(Mesh::get("Cube"), x, y, z, width, height, depth);
 }
 
 void DebugRenderer::sphere(float x, float y, float z, float radius)
 {
-	draw(graphics_pipeline_3D, Mesh::get("Sphere"), x, y, z, radius, radius, radius);
+	draw3D(Mesh::get("Sphere"), x, y, z, radius, radius, radius);
 }
 
 void DebugRenderer::ellipsoid(float x, float y, float z, float width, float height, float depth)
 {
-	draw(graphics_pipeline_3D, Mesh::get("Sphere"), x, y, z, width, height, depth);
+	draw3D(Mesh::get("Sphere"), x, y, z, width, height, depth);
 }
 
 void DebugRenderer::mesh(const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
 {
-	draw(graphics_pipeline_3D, mesh, x, y, z, width, height, depth);
+	draw3D(mesh, x, y, z, width, height, depth);
 }
 
 void DebugRenderer::model(const shared<Model>& model, float x, float y, float z, float width, float height, float depth)
@@ -469,45 +467,51 @@ void DebugRenderer::model(const shared<Model>& model, float x, float y, float z,
 }
 #pragma endregion
 
-void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const mat4& transform)
+void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, const void* instance_data, size_t instance_data_size, uint32_t image_index_offset, const std::vector<shared<Image>>& images)
+{
+	immediate_render_context.createInstance(mesh, 0, mesh->getIndexCount(), instance_data, instance_data_size, image_index_offset, graphics_pipeline, images);
+}
+
+void DebugRenderer::draw3D(const shared<Mesh>& mesh, const mat4& transform)
 {
 	InstanceData3D data{};
 	data.transform = transform;
 	data.color = active.color;
 	if (active.transformed)
 		data.transform *= active.transform;
-	immediate_render_context.createInstance(mesh, 0, mesh->getIndexCount(), &data, sizeof(data), offsetof(data, image_index), graphics_pipeline, active.images);
+	draw(graphics_pipeline_3D, mesh, &data, sizeof(data), offsetof(data, image_index), active.images);
 }
 
-void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
+void DebugRenderer::draw3D(const shared<Mesh>& mesh, float x, float y, float z, float width, float height, float depth)
 {
-	InstanceData3D data{};
-	data.transform = {
+	draw3D(mesh, {
 		width, 0, 0, 0,
 		0, height, 0, 0,
 		0, 0, depth, 0,
 		x, y, z, 1
-	};
+	});
+}
+
+void DebugRenderer::draw2D(const shared<Mesh>& mesh, const mat4& transform)
+{
+	InstanceData2D data{};
+	data.transform = transform;
+	data.transform[3][3] = active.depth;
 	data.color = active.color;
 	if (active.transformed)
 		data.transform *= active.transform;
-	immediate_render_context.createInstance(mesh, 0, mesh->getIndexCount(), &data, sizeof(data), offsetof(data, image_index), graphics_pipeline, active.images);
+	draw(graphics_pipeline_2D, mesh, &data, sizeof(data), offsetof(data, image_index), active.images);
+	active.depth += 1e-8;
 }
 
-void DebugRenderer::draw(const shared<GraphicsPipeline>& graphics_pipeline, const shared<Mesh>& mesh, float x, float y, float width, float height)
+void DebugRenderer::draw2D(const shared<Mesh>& mesh, float x, float y, float width, float height)
 {
-	InstanceData2D data{};
-	data.transform = {
+	draw2D(mesh, {
 		width, 0, 0, 0,
 		0, height, 0, 0,
 		0, 0, 1, 0,
 		x, y, active.depth, 1
-	};
-	data.color = active.color;
-	if (active.transformed)
-		data.transform *= active.transform;
-	immediate_render_context.createInstance(mesh, 0, mesh->getIndexCount(), &data, sizeof(data), offsetof(data, image_index), graphics_pipeline, active.images);
-	active.depth += std::numeric_limits<float>::epsilon();
+	});
 }
 
 Light* DebugRenderer::addLight(const Light& light)

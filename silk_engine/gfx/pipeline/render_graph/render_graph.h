@@ -7,9 +7,18 @@ class RenderPass;
 class SwapChain;
 class Semaphore;
 class CommandBuffer;
+class QueryPool;
 
 class RenderGraph
 {
+public:
+	struct Statistics
+	{
+		uint32_t vertex_invocations = 0;
+		uint32_t fragment_invocations = 0;
+		uint32_t compute_invocations = 0;
+	};
+
 public:
 	~RenderGraph();
 
@@ -33,7 +42,7 @@ public:
 	}
 
 	void build(const char* backbuffer = nullptr);
-	void render();
+	void render(Statistics* statistics = nullptr);
 	void resize(const SwapChain& swap_chain);
 
 	const shared<Image>& getAttachment(std::string_view resource_name) const;
@@ -45,6 +54,7 @@ private:
 	std::unordered_map<std::string_view, const Pass*> passes_map;
 	std::vector<Pass*> sorted_passes;
 	shared<RenderPass> render_pass = nullptr;
+	shared<QueryPool> query_pool = nullptr;
 	std::vector<unique<Resource>> resources;
 	std::unordered_map<std::string_view, const Resource*> resources_map;
 	shared<CommandBuffer> command_buffer = nullptr;

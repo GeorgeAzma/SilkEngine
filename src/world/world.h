@@ -11,18 +11,6 @@ class Camera;
 class World
 {
 public:
-	static Chunk::Coord toChunkCoord(const Chunk::Coord& position)
-	{ 
-		return Chunk::Coord(
-			(position.x < 0) ? ((position.x + 1 - Chunk::SIZE) / Chunk::SIZE) : (position.x / Chunk::SIZE),
-			(position.y < 0) ? ((position.y + 1 - Chunk::SIZE) / Chunk::SIZE) : (position.y / Chunk::SIZE),
-			(position.z < 0) ? ((position.z + 1 - Chunk::SIZE) / Chunk::SIZE) : (position.z / Chunk::SIZE)
-		); 
-	}
-	static Chunk::Coord toBlockCoord(const Chunk::Coord& position) { return (Chunk::DIM + (position % Chunk::DIM)) % Chunk::DIM; }
-	static Chunk::Coord toWorldCoord(const Chunk::Coord& position) { return position * Chunk::DIM; }
-
-public:
 	World();
 
 	void update();

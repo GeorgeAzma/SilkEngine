@@ -15,14 +15,14 @@ void Application::run()
 {
     while (running)
     {
-        if (Window::getActive().isMinimized())
+        if (Window::get().isMinimized())
             glfwWaitEvents();
         else
             glfwPollEvents();
             
         update();
 
-        Window::getActive().update();
+        Window::get().update();
         Joystick::getActive().update();
     }
     RenderContext::getLogicalDevice().wait();
@@ -30,7 +30,7 @@ void Application::run()
 
 void Application::update()
 {
-    if (!running || Window::getActive().isMinimized())
+    if (!running || Window::get().isMinimized())
         return;
 
     onUpdate();

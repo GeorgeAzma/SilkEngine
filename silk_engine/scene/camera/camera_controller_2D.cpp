@@ -7,7 +7,7 @@
 
 void CameraController2D::onCreate()
 {
-	Window::getActive().setCursorMode(CursorMode::LOCKED);
+	Window::get().setCursorMode(CursorMode::LOCKED);
 }
 
 void CameraController2D::onUpdate()

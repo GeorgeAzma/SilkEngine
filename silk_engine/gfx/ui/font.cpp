@@ -55,7 +55,7 @@ Font::Font(const fs::path& file, uint32_t size)
 	RawImage texture_atlas_bitmap{};
 	texture_atlas_bitmap.width = width;
 	texture_atlas_bitmap.height = height;
-	texture_atlas_bitmap.channels = 1;
+	texture_atlas_bitmap.channels = 4;
 	texture_atlas_bitmap.allocate();
 
 	int origin_x = 0;
@@ -89,7 +89,16 @@ Font::Font(const fs::path& file, uint32_t size)
 		characters[i].texture_coordinate.w = (origin_y + face->glyph->bitmap.rows) / (float)height;		
 
 		for (size_t j = 0; j < face->glyph->bitmap.rows; ++j)
-			memcpy(texture_atlas_bitmap.pixels.data() + (origin_x + (j + origin_y) * width), face->glyph->bitmap.buffer + j * face->glyph->bitmap.width, face->glyph->bitmap.width);
+		{
+			for (size_t k = 0; k < face->glyph->bitmap.width; ++k)
+			{
+				size_t off = (origin_x + k + (j + origin_y) * width) * 4;
+				texture_atlas_bitmap.pixels[off + 0] = 255;
+				texture_atlas_bitmap.pixels[off + 1] = 255;
+				texture_atlas_bitmap.pixels[off + 2] = 255;
+				texture_atlas_bitmap.pixels[off + 3] = face->glyph->bitmap.buffer[j * face->glyph->bitmap.width + k];
+			}
+		}
 
 		row_height = std::max(row_height, face->glyph->bitmap.rows + padding);
 		origin_x += face->glyph->bitmap.width + 1 + padding;
@@ -98,7 +107,6 @@ Font::Font(const fs::path& file, uint32_t size)
 	Image::Props texture_atlas_props{};
 	texture_atlas_props.width = width;
 	texture_atlas_props.height = height;
-	texture_atlas_props.format = Image::Format::RED;
 	texture_atlas = makeShared<Image>(texture_atlas_props);
 	texture_atlas->setData(texture_atlas_bitmap.pixels.data());
 	texture_atlas->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

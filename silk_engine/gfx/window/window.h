@@ -324,9 +324,9 @@ private:
     SwapChain* swap_chain = nullptr;
 
 public:
-    static Window& getActive() { return *active_window; }
+    static Window& get() { return *active_window; }
 	static const std::unordered_set<Window*>& getWindows() { return windows; }
-	static void setActive(Window* window);
+	static void set(Window* window);
 
 private:
     static inline Window* active_window = nullptr;

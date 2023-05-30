@@ -43,7 +43,6 @@ MyApp::~MyApp()
     Dispatcher<FramebufferResizeEvent>::unsubscribe(*this, &MyApp::onFramebufferResize);
 
     scene = nullptr;
-    DebugRenderer::destroy();
     window = nullptr;
     RenderContext::destroy();
     GLFW::destroy();
@@ -52,14 +51,8 @@ MyApp::~MyApp()
 
 void MyApp::onUpdate()
 {
-    DebugRenderer::reset();
-
     if (Scene::getActive())
-    {
         Scene::getActive()->update();
-        DebugRenderer::update(Scene::getActive()->getMainCamera());
-    }
-
     RenderContext::update();
 }
 

@@ -101,11 +101,11 @@ void RenderContext::screenshot(const fs::path& file)
 	
 	logical_device->wait();
 
-	auto& img = Window::getActive().getSwapChain().getImages()[Window::getActive().getSwapChain().getImageIndex()];
+	auto& img = Window::get().getSwapChain().getImages()[Window::get().getSwapChain().getImageIndex()];
 
 	Image::Props props{};
-	props.width = Window::getActive().getWidth();
-	props.height = Window::getActive().getHeight();
+	props.width = Window::get().getWidth();
+	props.height = Window::get().getHeight();
 	props.format = Image::Format::RGBA;
 	props.usage = Image::TRANSFER_DST | Image::TRANSFER_SRC;
 	props.sampler_props.mipmap_mode = Sampler::MipmapMode::NONE;
@@ -118,7 +118,7 @@ void RenderContext::screenshot(const fs::path& file)
 
 	const fs::path folder = "res/images/screenshots";
 	fs::path file_path = folder / file;
-	stbi_write_png(file_path.string().c_str(), Window::getActive().getWidth(), Window::getActive().getHeight(), Image::getFormatChannels(Image::Format(Window::getActive().getSurface().getFormat())), data.data(), 0);
+	stbi_write_png(file_path.string().c_str(), Window::get().getWidth(), Window::get().getHeight(), Image::getFormatChannels(Image::Format(Window::get().getSurface().getFormat())), data.data(), 0);
 	SK_TRACE("Screenshot saved at {}", file_path);
 }
 

@@ -9,7 +9,7 @@ Window::Window()
 {
     data.window = this;
     if (!active_window)
-        setActive(this);
+        set(this);
 
     // Initializing input related stuff
     data.keys.resize(GLFW_KEY_LAST + 1);
@@ -593,7 +593,7 @@ void Window::close()
     Dispatcher<WindowCloseEvent>::post(*this);
 }
 
-void Window::setActive(Window* window)
+void Window::set(Window* window)
 {
     if (window == active_window)
         return;
