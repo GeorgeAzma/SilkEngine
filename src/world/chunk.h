@@ -15,7 +15,7 @@ public:
 	using Index = uint32_t;
 
 public:
-	static constexpr int32_t SIZE = 32;
+	static constexpr int32_t SIZE = 64;
 	static constexpr int32_t EDGE = SIZE - 1;
 	static constexpr int32_t AREA = SIZE * SIZE;
 	static constexpr int32_t VOLUME = SIZE * AREA;
@@ -27,8 +27,7 @@ public:
 	static constexpr int32_t SHARED_VOLUME = SHARED_SIZE * SHARED_AREA;
 	static constexpr Coord SHARED_DIM = Coord(SHARED_SIZE);
 
-	static constexpr size_t MAX_VERTICES = VOLUME * 4 * 6;
-	static constexpr size_t MAX_INDICES = VOLUME * 6 * 6;
+	static constexpr size_t MAX_VERTICES = VOLUME * 6 * 6 / 2;
 	static constexpr Chunk::Coord NEIGHBORS[26]
 	{
 		{ -1, -1, -1 }, //  0 ^
@@ -72,20 +71,21 @@ public:
 	Chunk(const Coord& position);
 	~Chunk();
 
-	void generate();
+	void generateStart();
+	void generateEnd();
 	void generateMesh();
 	void render() const;
 
 	void addNeighbor(size_t index, Chunk* neighbor) 
 	{ 
-		if (neighbors[index] || neighbor == nullptr)
+		if (neighbors[index] == neighbor)
 			return;
 		neighbors[index] = neighbor;
 		dirty = true;
 		neighbor->addNeighbor(getNeighborIndexFromCoord(position - neighbor->getPosition()), this);
 	}
 
-	std::vector<Chunk::Coord> getMissingNeighborLocations() const
+	std::vector<Chunk::Coord> getMissingAdjacentNeighborLocations() const
 	{
 		std::vector<Chunk::Coord> missing_neighbors;
 		for (size_t i = 0; i < 6; ++i)
@@ -94,12 +94,13 @@ public:
 		return missing_neighbors;
 	}
 
+	bool isNeighborValid(size_t index) const { return neighbors[index] && neighbors[index]->blocks.size() == SHARED_VOLUME; }
+
 	Block& at(uint32_t x, uint32_t y, uint32_t z) { return blocks[idx(x, y, z)]; }
 	Block at(uint32_t x, uint32_t y, uint32_t z) const { return blocks[idx(x, y, z)]; }
 	const Coord& getPosition() const { return position; }
 	const shared<Buffer>& getVertexBuffer() const { return vertex_buffer; }
 	uint32_t getVertexCount() const { return vertex_count; }
-	uint32_t getIndexCount() const { return index_count; }
 	Block getFill() const { return fill; }
 
 	bool operator==(const Chunk& other) const { return position == other.position; }
@@ -131,13 +132,15 @@ private:
 		return (side1 && side2) ? 0 : 3 - (side1 + side2 + corner);
 	}
 
+public:
+	bool visible = true;
+
 private:
 	Coord position = Coord(0);
 	std::vector<Block> blocks = {}; 
 	uint32_t vertex_count = 0;
-	uint32_t index_count = 0;
 	shared<Buffer> vertex_buffer = nullptr;
-	shared<Buffer> index_buffer = nullptr;
+	shared<Buffer> block_buffer = nullptr;
 	shared<Material> gen_material = nullptr;
 	std::array<Chunk*, 26> neighbors = {};
 	bool dirty = true;

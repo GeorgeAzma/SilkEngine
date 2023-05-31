@@ -45,6 +45,7 @@ GraphicsPipeline::GraphicsPipeline()
 
 	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 	multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+	multisampling.minSampleShading = 1.0f;
 
 	ci.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 }
@@ -178,6 +179,12 @@ GraphicsPipeline& GraphicsPipeline::setAlphaBlendOp(BlendOp blend_op)
 GraphicsPipeline& GraphicsPipeline::setColorWriteMask(ColorComponent mask)
 {
 	color_blend_attachment.colorWriteMask = VkColorComponentFlags(mask);
+	return *this;
+}
+
+GraphicsPipeline& GraphicsPipeline::setMinSampleShading(float min_sample_shading)
+{
+	multisampling.minSampleShading = min_sample_shading;
 	return *this;
 }
 

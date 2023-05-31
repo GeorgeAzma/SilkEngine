@@ -112,6 +112,7 @@ public:
 	GraphicsPipeline& setColorBlendOp(BlendOp blend_op);
 	GraphicsPipeline& setAlphaBlendOp(BlendOp blend_op);
 	GraphicsPipeline& setColorWriteMask(ColorComponent mask);
+	GraphicsPipeline& setMinSampleShading(float min_sample_shading);
 	GraphicsPipeline& setShader(const shared<Shader>& shader, const std::vector<Pipeline::Constant>& constants = {});
 
 	void build();

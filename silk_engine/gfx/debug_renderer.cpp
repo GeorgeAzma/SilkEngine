@@ -55,8 +55,8 @@ void DebugRenderer::InstancedRendererBase::update()
 		if (instance_batch.needs_update && instance_batch.instance_count)
 		{
 			instance_batch.needs_update = false;
-			//if (!any_needs_update)
-			//	RenderContext::getLogicalDevice().wait();
+			if (!any_needs_update)
+				RenderContext::getLogicalDevice().wait();
 			any_needs_update = true;
 			draw_commands[i].instanceCount = instance_batch.instance_count;
 			draw_commands[i].firstIndex = instance_batch.first_index;

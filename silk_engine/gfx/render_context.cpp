@@ -30,6 +30,7 @@ void RenderContext::init(std::string_view app_name)
 	logical_device = new LogicalDevice(*physical_device, 
 		{ 
 			SAMPLER_ANISOTROPY, 
+			SAMPLE_RATE_SHADING,
 			OCCLUSION_QUERY_PRECISE, 
 			MULTI_DRAW_INDIRECT, 
 			FRAGMENT_STORES_AND_ATOMICS,  

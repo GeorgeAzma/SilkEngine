@@ -4,6 +4,7 @@
 #include "silk_engine/scene/light.h"
 #include "silk_engine/scene/instance_images.h"
 #include "silk_engine/scene/camera/camera.h"
+#include "silk_engine/gfx/buffers/buffer.h"
 
 class Image;
 class Font;
@@ -169,12 +170,25 @@ private:
 	public:
 		void clear()
 		{
-			for (auto& instance_batch : instance_batches)
-				instance_batch.clear();
+			bool any_needs_update = false;
+			for (int i = 0; i < instance_batches.size(); ++i)
+			{
+				bool should_remove = instance_batches[i].instance_count < 16;
+				instance_batches[i].clear();
+				if (should_remove)
+				{
+					std::swap(instance_batches[i], instance_batches.back());
+					std::swap(draw_commands[i], draw_commands.back());
+					std::swap(instances[i], instances.back());
+					instance_batches.pop_back();
+					draw_commands.pop_back();
+					instances.pop_back(); 
+					--i;
+					any_needs_update = true;
+				}
+			}
 			for (auto& instance : instances)
 				instance.clear();
-			instance_batches.clear();
-			instances.clear();
 		}
 
 		void createInstance(const shared<Mesh>& mesh, uint32_t first_index, uint32_t index_count, const void* instance_data, size_t instance_data_size, size_t image_index_offset = std::numeric_limits<size_t>::max(), const shared<GraphicsPipeline>& pipeline = nullptr, const std::vector<shared<Image>>& images = {});

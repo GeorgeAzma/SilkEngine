@@ -21,7 +21,7 @@ void MyScene::onStart()
     geometry.setRenderCallback([&](const RenderGraph& render_graph) 
     { 
         world->render();
-        DebugRenderer::render(); 
+        //DebugRenderer::render(); 
     });
     render_graph->build("Color");
     RenderContext::setRenderGraph(render_graph);
@@ -40,14 +40,14 @@ void MyScene::onUpdate()
     if (c())
         Window::get().setTitle(std::format("Vulkan - {} FPS ({:.4} ms) | {}x{}", int(1.0 / Time::dt), (Time::dt * 1000), Window::get().getWidth(), Window::get().getHeight()));
 
-    static RenderGraph::Statistics stats{};
 
-    DebugRenderer::reset();
+    //DebugRenderer::reset();
     world->update();
-    DebugRenderer::color(Colors::WHITE);
-    DebugRenderer::text(std::string("Vertex Invocations: ") + std::to_string(stats.vertex_invocations), 16.0f, 64.0f, 24.0f);
-    DebugRenderer::text(std::string("Fragment Invocations: ") + std::to_string(stats.fragment_invocations), 16.0f, 100.0f, 24.0f);
-    DebugRenderer::text(std::string("Compute Invocations: ") + std::to_string(stats.compute_invocations), 16.0f, 136.0f, 24.0f);
+    //DebugRenderer::color(Colors::WHITE);
+    static RenderGraph::Statistics stats{};
+    //DebugRenderer::text(std::string("Vertex Invocations: ") + std::to_string(stats.vertex_invocations), 16.0f, 64.0f, 24.0f);
+    //DebugRenderer::text(std::string("Fragment Invocations: ") + std::to_string(stats.fragment_invocations), 16.0f, 100.0f, 24.0f);
+    //DebugRenderer::text(std::string("Compute Invocations: ") + std::to_string(stats.compute_invocations), 16.0f, 136.0f, 24.0f);
     render_graph->render(&stats);
     DebugRenderer::update(Scene::getActive()->getMainCamera());
 }

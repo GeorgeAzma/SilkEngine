@@ -62,7 +62,7 @@ shared<DescriptorPool> DescriptorAllocator::getPool()
 	sizes.reserve(descriptor_sizes.size());
 	for (auto&& [type, size] : descriptor_sizes)
 		sizes.emplace_back(type, size);
-	shared<DescriptorPool> pool = makeShared<DescriptorPool>(1024, sizes);
+	shared<DescriptorPool> pool = makeShared<DescriptorPool>(64, sizes);
 	used_pools.push_back(pool);
 	return pool;
 }

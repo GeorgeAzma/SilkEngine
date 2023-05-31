@@ -81,7 +81,7 @@ uint8_t Image::getFormatChannels(Format format)
 	case Format::STENCIL:
 	case Format::DEPTH16_STENCIL:
 	case Format::DEPTH24_STENCIL:
-	case Format::DEPTH_STENCIL:  //NOTE: Might be 2, probably not gonna use this anyways tho
+	case Format::DEPTH_STENCIL:  // NOTE: Might be 2, probably not gonna use this anyways tho
 		return 1;
 	}
 	return 4;
@@ -396,6 +396,8 @@ void Image::create()
 		ci.arrayLayers = props.layers;
 		// Multisampled images are never mip mapped
 		mip_levels = (props.samples != VK_SAMPLE_COUNT_1_BIT || props.sampler_props.mipmap_mode == Sampler::MipmapMode::NONE) ? 1 : calculateMipLevels(props.width, props.height, props.depth);
+		if (mip_levels > 1)
+			ci.usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		ci.mipLevels = mip_levels;
 		ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		ci.samples = props.samples;

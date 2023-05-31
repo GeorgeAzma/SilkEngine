@@ -44,7 +44,7 @@ Instance::Instance(std::string_view app_name)
     required_validation_layers = debug_messenger->getRequiredValidationLayers();
 #endif
 
-    VkValidationFeatureEnableEXT enables[] = { VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT };
+    VkValidationFeatureEnableEXT enables[] = { VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT, VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT };
     VkValidationFeaturesEXT features = {};
     features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
     features.enabledValidationFeatureCount = countof(enables);

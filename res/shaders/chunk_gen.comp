@@ -1,4 +1,4 @@
-layout(local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
 layout(set = 0, binding = 0) writeonly buffer Blocks
 {
@@ -102,8 +102,58 @@ float fbm(vec2 p, int octaves)
     {
       n += noise(p) * a;
       norm += a;
-      p *= 2.0;
-      a *= 0.5;
+      p *= 1.75;
+      a *= 0.6;
+    }
+    return n / norm;
+}
+
+const mat2 myt = mat2(.12121212, .13131313, -.13131313, .12121212);
+const vec2 mys = vec2(1e4, 1e6);
+
+vec2 rhash(vec2 uv) 
+{
+  uv *= myt;
+  uv *= mys;
+  return fract(fract(uv / mys) * uv);
+}
+
+vec3 hash(vec3 p) 
+{
+  return fract(sin(vec3(dot(p, vec3(1.0, 57.0, 113.0)),
+                        dot(p, vec3(57.0, 113.0, 1.0)),
+                        dot(p, vec3(113.0, 1.0, 57.0)))) *
+               43758.5453);
+}
+
+float voronoi(const in vec2 point, float pwr) 
+{
+  vec2 p = floor(point);
+  vec2 f = fract(point);
+  float res = 0.0;
+  for (int j = -1; j <= 1; j++) 
+  {
+    for (int i = -1; i <= 1; i++) 
+    {
+      vec2 b = vec2(i, j);
+      vec2 r = vec2(b) - f + rhash(p + b);
+      res += 1. / pow(dot(r, r), 8.);
+    }
+  }
+  return pow(1024. * pwr * pwr * pwr / pow(res * 0.00625, 4.0), 0.0625);
+}
+
+float voronoiFbm(vec2 p, int octaves)
+{
+    float n = 0.0;
+    float a = 1.0;
+    float norm = 0.0;
+    for(int i = 0; i < octaves; ++i)
+    {
+      n += voronoi(p, a) * a;
+      norm += a;
+      p *= 1.85;
+      a *= 0.6;
     }
     return n / norm;
 }
@@ -115,18 +165,22 @@ void main()
 	const int z = int(gl_GlobalInvocationID.z);
     
     int y_level = chunk_position.y * SIZE + y;
-    float h = fbm(vec2(chunk_position.x * SIZE + x, chunk_position.z * SIZE + z) * 0.005, 8) * 0.5 + 0.5;
+    vec2 p = vec2(chunk_position.x * SIZE + x, chunk_position.z * SIZE + z) * 0.0075;
+    float n = fbm(p * 0.25, 4);
+    float h = voronoiFbm(p * 0.25, 6);
     h *= h;
+    h += smoothstep(0.0, 1.0, smoothstep(0.0, 1.0, n)) * 0.5;
+    h /= 1.5;
     int height = int(128.0 * h);
     int delta = height - y_level;
 	if (delta >= 0)
 	{
-        if (delta == 1)
-            BLOCK = SNOW;
-        else if (delta >= 2)
-            BLOCK = SNOW;
+        if (delta == 0)
+            BLOCK = GRASS;
+        else if (delta >= 1)
+            BLOCK = DIRT;
         else
-            BLOCK = SNOW;
+            BLOCK = STONE;
 		fill = NONE;
 	}
 	else

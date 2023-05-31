@@ -173,7 +173,7 @@ void RenderGraph::render(Statistics* statistics)
 
 	if (statistics)
 	{
-		std::vector<uint32_t> results = query_pool->getResults(0, true);
+		std::vector<uint32_t> results = query_pool->getResults();
 		memcpy(statistics, results.data(), results.size() * sizeof(uint32_t));
 	}
 

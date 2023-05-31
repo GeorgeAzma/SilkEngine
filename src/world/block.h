@@ -32,13 +32,8 @@ static constexpr const char* block_names[TOTAL_BLOCKS]
 	"SNOW"
 };
 
-struct BlockFlag
-{
-	uint32_t solid : 1;
-};
-
 // SOLID
-static constexpr uint32_t block_flags[TOTAL_BLOCKS]
+static constexpr uint32_t block_solid[TOTAL_BLOCKS]
 {
 	/* AIR		 */  0,
 	/* STONE	 */  1,
@@ -64,12 +59,6 @@ static constexpr uint32_t block_texture_indices[TOTAL_BLOCKS * 6]
 	/* LEAF		 */  9, 9, 9, 9, 9, 9,
 	/* OAK_LOG	 */  11, 10, 10, 10, 10, 11,
 	/* SNOW		 */  12, 12, 12, 12, 12, 12
-};
-
-struct BlockInfo
-{
-	static constexpr uint32_t isSolid(Block block) { return block_flags[ecast(block)] & 1; }
-	static constexpr uint32_t getTextureIndex(Block block, uint32_t face) { return block_texture_indices[ecast(block) * 6 + face]; }
 };
 
 static inline const auto block_textures = makeArray<fs::path>
