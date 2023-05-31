@@ -163,6 +163,14 @@ void main()
 	const int x = int(gl_GlobalInvocationID.x);
 	const int y = int(gl_GlobalInvocationID.y);
 	const int z = int(gl_GlobalInvocationID.z);
+#if 0
+    fill = NONE;
+    if ((x + y % 2 + z % 2 + chunk_position.z / 100000) % 2 == 0)
+        BLOCK = STONE;
+    else
+        BLOCK = AIR;
+    return;
+#endif
     
     int y_level = chunk_position.y * SIZE + y;
     vec2 p = vec2(chunk_position.x * SIZE + x, chunk_position.z * SIZE + z) * 0.0075;

@@ -230,6 +230,8 @@ void Chunk::generateMesh()
 
                     uint32_t face_data = (face << 2) | (idx << 5) | (block_texture_indices[size_t(block) * 6 + face] << 23);
                     uint32_t face12 = face * 12;
+#define AO 1
+#if AO
                     Vertex ao0 = getAO(block_solid[ecast(blocks[i + ao_table[face12 +  0]])],
                                        block_solid[ecast(blocks[i + ao_table[face12 +  1]])],
                                        block_solid[ecast(blocks[i + ao_table[face12 +  2]])]);
@@ -261,6 +263,14 @@ void Chunk::generateMesh()
                         vertices[vertex_count++] = 3 | face_data | (ao3 << 32);
                         vertices[vertex_count++] = 2 | face_data | (ao2 << 32);
                     }
+#else
+                    vertices[vertex_count++] = 2 | face_data | (3ui64 << 32);
+                    vertices[vertex_count++] = 1 | face_data | (3ui64 << 32);
+                    vertices[vertex_count++] = 3 | face_data | (3ui64 << 32);
+                    vertices[vertex_count++] = 3 | face_data | (3ui64 << 32);
+                    vertices[vertex_count++] = 1 | face_data | (3ui64 << 32);
+                    vertices[vertex_count++] = 0 | face_data | (3ui64 << 32);
+#endif
                 }
             }
         }
@@ -268,10 +278,10 @@ void Chunk::generateMesh()
     //vertex_count = vertices.size();
     if (vertex_count)
     {
-        //static std::mutex mux;
-        //std::scoped_lock lock(mux);
+        static std::mutex mux;
+        std::scoped_lock lock(mux);
         size_t vertices_size = vertex_count * sizeof(Vertex);
-        if (!vertex_buffer || vertices_size > vertex_buffer->getSize())
+        if (!vertex_buffer || vertices_size != vertex_buffer->getSize())
             vertex_buffer = makeShared<Buffer>(vertices_size, Buffer::VERTEX | Buffer::TRANSFER_DST);
         vertex_buffer->setData(vertices.data());
     }

@@ -31,10 +31,14 @@ Framebuffer::Framebuffer(const SwapChain& swap_chain, const RenderPass& render_p
             image_props.allocation_props.preferred_device = Allocation::Device::GPU;
             image_props.allocation_props.priority = 1.0f;
             image_props.usage = Image::isDepthStencilFormat(Image::Format(attachment_desc.format)) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-            if (attachment_desc.samples != VK_SAMPLE_COUNT_1_BIT)
-                image_props.usage |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
-            else
-                image_props.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
+            // NOTE: Not sure if this is correct
+            if (attachment_desc.loadOp == VK_ATTACHMENT_LOAD_OP_DONT_CARE && attachment_desc.stencilLoadOp == VK_ATTACHMENT_LOAD_OP_DONT_CARE)
+            {
+                if (attachment_desc.storeOp == VK_ATTACHMENT_STORE_OP_DONT_CARE && attachment_desc.stencilStoreOp == VK_ATTACHMENT_STORE_OP_DONT_CARE)
+                    image_props.usage |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
+                else
+                    image_props.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
+            }
             if (render_pass.isInputAttachment(attachment))
                 image_props.usage |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
             

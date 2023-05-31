@@ -43,7 +43,7 @@ World::World()
 		.setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
-		.enableTag(GraphicsPipeline::EnableTag::SAMPLE_SHADING)
+		//.enableTag(GraphicsPipeline::EnableTag::SAMPLE_SHADING)
 		.setCullMode(GraphicsPipeline::CullMode::FRONT)
 		.setDepthCompareOp(GraphicsPipeline::CompareOp::LESS);
 	chunk_pipeline->build();
@@ -61,7 +61,7 @@ World::World()
 	ComputePipeline::add("Chunk Gen", makeShared<ComputePipeline>(makeShared<Shader>("chunk_gen", chunk_defines)));
 }
 
-#define MULTITHREAD 0
+#define MULTITHREAD 1
 
 void World::update()
 {
@@ -121,7 +121,7 @@ void World::update()
 		std::unordered_set<Chunk::Coord> queued_chunks;
 		if (!findChunk(chunk_origin))
 			queued_chunks.emplace(chunk_origin);
-		constexpr size_t max_queued_chunks = 16;
+		constexpr size_t max_queued_chunks = 8;
 		for (const auto& chunk : chunks)
 		{
 			if (distance2(vec3(chunk_origin), vec3(chunk->getPosition())) > (max_chunk_distance2 - 1.0f) || !isChunkVisible(chunk->getPosition()))

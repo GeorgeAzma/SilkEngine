@@ -12,7 +12,6 @@ class Chunk : NoCopy
 public:
 	using Coord = ivec3;
 	using Vertex = uint64_t;
-	using Index = uint32_t;
 
 public:
 	static constexpr int32_t SIZE = 64;

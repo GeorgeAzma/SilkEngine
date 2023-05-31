@@ -21,7 +21,6 @@ void ParticleSystem::init(VkRenderPass render_pass)
 
     shared<GraphicsPipeline> pipeline = makeShared<GraphicsPipeline>();
     pipeline->setShader(makeShared<Shader>("particle"))
-        .setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
         .setRenderPass(render_pass)
         .setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
         .enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
