@@ -41,6 +41,6 @@ private:
 	const shared<DescriptorSet>& getDescriptorSet(uint32_t set);
 
 private:
-	shared<Pipeline> pipeline;
-	std::unordered_map<uint32_t, shared<DescriptorSet>> descriptor_sets;
+	shared<Pipeline> pipeline = nullptr;
+	std::unordered_map<uint32_t, shared<DescriptorSet>> descriptor_sets = {};
 };

@@ -57,6 +57,7 @@ Shader::Stage::~Stage()
 bool Shader::Stage::compile(const Defines& defines)
 {
 	DebugTimer t(std::format("Compiling {}", file.filename()));
+	t.begin();
 	static shaderc::Compiler compiler;
 
 	if (module)
@@ -120,6 +121,8 @@ bool Shader::Stage::compile(const Defines& defines)
 	binary = std::vector<uint32_t>(compilation_result.cbegin(), compilation_result.cend());
 
 	createModule();
+	t.end();
+	t.print(t.getElapsed());
 
 	return true;
 }

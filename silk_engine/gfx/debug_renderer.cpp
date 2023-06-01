@@ -255,6 +255,9 @@ void DebugRenderer::destroy()
 	immediate_render_context.destroy();
 	active = {};
 	global_uniform_buffer = nullptr;
+	graphics_pipeline_2D = nullptr;
+	graphics_pipeline_3D = nullptr;
+	white_image = nullptr;
 }
 
 void DebugRenderer::reset()

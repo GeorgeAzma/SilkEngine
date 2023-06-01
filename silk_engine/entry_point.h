@@ -6,13 +6,20 @@ extern Application* createApplication();
 
 int Main(int argc, char** argv)
 {
-	Log::init();
-	Application::command_line_args = { argc, argv };
-	Application* app = createApplication();
-	if (app)
+	try
 	{
-		app->run();
-		delete app;
+		Log::init();
+		Application::command_line_args = { argc, argv };
+		Application* app = createApplication();
+		if (app)
+		{
+			app->run();
+			delete app;
+		}
+	}
+	catch (const std::exception& e)
+	{
+		SK_CRITICAL("Exception: {}", e.what());
 	}
 	return 0;
 }

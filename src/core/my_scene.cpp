@@ -56,5 +56,4 @@ void MyScene::onUpdate()
 void MyScene::onStop()
 {
     DebugRenderer::destroy();
-    render_graph = nullptr;
 }

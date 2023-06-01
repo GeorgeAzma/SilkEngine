@@ -200,18 +200,18 @@ void Chunk::generateMesh()
     /* (+1, +1, +1) */ if (isNeighborValid(25)) blocks[SHARED_VOLUME - 1] = neighbors[25]->at(0, 0, 0);
 
     thread_local std::vector<Vertex> vertices(MAX_VERTICES);
-    for (uint32_t y = 0; y < SIZE; ++y)
+    for (size_t y = 0; y < SIZE; ++y)
     {
-        for (uint32_t z = 0; z < SIZE; ++z)
+        for (size_t z = 0; z < SIZE; ++z)
         {
-            for (uint32_t x = 0; x < SIZE; ++x)
+            for (size_t x = 0; x < SIZE; ++x)
             {
-                uint32_t i = (y + 1) * SHARED_AREA + (z + 1) * SHARED_SIZE + (x + 1);
+                size_t i = (y + 1) * SHARED_AREA + (z + 1) * SHARED_SIZE + (x + 1);
                 Block& block = blocks[i];
                 if (block == Block::AIR)
                     continue;
 
-                Block neighboring_blocks[6] =
+                const Block neighboring_blocks[6] =
                 {
                     blocks[i - SHARED_AREA],
                     blocks[i - SHARED_SIZE],
@@ -221,13 +221,13 @@ void Chunk::generateMesh()
                     blocks[i + SHARED_AREA]
                 };
 
-                uint32_t idx = y * AREA + z * SIZE + x;
-                for (uint32_t face = 0; face < 6; ++face)
+                size_t idx = y * AREA + z * SIZE + x;
+                for (size_t face = 0; face < 6; ++face)
                 {
                     if (BLOCK_SOLID[ecast(neighboring_blocks[face])])
                         continue;
 
-                    Vertex face_data = (face << 2) | (idx << 5) | (BLOCK_TEXTURE_INDICES[size_t(block) * 6 + face] << 23);
+                    Vertex face_data = (face << 2) | (idx << 5) | (Vertex(BLOCK_TEXTURE_INDICES[size_t(block) * 6 + face]) << 23);
 
                     Vertex ao0 = getAO(BLOCK_SOLID[ecast(blocks[i + ao_table[face * 12 + 0]])],
                                        BLOCK_SOLID[ecast(blocks[i + ao_table[face * 12 + 1]])],
@@ -276,7 +276,7 @@ void Chunk::generateMesh()
     }
     else vertex_buffer = nullptr;
     t.end();
-    if (t.getSamples() >= 256)
+    if (t.getSamples() >= 64)
     {
         t.print(t.getAverage());
         t.reset();

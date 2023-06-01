@@ -55,6 +55,7 @@ void RenderContext::init(std::string_view app_name)
 
 void RenderContext::destroy()
 {
+	render_graph = nullptr;
 	Model::destroy();
 	Mesh::destroy();
 	Image::destroy();
@@ -68,6 +69,8 @@ void RenderContext::destroy()
 	delete pipeline_cache;
 	delete allocator;
 	command_queues.clear();
+	compute_command_queues.clear();
+	transfer_command_queues.clear();
 	delete logical_device;
 	delete physical_device;
 	delete instance;
