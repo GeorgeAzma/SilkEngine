@@ -528,7 +528,7 @@ void CommandBuffer::submit(VkQueueFlagBits queue_type, const std::vector<VkPipel
 	submit_info.pSignalSemaphores = signal_semaphores.data();
 	
 	if (!fence)
-		fence = makeShared<Fence>();
+		fence = makeShared<Fence>(); // TODO: Maybe think about creating fence pool (and other pools)?
 	RenderContext::getLogicalDevice().getQueue(queue_type).submit(submit_info, *fence);
 	*state = State::PENDING;
 }

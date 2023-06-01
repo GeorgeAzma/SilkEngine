@@ -7,11 +7,11 @@ Sampler::Sampler(const Props& props)
 {
 	VkSamplerCreateInfo ci{};
 	ci.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	ci.magFilter = props.mag_filter;
-	ci.minFilter = props.min_filter;
-	ci.addressModeU = props.u_wrap;
-	ci.addressModeV = props.v_wrap;
-	ci.addressModeW = props.w_wrap;
+	ci.magFilter = VkFilter(props.mag_filter);
+	ci.minFilter = VkFilter(props.min_filter);
+	ci.addressModeU = VkSamplerAddressMode(props.u_wrap);
+	ci.addressModeV = VkSamplerAddressMode(props.v_wrap);
+	ci.addressModeW = VkSamplerAddressMode(props.w_wrap);
 	if (props.anisotropy != 1.0f)
 	{
 		ci.anisotropyEnable = VK_TRUE;

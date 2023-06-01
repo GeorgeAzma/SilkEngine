@@ -80,7 +80,8 @@ public:
 		if (neighbors[index] == neighbor)
 			return;
 		neighbors[index] = neighbor;
-		dirty = true;
+		dirty = true; 
+		updateNeighboringBlocks(index);
 		neighbor->addNeighbor(getNeighborIndexFromCoord(position - neighbor->getPosition()), this);
 	}
 
@@ -93,10 +94,10 @@ public:
 		return missing_neighbors;
 	}
 
-	bool isNeighborValid(size_t index) const { return neighbors[index] && neighbors[index]->blocks.size() == SHARED_VOLUME; }
+	bool isNeighborValid(size_t index) const { return neighbors[index]; }
 
-	Block& at(uint32_t x, uint32_t y, uint32_t z) { return blocks[idx(x, y, z)]; }
-	Block at(uint32_t x, uint32_t y, uint32_t z) const { return blocks[idx(x, y, z)]; }
+	Block& at(uint32_t x, uint32_t y, uint32_t z) { return blocks.size() ? blocks[idx(x, y, z)] : fill; }
+	Block at(uint32_t x, uint32_t y, uint32_t z) const { return blocks.size() ? blocks[idx(x, y, z)] : fill; }
 	const Coord& getPosition() const { return position; }
 	const shared<Buffer>& getVertexBuffer() const { return vertex_buffer; }
 	uint32_t getVertexCount() const { return vertex_count; }
@@ -105,8 +106,11 @@ public:
 	bool operator==(const Chunk& other) const { return position == other.position; }
 	bool operator==(const Chunk::Coord& chunk_coord) const { return position == chunk_coord; }
 
+private:
+	void updateNeighboringBlocks(size_t index);
+
 public:
-	static uint32_t idx(uint32_t x, uint32_t y, uint32_t z) { return (y + 1) * SHARED_AREA + (z + 1) * SHARED_SIZE + (x + 1); }
+	static size_t idx(uint32_t x, uint32_t y, uint32_t z) { return (y + 1) * SHARED_AREA + (z + 1) * SHARED_SIZE + (x + 1); }
 
 	static uint32_t getNeighborIndexFromCoord(const Chunk::Coord& position)
 	{

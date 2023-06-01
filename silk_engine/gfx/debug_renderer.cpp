@@ -210,8 +210,8 @@ void DebugRenderer::init()
 	Image::Props image_props{};
 	image_props.width = 1;
 	image_props.height = 1;
-	image_props.sampler_props.min_filter = VK_FILTER_NEAREST;
-	image_props.sampler_props.mag_filter = VK_FILTER_NEAREST;
+	image_props.sampler_props.min_filter = Sampler::Filter::NEAREST;
+	image_props.sampler_props.mag_filter = Sampler::Filter::NEAREST;
 	image_props.sampler_props.anisotropy = 1.0f;
 	constexpr u8vec4 white(255);
 	white_image = makeShared<Image>(image_props);
@@ -227,8 +227,8 @@ void DebugRenderer::init()
 
 	image_props.width = 2;
 	image_props.height = 2;
-	image_props.sampler_props.u_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-	image_props.sampler_props.v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+	image_props.sampler_props.u_wrap = Sampler::Wrap::CLAMP_TO_EDGE;
+	image_props.sampler_props.v_wrap = Sampler::Wrap::CLAMP_TO_EDGE;
 	constexpr u8vec4 null_data[4] = { { 0, 0, 0, 255 }, { 255, 0, 255, 255 }, { 255, 0, 255, 255 }, { 0, 0, 0, 255 } };
 	auto null_image = makeShared<Image>(image_props);
 	null_image->setData(null_data);

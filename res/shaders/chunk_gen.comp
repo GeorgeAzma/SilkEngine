@@ -2,8 +2,8 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
 layout(set = 0, binding = 0) writeonly buffer Blocks
 {
-    uint blocks[SHARED_VOLUME];
     uint fill;
+    uint blocks[SHARED_VOLUME];
 };
 
 layout(push_constant) uniform PushConstant

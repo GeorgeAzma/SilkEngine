@@ -46,6 +46,8 @@ World::World()
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
 		//.enableTag(GraphicsPipeline::EnableTag::SAMPLE_SHADING)
+		.setPolygonMode(GraphicsPipeline::PolygonMode::LINE)
+		.setLineWidth(1.0f)
 		.setCullMode(GraphicsPipeline::CullMode::FRONT)
 		.setDepthCompareOp(GraphicsPipeline::CompareOp::LESS);
 	chunk_pipeline->build();
@@ -53,9 +55,11 @@ World::World()
 	material = makeShared<Material>(chunk_pipeline);
 
 	Image::Props props{};
-	props.sampler_props.mag_filter = VK_FILTER_NEAREST;
-	props.sampler_props.min_filter = VK_FILTER_NEAREST;
+	props.sampler_props.mag_filter = Sampler::Filter::NEAREST;
+	props.sampler_props.min_filter = Sampler::Filter::NEAREST;
 	props.sampler_props.mipmap_mode = Sampler::MipmapMode::LINEAR;
+	props.sampler_props.u_wrap = Sampler::Wrap::REPEAT;
+	props.sampler_props.v_wrap = Sampler::Wrap::REPEAT;
 	props.sampler_props.anisotropy = 0.0f;
 	texture_atlas = makeShared<Image>(BLOCK_TEXTURES, props);
 	texture_atlas->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -145,14 +149,15 @@ void World::update()
 		for (const auto& chunk : queued_chunks)
 		{
 			chunks.emplace_back(makeShared<Chunk>(chunk));
-			for (size_t i = 0; i < 26; ++i)
-				chunks.back()->addNeighbor(i, findChunk(chunk + Chunk::NEIGHBORS[i]));
 			chunks.back()->generateStart();
 		}
 		RenderContext::executeCompute();
 		for (size_t i = chunks.size() - queued_chunks.size(); i < chunks.size(); ++i)
 		{
-			chunks[i]->generateEnd();
+			const auto& chunk = chunks[i];
+			chunk->generateEnd();
+			for (size_t i = 0; i < 26; ++i)
+				chunk->addNeighbor(i, findChunk(chunk->getPosition() + Chunk::NEIGHBORS[i]));
 		}
 		t1.end();
 	}

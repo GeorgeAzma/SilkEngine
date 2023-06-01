@@ -3,20 +3,35 @@
 class Sampler
 {
 public:
-	enum class MipmapMode
+	enum class MipmapMode : std::underlying_type_t<VkSamplerMipmapMode>
 	{
 		NONE = 0, // This is used for image class to determine if using mipmapping or not
 		NEAREST = VK_SAMPLER_MIPMAP_MODE_NEAREST,
 		LINEAR = VK_SAMPLER_MIPMAP_MODE_LINEAR
 	};
 
+	enum class Wrap : std::underlying_type_t<VkSamplerAddressMode>
+	{
+		REPEAT = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+		MIRROR_REPEAT = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
+		CLAMP_TO_EDGE = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+		CLAMP_TO_BORDER = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+		MIRROR_CLAMP_TO_EDGE = VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
+	};
+
+	enum class Filter : std::underlying_type_t<VkFilter>
+	{
+		NEAREST = VK_FILTER_NEAREST,
+		LINEAR = VK_FILTER_LINEAR
+	};
+
 	struct Props
 	{
-		VkFilter min_filter = VK_FILTER_LINEAR;
-		VkFilter mag_filter = VK_FILTER_LINEAR;
-		VkSamplerAddressMode u_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-		VkSamplerAddressMode v_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-		VkSamplerAddressMode w_wrap = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		Filter min_filter = Filter::LINEAR;
+		Filter mag_filter = Filter::LINEAR;
+		Wrap u_wrap = Wrap::CLAMP_TO_EDGE;
+		Wrap v_wrap = Wrap::CLAMP_TO_EDGE;
+		Wrap w_wrap = Wrap::CLAMP_TO_EDGE;
 		MipmapMode mipmap_mode = MipmapMode::NONE;
 		float anisotropy = 1.0f; // 0.0f is max anisotropy level available
 	};
@@ -48,7 +63,7 @@ private:
 	{
 		size_t operator()(const Props& props) const
 		{
-			size_t result = props.min_filter ^ (props.mag_filter << 1) ^ (props.u_wrap << 4) ^ (props.v_wrap << 7) ^ (props.v_wrap << 10) ^ (size_t(props.mipmap_mode) << 12);
+			size_t result = size_t(props.min_filter) ^ (size_t(props.mag_filter) << 1) ^ (size_t(props.u_wrap) << 4) ^ (size_t(props.v_wrap) << 7) ^ (size_t(props.v_wrap) << 10) ^ (size_t(props.mipmap_mode) << 12);
 			return result ^ *(const uint32_t*)&props.anisotropy;
 		}
 	};

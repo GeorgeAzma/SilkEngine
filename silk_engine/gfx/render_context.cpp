@@ -96,14 +96,11 @@ void RenderContext::update()
 	frame = (frame + 1) % 3;
 }
 
-
 void RenderContext::screenshot(const fs::path& file)
 {
 	// TODO: Fix sync error (though this works)
 	if (!std::filesystem::exists("res/images/screenshots"))
 		std::filesystem::create_directories("res/images/screenshots");
-	
-	logical_device->wait();
 
 	auto& img = Window::get().getSwapChain().getImages()[Window::get().getSwapChain().getImageIndex()];
 
@@ -112,8 +109,9 @@ void RenderContext::screenshot(const fs::path& file)
 	props.height = Window::get().getHeight();
 	props.format = Image::Format::RGBA;
 	props.usage = Image::TRANSFER_DST | Image::TRANSFER_SRC;
-	props.sampler_props.mipmap_mode = Sampler::MipmapMode::NONE;
 	auto image = makeShared<Image>(props);
+
+	logical_device->wait();
 	img->copyToImage(*image);
 	execute();
 
