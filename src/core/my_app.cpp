@@ -62,7 +62,6 @@ void MyApp::onKeyPress(const KeyPressEvent& e)
     {
     case Key::ESCAPE:
         e.window.close();
-        Dispatcher<WindowCloseEvent>::post(e.window);
         break;
     case Key::F11:
         e.window.setFullscreen(!e.window.isFullscreen());
