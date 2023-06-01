@@ -123,7 +123,7 @@ void RenderGraph::build(const char* backbuffer)
 
 	resize(Window::get().getSwapChain());
 
-	query_pool = makeShared<QueryPool>(QueryPool::VERTEX_SHADER_INVOCATIONS | QueryPool::FRAGMENT_SHADER_INVOCATIONS | QueryPool::COMPUTE_SHADER_INVOCATIONS);
+	query_pool = makeShared<QueryPool>(QueryPool::VERTEX_SHADER_INVOCATIONS | QueryPool::GEOMETRY_SHADER_PRIMITIVES | QueryPool::FRAGMENT_SHADER_INVOCATIONS | QueryPool::COMPUTE_SHADER_INVOCATIONS);
 }
 
 void RenderGraph::render(Statistics* statistics)

@@ -14,7 +14,7 @@ layout(location = 0) in VertexOutput
     flat float metallic;
     flat float roughness;
     flat vec3 emissive;
-} fragment_input;
+} frag_in;
 
 struct Light
 {
@@ -109,30 +109,30 @@ vec3 aces(vec3 x)
 
 void main()
 {
-    vec4 albedo = fragment_input.color;
-    if (fragment_input.instance_image_index > -1)
-        albedo *= texture(images[fragment_input.instance_image_index], fragment_input.uv);
+    vec4 albedo = frag_in.color;
+    if (frag_in.instance_image_index > -1)
+        albedo *= texture(images[frag_in.instance_image_index], frag_in.uv);
     color.a = albedo.a;
     if (color.a <= 0.01)
         discard;  
         
-    if (fragment_input.normal == vec3(0) || albedo.rgb == vec3(0))
+    if (frag_in.normal == vec3(0) || albedo.rgb == vec3(0))
     {
         color.rgb = albedo.rgb;
         return;
     }
         
-    vec3 normal = normalize(fragment_input.normal);
+    vec3 normal = normalize(frag_in.normal);
 
-    vec3 to_camera = normalize(global_uniform.camera_position - fragment_input.world_position.xyz);
-    vec3 F0 = mix(vec3(0.04), albedo.rgb, fragment_input.metallic);
+    vec3 to_camera = normalize(global_uniform.camera_position - frag_in.world_position.xyz);
+    vec3 F0 = mix(vec3(0.04), albedo.rgb, frag_in.metallic);
 
 
-    mat3 TBN = mat3(normalize(fragment_input.tangent), normalize(fragment_input.bitangent), normal);
-    vec3 local_normal = normalize(texture(images[fragment_input.instance_image_index + 2], fragment_input.uv).rgb * 2.0 - 1.0);
+    mat3 TBN = mat3(normalize(frag_in.tangent), normalize(frag_in.bitangent), normal);
+    vec3 local_normal = normalize(texture(images[frag_in.instance_image_index + 2], frag_in.uv).rgb * 2.0 - 1.0);
     normal = mix(normal, normalize(TBN * local_normal), abs(dot(to_camera, normal))); // I do this mixing, because of weird artifact on critical angles
     
-    vec3 ambient = vec3(AMBIENT) * albedo.rgb * texture(images[fragment_input.instance_image_index + 1], fragment_input.uv).r; // * ao
+    vec3 ambient = vec3(AMBIENT) * albedo.rgb * texture(images[frag_in.instance_image_index + 1], frag_in.uv).r; // * ao
     vec3 total_light = vec3(0);
     
     for(uint i = 0; i < MAX_LIGHTS; ++i)
@@ -141,7 +141,7 @@ void main()
         if (light.color == vec3(0))
             continue;
     
-        total_light += PBR(light, normal, to_camera, albedo.rgb, fragment_input.metallic, fragment_input.roughness, F0, fragment_input.world_position.xyz);
+        total_light += PBR(light, normal, to_camera, albedo.rgb, frag_in.metallic, frag_in.roughness, F0, frag_in.world_position.xyz);
     }
     color.rgb = aces(total_light + ambient.rgb);
 }

@@ -23,7 +23,7 @@ layout(location = 0) out VertexOutput
     flat float metallic;
     flat float roughness;
     flat vec3 emissive;
-} vertex_output;
+} vert_out;
 
 layout(set = 0, binding = 0) uniform GlobalUniform
 {
@@ -32,18 +32,18 @@ layout(set = 0, binding = 0) uniform GlobalUniform
 
 void main()
 {
-    vertex_output.uv = vertex_uv;
-    vertex_output.color = vertex_color * instance_color;
-    vertex_output.normal  = normalize(vec3(instance_transform * vec4(vertex_normal, 0)));
-    vertex_output.tangent = normalize(vec3(instance_transform * vec4(vertex_tangent.xyz, 0)));
-    vertex_output.tangent = normalize(vertex_output.tangent - dot(vertex_output.tangent, vertex_output.normal) * vertex_output.normal); // Re-orthogonalize T with respect to N
-    vertex_output.bitangent = cross(vertex_output.normal, vertex_output.tangent.xyz) * vertex_tangent.w;
-    vertex_output.instance_image_index = instance_image_index;
-    vertex_output.metallic = instance_metallic;
-    vertex_output.roughness = instance_roughness;
-    vertex_output.emissive = instance_emissive;
+    vert_out.uv = vertex_uv;
+    vert_out.color = vertex_color * instance_color;
+    vert_out.normal  = normalize(vec3(instance_transform * vec4(vertex_normal, 0)));
+    vert_out.tangent = normalize(vec3(instance_transform * vec4(vertex_tangent.xyz, 0)));
+    vert_out.tangent = normalize(vert_out.tangent - dot(vert_out.tangent, vert_out.normal) * vert_out.normal); // Re-orthogonalize T with respect to N
+    vert_out.bitangent = cross(vert_out.normal, vert_out.tangent.xyz) * vertex_tangent.w;
+    vert_out.instance_image_index = instance_image_index;
+    vert_out.metallic = instance_metallic;
+    vert_out.roughness = instance_roughness;
+    vert_out.emissive = instance_emissive;
 
     const vec4 world_position = instance_transform * vec4(vertex_position, 1.0);
-    vertex_output.world_position = world_position.xyz;
+    vert_out.world_position = world_position.xyz;
     gl_Position = global_uniform.projection_view * world_position;
 }

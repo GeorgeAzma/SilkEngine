@@ -32,8 +32,9 @@ World::World()
 	chunk_defines.emplace_back("SHARED_AREA", std::to_string(Chunk::SHARED_AREA));
 	chunk_defines.emplace_back("SHARED_VOLUME", std::to_string(Chunk::SHARED_VOLUME));
 	chunk_defines.emplace_back("SHARED_DIM", std::format("ivec3({}, {}, {})", std::to_string(Chunk::SHARED_DIM.x), std::to_string(Chunk::SHARED_DIM.y), std::to_string(Chunk::SHARED_DIM.z)));
+	chunk_defines.emplace_back("TOTAL_BLOCKS", std::to_string(TOTAL_BLOCKS));
 	for (size_t i = 0; i < TOTAL_BLOCKS; ++i)
-		chunk_defines.emplace_back(block_names[i], std::to_string(i));
+		chunk_defines.emplace_back(BLOCK_NAMES[i], std::to_string(i));
 	chunk_defines.emplace_back("NONE", std::to_string(uint32_t(Block::NONE)));
 
 	VkRenderPass render_pass = RenderContext::getRenderGraph().getPass("Geometry").getRenderPass();
@@ -41,6 +42,7 @@ World::World()
 	chunk_pipeline->setShader(makeShared<Shader>("chunk", chunk_defines))
 		.setRenderPass(render_pass)
 		.setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
+		.setTopology(GraphicsPipeline::Topology::TRIANGLE)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
 		//.enableTag(GraphicsPipeline::EnableTag::SAMPLE_SHADING)
@@ -55,7 +57,7 @@ World::World()
 	props.sampler_props.min_filter = VK_FILTER_NEAREST;
 	props.sampler_props.mipmap_mode = Sampler::MipmapMode::LINEAR;
 	props.sampler_props.anisotropy = 0.0f;
-	texture_atlas = makeShared<Image>(block_textures, props);
+	texture_atlas = makeShared<Image>(BLOCK_TEXTURES, props);
 	texture_atlas->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 	ComputePipeline::add("Chunk Gen", makeShared<ComputePipeline>(makeShared<Shader>("chunk_gen", chunk_defines)));

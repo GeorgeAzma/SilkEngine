@@ -4,7 +4,7 @@ layout(location = 0) out VertexOutput
 {
     vec3 uv;
     vec3 light;
-} vertex_output;
+} vert_out;
 
 layout(set = 0, binding = 0) uniform GlobalUniform
 {
@@ -13,9 +13,7 @@ layout(set = 0, binding = 0) uniform GlobalUniform
 
 layout(push_constant) uniform PushConstant
 {
-    vec4 chunk_position;
-    vec4 light_position;
-    vec4 light_color;
+    ivec3 chunk_position;
 };
 
 const vec2 uvs[4] = vec2[4](
@@ -58,34 +56,16 @@ const vec3 positions[24] = vec3[24](
     vec3(1, 1, 1)
 );
 
-const vec3 normals[6] = vec3[6](
-    vec3( 0, -1,  0),
-    vec3( 0,  0, -1),
-    vec3(-1,  0,  0),
-    vec3( 1,  0,  0),
-    vec3( 0,  0,  1),
-    vec3( 0,  1,  0)
-);
+const float face_light_values[6] = float[6](0.3, 0.4, 0.6, 0.5, 0.8, 1.0);
 
 void main()
 {
     const uint vert_id = (vertex.x) & 3;
     const uint face_id = (vertex.x >> 2) & 7;
     const uint idx = (vertex.x >> 5) & (VOLUME - 1);
-
-    const vec3 local_pos = vec3(idx % SIZE, idx / AREA, idx % AREA / SIZE) + positions[face_id * 4 + vert_id];
-    const vec3 world_pos = local_pos + chunk_position.xyz * vec3(SIZE);
-
-    vertex_output.uv = vec3(uvs[vert_id], (vertex.x >> 23) & 255);
-    
-    const vec3 normal = normals[face_id];
     const float ao = float(vertex.y & 3) * 0.3333;
-    vertex_output.light = vec3(0.07);
-    vertex_output.light += max(dot(normalize(light_position.xyz), normal), 0.0);
-    vertex_output.light += max(dot(vec3(-0.8017, 0.5345, 0.2672), normal), 0.0);
-    vertex_output.light += max(dot(vec3(0.4082, -0.4082, 0.8164), normal), 0.0);
-    vertex_output.light *= light_color.rgb * (ao * 0.75 + 0.25);
-    //vertex_output.light = max(normal, vec3(0)) * 0.5 + abs(normal) * 0.5;
- 
+    vert_out.light = vec3(0.07) + face_light_values[face_id] * ao;
+    vert_out.uv = vec3(uvs[vert_id], (vertex.x >> 23) & 255);
+    const vec3 world_pos = vec3(ivec3(idx % SIZE, idx / AREA, idx % AREA / SIZE) + positions[face_id * 4 + vert_id] + chunk_position * DIM);
     gl_Position = global_uniform.projection_view * vec4(world_pos, 1.0);
 }

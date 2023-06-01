@@ -45,9 +45,10 @@ void MyScene::onUpdate()
     world->update();
     DebugRenderer::color(Colors::WHITE);
     static RenderGraph::Statistics stats{};
-    DebugRenderer::text(std::string("Vertex Invocations: ") + std::to_string(stats.vertex_invocations / 1'000'000) + " M", 16.0f, 32.0f, 24.0f);
-    DebugRenderer::text(std::string("Fragment Invocations: ") + std::to_string(stats.fragment_invocations / 1'000'000) + " M", 16.0f, 64.0f, 24.0f);
-    //DebugRenderer::text(std::string("Compute Invocations: ") + std::to_string(stats.compute_invocations / 1'000'000) + " M", 16.0f, 136.0f, 24.0f);
+    DebugRenderer::text(std::string("Vertex Invocations: ") + std::to_string(stats.vertex_invocations / 1000) + "K", 16.0f, 32.0f, 24.0f);
+    DebugRenderer::text(std::string("Geometry Primitives: ") + std::to_string(stats.geometry_primitives / 1000) + "K", 16.0f, 64.0f, 24.0f);
+    DebugRenderer::text(std::string("Fragment Invocations: ") + std::to_string(stats.fragment_invocations / 1000) + "K", 16.0f, 96.0f, 24.0f);
+    DebugRenderer::text(std::string("Compute Invocations: ") + std::to_string(stats.compute_invocations / 1000) + "K", 16.0f, 128.0f, 24.0f);
     render_graph->render(&stats);
     DebugRenderer::update(Scene::getActive()->getMainCamera());
 }

@@ -11,7 +11,7 @@ layout(location = 0) out VertexOutput
     vec2 uv;
     vec4 color;
     flat int instance_image_index;
-} vertex_output;
+} vert_out;
 
 layout(set = 0, binding = 0) uniform GlobalUniform
 {
@@ -20,8 +20,8 @@ layout(set = 0, binding = 0) uniform GlobalUniform
 
 void main()
 {
-    vertex_output.uv = vertex_uv;
-    vertex_output.color = vertex_color * instance_color;
-    vertex_output.instance_image_index = instance_image_index;
+    vert_out.uv = vertex_uv;
+    vert_out.color = vertex_color * instance_color;
+    vert_out.instance_image_index = instance_image_index;
     gl_Position = global_uniform.projection_view * instance_transform * vec4(vertex_position, 0.0, 1.0);
 }

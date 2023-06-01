@@ -75,8 +75,8 @@ public:
 	void generateMesh();
 	void render() const;
 
-	void addNeighbor(size_t index, Chunk* neighbor) 
-	{ 
+	void addNeighbor(size_t index, Chunk* neighbor)
+	{
 		if (neighbors[index] == neighbor)
 			return;
 		neighbors[index] = neighbor;
@@ -136,7 +136,7 @@ public:
 
 private:
 	Coord position = Coord(0);
-	std::vector<Block> blocks = {}; 
+	std::vector<Block> blocks = {};
 	uint32_t vertex_count = 0;
 	shared<Buffer> vertex_buffer = nullptr;
 	shared<Buffer> block_buffer = nullptr;

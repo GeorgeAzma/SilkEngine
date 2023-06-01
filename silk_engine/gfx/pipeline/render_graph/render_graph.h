@@ -15,6 +15,7 @@ public:
 	struct Statistics
 	{
 		uint32_t vertex_invocations = 0;
+		uint32_t geometry_primitives = 0;
 		uint32_t fragment_invocations = 0;
 		uint32_t compute_invocations = 0;
 	};

@@ -8,7 +8,7 @@ layout(set = 0, binding = 0) writeonly buffer Blocks
 
 layout(push_constant) uniform PushConstant
 {
-    ivec4 chunk_position;
+    ivec3 chunk_position;
 };
 
 #include "chunk.glsl"

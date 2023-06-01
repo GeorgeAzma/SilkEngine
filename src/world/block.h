@@ -18,7 +18,7 @@ enum class Block : uint32_t
 };
 static constexpr size_t TOTAL_BLOCKS = ecast(Block::LAST);
 
-static constexpr const char* block_names[TOTAL_BLOCKS]
+static constexpr const char* BLOCK_NAMES[TOTAL_BLOCKS]
 {
 	"AIR",
 	"STONE",
@@ -33,7 +33,7 @@ static constexpr const char* block_names[TOTAL_BLOCKS]
 };
 
 // SOLID
-static constexpr uint32_t block_solid[TOTAL_BLOCKS]
+static constexpr bool BLOCK_SOLID[TOTAL_BLOCKS]
 {
 	/* AIR		 */  0,
 	/* STONE	 */  1,
@@ -47,7 +47,7 @@ static constexpr uint32_t block_solid[TOTAL_BLOCKS]
 	/* SNOW		 */  1
 };
 
-static constexpr uint32_t block_texture_indices[TOTAL_BLOCKS * 6]
+static constexpr uint32_t BLOCK_TEXTURE_INDICES[TOTAL_BLOCKS * 6]
 {
 	/* AIR		 */  0, 0, 0, 0, 0, 0,
 	/* STONE	 */  1, 1, 1, 1, 1, 1,
@@ -61,7 +61,7 @@ static constexpr uint32_t block_texture_indices[TOTAL_BLOCKS * 6]
 	/* SNOW		 */  12, 12, 12, 12, 12, 12
 };
 
-static inline const auto block_textures = makeArray<fs::path>
+static inline const auto BLOCK_TEXTURES = makeArray<fs::path>
 (
 	"res/images/blocks/Air.png",
 	"res/images/blocks/Stone.png",
