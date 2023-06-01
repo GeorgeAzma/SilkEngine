@@ -188,6 +188,12 @@ GraphicsPipeline& GraphicsPipeline::setMinSampleShading(float min_sample_shading
 	return *this;
 }
 
+GraphicsPipeline& GraphicsPipeline::setTopology(Topology topology)
+{
+	input_assembly_info.topology = VkPrimitiveTopology(topology);
+	return *this;
+}
+
 GraphicsPipeline& GraphicsPipeline::setShader(const shared<Shader>& shader, const std::vector<Pipeline::Constant>& constants)
 {
 	SK_VERIFY(!this->shader, "Must not call setShader more than once");
