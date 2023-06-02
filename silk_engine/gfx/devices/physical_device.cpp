@@ -41,7 +41,7 @@ PhysicalDevice::PhysicalDevice(const Instance& instance, VkPhysicalDevice physic
 	// Try to find a queue family index that supports compute but not graphics
 	for (uint32_t i = 0; i < queue_family_properties.size(); i++)
 	{
-		if (queue_family_properties[i].queueFlags == VK_QUEUE_COMPUTE_BIT)
+		if ((queue_family_properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT) && !(queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT))
 		{
 			compute_queue = i;
 			queue_family_indices.emplace_back(i);
@@ -52,7 +52,7 @@ PhysicalDevice::PhysicalDevice(const Instance& instance, VkPhysicalDevice physic
 	// Try to find a queue family index that supports transfer but not graphics
 	for (uint32_t i = 0; i < queue_family_properties.size(); i++)
 	{
-		if (queue_family_properties[i].queueFlags == VK_QUEUE_TRANSFER_BIT)
+		if ((queue_family_properties[i].queueFlags & VK_QUEUE_TRANSFER_BIT)/* && !(queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)*/)
 		{
 			transfer_queue = i;
 			queue_family_indices.emplace_back(i);
@@ -76,7 +76,7 @@ PhysicalDevice::PhysicalDevice(const Instance& instance, VkPhysicalDevice physic
 	{
 		for (uint32_t i = 0; i < queue_family_properties.size(); ++i)
 		{
-			if (queue_family_properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT)
+			if (queue_family_properties[i].queueFlags & (VK_QUEUE_COMPUTE_BIT | VK_QUEUE_GRAPHICS_BIT))
 			{
 				compute_queue = i;
 				queue_family_indices.emplace_back(i);
@@ -90,10 +90,11 @@ PhysicalDevice::PhysicalDevice(const Instance& instance, VkPhysicalDevice physic
 	{
 		for (uint32_t i = 0; i < queue_family_properties.size(); ++i)
 		{
-			if (queue_family_properties[i].queueFlags & VK_QUEUE_TRANSFER_BIT)
+			if (queue_family_properties[i].queueFlags & (VK_QUEUE_TRANSFER_BIT | VK_QUEUE_GRAPHICS_BIT))
 			{
 				transfer_queue = i;
 				queue_family_indices.emplace_back(i);
+				break;
 			}
 		}
 	}

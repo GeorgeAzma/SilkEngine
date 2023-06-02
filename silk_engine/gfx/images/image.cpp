@@ -209,8 +209,7 @@ void Image::setData(const void* data, uint32_t base_layer, uint32_t layers)
 	if (!data)
 		return;
 
-	layers = layers ? layers : props.layers - base_layer;
-
+	if (!layers) layers = props.layers - base_layer;
 	if (VmaAllocation(allocation) && allocation.isHostVisible())
 	{
 		uint32_t row_pitch = props.width * getFormatSize(props.format);
@@ -319,7 +318,8 @@ bool Image::copyToImage(Image& destination)
 
 void Image::copyFromBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers)
 {
-	transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	if (!layers) layers = props.layers - base_layer;
+	transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0, 1, 0, layers, base_layer);
 	VkBufferImageCopy region{};
 	region.bufferOffset = 0;
 	region.bufferRowLength = 0;
@@ -327,7 +327,7 @@ void Image::copyFromBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers
 	region.imageSubresource.aspectMask = getFormatVulkanAspectFlags(props.format);
 	region.imageSubresource.mipLevel = 0;
 	region.imageSubresource.baseArrayLayer = base_layer;
-	region.imageSubresource.layerCount = layers ? layers : props.layers - base_layer;
+	region.imageSubresource.layerCount = layers;
 	region.imageOffset = VkOffset3D(0, 0, 0);
 	region.imageExtent = VkExtent3D(props.width, props.height, props.depth);
 	RenderContext::getCommandBuffer().copyBufferToImage(buffer, image, getLayout(region.imageSubresource.mipLevel, region.imageSubresource.baseArrayLayer), { region });
@@ -335,7 +335,8 @@ void Image::copyFromBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers
 
 void Image::copyToBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers)
 {
-	transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+	if (!layers) layers = props.layers - base_layer;
+	transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 0, 1, 0, layers, base_layer);
 	VkBufferImageCopy region{};
 	region.imageOffset = VkOffset3D(0, 0, 0);
 	region.imageExtent = VkExtent3D(props.width, props.height, props.depth);
@@ -344,19 +345,26 @@ void Image::copyToBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers)
 	region.bufferRowLength = props.width;
 	region.imageSubresource.aspectMask = getAspectFlags();
 	region.imageSubresource.baseArrayLayer = base_layer;
-	region.imageSubresource.layerCount = layers ? layers : props.layers - base_layer;
+	region.imageSubresource.layerCount = layers;
 	region.imageSubresource.mipLevel = 0;
 	RenderContext::getCommandBuffer().copyImageToBuffer(image, getLayout(region.imageSubresource.mipLevel, region.imageSubresource.baseArrayLayer), buffer, { region });
 }
 
 void Image::transitionLayout(VkImageLayout new_layout, VkDependencyFlags dependency, uint32_t mip_levels, uint32_t base_mip_level, uint32_t layers, uint32_t base_layer)
 {
-	if (getLayout(base_mip_level, base_layer) == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
+	if (new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
 		return;
-	if (!mip_levels) mip_levels = this->mip_levels;
-	if (!layers) layers = props.layers;
-	insertMemoryBarrier(image, getLayout(base_mip_level, base_layer), new_layout, dependency, getAspectFlags(), mip_levels, base_mip_level, layers, base_layer);
-	setLayout(new_layout, mip_levels, base_mip_level, layers, base_layer);
+	if (!mip_levels) mip_levels = this->mip_levels - base_mip_level;
+	if (!layers) layers = props.layers - base_layer;
+
+	for (uint32_t layer = 0; layer < layers; ++layer)
+		for (uint32_t mip = 0; mip < mip_levels; ++mip)
+		{
+			if (getLayout(mip + base_mip_level, layer + base_layer) == new_layout)
+				continue;
+			insertMemoryBarrier(image, getLayout(mip + base_mip_level, layer + base_layer), new_layout, dependency, getAspectFlags(), 1, mip + base_mip_level, 1, layer + base_layer);
+			setLayout(new_layout, 1, mip + base_mip_level, 1, layer + base_layer);
+		}
 }
 
 bool Image::isFeatureSupported(VkFormatFeatureFlags feature) const
@@ -368,7 +376,7 @@ bool Image::isFeatureSupported(VkFormatFeatureFlags feature) const
 
 void Image::create()
 {
-	layouts.resize(1);
+	layouts.resize(1, VK_IMAGE_LAYOUT_UNDEFINED);
 	if (image == nullptr)
 	{
 		VkImageCreateInfo ci{};
@@ -388,7 +396,7 @@ void Image::create()
 		ci.mipLevels = mip_levels;
 		ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		ci.samples = props.samples;
-		layouts.resize(mip_levels * props.layers);
+		layouts.resize(mip_levels * props.layers, VK_IMAGE_LAYOUT_UNDEFINED);
 		setLayout(props.initial_layout);
 
 		VmaAllocationCreateInfo alloc_ci{};
@@ -411,15 +419,15 @@ void Image::generateMipmaps()
 	if (mip_levels <= 1 || props.sampler_props.mipmap_mode == Sampler::MipmapMode::NONE)
 		return;
 
-	CommandBuffer& cb = RenderContext::getCommandBuffer();
-
 	int32_t mip_width = props.width;
 	int32_t mip_height = props.height;
 	int32_t mip_depth = props.depth;
 
+	transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
 	for (uint32_t i = 1; i < mip_levels; ++i)
 	{
-		transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 0, 1, i - 1, props.layers, 0);
+		transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 0, 1, i - 1);
 
 		VkImageBlit blit{};
 		blit.srcOffsets[0] = VkOffset3D(0, 0, 0);
@@ -428,10 +436,11 @@ void Image::generateMipmaps()
 		blit.srcSubresource.mipLevel = i - 1;
 		blit.srcSubresource.baseArrayLayer = 0;
 		blit.srcSubresource.layerCount = props.layers;
-		blit.dstOffsets[0] = VkOffset3D(0, 0, 0);
+
 		if (mip_width > 1) mip_width >>= 1;
 		if (mip_height > 1) mip_height >>= 1;
 		if (mip_depth > 1) mip_depth >>= 1;
+
 		blit.dstOffsets[0] = VkOffset3D(0, 0, 0);
 		blit.dstOffsets[1] = VkOffset3D(mip_width, mip_height, mip_depth);
 		blit.dstSubresource.aspectMask = getAspectFlags();
@@ -439,7 +448,7 @@ void Image::generateMipmaps()
 		blit.dstSubresource.baseArrayLayer = 0;
 		blit.dstSubresource.layerCount = props.layers;
 
-		cb.blitImage(image, getLayout(i - 1), image, getLayout(i), { blit }, VK_FILTER_LINEAR);
+		RenderContext::getCommandBuffer().blitImage(image, getLayout(i - 1), image, getLayout(i), { blit }, VK_FILTER_LINEAR);
 	}
 	RenderContext::execute();
 }

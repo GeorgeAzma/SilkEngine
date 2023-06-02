@@ -7,16 +7,28 @@ class CommandPool;
 
 class CommandBuffer : NoCopy
 {
-	template<std::unsigned_integral T>
-	static constexpr T None() 
-	{ 
-		return std::numeric_limits<T>::max(); 
+	template<std::signed_integral T>
+	static constexpr T None()
+	{
+		return std::numeric_limits<T>::max();
 	}
 
-	template<typename T>
+	template<std::floating_point T>
 	static constexpr T None()
 	{
 		return std::numeric_limits<T>::lowest();
+	}
+
+	template<std::unsigned_integral T>
+	static constexpr T None()
+	{
+		return std::numeric_limits<T>::max();
+	}
+
+	template<typename T> requires std::is_enum_v<T>
+	static constexpr T None()
+	{
+		return static_cast<T>(std::numeric_limits<std::underlying_type_t<T>>::max());
 	}
 
 public:

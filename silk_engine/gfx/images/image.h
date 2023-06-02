@@ -143,11 +143,11 @@ public:
 
 	void setLayout(VkImageLayout layout, uint32_t mip_levels = 0, uint32_t base_mip_level = 0, uint32_t layers = 0, uint32_t base_layer = 0) // Use sparingly
 	{ 
-		if (!mip_levels) mip_levels = this->mip_levels;
-		if (!layers) layers = props.layers;
-		for (uint32_t mip = base_mip_level; mip < mip_levels; ++mip)
-			for (uint32_t layer = base_layer; layer < layers; ++layer)
-				getLayout(mip, layer) = layout;
+		if (!mip_levels) mip_levels = this->mip_levels - base_mip_level;
+		if (!layers) layers = props.layers - base_layer;
+		for (uint32_t layer = 0; layer < layers; ++layer)
+			for (uint32_t mip = 0; mip < mip_levels; ++mip)
+				getLayout(mip + base_mip_level, layer + base_layer) = layout;
 	}
 	void setData(const void* data, uint32_t base_layer = 0, uint32_t layers = 1);
 	void getData(void* data, uint32_t base_layer = 0, uint32_t layers = 1);

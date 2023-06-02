@@ -7,7 +7,7 @@ class CommandPool;
 class CommandQueue : NoCopy
 {
 public:
-	CommandQueue(std::optional<uint32_t> queue_family_index, VkQueueFlagBits queue_type);
+	CommandQueue(const std::optional<uint32_t>& queue_family_index, VkQueueFlagBits queue_type);
 
 	CommandBuffer& getCommandBuffer(bool begin = true);
 
@@ -17,7 +17,7 @@ public:
 
 private:
 	VkQueueFlagBits queue_type;
-	shared<CommandPool> command_pool;
+	shared<CommandPool> command_pool = nullptr;
 	std::vector<shared<CommandBuffer>> command_buffers;
-	size_t index;
+	size_t index = 0;
 };

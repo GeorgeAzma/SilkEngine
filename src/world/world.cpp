@@ -18,7 +18,7 @@ World::World()
 	player = Scene::getActive()->createEntity();
 	player->add<CameraComponent>();
 	player->add<ScriptComponent>().bind<CameraController>();
-	player->get<CameraComponent>().camera.position = vec3(0.0f, 0.0f, 8.0f);
+	player->get<CameraComponent>().camera.position = vec3(0.0f, 8.0f, 8.0f);
 	camera = &player->get<CameraComponent>().camera;
 
 	Shader::Defines chunk_defines{};
@@ -46,8 +46,7 @@ World::World()
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
 		//.enableTag(GraphicsPipeline::EnableTag::SAMPLE_SHADING)
-		.setPolygonMode(GraphicsPipeline::PolygonMode::LINE)
-		.setLineWidth(1.0f)
+		//.setPolygonMode(GraphicsPipeline::PolygonMode::LINE)
 		.setCullMode(GraphicsPipeline::CullMode::FRONT)
 		.setDepthCompareOp(GraphicsPipeline::CompareOp::LESS);
 	chunk_pipeline->build();
@@ -63,6 +62,7 @@ World::World()
 	props.sampler_props.anisotropy = 0.0f;
 	texture_atlas = makeShared<Image>(BLOCK_TEXTURES, props);
 	texture_atlas->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	RenderContext::execute();
 
 	ComputePipeline::add("Chunk Gen", makeShared<ComputePipeline>(makeShared<Shader>("chunk_gen", chunk_defines)));
 }
@@ -120,9 +120,9 @@ void World::update()
 		t2.begin();
 		std::ranges::sort(chunks, [&](const shared<Chunk>& lhs, const shared<Chunk>& rhs) {
 			constexpr vec3 modifier = vec3(1, 2, 1);
-			return ((100.0f + distance2(vec3(chunk_origin) * modifier, vec3(lhs->getPosition()) * modifier)) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f)) <
-				((100.0f + distance2(vec3(chunk_origin) * modifier, vec3(rhs->getPosition()) * modifier)) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f));
-			});
+			return ((10.0f + distance2(vec3(chunk_origin) * modifier, vec3(lhs->getPosition()) * modifier)) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f)) <
+				   ((10.0f + distance2(vec3(chunk_origin) * modifier, vec3(rhs->getPosition()) * modifier)) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f));
+		});
 
 		std::unordered_set<Chunk::Coord> queued_chunks;
 		if (!findChunk(chunk_origin))
@@ -151,7 +151,7 @@ void World::update()
 			chunks.emplace_back(makeShared<Chunk>(chunk));
 			chunks.back()->generateStart();
 		}
-		RenderContext::executeCompute();
+		RenderContext::execute();
 		for (size_t i = chunks.size() - queued_chunks.size(); i < chunks.size(); ++i)
 		{
 			const auto& chunk = chunks[i];

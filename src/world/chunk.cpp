@@ -7,6 +7,7 @@
 #include "silk_engine/gfx/material.h"
 #include "silk_engine/utils/random.h"
 #include "silk_engine/utils/debug_timer.h"
+#include "silk_engine/gfx/descriptors/descriptor_set.h"
 #include "world.h"
 
 Chunk::Chunk(const Coord& position)
@@ -33,6 +34,13 @@ void Chunk::generateStart()
     gen_material->set("Blocks", *block_buffer);
     gen_material->bind();
     RenderContext::getCommandBuffer().pushConstants(Shader::Stage::COMPUTE, 0, sizeof(position), &position);
+    //gen_material->getPipeline()->bind();
+    //for (auto&& [set, descriptor_set] : gen_material->getDescriptorSets())
+    //{
+    //    descriptor_set->update();
+    //    RenderContext::getComputeCommandBuffer().bindDescriptorSets(set, { *descriptor_set }, {});
+    //}
+    //RenderContext::getComputeCommandBuffer().pushConstants(Shader::Stage::COMPUTE, 0, sizeof(position), &position);
     gen_material->dispatch(SIZE, SIZE, SIZE);
 }
 
@@ -173,18 +181,17 @@ void Chunk::generateMesh()
                     size_t face12 = face * 12;
                     Vertex ao0 = getAO(BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 0]])],
                                        BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 1]])],
-                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 2]])]) << 32;
+                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 2]])]);
                     Vertex ao1 = getAO(BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 3]])],
                                        BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 4]])],
-                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 5]])]) << 32;
+                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 5]])]);
                     Vertex ao2 = getAO(BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 6]])],
                                        BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 7]])],
-                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 8]])]) << 32;
+                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 8]])]);
                     Vertex ao3 = getAO(BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 9]])],
                                        BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 10]])],
-                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 11]])]) << 32;
+                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 11]])]);
                     Vertex run = 1;
-                    Vertex hash = ao0 | (ao1 << 2) | (ao2 << 4) | (ao3 << 6);
                     for (; run < SIZE - x; ++run)
                     {
                         size_t ni = i + run * greedy_axis[face];
@@ -193,16 +200,16 @@ void Chunk::generateMesh()
                             break;
                         Vertex nao0 = getAO(BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 0]])],
                                             BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 1]])],
-                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 2]])]) << 32;
+                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 2]])]);
                         Vertex nao1 = getAO(BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 3]])],
                                             BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 4]])],
-                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 5]])]) << 32;
+                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 5]])]);
                         Vertex nao2 = getAO(BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 6]])],
                                             BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 7]])],
-                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 8]])]) << 32;
+                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 8]])]);
                         Vertex nao3 = getAO(BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 9]])],
                                             BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 10]])],
-                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 11]])]) << 32;
+                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 11]])]);
                         if (!(ao0 == nao0 && ao1 == nao1 && ao2 == nao2 && ao3 == nao3))
                             break;
                         visited[ni * 6 + face] = true;
@@ -211,21 +218,21 @@ void Chunk::generateMesh()
                     Vertex face_data = (face << 2) | (idx << 5) | (Vertex(BLOCK_TEXTURE_INDICES[size_t(block) * 6 + face]) << 23) | ((run - Vertex(1)) << 34);
                     if (ao1 + ao3 > ao0 + ao2)
                     {
-                        vertices[vertex_count++] = 2 | face_data | ao2;
-                        vertices[vertex_count++] = 1 | face_data | ao1;
-                        vertices[vertex_count++] = 3 | face_data | ao3;
-                        vertices[vertex_count++] = 3 | face_data | ao3;
-                        vertices[vertex_count++] = 1 | face_data | ao1;
-                        vertices[vertex_count++] = 0 | face_data | ao0;
+                        vertices[vertex_count++] = 2 | face_data | (ao2 << 32);
+                        vertices[vertex_count++] = 1 | face_data | (ao1 << 32);
+                        vertices[vertex_count++] = 3 | face_data | (ao3 << 32);
+                        vertices[vertex_count++] = 3 | face_data | (ao3 << 32);
+                        vertices[vertex_count++] = 1 | face_data | (ao1 << 32);
+                        vertices[vertex_count++] = 0 | face_data | (ao0 << 32);
                     }
                     else
                     {
-                        vertices[vertex_count++] = 2 | face_data | ao2;
-                        vertices[vertex_count++] = 1 | face_data | ao1;
-                        vertices[vertex_count++] = 0 | face_data | ao0;
-                        vertices[vertex_count++] = 0 | face_data | ao0;
-                        vertices[vertex_count++] = 3 | face_data | ao3;
-                        vertices[vertex_count++] = 2 | face_data | ao2;
+                        vertices[vertex_count++] = 2 | face_data | (ao2 << 32);
+                        vertices[vertex_count++] = 1 | face_data | (ao1 << 32);
+                        vertices[vertex_count++] = 0 | face_data | (ao0 << 32);
+                        vertices[vertex_count++] = 0 | face_data | (ao0 << 32);
+                        vertices[vertex_count++] = 3 | face_data | (ao3 << 32);
+                        vertices[vertex_count++] = 2 | face_data | (ao2 << 32);
                     }
                 }
             }
