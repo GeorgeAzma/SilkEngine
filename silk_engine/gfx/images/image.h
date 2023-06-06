@@ -10,81 +10,6 @@ class RawImage;
 class Image : NoCopy
 {
 public:
-	enum class Type : std::underlying_type_t<VkImageViewType>
-	{
-		_1D = VK_IMAGE_VIEW_TYPE_1D,
-		_2D = VK_IMAGE_VIEW_TYPE_2D,
-		_3D = VK_IMAGE_VIEW_TYPE_3D,
-		CUBE = VK_IMAGE_VIEW_TYPE_CUBE,
-		_1D_ARRAY = VK_IMAGE_VIEW_TYPE_1D_ARRAY,
-		_2D_ARRAY = VK_IMAGE_VIEW_TYPE_2D_ARRAY,
-		CUBE_ARRAY = VK_IMAGE_VIEW_TYPE_CUBE_ARRAY
-	};
-
-	static VkImageType getVulkanTypeFromType(Type type);
-
-	enum class Format : std::underlying_type_t<VkFormat>
-	{
-		RED = VK_FORMAT_R8_UNORM,
-		RG = VK_FORMAT_R8G8_UNORM,
-		RGB = VK_FORMAT_R8G8B8_UNORM,
-		RGBA = VK_FORMAT_R8G8B8A8_UNORM,
-		BGRA = VK_FORMAT_B8G8R8A8_UNORM,
-		DEPTH16 = VK_FORMAT_D16_UNORM,
-		DEPTH = VK_FORMAT_D32_SFLOAT,
-		STENCIL = VK_FORMAT_S8_UINT,
-		DEPTH16_STENCIL = VK_FORMAT_D16_UNORM_S8_UINT,
-		DEPTH24_STENCIL = VK_FORMAT_D24_UNORM_S8_UINT,
-		DEPTH_STENCIL = VK_FORMAT_D32_SFLOAT_S8_UINT
-	};
-
-	typedef VkBufferUsageFlags Usage;
-	enum UsageBits : Usage
-	{
-		TRANSFER_SRC = VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-		TRANSFER_DST = VK_IMAGE_USAGE_TRANSFER_DST_BIT,
-		SAMPLED = VK_IMAGE_USAGE_SAMPLED_BIT,
-		STORAGE = VK_IMAGE_USAGE_STORAGE_BIT,
-		COLOR_ATTACHMENT = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-		DEPTH_STENCIL_ATTACHMENT = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-		TRANSIENT_ATTACHMENT = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
-		INPUT_ATTACHMENT = VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT
-	};
-
-	static Format getFormatFromChannels(uint8_t channels);
-	static VkImageAspectFlags getFormatVulkanAspectFlags(Format format);
-	static uint8_t getFormatChannels(Format format);
-	static size_t getFormatSize(Format format);
-	static bool isStencilFormat(Format format)
-	{
-		return format >= Format::STENCIL && format <= Format::DEPTH_STENCIL;
-	}
-	static bool isDepthFormat(Format format)
-	{
-		return format >= Format::DEPTH16 && format <= Format::DEPTH_STENCIL && format != Format::STENCIL;
-	}
-	static bool isDepthStencilFormat(Format format)
-	{
-		return format >= Format::DEPTH16 && format <= Format::DEPTH_STENCIL;
-	}
-	static bool isStencilOnlyFormat(Format format)
-	{
-		return format == Format::STENCIL;
-	}
-	static bool isDepthOnlyFormat(Format format)
-	{
-		return format == Format::DEPTH || format == Format::DEPTH16;
-	}
-	static bool isDepthStencilOnlyFormat(Format format)
-	{
-		return format == Format::DEPTH24_STENCIL || format == Format::DEPTH16_STENCIL;
-	}
-	static bool isColorFormat(Format format)
-	{
-		return !isDepthStencilFormat(format);
-	}
-	static uint32_t calculateMipLevels(uint32_t width, uint32_t height = 1, uint32_t depth = 1);
-
 	struct Props
 	{
 		uint32_t width = 1;
@@ -92,13 +17,13 @@ public:
 		uint32_t depth = 1;
 		uint32_t layers = 1;
 		Format format = Format::BGRA;
-		Usage usage = TRANSFER_DST | SAMPLED;
+		ImageUsage usage = ImageUsage::TRANSFER_DST | ImageUsage::SAMPLED;
 		Allocation::Props allocation_props{};
 		VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 		VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 		Sampler::Props sampler_props{};
 		bool linear_tiling = false;
-		Type type = Type::_2D;
+		ImageViewType view_type = ImageViewType::_2D;
 
 		uint32_t getChannels() const { return getFormatChannels(format); }
 		size_t getPixelCount() const { return width * height * depth * layers; }
@@ -122,17 +47,18 @@ public:
 	uint32_t getDepth() const { return props.depth; }
 	uint32_t getLayers() const { return props.layers; }
 	Format getFormat() const { return props.format; }
-	Usage getUsage() const { return props.usage; }
+	ImageUsage getUsage() const { return props.usage; }
 	VkSampleCountFlagBits getSamples() const { return props.samples; }
-	Type getType() const { return props.type; }
+	ImageType getType() const { return getImageViewTypeImageType(props.view_type); }
+	ImageViewType getViewType() const { return props.view_type; }
 
-	bool isSampled() const { return props.usage & VK_IMAGE_USAGE_SAMPLED_BIT; }
+	bool isSampled() const { return bool(props.usage & ImageUsage::SAMPLED); }
 	uint32_t getChannels() const { return props.getChannels(); }
 	size_t getPixelCount() const { return props.getPixelCount(); }
 	float getAspectRatio() const { return float(getWidth()) / getHeight(); }
 	size_t getSize() const { return props.getSize(); }
 	uint32_t getMipLevels() const { return mip_levels; }
-	VkImageAspectFlags getAspectFlags() const { return getFormatVulkanAspectFlags(props.format); }
+	ImageAspect getAspect() const { return getFormatImageAspect(props.format); }
 
 	const VkImageLayout& getLayout(uint32_t base_mip_level = 0, uint32_t base_layer = 0) const { return layouts[base_layer * mip_levels + base_mip_level]; }
 	const VkImageView& getView() const;
@@ -164,8 +90,12 @@ private:
 	void generateMipmaps();
 
 private:
-	static void insertMemoryBarrier(const VkImage& image, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDependencyFlags depencency = 0, VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT, uint32_t mip_levels = 1, uint32_t base_mip_level = 0, uint32_t layers = 1, uint32_t base_layer = 0);
-	static void insertMemoryBarrier(const VkImage& image, VkImageLayout old_layout, VkImageLayout new_layout, VkDependencyFlags dependency = 0, VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT, uint32_t mip_levels = 1, uint32_t base_mip_level = 0, uint32_t layers = 1, uint32_t base_layer = 0);
+	static void insertMemoryBarrier(const VkImage& image, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, PipelineStage source_stage, PipelineStage destination_stage, VkDependencyFlags depencency = 0, ImageAspect aspect = ImageAspect::COLOR, uint32_t mip_levels = 1, uint32_t base_mip_level = 0, uint32_t layers = 1, uint32_t base_layer = 0);
+	static void insertMemoryBarrier(const VkImage& image, VkImageLayout old_layout, VkImageLayout new_layout, VkDependencyFlags dependency = 0, ImageAspect aspect = ImageAspect::COLOR, uint32_t mip_levels = 1, uint32_t base_mip_level = 0, uint32_t layers = 1, uint32_t base_layer = 0);
+	static uint32_t calculateMipLevels(uint32_t width, uint32_t height = 1, uint32_t depth = 1)
+	{
+		return floor(std::log2(std::max({ width, height, depth }))) + 1;
+	}
 
 private:
 	VkImage image = nullptr;

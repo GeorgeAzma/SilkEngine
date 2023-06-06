@@ -5,11 +5,11 @@
 #include "silk_engine/scene/meshes/mesh.h"
 #include "silk_engine/utils/thread_pool.h"
 #include "buffers/command_buffer.h"
-#include "material.h"
-#include "debug_renderer.h"
+#include "debug/debug_renderer.h"
 #include "render_context.h"
 #include "buffers/buffer.h"
 #include "pipeline/graphics_pipeline.h"
+#include "pipeline/material.h"
 
 unique<ThreadPool> ParticleSystem::thread_pool = nullptr;
 

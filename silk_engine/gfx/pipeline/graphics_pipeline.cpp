@@ -201,6 +201,30 @@ GraphicsPipeline& GraphicsPipeline::setShader(const shared<Shader>& shader, cons
 	return *this;
 }
 
+GraphicsPipeline& GraphicsPipeline::from(const GraphicsPipeline& other)
+{
+	pipeline = other.pipeline;
+	layout = other.layout;
+	shader = other.shader;
+	shader_stage_infos = other.shader_stage_infos;
+	stage_specialization_infos = other.stage_specialization_infos;
+	constants = other.constants;
+	ci = other.ci;
+	dynamic_states = other.dynamic_states;
+	vertex_input_info = other.vertex_input_info;
+	rasterizer = other.rasterizer;
+	multisampling = other.multisampling;
+	depth_stencil_info = other.depth_stencil_info;
+	color_blend_attachment = other.color_blend_attachment;
+	color_blending = other.color_blending;
+	viewport_info = other.viewport_info;
+	input_assembly_info = other.input_assembly_info;
+	dynamic_state = other.dynamic_state;
+	render_pass = other.render_pass;
+	subpass = other.subpass;
+	return *this;
+}
+
 void GraphicsPipeline::build()
 {
 	dynamic_state.dynamicStateCount = dynamic_states.size();

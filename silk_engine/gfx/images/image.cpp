@@ -10,88 +10,6 @@
 #include "silk_engine/gfx/buffers/command_buffer.h"
 #include "silk_engine/gfx/allocators/allocator.h"
 
-VkImageType Image::getVulkanTypeFromType(Type type)
-{
-	switch (type)
-	{
-	case Type::_1D:
-	case Type::_1D_ARRAY:
-		return VK_IMAGE_TYPE_1D;
-	case Type::_2D:
-	case Type::_2D_ARRAY:
-	case Type::CUBE:
-	case Type::CUBE_ARRAY:
-		return VK_IMAGE_TYPE_2D;
-	case Type::_3D:
-		return VK_IMAGE_TYPE_3D;
-	}
-
-	return VK_IMAGE_TYPE_2D;
-}
-
-Image::Format Image::getFormatFromChannels(uint8_t channels)
-{
-	switch (channels)
-	{
-	case 1: return Format::RED;
-	case 2: return Format::RG;
-	case 3: return Format::RGB;
-	case 4: return Format::RGBA;
-	}
-
-	return Format::BGRA;
-}
-
-size_t Image::getFormatSize(Format format)
-{
-	switch (format)
-	{
-	case Format::RED: return 1;
-	case Format::RG: return 2;
-	case Format::RGB: return 3;
-	case Format::RGBA: return 4;
-	case Format::BGRA: return 4;
-	case Format::DEPTH16: return 2;
-	case Format::DEPTH: return 4;
-	case Format::STENCIL: return 1;
-	case Format::DEPTH16_STENCIL: return 3;
-	case Format::DEPTH24_STENCIL: return 4;
-	case Format::DEPTH_STENCIL: return 5;
-	}
-
-	return 4;
-}
-
-VkImageAspectFlags Image::getFormatVulkanAspectFlags(Format format)
-{
-	return (isColorFormat(format) * VK_IMAGE_ASPECT_COLOR_BIT) | (isDepthFormat(format) * VK_IMAGE_ASPECT_DEPTH_BIT) | (isStencilFormat(format) * VK_IMAGE_ASPECT_STENCIL_BIT);
-}
-
-uint8_t Image::getFormatChannels(Format format)
-{
-	switch (format)
-	{
-	case Format::RED: return 1;
-	case Format::RG: return 2;
-	case Format::RGB: return 3;
-	case Format::RGBA: return 4;
-	case Format::BGRA: return 4;
-	case Format::DEPTH16:
-	case Format::DEPTH:
-	case Format::STENCIL:
-	case Format::DEPTH16_STENCIL:
-	case Format::DEPTH24_STENCIL:
-	case Format::DEPTH_STENCIL:  // NOTE: Might be 2, probably not gonna use this anyways tho
-		return 1;
-	}
-	return 4;
-}
-
-uint32_t Image::calculateMipLevels(uint32_t width, uint32_t height, uint32_t depth)
-{
-	return floor(std::log2(std::max({ width, height, depth }))) + 1;
-}
-
 Image::Image(const Props& props)
 	: props(props)
 {
@@ -103,7 +21,7 @@ Image::Image(const RawImage<uint8_t>& raw_image, const Props& props)
 {
 	this->props.width = raw_image.width;
 	this->props.height = raw_image.height;
-	this->props.format = getFormatFromChannels(raw_image.channels);
+	this->props.format = getChannelsFormat(raw_image.channels);
 	create();
 	setData(raw_image.pixels.data());
 	generateMipmaps();
@@ -113,7 +31,7 @@ Image::Image(uint32_t width, Format format)
 {
 	props.width = width;
 	props.format = format;
-	props.type = Type::_1D;
+	props.view_type = ImageViewType::_1D;
 	create();
 }
 
@@ -134,7 +52,6 @@ Image::Image(uint32_t width, uint32_t height, Format format, VkImage img)
 	props.width = width;
 	props.height = height;
 	props.format = format;
-	props.sampler_props.mipmap_mode = Sampler::MipmapMode::NONE;
 	props.allocation_props.priority = 1.0f;
 	image = img;
 	create();
@@ -146,8 +63,8 @@ Image::Image(const std::array<fs::path, 6>& files, const Props& props)
 	RawImage raw_image(files);
 	this->props.width = raw_image.width;
 	this->props.height = raw_image.height;
-	this->props.format = getFormatFromChannels(raw_image.channels);
-	this->props.type = Type::CUBE;
+	this->props.format = getChannelsFormat(raw_image.channels);
+	this->props.view_type = ImageViewType::CUBE;
 	create();
 	setData(raw_image.pixels.data());
 	generateMipmaps();
@@ -160,8 +77,8 @@ Image::Image(std::span<const fs::path> files, const Props& props)
 	this->props.width = raw_image.width;
 	this->props.height = raw_image.height;
 	this->props.layers = files.size();
-	this->props.format = getFormatFromChannels(raw_image.channels);
-	this->props.type = Type::_2D_ARRAY;
+	this->props.format = getChannelsFormat(raw_image.channels);
+	this->props.view_type = ImageViewType::_2D_ARRAY;
 	create();
 	setData(raw_image.pixels.data(), 0, 0);
 	generateMipmaps();
@@ -178,8 +95,8 @@ Image::Image(std::span<const std::array<fs::path, 6>> files, const Props& props)
 	this->props.width = raw_image.width;
 	this->props.height = raw_image.height;
 	this->props.layers = files.size();
-	this->props.format = getFormatFromChannels(raw_image.channels);
-	this->props.type = Type::CUBE_ARRAY;
+	this->props.format = getChannelsFormat(raw_image.channels);
+	this->props.view_type = ImageViewType::CUBE_ARRAY;
 	create();
 	setData(raw_image.pixels.data(), 0, 0);
 	generateMipmaps();
@@ -283,13 +200,13 @@ bool Image::copyToImage(Image& destination)
 	if (supports_blit)
 	{
 		VkImageBlit blit{};
-		blit.srcSubresource.aspectMask = getAspectFlags();
+		blit.srcSubresource.aspectMask = ecast(getAspect());
 		blit.srcSubresource.mipLevel = 0;
 		blit.srcSubresource.baseArrayLayer = 0;
 		blit.srcSubresource.layerCount = 1;
 		blit.srcOffsets[0] = VkOffset3D(0, 0, 0);
 		blit.srcOffsets[1] = VkOffset3D((int32_t)props.width, (int32_t)props.height, (int32_t)props.depth);
-		blit.dstSubresource.aspectMask = destination.getAspectFlags();
+		blit.dstSubresource.aspectMask = ecast(destination.getAspect());
 		blit.dstSubresource.mipLevel = 0;
 		blit.dstSubresource.baseArrayLayer = 0;
 		blit.dstSubresource.layerCount = 1;
@@ -301,11 +218,11 @@ bool Image::copyToImage(Image& destination)
 	{
 		// Otherwise use image copy (requires us to manually flip components).
 		VkImageCopy region{};
-		region.srcSubresource.aspectMask = getAspectFlags();
+		region.srcSubresource.aspectMask = ecast(getAspect());
 		region.srcSubresource.mipLevel = 0;
 		region.srcSubresource.baseArrayLayer = 0;
 		region.srcSubresource.layerCount = 1;
-		region.dstSubresource.aspectMask = destination.getAspectFlags();
+		region.dstSubresource.aspectMask = ecast(destination.getAspect());
 		region.dstSubresource.mipLevel = 0;
 		region.dstSubresource.baseArrayLayer = 0;
 		region.dstSubresource.layerCount = 1;
@@ -324,7 +241,7 @@ void Image::copyFromBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers
 	region.bufferOffset = 0;
 	region.bufferRowLength = 0;
 	region.bufferImageHeight = 0;
-	region.imageSubresource.aspectMask = getFormatVulkanAspectFlags(props.format);
+	region.imageSubresource.aspectMask = ecast(getAspect());
 	region.imageSubresource.mipLevel = 0;
 	region.imageSubresource.baseArrayLayer = base_layer;
 	region.imageSubresource.layerCount = layers;
@@ -343,7 +260,7 @@ void Image::copyToBuffer(VkBuffer buffer, uint32_t base_layer, uint32_t layers)
 	region.bufferOffset = 0;
 	region.bufferImageHeight = props.height;
 	region.bufferRowLength = props.width;
-	region.imageSubresource.aspectMask = getAspectFlags();
+	region.imageSubresource.aspectMask = ecast(getAspect());
 	region.imageSubresource.baseArrayLayer = base_layer;
 	region.imageSubresource.layerCount = layers;
 	region.imageSubresource.mipLevel = 0;
@@ -362,7 +279,7 @@ void Image::transitionLayout(VkImageLayout new_layout, VkDependencyFlags depende
 		{
 			if (getLayout(mip + base_mip_level, layer + base_layer) == new_layout)
 				continue;
-			insertMemoryBarrier(image, getLayout(mip + base_mip_level, layer + base_layer), new_layout, dependency, getAspectFlags(), 1, mip + base_mip_level, 1, layer + base_layer);
+			insertMemoryBarrier(image, getLayout(mip + base_mip_level, layer + base_layer), new_layout, dependency, getAspect(), 1, mip + base_mip_level, 1, layer + base_layer);
 			setLayout(new_layout, 1, mip + base_mip_level, 1, layer + base_layer);
 		}
 }
@@ -381,18 +298,18 @@ void Image::create()
 	{
 		VkImageCreateInfo ci{};
 		ci.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		ci.imageType = getVulkanTypeFromType(props.type);
+		ci.imageType = VkImageType(getImageViewTypeImageType(props.view_type));
 		ci.format = VkFormat(props.format);
 		ci.tiling = props.linear_tiling ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
-		ci.usage = props.usage;
-		ci.flags = (props.type == Type::CUBE) * VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+		ci.usage = ecast(props.usage);
+		ci.flags = (props.view_type == ImageViewType::CUBE) * VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 		ci.initialLayout = props.initial_layout;
 		ci.extent = { props.width, props.height, props.depth };
 		ci.arrayLayers = props.layers;
 		// Multisampled images are never mip mapped
-		mip_levels = (props.samples != VK_SAMPLE_COUNT_1_BIT || props.sampler_props.mipmap_mode == Sampler::MipmapMode::NONE) ? 1 : calculateMipLevels(props.width, props.height, props.depth);
+		mip_levels = (props.samples != VK_SAMPLE_COUNT_1_BIT || props.sampler_props.mipmap_mode == MipmapMode::NONE) ? 1 : calculateMipLevels(props.width, props.height, props.depth);
 		if (mip_levels > 1)
-			ci.usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+			ci.usage |= ecast(ImageUsage::TRANSFER_DST | ImageUsage::TRANSFER_SRC);
 		ci.mipLevels = mip_levels;
 		ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		ci.samples = props.samples;
@@ -405,18 +322,18 @@ void Image::create()
 		alloc_ci.priority = props.allocation_props.priority;
 		allocation = RenderContext::getAllocator().allocateImage(ci, alloc_ci, image);
 
-		if (props.usage & VK_IMAGE_USAGE_SAMPLED_BIT)
+		if (bool(props.usage & ImageUsage::SAMPLED))
 			sampler = Sampler::get(props.sampler_props);
 	}
 
 	// Determining if image should create ImageView based on usage (Note: this is probably correct, but not sure)
-	if (props.usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT))
+	if (bool(props.usage & (ImageUsage::SAMPLED | ImageUsage::STORAGE | ImageUsage::COLOR_ATTACHMENT | ImageUsage::DEPTH_STENCIL_ATTACHMENT | ImageUsage::INPUT_ATTACHMENT | ImageUsage::TRANSIENT_ATTACHMENT)))
 		view = makeShared<ImageView>(*this);
 }
 
 void Image::generateMipmaps()
 {
-	if (mip_levels <= 1 || props.sampler_props.mipmap_mode == Sampler::MipmapMode::NONE)
+	if (mip_levels <= 1 || props.sampler_props.mipmap_mode == MipmapMode::NONE)
 		return;
 
 	int32_t mip_width = props.width;
@@ -432,7 +349,7 @@ void Image::generateMipmaps()
 		VkImageBlit blit{};
 		blit.srcOffsets[0] = VkOffset3D(0, 0, 0);
 		blit.srcOffsets[1] = VkOffset3D(mip_width, mip_height, mip_depth);
-		blit.srcSubresource.aspectMask = getAspectFlags();
+		blit.srcSubresource.aspectMask = ecast(getAspect());
 		blit.srcSubresource.mipLevel = i - 1;
 		blit.srcSubresource.baseArrayLayer = 0;
 		blit.srcSubresource.layerCount = props.layers;
@@ -443,7 +360,7 @@ void Image::generateMipmaps()
 
 		blit.dstOffsets[0] = VkOffset3D(0, 0, 0);
 		blit.dstOffsets[1] = VkOffset3D(mip_width, mip_height, mip_depth);
-		blit.dstSubresource.aspectMask = getAspectFlags();
+		blit.dstSubresource.aspectMask = ecast(getAspect());
 		blit.dstSubresource.mipLevel = i;
 		blit.dstSubresource.baseArrayLayer = 0;
 		blit.dstSubresource.layerCount = props.layers;
@@ -453,7 +370,7 @@ void Image::generateMipmaps()
 	RenderContext::execute();
 }
 
-void Image::insertMemoryBarrier(const VkImage& image, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDependencyFlags dependency, VkImageAspectFlags aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t layers, uint32_t base_layer)
+void Image::insertMemoryBarrier(const VkImage& image, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkImageLayout old_layout, VkImageLayout new_layout, PipelineStage source_stage, PipelineStage destination_stage, VkDependencyFlags dependency, ImageAspect aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t layers, uint32_t base_layer)
 {
 	VkImageMemoryBarrier barrier{};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -464,98 +381,98 @@ void Image::insertMemoryBarrier(const VkImage& image, VkAccessFlags source_acces
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.image = image;
-	barrier.subresourceRange.aspectMask = aspect;
+	barrier.subresourceRange.aspectMask = ecast(aspect);
 	barrier.subresourceRange.baseMipLevel = base_mip_level;
 	barrier.subresourceRange.levelCount = mip_levels;
 	barrier.subresourceRange.baseArrayLayer = base_layer;
 	barrier.subresourceRange.layerCount = layers;
-	RenderContext::getCommandBuffer().pipelineBarrier(source_stage_mask, destination_stage_mask, dependency, {}, {}, { barrier });
+	RenderContext::getCommandBuffer().pipelineBarrier(source_stage, destination_stage, dependency, {}, {}, { barrier });
 }
 
-void Image::insertMemoryBarrier(const VkImage& image, VkImageLayout old_layout, VkImageLayout new_layout, VkDependencyFlags dependency, VkImageAspectFlags aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t layers, uint32_t base_layer)
+void Image::insertMemoryBarrier(const VkImage& image, VkImageLayout old_layout, VkImageLayout new_layout, VkDependencyFlags dependency, ImageAspect aspect, uint32_t mip_levels, uint32_t base_mip_level, uint32_t layers, uint32_t base_layer)
 {
 	if (old_layout == new_layout || new_layout == VK_IMAGE_LAYOUT_UNDEFINED)
 		return;
-	VkPipelineStageFlags src_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+	PipelineStage src_stage = PipelineStage::ALL_COMMANDS;
 	VkAccessFlags src_access = VK_ACCESS_NONE;
 	switch (old_layout)
 	{
 	case VK_IMAGE_LAYOUT_UNDEFINED:
-		src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		src_stage = PipelineStage::TOP;
 		break;
 	case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR: // NOTE: probably doesn't work in some cases 
-		src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		src_stage = PipelineStage::TRANSFER;
 		break;
 	case VK_IMAGE_LAYOUT_GENERAL:
-		src_stage = VK_PIPELINE_STAGE_HOST_BIT;
+		src_stage = PipelineStage::HOST;
 		break;
 	case VK_IMAGE_LAYOUT_PREINITIALIZED:
 		src_access = VK_ACCESS_HOST_WRITE_BIT;
-		src_stage = VK_PIPELINE_STAGE_HOST_BIT;
+		src_stage = PipelineStage::HOST;
 		break;
 	case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
 		src_access = VK_ACCESS_TRANSFER_WRITE_BIT;
-		src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		src_stage = PipelineStage::TRANSFER;
 		break;
 	case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
 		src_access = VK_ACCESS_TRANSFER_READ_BIT;
-		src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		src_stage = PipelineStage::TRANSFER;
 		break;
 	case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
 		src_access = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-		src_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		src_stage = PipelineStage::COLOR_ATTACHMENT_OUTPUT;
 		break;
 	case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
 		src_access = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		src_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+		src_stage = PipelineStage::EARLY_FRAGMENT_TESTS | PipelineStage::LATE_FRAGMENT_TESTS;
 		break;
 	case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
 		src_access = VK_ACCESS_SHADER_READ_BIT;
-		src_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		src_stage = PipelineStage::FRAGMENT;
 		break;
 	}
 
-	VkPipelineStageFlags dst_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+	PipelineStage dst_stage = PipelineStage::ALL_COMMANDS;
 	VkAccessFlags dst_access = VK_ACCESS_NONE;
 	switch (new_layout)
 	{
 	case VK_IMAGE_LAYOUT_UNDEFINED:
-		dst_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		dst_stage = PipelineStage::TOP;
 		break;
 	case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR: // NOTE: probably doesn't work in some cases 
-		dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		dst_stage = PipelineStage::TRANSFER;
 		break;
 	case VK_IMAGE_LAYOUT_GENERAL:
-		dst_stage = VK_PIPELINE_STAGE_HOST_BIT;
+		dst_stage = PipelineStage::HOST;
 		break;
 	case VK_IMAGE_LAYOUT_PREINITIALIZED:
 		dst_access = VK_ACCESS_HOST_WRITE_BIT;
-		dst_stage = VK_PIPELINE_STAGE_HOST_BIT;
+		dst_stage = PipelineStage::HOST;
 		break;
 	case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
 		dst_access = VK_ACCESS_TRANSFER_WRITE_BIT;
-		dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		dst_stage = PipelineStage::TRANSFER;
 		break;
 	case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
 		dst_access = VK_ACCESS_TRANSFER_READ_BIT;
-		dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		dst_stage = PipelineStage::TRANSFER;
 		break;
 	case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
 		dst_access = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-		dst_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dst_stage = PipelineStage::COLOR_ATTACHMENT_OUTPUT;
 		break;
 	case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
 		dst_access |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		dst_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+		dst_stage = PipelineStage::EARLY_FRAGMENT_TESTS | PipelineStage::LATE_FRAGMENT_TESTS;
 		break;
 	case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
 		if (src_access == VK_ACCESS_NONE)
 		{
 			src_access = VK_ACCESS_HOST_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
-			src_stage = VK_PIPELINE_STAGE_HOST_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT;
+			src_stage = PipelineStage::HOST | PipelineStage::TRANSFER;
 		}
 		dst_access = VK_ACCESS_SHADER_READ_BIT;
-		dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		dst_stage = PipelineStage::FRAGMENT;
 		break;
 	}
 	insertMemoryBarrier(image, src_access, dst_access, old_layout, new_layout, src_stage, dst_stage, dependency, aspect, mip_levels, base_mip_level, layers, base_layer);

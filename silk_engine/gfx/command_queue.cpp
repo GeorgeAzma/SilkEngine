@@ -11,27 +11,33 @@ CommandQueue::CommandQueue(const std::optional<uint32_t>& queue_family_index, Vk
 
 CommandBuffer& CommandQueue::getCommandBuffer(bool begin)
 {
-	shared<CommandBuffer> command_buffer = command_buffers[index];
+	const shared<CommandBuffer>& command_buffer = command_buffers[index];
 	if (*command_buffer->getState() != CommandBuffer::State::INITIAL && *command_buffer->getState() != CommandBuffer::State::RECORDING)
-	{
-		++index;
-		if (index >= command_buffers.size())
-			command_buffers.emplace_back(makeShared<CommandBuffer>(*command_pool));
-		command_buffer = command_buffers[index];
-	}
+		return getNewCommandBuffer(begin);
+	if (begin)
+		command_buffer->begin();
+	return *command_buffer;
+}
+
+CommandBuffer& CommandQueue::getNewCommandBuffer(bool begin)
+{
+	++index;
+	if (index >= command_buffers.size())
+		command_buffers.emplace_back(makeShared<CommandBuffer>(*command_pool));
+	const shared<CommandBuffer>& command_buffer = command_buffers[index];
 	if (begin)
 		command_buffer->begin();
 	return *command_buffer;
 }
 
 
-const shared<CommandBuffer>& CommandQueue::submit(const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
+const shared<CommandBuffer>& CommandQueue::submit(const std::vector<PipelineStage>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
 {
 	command_buffers[index]->submit(queue_type, wait_stages, wait_semaphores, signal_semaphores);
 	return command_buffers[index];
 }
 
-void CommandQueue::execute(const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
+void CommandQueue::execute(const std::vector<PipelineStage>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
 {
 	command_buffers[index]->execute(queue_type, wait_stages, wait_semaphores, signal_semaphores);
 }

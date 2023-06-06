@@ -4,7 +4,6 @@
 #include "silk_engine/scene/light.h"
 #include "silk_engine/scene/instance_images.h"
 #include "silk_engine/scene/camera/camera.h"
-#include "silk_engine/gfx/buffers/buffer.h"
 
 class Image;
 class Font;

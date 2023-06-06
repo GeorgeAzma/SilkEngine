@@ -3,28 +3,6 @@
 class Sampler
 {
 public:
-	enum class MipmapMode : std::underlying_type_t<VkSamplerMipmapMode>
-	{
-		NONE = 0, // This is used for image class to determine if using mipmapping or not
-		NEAREST = VK_SAMPLER_MIPMAP_MODE_NEAREST,
-		LINEAR = VK_SAMPLER_MIPMAP_MODE_LINEAR
-	};
-
-	enum class Wrap : std::underlying_type_t<VkSamplerAddressMode>
-	{
-		REPEAT = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-		MIRROR_REPEAT = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
-		CLAMP_TO_EDGE = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-		CLAMP_TO_BORDER = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
-		MIRROR_CLAMP_TO_EDGE = VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
-	};
-
-	enum class Filter : std::underlying_type_t<VkFilter>
-	{
-		NEAREST = VK_FILTER_NEAREST,
-		LINEAR = VK_FILTER_LINEAR
-	};
-
 	struct Props
 	{
 		Filter min_filter = Filter::LINEAR;

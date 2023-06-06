@@ -100,12 +100,12 @@ void Buffer::getDataRanges(const std::vector<Range>& ranges) const
 	}
 }
 
-void Buffer::insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDeviceSize offset, VkDeviceSize size) const
+void Buffer::insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, PipelineStage source_stage, PipelineStage destination_stage, VkDeviceSize offset, VkDeviceSize size) const
 {
-	insertMemoryBarrier(buffer, source_access_mask, destination_access_mask, source_stage_mask, destination_stage_mask, offset, size ? size : ci.size);
+	insertMemoryBarrier(buffer, source_access_mask, destination_access_mask, source_stage, destination_stage, offset, size ? size : ci.size);
 }
 
-void Buffer::insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDeviceSize offset, VkDeviceSize size)
+void Buffer::insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, PipelineStage source_stage, PipelineStage destination_stage, VkDeviceSize offset, VkDeviceSize size)
 {
 	VkBufferMemoryBarrier barrier = {};
 	barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -116,7 +116,7 @@ void Buffer::insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_ac
 	barrier.buffer = buffer;
 	barrier.offset = offset;
 	barrier.size = size;
-	RenderContext::getCommandBuffer().pipelineBarrier(source_stage_mask, destination_stage_mask, VkDependencyFlags(0), {}, { barrier }, {});
+	RenderContext::getCommandBuffer().pipelineBarrier(source_stage, destination_stage, VkDependencyFlags(0), {}, { barrier }, {});
 }
 
 void Buffer::copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDeviceSize dst_offset, VkDeviceSize src_offset)

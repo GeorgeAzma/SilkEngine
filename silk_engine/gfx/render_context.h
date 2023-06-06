@@ -17,45 +17,61 @@ class RenderGraph;
 class RenderContext
 {
 public:
+	static constexpr size_t MAX_FRAMES = 2;
+
+public:
 	static void init(std::string_view app_name);
 	static void destroy();
 	static void update();
+	static void nextFrame() { frame = (frame + 1) % MAX_FRAMES; }
 
+	static CommandBuffer& getNewCommandBuffer(bool begin = true)
+	{
+		return getCommandQueues()[frame]->getNewCommandBuffer(begin);
+	}
 	static CommandBuffer& getCommandBuffer(bool begin = true)
 	{
 		return getCommandQueues()[frame]->getCommandBuffer(begin);
 	}
-	static const shared<CommandBuffer>& submit(const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {})
+	static const shared<CommandBuffer>& submit(const std::vector<PipelineStage>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {})
 	{
 		return getCommandQueues()[frame]->submit(wait_stages, wait_semaphores, signal_semaphores);
 	}
-	static void execute(const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {})
+	static void execute(const std::vector<PipelineStage>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {})
 	{
 		getCommandQueues()[frame]->execute(wait_stages, wait_semaphores, signal_semaphores);
 	}
 
+	static CommandBuffer& getNewComputeCommandBuffer(bool begin = true)
+	{
+		return getComputeCommandQueues()[frame]->getNewCommandBuffer(begin);
+	}
 	static CommandBuffer& getComputeCommandBuffer(bool begin = true)
 	{
 		return getComputeCommandQueues()[frame]->getCommandBuffer(begin);
 	}
-	static const shared<CommandBuffer>& submitCompute(const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {})
+	static const shared<CommandBuffer>& submitCompute(const std::vector<PipelineStage>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {})
 	{
 		return getComputeCommandQueues()[frame]->submit(wait_stages, wait_semaphores, signal_semaphores);
 	}
-	static void executeCompute(const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {})
+	static void executeCompute(const std::vector<PipelineStage>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {})
 	{
 		getComputeCommandQueues()[frame]->execute(wait_stages, wait_semaphores, signal_semaphores);
 	}
 
+	static CommandBuffer& getNewTransferCommandBuffer(bool begin = true)
+	{
+		return getTransferCommandQueues()[frame]->getNewCommandBuffer(begin);
+	}
 	static CommandBuffer& getTransferCommandBuffer(bool begin = true)
 	{
 		return getTransferCommandQueues()[frame]->getCommandBuffer(begin);
 	}
-	static const shared<CommandBuffer>& submitTransfer(const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {})
+	static const shared<CommandBuffer>& submitTransfer(const std::vector<PipelineStage>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {})
 	{
 		return getTransferCommandQueues()[frame]->submit(wait_stages, wait_semaphores, signal_semaphores);
 	}
-	static void executeTransfer(const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {})
+	static void executeTransfer(const std::vector<PipelineStage>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {})
 	{
 		getTransferCommandQueues()[frame]->execute(wait_stages, wait_semaphores, signal_semaphores);
 	}

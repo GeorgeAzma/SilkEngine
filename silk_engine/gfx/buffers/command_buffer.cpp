@@ -1,9 +1,9 @@
 #include "command_buffer.h"
 #include "silk_engine/gfx/render_context.h"
-#include "silk_engine/gfx/queue.h"
+#include "silk_engine/gfx/devices/queue.h"
 #include "silk_engine/gfx/devices/logical_device.h"
 #include "silk_engine/gfx/allocators/command_pool.h"
-#include "silk_engine/gfx/fence.h"
+#include "silk_engine/gfx/sync/fence.h"
 #include "silk_engine/gfx/instance.h"
 
 // TODO: Doesn't account for: "Any primary command buffer that is in the recording or executable state and has resetting command buffer recorded into it, becomes invalid."
@@ -433,24 +433,24 @@ void CommandBuffer::copyBuffer(VkBuffer source, VkBuffer destination, const std:
 	vkCmdCopyBuffer(command_buffer, source, destination, copy_regions.size(), copy_regions.data());
 }
 
-void CommandBuffer::pipelineBarrier(VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDependencyFlags dependency, const std::vector<VkMemoryBarrier>& memory_barriers, const std::vector<VkBufferMemoryBarrier>& buffer_barriers, const std::vector<VkImageMemoryBarrier>& image_barriers) const
+void CommandBuffer::pipelineBarrier(PipelineStage source_stage, PipelineStage destination_stage, VkDependencyFlags dependency, const std::vector<VkMemoryBarrier>& memory_barriers, const std::vector<VkBufferMemoryBarrier>& buffer_barriers, const std::vector<VkImageMemoryBarrier>& image_barriers) const
 {
-	vkCmdPipelineBarrier(command_buffer, source_stage_mask, destination_stage_mask, dependency, memory_barriers.size(), memory_barriers.data(), buffer_barriers.size(), buffer_barriers.data(), image_barriers.size(), image_barriers.data());
+	vkCmdPipelineBarrier(command_buffer, ecast(source_stage), ecast(destination_stage), dependency, memory_barriers.size(), memory_barriers.data(), buffer_barriers.size(), buffer_barriers.data(), image_barriers.size(), image_barriers.data());
 }
 
-void CommandBuffer::setEvent(VkEvent event, VkPipelineStageFlags stage_mask) const
+void CommandBuffer::setEvent(VkEvent event, PipelineStage stage) const
 {
-	vkCmdSetEvent(command_buffer, event, stage_mask);
+	vkCmdSetEvent(command_buffer, event, ecast(stage));
 }
 
-void CommandBuffer::resetEvent(VkEvent event, VkPipelineStageFlags stage_mask) const
+void CommandBuffer::resetEvent(VkEvent event, PipelineStage stage) const
 {
-	vkCmdResetEvent(command_buffer, event, stage_mask);
+	vkCmdResetEvent(command_buffer, event, ecast(stage));
 }
 
-void CommandBuffer::waitEvents(const std::vector<VkEvent>& events, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDependencyFlags dependency, const std::vector<VkMemoryBarrier>& memory_barriers, const std::vector<VkBufferMemoryBarrier>& buffer_barriers, const std::vector<VkImageMemoryBarrier>& image_barriers) const
+void CommandBuffer::waitEvents(const std::vector<VkEvent>& events, PipelineStage source_stage, PipelineStage destination_stage, VkDependencyFlags dependency, const std::vector<VkMemoryBarrier>& memory_barriers, const std::vector<VkBufferMemoryBarrier>& buffer_barriers, const std::vector<VkImageMemoryBarrier>& image_barriers) const
 {
-	vkCmdWaitEvents(command_buffer, events.size(), events.data(), source_stage_mask, destination_stage_mask, memory_barriers.size(), memory_barriers.data(), buffer_barriers.size(), buffer_barriers.data(), image_barriers.size(), image_barriers.data());
+	vkCmdWaitEvents(command_buffer, events.size(), events.data(), ecast(source_stage), ecast(destination_stage), memory_barriers.size(), memory_barriers.data(), buffer_barriers.size(), buffer_barriers.data(), image_barriers.size(), image_barriers.data());
 }
 
 void CommandBuffer::resetQueryPool(VkQueryPool query_pool, uint32_t first, uint32_t count) const
@@ -483,9 +483,9 @@ void CommandBuffer::dispatch(uint32_t global_invocation_count_x, uint32_t global
 	vkCmdDispatch(command_buffer, global_invocation_count_x, global_invocation_count_y, global_invocation_count_z);
 }
 
-void CommandBuffer::pushConstants(VkPipelineStageFlags stages, uint32_t offset, uint32_t size, const void* data) const
+void CommandBuffer::pushConstants(ShaderStage stages, uint32_t offset, uint32_t size, const void* data) const
 {
-	vkCmdPushConstants(command_buffer, active.pipeline_layout, stages, offset, size, data);
+	vkCmdPushConstants(command_buffer, active.pipeline_layout, ecast(stages), offset, size, data);
 }
 
 void CommandBuffer::draw(uint32_t vertices, uint32_t instances, uint32_t first_vertex, uint32_t first_instance) const
@@ -509,7 +509,7 @@ void CommandBuffer::drawIndexedIndirect(VkBuffer indirect_buffer, uint32_t offse
 }
 #pragma endregion
 
-void CommandBuffer::submit(VkQueueFlagBits queue_type, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
+void CommandBuffer::submit(VkQueueFlagBits queue_type, const std::vector<PipelineStage>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
 {
 	end();
 	if (*state != State::EXECUTABLE)
@@ -520,7 +520,7 @@ void CommandBuffer::submit(VkQueueFlagBits queue_type, const std::vector<VkPipel
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &command_buffer;
 
-	submit_info.pWaitDstStageMask = wait_stages.data();
+	submit_info.pWaitDstStageMask = (VkPipelineStageFlags*) wait_stages.data();
 	submit_info.waitSemaphoreCount = wait_semaphores.size();
 	submit_info.pWaitSemaphores = wait_semaphores.data();
 
@@ -533,7 +533,7 @@ void CommandBuffer::submit(VkQueueFlagBits queue_type, const std::vector<VkPipel
 	*state = State::PENDING;
 }
 
-void CommandBuffer::execute(VkQueueFlagBits queue_type, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
+void CommandBuffer::execute(VkQueueFlagBits queue_type, const std::vector<PipelineStage>& wait_stages, const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores)
 {
 	end();
 	if (*state != State::EXECUTABLE)

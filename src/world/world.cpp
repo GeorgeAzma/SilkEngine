@@ -1,11 +1,11 @@
 #include "world.h"
-#include "silk_engine/gfx/material.h"
+#include "silk_engine/gfx/pipeline/material.h"
 #include "silk_engine/gfx/pipeline/graphics_pipeline.h"
 #include "silk_engine/gfx/pipeline/compute_pipeline.h"
 #include "silk_engine/gfx/render_context.h"
 #include "silk_engine/gfx/pipeline/render_graph/render_graph.h"
 #include "silk_engine/gfx/pipeline/render_pass.h"
-#include "silk_engine/gfx/debug_renderer.h"
+#include "silk_engine/gfx/debug/debug_renderer.h"
 #include "silk_engine/gfx/devices/logical_device.h"
 #include "silk_engine/scene/camera/camera_controller.h"
 #include "silk_engine/scene/camera/camera.h"
@@ -35,6 +35,7 @@ World::World()
 	chunk_defines.emplace_back("TOTAL_BLOCKS", std::to_string(TOTAL_BLOCKS));
 	for (size_t i = 0; i < TOTAL_BLOCKS; ++i)
 		chunk_defines.emplace_back(BLOCK_NAMES[i], std::to_string(i));
+	chunk_defines.emplace_back("ANY", std::to_string(uint32_t(Block::ANY)));
 	chunk_defines.emplace_back("NONE", std::to_string(uint32_t(Block::NONE)));
 
 	VkRenderPass render_pass = RenderContext::getRenderGraph().getPass("Geometry").getRenderPass();
@@ -46,19 +47,29 @@ World::World()
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
 		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
 		//.enableTag(GraphicsPipeline::EnableTag::SAMPLE_SHADING)
-		//.setPolygonMode(GraphicsPipeline::PolygonMode::LINE)
 		.setCullMode(GraphicsPipeline::CullMode::FRONT)
 		.setDepthCompareOp(GraphicsPipeline::CompareOp::LESS);
 	chunk_pipeline->build();
-	GraphicsPipeline::add("Chunk", chunk_pipeline);
-	material = makeShared<Material>(chunk_pipeline);
+	material = makeShared<Material>(chunk_pipeline); 
+	
+	shared<GraphicsPipeline> line_pipeline = makeShared<GraphicsPipeline>();
+	VkBool32 lines = true;
+	line_pipeline->setShader(makeShared<Shader>("chunk", chunk_defines), { Pipeline::Constant{ "LINES", &lines, sizeof(lines)}})
+		.setRenderPass(render_pass)
+		.setSamples(RenderContext::getPhysicalDevice().getMaxSampleCount())
+		.enableTag(GraphicsPipeline::EnableTag::DEPTH_WRITE)
+		.enableTag(GraphicsPipeline::EnableTag::DEPTH_TEST)
+		.setDepthCompareOp(GraphicsPipeline::CompareOp::LESS)
+		.setPolygonMode(GraphicsPipeline::PolygonMode::LINE);
+	line_pipeline->build();
+	line_material = makeShared<Material>(line_pipeline);
 
 	Image::Props props{};
-	props.sampler_props.mag_filter = Sampler::Filter::NEAREST;
-	props.sampler_props.min_filter = Sampler::Filter::NEAREST;
-	props.sampler_props.mipmap_mode = Sampler::MipmapMode::LINEAR;
-	props.sampler_props.u_wrap = Sampler::Wrap::REPEAT;
-	props.sampler_props.v_wrap = Sampler::Wrap::REPEAT;
+	props.sampler_props.mag_filter = Filter::NEAREST;
+	props.sampler_props.min_filter = Filter::NEAREST;
+	props.sampler_props.mipmap_mode = MipmapMode::LINEAR;
+	props.sampler_props.u_wrap = Wrap::REPEAT;
+	props.sampler_props.v_wrap = Wrap::REPEAT;
 	props.sampler_props.anisotropy = 0.0f;
 	texture_atlas = makeShared<Image>(BLOCK_TEXTURES, props);
 	texture_atlas->transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -75,7 +86,6 @@ void World::update()
 	const Chunk::Coord& chunk_origin = Chunk::toChunkCoord((Chunk::Coord)round(origin));
 
 	// Delete far chunks
-	RenderContext::getLogicalDevice().wait();
 	constexpr float max_chunk_distance = 64;
 	constexpr float max_chunk_distance2 = max_chunk_distance * max_chunk_distance;
 	for (int32_t i = 0; i < chunks.size(); ++i)
@@ -83,9 +93,9 @@ void World::update()
 		if (distance2(vec3(chunks[i]->getPosition()), vec3(chunk_origin)) > max_chunk_distance2)
 		{
 			// TODO: When removing chunk, other chunks neighbors are made invalid, fix that
-			//std::swap(chunks[i], chunks.back());
-			//chunks.pop_back();
-			//--i;
+			std::swap(chunks[i], chunks.back());
+			chunks.pop_back();
+			--i;
 		}
 	}
 
@@ -119,9 +129,8 @@ void World::update()
 		// Queue up to be generated chunks
 		t2.begin();
 		std::ranges::sort(chunks, [&](const shared<Chunk>& lhs, const shared<Chunk>& rhs) {
-			constexpr vec3 modifier = vec3(1, 2, 1);
-			return ((10.0f + distance2(vec3(chunk_origin) * modifier, vec3(lhs->getPosition()) * modifier)) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f)) <
-				   ((10.0f + distance2(vec3(chunk_origin) * modifier, vec3(rhs->getPosition()) * modifier)) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f));
+			return ((10.0f + distance2(vec3(chunk_origin), vec3(lhs->getPosition()))) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f)) <
+				   ((10.0f + distance2(vec3(chunk_origin), vec3(rhs->getPosition()))) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f));
 		});
 
 		std::unordered_set<Chunk::Coord> queued_chunks;
@@ -145,6 +154,7 @@ void World::update()
 				break;
 		}
 		t2.end();
+
 		t1.begin();
 		for (const auto& chunk : queued_chunks)
 		{
@@ -178,18 +188,30 @@ void World::update()
 	vec4 dx = v * vec4(1, 0, 0, 0);
 	vec4 dy = v * vec4(0, 1, 0, 0);
 	vec4 dz = v * vec4(0, 0, 1, 0);
-	//DebugRenderer::color({ 1.0f, 0.2f, 0.2f, 0.7f });
-	//DebugRenderer::line(w, h, w + dx.x * s, h + dx.y * s, 2.0f);
-	//DebugRenderer::color({ 0.2f, 1.0f, 0.2f, 0.7f });
-	//DebugRenderer::line(w, h, w + dy.x * s, h + dy.y * s, 2.0f);
-	//DebugRenderer::color({ 0.2f, 0.5f, 1.0f, 0.7f });
-	//DebugRenderer::line(w, h, w + dz.x * s, h + dz.y * s, 2.0f);
+	DebugRenderer::color({ 1.0f, 0.2f, 0.2f, 0.7f });
+	DebugRenderer::line(w, h, w + dx.x * s, h + dx.y * s, 2.0f);
+	DebugRenderer::color({ 0.2f, 1.0f, 0.2f, 0.7f });
+	DebugRenderer::line(w, h, w + dy.x * s, h + dy.y * s, 2.0f);
+	DebugRenderer::color({ 0.2f, 0.5f, 1.0f, 0.7f });
+	DebugRenderer::line(w, h, w + dz.x * s, h + dz.y * s, 2.0f);
 }
 
 void World::render()
 {
 	static DebugTimer t("Rendering");
 	t.begin();
+
+	line_material->set("GlobalUniform", *DebugRenderer::getGlobalUniformBuffer());
+	line_material->set("texture_atlas", *texture_atlas);
+	line_material->bind();
+	for (size_t i = 0; i < std::min(chunks.size(), size_t(16)); ++i)
+	{
+		const auto& chunk = chunks[i];
+		if (chunk->getVertexCount() == 0 || !chunk->visible)
+			continue;
+		chunk->render();
+	}
+	
 	material->set("GlobalUniform", *DebugRenderer::getGlobalUniformBuffer());
 	material->set("texture_atlas", *texture_atlas);
 	material->bind();
@@ -199,6 +221,7 @@ void World::render()
 			continue;
 		chunk->render();
 	}
+
 	t.end();
 	if (t.getSamples() >= 64)
 	{

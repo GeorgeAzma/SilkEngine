@@ -94,8 +94,6 @@ public:
 		return missing_neighbors;
 	}
 
-	bool isNeighborValid(size_t index) const { return neighbors[index]; }
-
 	Block& at(uint32_t x, uint32_t y, uint32_t z) { return blocks.size() ? blocks[idx(x, y, z)] : fill; }
 	Block at(uint32_t x, uint32_t y, uint32_t z) const { return blocks.size() ? blocks[idx(x, y, z)] : fill; }
 	const Coord& getPosition() const { return position; }
@@ -147,5 +145,5 @@ private:
 	shared<Material> gen_material = nullptr;
 	std::array<Chunk*, 26> neighbors = {};
 	bool dirty = true;
-	Block fill = Block::AIR;
+	Block fill = Block::ANY;
 };

@@ -1,6 +1,6 @@
 #include "debug_renderer.h"
-#include "pipeline/graphics_pipeline.h"
-#include "descriptors/descriptor_set.h"
+#include "silk_engine/gfx/pipeline/graphics_pipeline.h"
+#include "silk_engine/gfx/descriptors/descriptor_set.h"
 #include "silk_engine/scene/meshes/mesh.h"
 #include "silk_engine/scene/meshes/bezier_mesh.h"
 #include "silk_engine/scene/meshes/line_mesh.h"
@@ -14,15 +14,15 @@
 #include "silk_engine/scene/meshes/cube_mesh.h"
 #include "silk_engine/scene/meshes/sphere_mesh.h"
 #include "silk_engine/scene/model.h"
-#include "window/window.h"
-#include "material.h"
-#include "images/image.h"
-#include "ui/font.h"
-#include "buffers/buffer.h"
-#include "render_context.h"
-#include "devices/logical_device.h"
-#include "pipeline/render_graph/render_graph.h"
-#include "pipeline/render_pass.h"
+#include "silk_engine/gfx/window/window.h"
+#include "silk_engine/gfx/images/image.h"
+#include "silk_engine/gfx/ui/font.h"
+#include "silk_engine/gfx/buffers/buffer.h"
+#include "silk_engine/gfx/render_context.h"
+#include "silk_engine/gfx/devices/logical_device.h"
+#include "silk_engine/gfx/pipeline/render_graph/render_graph.h"
+#include "silk_engine/gfx/pipeline/material.h"
+#include "silk_engine/gfx/pipeline/render_pass.h"
 
 shared<Buffer> DebugRenderer::global_uniform_buffer = nullptr;
 std::array<Light, DebugRenderer::MAX_LIGHTS> DebugRenderer::lights{};
@@ -210,8 +210,8 @@ void DebugRenderer::init()
 	Image::Props image_props{};
 	image_props.width = 1;
 	image_props.height = 1;
-	image_props.sampler_props.min_filter = Sampler::Filter::NEAREST;
-	image_props.sampler_props.mag_filter = Sampler::Filter::NEAREST;
+	image_props.sampler_props.min_filter = Filter::NEAREST;
+	image_props.sampler_props.mag_filter = Filter::NEAREST;
 	image_props.sampler_props.anisotropy = 1.0f;
 	constexpr u8vec4 white(255);
 	white_image = makeShared<Image>(image_props);
@@ -227,8 +227,8 @@ void DebugRenderer::init()
 
 	image_props.width = 2;
 	image_props.height = 2;
-	image_props.sampler_props.u_wrap = Sampler::Wrap::CLAMP_TO_EDGE;
-	image_props.sampler_props.v_wrap = Sampler::Wrap::CLAMP_TO_EDGE;
+	image_props.sampler_props.u_wrap = Wrap::CLAMP_TO_EDGE;
+	image_props.sampler_props.v_wrap = Wrap::CLAMP_TO_EDGE;
 	constexpr u8vec4 null_data[4] = { { 0, 0, 0, 255 }, { 255, 0, 255, 255 }, { 255, 0, 255, 255 }, { 0, 0, 0, 255 } };
 	auto null_image = makeShared<Image>(image_props);
 	null_image->setData(null_data);

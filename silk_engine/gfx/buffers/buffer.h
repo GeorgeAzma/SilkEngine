@@ -49,13 +49,13 @@ public:
 	void getData(void* data, VkDeviceSize size = 0, VkDeviceSize offset = 0) const;
 	void getDataRanges(const std::vector<Range>& ranges) const;
 
-	void insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDeviceSize offset = 0, VkDeviceSize size = 0) const;
+	void insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, PipelineStage source_stage, PipelineStage destination_stage, VkDeviceSize offset = 0, VkDeviceSize size = 0) const;
 
 public:
 	static void copy(VkBuffer destination, VkBuffer source, VkDeviceSize size, VkDeviceSize dst_offset = 0, VkDeviceSize src_offset = 0);
 
 protected:
-	static void insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDeviceSize offset, VkDeviceSize size);
+	static void insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, PipelineStage source_stage, PipelineStage destination_stage, VkDeviceSize offset, VkDeviceSize size);
 
 protected:
 	VkBuffer buffer = nullptr;

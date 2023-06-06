@@ -47,6 +47,13 @@ static constexpr std::underlying_type_t<Enum> ecast(Enum e)
     return static_cast<std::underlying_type_t<Enum>>(e);
 }
 
+#define ADD_ENUM_CLASS_OPERATORS(Enum)\
+static constexpr Enum operator|(Enum lhs, Enum rhs) { return Enum(ecast(lhs) | ecast(rhs)); }\
+static constexpr Enum& operator|=(Enum& lhs, Enum rhs) { return (lhs = lhs | rhs); }\
+static constexpr Enum operator&(Enum lhs, Enum rhs) { return Enum(ecast(lhs) & ecast(rhs)); }\
+static constexpr Enum& operator&=(Enum& lhs, Enum rhs) { return (lhs = lhs & rhs); }\
+static constexpr Enum operator*(std::underlying_type_t<Enum> lhs, Enum rhs) { return Enum(lhs * ecast(rhs)); }
+
 struct NoMove
 {
     NoMove() {}
@@ -221,3 +228,4 @@ namespace std
 #include "silk_engine/utils/time.h"
 #include "silk_engine/utils/random.h"
 #include "silk_engine/core/log.h"
+#include "silk_engine/gfx/enums.h"

@@ -1,3 +1,5 @@
+layout (constant_id = 0) const bool LINES = false;
+
 layout(location = 0) in uvec2 vertex;
 
 layout(location = 0) out VertexOutput 
@@ -9,6 +11,9 @@ layout(location = 0) out VertexOutput
 layout(set = 0, binding = 0) uniform GlobalUniform
 {
     mat4 projection_view;
+	mat4 projection_view2D;
+	mat4 projection;
+	mat4 view;
 } global_uniform;
 
 layout(push_constant) uniform PushConstant
@@ -40,11 +45,14 @@ void main()
     const uint vert_id = (vertex.x) & 3;
     const uint face_id = (vertex.x >> 2) & 7;
     const uint idx = (vertex.x >> 5) & (VOLUME - 1);
-    const float ao = float(vertex.y & 3) * 0.3333;
-    vert_out.light = vec3(0.07) + face_light_values[face_id] * ao;
+    vert_out.light = vec3(0.07) + face_light_values[face_id];
     const uint run = (vertex.y >> 2) & EDGE;
     vert_out.uv = vec3(uvs[vert_id] * vec2(run + 1, 1), (vertex.x >> 23) & 255);
     const ivec3 local_pos = ivec3(idx % SIZE, idx / AREA, idx % AREA / SIZE);
-    const vec3 world_pos = vec3(local_pos + positions[face_id * 4 + vert_id] * ivec3(1 + run * face_greedy_axis[face_id].x, 1, 1 + run * face_greedy_axis[face_id].y) + chunk_position * DIM);
+    vec3 world_pos;
+    if (LINES)
+        world_pos = vec3(vec3(local_pos) + vec3(positions[face_id * 4 + vert_id]) * 1.008 - 0.004 + vec3(positions[face_id * 4 + vert_id]) * vec3(run * face_greedy_axis[face_id].x, 0, run * face_greedy_axis[face_id].y) + vec3(chunk_position * DIM));
+    else
+        world_pos = vec3(local_pos + positions[face_id * 4 + vert_id] * ivec3(1 + run * face_greedy_axis[face_id].x, 1, 1 + run * face_greedy_axis[face_id].y) + chunk_position * DIM);
     gl_Position = global_uniform.projection_view * vec4(world_pos, 1.0);
 }

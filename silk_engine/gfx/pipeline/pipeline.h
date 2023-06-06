@@ -22,7 +22,7 @@ private:
 public:
 	struct Constant
 	{
-		std::string name;
+		const char* name;
 		void* data;
 		size_t size;
 	};

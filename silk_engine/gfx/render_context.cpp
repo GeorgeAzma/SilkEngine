@@ -18,7 +18,6 @@
 #include "silk_engine/gfx/buffers/command_buffer.h"
 #include "silk_engine/scene/meshes/mesh.h"
 #include "silk_engine/scene/model.h"
-#include "silk_engine/gfx/material.h"
 #include <stb_image_write.h>
 
 void RenderContext::init(std::string_view app_name)
@@ -78,22 +77,18 @@ void RenderContext::destroy()
 
 void RenderContext::update()
 {
-	uint32_t last_frame = (int64_t(frame) - 1) >= 0 ? (frame - 1) : 2;
-
 	for (auto&& [tid, command_queue] : command_queues)
-		command_queue[last_frame]->reset();
+		command_queue[frame]->reset();
 
 	if (physical_device->getComputeQueue() != -1)
 		for (auto&& [tid, command_queue] : compute_command_queues)
-			command_queue[last_frame]->reset();
+			command_queue[frame]->reset();
 
 	if (physical_device->getTransferQueue() != -1)
 		for (auto&& [tid, command_queue] : transfer_command_queues)
-			command_queue[last_frame]->reset();
+			command_queue[frame]->reset();
 
 	DescriptorAllocator::reset();
-
-	frame = (frame + 1) % 3;
 }
 
 void RenderContext::screenshot(const fs::path& file)
@@ -107,8 +102,8 @@ void RenderContext::screenshot(const fs::path& file)
 	Image::Props props{};
 	props.width = Window::get().getWidth();
 	props.height = Window::get().getHeight();
-	props.format = Image::Format::RGBA;
-	props.usage = Image::TRANSFER_DST | Image::TRANSFER_SRC;
+	props.format = Format::RGBA;
+	props.usage = ImageUsage::TRANSFER_DST | ImageUsage::TRANSFER_SRC;
 	auto image = makeShared<Image>(props);
 
 	logical_device->wait();
@@ -120,7 +115,7 @@ void RenderContext::screenshot(const fs::path& file)
 
 	const fs::path folder = "res/images/screenshots";
 	fs::path file_path = folder / file;
-	stbi_write_png(file_path.string().c_str(), Window::get().getWidth(), Window::get().getHeight(), Image::getFormatChannels(Image::Format(Window::get().getSurface().getFormat())), data.data(), 0);
+	stbi_write_png(file_path.string().c_str(), Window::get().getWidth(), Window::get().getHeight(), getFormatChannels(Format(Window::get().getSurface().getFormat())), data.data(), 0);
 	SK_TRACE("Screenshot saved at {}", file_path);
 }
 

@@ -1,3 +1,5 @@
+layout (constant_id = 0) const bool LINES = false;
+
 layout(location = 0) in VertexOutput 
 {
     vec3 uv;
@@ -11,6 +13,8 @@ layout(location = 0) out vec4 color;
 void main()
 {
     color = texture(texture_atlas, frag_in.uv) * vec4(frag_in.light, 1.0);
+    if (LINES)
+        color = vec4(0.1, 0.25, 0.3, 1.0);
     if (color.a < 0.01)
         discard;
 }

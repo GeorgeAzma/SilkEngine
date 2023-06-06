@@ -4,7 +4,7 @@
 #include "silk_engine/gfx/window/window.h"
 #include "silk_engine/gfx/window/surface.h"
 #include "silk_engine/gfx/devices/logical_device.h"
-#include "silk_engine/gfx/queue.h"
+#include "silk_engine/gfx/devices/queue.h"
 
 SwapChain::SwapChain(const Surface& surface, bool vsync)
 	: surface(surface)
@@ -147,7 +147,7 @@ void SwapChain::recreate(bool vsync)
 	this->images.resize(image_count);
 
 	for (size_t i = 0; i < images.size(); ++i)
-		this->images[i] = makeShared<Image>(getWidth(), getHeight(), Image::Format(surface.getFormat()), images[i]);
+		this->images[i] = makeShared<Image>(getWidth(), getHeight(), Format(surface.getFormat()), images[i]);
 }
 
 SwapChain::~SwapChain()

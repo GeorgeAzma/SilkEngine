@@ -130,6 +130,7 @@ public:
 	GraphicsPipeline& setMinSampleShading(float min_sample_shading);
 	GraphicsPipeline& setTopology(Topology topology);
 	GraphicsPipeline& setShader(const shared<Shader>& shader, const std::vector<Pipeline::Constant>& constants = {});
+	GraphicsPipeline& from(const GraphicsPipeline& other);
 
 	void build();
 

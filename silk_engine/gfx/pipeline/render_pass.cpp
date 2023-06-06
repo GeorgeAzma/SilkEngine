@@ -68,7 +68,7 @@ size_t RenderPass::addAttachment(const AttachmentProps& attachment_props)
     }
 
     // RULE: If not using stencil, stencil load and store ops should be set to DONT_CARE
-    bool stencil = Image::isStencilFormat(attachment_props.format);
+    bool stencil = isStencilFormat(attachment_props.format);
     if (!stencil)
     {
         attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -97,13 +97,13 @@ size_t RenderPass::addAttachment(const AttachmentProps& attachment_props)
     if (cleared)
     {
         any_cleared = true;
-        if (Image::isColorFormat(attachment_props.format))
+        if (isColorFormat(attachment_props.format))
             clear_value.color = { 0.0f, 0.0f, 0.0f, 0.0f };
         else
             clear_value.depthStencil = { 1.0f, 0 };
     }
 
-    if (Image::isColorFormat(attachment_props.format))
+    if (isColorFormat(attachment_props.format))
     {
         if (multisampled)
         {
@@ -130,11 +130,11 @@ size_t RenderPass::addAttachment(const AttachmentProps& attachment_props)
     }
     else // Depth | Stencil
     {
-        if (Image::isDepthOnlyFormat(attachment_props.format))
+        if (isDepthOnlyFormat(attachment_props.format))
             attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-        else if (Image::isStencilOnlyFormat(attachment_props.format))
+        else if (isStencilOnlyFormat(attachment_props.format))
             attachment_description.finalLayout = VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL;
-        else if (Image::isDepthStencilFormat(attachment_props.format))
+        else if (isDepthStencilFormat(attachment_props.format))
             attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         else SK_ERROR("Render pass attachment is in incompatible format");
         subpass_info.depth_attachment_reference.attachment = attachment_index;
@@ -142,7 +142,7 @@ size_t RenderPass::addAttachment(const AttachmentProps& attachment_props)
         clear_values.emplace_back(clear_value);
     }
     attachment_descriptions.emplace_back(std::move(attachment_description)); 
-    if (Image::isColorFormat(attachment_props.format) && multisampled)
+    if (isColorFormat(attachment_props.format) && multisampled)
         return attachment_descriptions.size() - 2;
     return attachment_descriptions.size() - 1;
 }

@@ -6,11 +6,9 @@
 #include "silk_engine/gfx/window/surface.h"
 #include "silk_engine/gfx/window/swap_chain.h"
 #include "silk_engine/gfx/buffers/framebuffer.h"
-#include "silk_engine/gfx/fence.h"
-#include "silk_engine/gfx/semaphore.h"
-#include "silk_engine/gfx/material.h"
+#include "silk_engine/gfx/pipeline/material.h"
 #include "silk_engine/gfx/render_context.h"
-#include "silk_engine/gfx/debug_renderer.h"
+#include "silk_engine/gfx/debug/debug_renderer.h"
 #include "silk_engine/gfx/pipeline/render_pass.h"
 #include "silk_engine/gfx/pipeline/graphics_pipeline.h"
 #include "silk_engine/gfx/devices/logical_device.h"
@@ -51,9 +49,10 @@ MyApp::~MyApp()
 
 void MyApp::onUpdate()
 {
+    RenderContext::update();
     if (Scene::getActive())
         Scene::getActive()->update();
-    RenderContext::update();
+    RenderContext::nextFrame();
 }
 
 void MyApp::onKeyPress(const KeyPressEvent& e)

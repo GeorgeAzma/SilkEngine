@@ -23,17 +23,6 @@ public:
 	struct Stage : NoCopy
 	{
 	public:
-		enum Type : VkShaderStageFlags
-		{
-			VERTEX = VK_SHADER_STAGE_VERTEX_BIT,
-			FRAGMENT = VK_SHADER_STAGE_FRAGMENT_BIT,
-			GEOMETRY = VK_SHADER_STAGE_GEOMETRY_BIT,
-			COMPUTE = VK_SHADER_STAGE_COMPUTE_BIT,
-			TESSELATION_CONTROL = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,
-			TESSELATION_EVALUATION = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
-		};
-
-	public:
 		Stage(const fs::path& file);
 		~Stage();
 
@@ -51,7 +40,7 @@ public:
 
 	public:
 		fs::path file = "";
-		Type type = Type(0);
+		ShaderStage type = ShaderStage(0);
 		VkShaderModule module = nullptr;
 		std::vector<uint32_t> binary = {};
 	};
@@ -68,7 +57,7 @@ public:
 		uint32_t count;
 		uint32_t set;
 		uint32_t binding;
-		Stage::Type stage;
+		ShaderStage stage;
 		VkDescriptorType type;
 		std::string name;
 	};
@@ -87,7 +76,7 @@ public:
 		std::vector<Resource> resources;
 		std::vector<VkPushConstantRange> push_constants;
 		std::unordered_map<std::string_view, ResourceLocation> resource_locations;
-		std::unordered_map<std::string_view, Constant> constants;
+		std::unordered_map<std::string, Constant> constants;
 		std::vector<VkVertexInputBindingDescription> vertex_input_binding_descriptions;
 		std::vector<VkVertexInputAttributeDescription> vertex_input_attribute_descriptions;
 		std::unordered_map<uint32_t, std::string_view> render_targets;
@@ -106,7 +95,7 @@ public:
 	const ReflectionData& getReflectionData() const { return reflection_data; }
 
 private:
-	void loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, Stage::Type stage, VkDescriptorType type);
+	void loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, ShaderStage stage, VkDescriptorType type);
 	
 private:
 	std::vector<unique<Stage>> stages;
@@ -120,23 +109,3 @@ public:
 private:
 	static inline std::unordered_map<std::string_view, shared<Shader>> shaders{};
 };
-
-static Shader::Stage::Type operator|(Shader::Stage::Type lhs, Shader::Stage::Type rhs)
-{
-	return Shader::Stage::Type(ecast(lhs) | ecast(rhs));
-}
-
-static Shader::Stage::Type& operator|=(Shader::Stage::Type& lhs, Shader::Stage::Type rhs)
-{
-	return (lhs = lhs | rhs);
-}
-
-static Shader::Stage::Type operator&(Shader::Stage::Type lhs, Shader::Stage::Type rhs)
-{
-	return Shader::Stage::Type(ecast(lhs) & ecast(rhs));
-}
-
-static Shader::Stage::Type& operator&=(Shader::Stage::Type& lhs, Shader::Stage::Type rhs)
-{
-	return (lhs = lhs & rhs);
-}

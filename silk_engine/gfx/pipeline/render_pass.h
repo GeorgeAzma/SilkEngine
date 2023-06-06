@@ -7,7 +7,7 @@ class SwapChain;
 
 struct AttachmentProps
 {
-	Image::Format format = Image::Format::BGRA;
+	Format format = Format::BGRA;
 	VkImageLayout final_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 

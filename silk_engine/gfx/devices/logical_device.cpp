@@ -1,6 +1,6 @@
 #include "logical_device.h"
+#include "queue.h"
 #include "silk_engine/gfx/render_context.h"
-#include "silk_engine/gfx/queue.h"
 #include "silk_engine/gfx/window/surface.h"
 #include "silk_engine/gfx/instance.h"
 

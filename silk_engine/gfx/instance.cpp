@@ -1,6 +1,6 @@
 #include "instance.h"
 #include "render_context.h"
-#include "debug_messenger.h"
+#include "debug/debug_messenger.h"
 #include "silk_engine/gfx/devices/physical_device.h"
 #include "silk_engine/gfx/devices/logical_device.h"
 

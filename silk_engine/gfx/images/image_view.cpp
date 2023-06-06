@@ -3,15 +3,15 @@
 #include "silk_engine/gfx/render_context.h"
 #include "silk_engine/gfx/devices/logical_device.h"
 
-ImageView::ImageView(VkImage image, Image::Format format, size_t base_mip_level, uint32_t mip_levels, size_t base_layer, size_t layers, Image::Type image_type, VkComponentMapping components)
+ImageView::ImageView(VkImage image, Format format, size_t base_mip_level, uint32_t mip_levels, size_t base_layer, size_t layers, ImageViewType image_view_type, VkComponentMapping components)
 {
 	VkImageViewCreateInfo ci{};
 	ci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	ci.image = image;
-	ci.viewType = VkImageViewType(image_type);
+	ci.viewType = VkImageViewType(image_view_type);
 	ci.format = VkFormat(format);
 	ci.components = components;
-	ci.subresourceRange.aspectMask = Image::getFormatVulkanAspectFlags(format);
+	ci.subresourceRange.aspectMask = ecast(getFormatImageAspect(format));
 	ci.subresourceRange.baseMipLevel = base_mip_level;
 	ci.subresourceRange.levelCount = mip_levels;
 	ci.subresourceRange.baseArrayLayer = base_layer;
@@ -20,9 +20,8 @@ ImageView::ImageView(VkImage image, Image::Format format, size_t base_mip_level,
 }
 
 ImageView::ImageView(const Image& image, size_t base_mip_level, uint32_t mip_levels, size_t base_layer, size_t layers, VkComponentMapping components)
-	: ImageView(VkImage(image), image.getFormat(), base_mip_level, mip_levels ? mip_levels : (image.getMipLevels() - base_mip_level), base_layer, layers ? layers : (image.getLayers() - base_layer), image.getType(), components)
-{
-}
+	: ImageView(VkImage(image), image.getFormat(), base_mip_level, mip_levels ? mip_levels : (image.getMipLevels() - base_mip_level), base_layer, layers ? layers : (image.getLayers() - base_layer), image.getViewType(), components)
+{}
 
 ImageView::~ImageView()
 {

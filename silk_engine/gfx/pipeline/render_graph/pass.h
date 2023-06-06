@@ -19,7 +19,7 @@ public:
 	Pass(const char* name, Type type, RenderGraph& render_graph)
 		: name(name), type(type), render_graph(render_graph) {}
 	
-	Resource& addAttachment(const char* name, Image::Format format = Image::Format::BGRA, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT, const std::vector<Resource*>& inputs = {});
+	Resource& addAttachment(const char* name, Format format = Format::BGRA, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT, const std::vector<Resource*>& inputs = {});
 	void setRenderCallback(std::function<void(const RenderGraph& render_graph)>&& render_callback) { this->render_callback = std::move(render_callback); }
 	void setSubpass(uint32_t subpass) { render.subpass = subpass; }
 

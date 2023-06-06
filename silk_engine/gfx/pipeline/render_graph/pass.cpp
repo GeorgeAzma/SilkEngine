@@ -1,7 +1,7 @@
 #include "pass.h"
 #include "render_graph.h"
 
-Resource& Pass::addAttachment(const char* name, Image::Format format, VkSampleCountFlagBits samples, const std::vector<Resource*>& inputs)
+Resource& Pass::addAttachment(const char* name, Format format, VkSampleCountFlagBits samples, const std::vector<Resource*>& inputs)
 {
 	Resource& resource = render_graph.addResource(makeUnique<Resource>(name, Resource::Type::ATTACHMENT, *this));
 	resource.attachment.format = format;

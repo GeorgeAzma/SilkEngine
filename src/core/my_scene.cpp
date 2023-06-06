@@ -1,6 +1,6 @@
 #include "silk_engine/gfx/window/window.h"
 #include "silk_engine/core/input/input.h"
-#include "silk_engine/gfx/debug_renderer.h"
+#include "silk_engine/gfx/debug/debug_renderer.h"
 #include "silk_engine/utils/cooldown.h"
 #include "silk_engine/gfx/render_context.h"
 #include "silk_engine/gfx/pipeline/render_graph/render_graph.h"
@@ -14,9 +14,9 @@ void MyScene::onStart()
 
     render_graph = makeShared<RenderGraph>();
     auto& geometry = render_graph->addPass("Geometry");
-    auto& color = geometry.addAttachment("Color", Image::Format::BGRA, RenderContext::getPhysicalDevice().getMaxSampleCount());
+    auto& color = geometry.addAttachment("Color", Format::BGRA, RenderContext::getPhysicalDevice().getMaxSampleCount());
     color.setClearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
-    auto& depth = geometry.addAttachment("Depth", Image::Format::DEPTH24_STENCIL, RenderContext::getPhysicalDevice().getMaxSampleCount());
+    auto& depth = geometry.addAttachment("Depth", Format::DEPTH24_STENCIL, RenderContext::getPhysicalDevice().getMaxSampleCount());
     depth.setClearDepthStencil({ 1.0f, 0 });
     geometry.setRenderCallback([&](const RenderGraph& render_graph) 
     { 

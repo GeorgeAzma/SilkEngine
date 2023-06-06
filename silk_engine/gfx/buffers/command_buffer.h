@@ -1,4 +1,3 @@
-
 #pragma once
 
 class Queue;
@@ -93,24 +92,24 @@ public:
 	
 	void executeCommands(const std::vector<VkCommandBuffer>& command_buffers) const;
 	void copyBuffer(VkBuffer source, VkBuffer destination, const std::vector<VkBufferCopy>& copy_regions) const;
-	void pipelineBarrier(VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDependencyFlags dependency, const std::vector<VkMemoryBarrier>& memory_barriers, const std::vector<VkBufferMemoryBarrier>& buffer_barriers, const std::vector<VkImageMemoryBarrier>& image_barriers) const;
-	void setEvent(VkEvent event, VkPipelineStageFlags stage_mask) const; 
-	void resetEvent(VkEvent event, VkPipelineStageFlags stage_mask) const;
-	void waitEvents(const std::vector<VkEvent>& events, VkPipelineStageFlags source_stage_mask, VkPipelineStageFlags destination_stage_mask, VkDependencyFlags dependency, const std::vector<VkMemoryBarrier>& memory_barriers, const std::vector<VkBufferMemoryBarrier>& buffer_barriers, const std::vector<VkImageMemoryBarrier>& image_barriers) const;
+	void pipelineBarrier(PipelineStage source_stage, PipelineStage destination_stage, VkDependencyFlags dependency, const std::vector<VkMemoryBarrier>& memory_barriers, const std::vector<VkBufferMemoryBarrier>& buffer_barriers, const std::vector<VkImageMemoryBarrier>& image_barriers) const;
+	void setEvent(VkEvent event, PipelineStage stage) const;
+	void resetEvent(VkEvent event, PipelineStage stage) const;
+	void waitEvents(const std::vector<VkEvent>& events, PipelineStage source_stage, PipelineStage destination_stage, VkDependencyFlags dependency, const std::vector<VkMemoryBarrier>& memory_barriers, const std::vector<VkBufferMemoryBarrier>& buffer_barriers, const std::vector<VkImageMemoryBarrier>& image_barriers) const;
 	void resetQueryPool(VkQueryPool query_pool, uint32_t first, uint32_t count) const;
 	void blitImage(VkImage source, VkImageLayout source_layout, VkImage destination, VkImageLayout destination_layout, const std::vector<VkImageBlit>& blit_regions, VkFilter filter = VK_FILTER_LINEAR) const;
 	void copyBufferToImage(VkBuffer buffer, VkImage image, VkImageLayout image_layout, const std::vector<VkBufferImageCopy>& copy_regions) const;
 	void copyImageToBuffer(VkImage image, VkImageLayout image_layout, VkBuffer buffer, const std::vector<VkBufferImageCopy>& copy_regions) const;
 	void copyImage(VkImage source, VkImageLayout source_layout, VkImage destination, VkImageLayout destination_layout, const std::vector<VkImageCopy>& copy_regions) const;
 	void dispatch(uint32_t global_invocation_count_x, uint32_t global_invocation_count_y, uint32_t global_invocation_count_z) const;
-	void pushConstants(VkPipelineStageFlags stages, uint32_t offset, uint32_t size, const void* data) const;
+	void pushConstants(ShaderStage stages, uint32_t offset, uint32_t size, const void* data) const;
 	void draw(uint32_t vertices, uint32_t instances = 1, uint32_t first_vertex = 0, uint32_t first_instance = 0) const;
 	void drawIndexed(uint32_t indices, uint32_t instances = 1, uint32_t first_index = 0, uint32_t vertex_offset = 0, uint32_t first_instance = 0) const;
 	void drawIndirect(VkBuffer indirect_buffer, uint32_t offset, uint32_t draw_count, uint32_t stride) const;
 	void drawIndexedIndirect(VkBuffer indirect_buffer, uint32_t offset, uint32_t draw_count, uint32_t stride) const;
 
-	void submit(VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
-	void execute(VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
+	void submit(VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT, const std::vector<PipelineStage>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
+	void execute(VkQueueFlagBits queue_type = VK_QUEUE_GRAPHICS_BIT, const std::vector<PipelineStage>& wait_stages = {}, const std::vector<VkSemaphore>& wait_semaphores = {}, const std::vector<VkSemaphore>& signal_semaphores = {});
 	void wait();
 	void reset(bool free = false);
 

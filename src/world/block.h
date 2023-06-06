@@ -14,6 +14,7 @@ enum class Block : uint32_t
 	SNOW,
 
 	LAST,
+	ANY,
 	NONE = std::numeric_limits<std::underlying_type_t<Block>>::max()
 };
 static constexpr size_t TOTAL_BLOCKS = ecast(Block::LAST);

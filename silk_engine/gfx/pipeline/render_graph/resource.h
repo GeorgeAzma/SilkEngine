@@ -34,7 +34,7 @@ private:
 public:
 	struct AttachmentInfo
 	{
-		Image::Format format = Image::Format::BGRA;
+		Format format = Format::BGRA;
 		VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 		std::optional<VkClearValue> clear = std::nullopt;
 		size_t index = 0;

@@ -3,8 +3,8 @@
 #include "silk_engine/gfx/window/window.h"
 #include "silk_engine/gfx/window/swap_chain.h"
 #include "silk_engine/gfx/render_context.h"
-#include "silk_engine/gfx/fence.h"
-#include "silk_engine/gfx/semaphore.h"
+#include "silk_engine/gfx/sync/fence.h"
+#include "silk_engine/gfx/sync/semaphore.h"
 #include "silk_engine/gfx/devices/logical_device.h"
 #include "silk_engine/gfx/allocators/query_pool.h"
 
@@ -76,9 +76,9 @@ void RenderGraph::build(const char* backbuffer)
 				VkSubpassDependency dep{};
 				dep.srcSubpass = input->getPass().getSubpass();
 				dep.dstSubpass = output->getPass().getSubpass();
-				dep.srcStageMask = Image::isColorFormat(input->attachment.format) ? VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT : VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+				dep.srcStageMask = ecast(isColorFormat(input->attachment.format) ? PipelineStage::COLOR_ATTACHMENT_OUTPUT : PipelineStage::EARLY_FRAGMENT_TESTS);
 				dep.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-				dep.srcAccessMask = Image::isColorFormat(input->attachment.format) ? VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT : VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+				dep.srcAccessMask = isColorFormat(input->attachment.format) ? VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT : VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 				dep.dstAccessMask = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
 				dep.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 				render_pass->addSubpassDependency(dep);
@@ -87,11 +87,11 @@ void RenderGraph::build(const char* backbuffer)
 			
 			AttachmentProps props{};
 			props.format = output->attachment.format;
-			if (Image::isDepthOnlyFormat(props.format))
+			if (isDepthOnlyFormat(props.format))
 				props.final_layout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-			else if (Image::isStencilOnlyFormat(props.format))
+			else if (isStencilOnlyFormat(props.format))
 				props.final_layout = VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL;
-			else if (Image::isDepthStencilFormat(props.format))
+			else if (isDepthStencilFormat(props.format))
 				props.final_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 			else if (backbuffer && strcmp(output->getName(), backbuffer) == 0) // If color attachment is root, then it is present src
 				props.final_layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
@@ -113,7 +113,7 @@ void RenderGraph::build(const char* backbuffer)
 		{
 			Resource& resource = *output;
 			if (resource.attachment.clear.has_value())
-				if (Image::isDepthStencilFormat(resource.attachment.format))
+				if (isDepthStencilFormat(resource.attachment.format))
 					render_pass->setClearDepthStencilValue(resource.attachment.index, resource.attachment.clear->depthStencil);
 				else
 					render_pass->setClearColorValue(resource.attachment.index, resource.attachment.clear->color);
@@ -169,7 +169,7 @@ void RenderGraph::render(Statistics* statistics)
 	if (statistics)
 		query_pool->end();
 
-	command_buffer = RenderContext::submit({ VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT }, { *swap_chain_image_available }, { *render_finished });
+	command_buffer = RenderContext::submit({ PipelineStage::TOP }, { *swap_chain_image_available }, { *render_finished });
 
 	if (statistics)
 	{

@@ -4,7 +4,7 @@
 #include "silk_engine/gfx/pipeline/shader.h"
 #include "silk_engine/gfx/pipeline/graphics_pipeline.h"
 #include "silk_engine/gfx/pipeline/compute_pipeline.h"
-#include "silk_engine/gfx/material.h"
+#include "silk_engine/gfx/pipeline/material.h"
 #include "silk_engine/utils/random.h"
 #include "silk_engine/utils/debug_timer.h"
 #include "silk_engine/gfx/descriptors/descriptor_set.h"
@@ -29,18 +29,12 @@ Chunk::~Chunk()
 
 void Chunk::generateStart()
 {
-    fill = Block::AIR;
+    fill = Block::ANY;
     block_buffer = makeShared<Buffer>(SHARED_VOLUME * sizeof(Block) + sizeof(fill), Buffer::STORAGE, Allocation::Props{ Allocation::RANDOM_ACCESS | Allocation::MAPPED });
+    block_buffer->setData(&fill, sizeof(fill));
     gen_material->set("Blocks", *block_buffer);
     gen_material->bind();
-    RenderContext::getCommandBuffer().pushConstants(Shader::Stage::COMPUTE, 0, sizeof(position), &position);
-    //gen_material->getPipeline()->bind();
-    //for (auto&& [set, descriptor_set] : gen_material->getDescriptorSets())
-    //{
-    //    descriptor_set->update();
-    //    RenderContext::getComputeCommandBuffer().bindDescriptorSets(set, { *descriptor_set }, {});
-    //}
-    //RenderContext::getComputeCommandBuffer().pushConstants(Shader::Stage::COMPUTE, 0, sizeof(position), &position);
+    RenderContext::getCommandBuffer().pushConstants(ShaderStage::COMPUTE, 0, sizeof(position), &position);
     gen_material->dispatch(SIZE, SIZE, SIZE);
 }
 
@@ -49,22 +43,14 @@ void Chunk::generateEnd()
     block_buffer->getData(&fill, sizeof(fill));
     if (fill == Block::NONE)
     {
-        blocks.resize(SHARED_VOLUME, Block::AIR);
+        blocks.resize(SHARED_VOLUME, Block::STONE);
         block_buffer->getData(blocks.data(), SHARED_VOLUME * sizeof(Block), sizeof(fill));
-        fill = at(0, 0, 0);
-        for (uint32_t y = 0; y < SIZE; ++y)
-            for (uint32_t z = 0; z < SIZE; ++z)
-                for (uint32_t x = 0; x < SIZE; ++x)
-                {
-                    if (at(x, y, z) != fill)
-                    {
-                        fill = Block::NONE;
-                        goto down;
-                    }
-                }
-    down:
-        if (fill != Block::NONE)
-            blocks.clear();
+    }
+    if (fill != Block::NONE)
+    {
+        if (fill == Block::ANY)
+            fill = Block::STONE;
+        blocks.clear();
     }
     block_buffer = nullptr;
 }
@@ -75,87 +61,14 @@ void Chunk::generateMesh()
         return;
     dirty = false;
     vertex_count = 0;
-    if (fill != Block::NONE || blocks.size() != SHARED_VOLUME)
+    if (blocks.size() != SHARED_VOLUME)
         return;
-
-    static constexpr int16_t ao_table[6 * 4 * 3] =
-    {
-        -1 - SHARED_AREA,
-         -SHARED_AREA - SHARED_SIZE,
-        -1 - SHARED_AREA - SHARED_SIZE,
-        -1 - SHARED_AREA,
-         -SHARED_AREA + SHARED_SIZE,
-        -1 - SHARED_AREA + SHARED_SIZE,
-        1 - SHARED_AREA,
-         -SHARED_AREA + SHARED_SIZE,
-        1 - SHARED_AREA + SHARED_SIZE,
-        1 - SHARED_AREA,
-         -SHARED_AREA - SHARED_SIZE,
-        1 - SHARED_AREA - SHARED_SIZE,
-        -1 - SHARED_SIZE,
-         +SHARED_AREA - SHARED_SIZE,
-        -1 + SHARED_AREA - SHARED_SIZE,
-        -1 - SHARED_SIZE,
-         -SHARED_AREA - SHARED_SIZE,
-        -1 - SHARED_AREA - SHARED_SIZE,
-        1 - SHARED_SIZE,
-         -SHARED_AREA - SHARED_SIZE,
-        1 - SHARED_AREA - SHARED_SIZE,
-        1 - SHARED_SIZE,
-         +SHARED_AREA - SHARED_SIZE,
-        1 + SHARED_AREA - SHARED_SIZE,
-        -1 + SHARED_AREA,
-        -1 + SHARED_SIZE,
-        -1 + SHARED_AREA + SHARED_SIZE,
-        -1 - SHARED_AREA,
-        -1 + SHARED_SIZE,
-        -1 - SHARED_AREA + SHARED_SIZE,
-        -1 - SHARED_AREA,
-        -1 - SHARED_SIZE,
-        -1 - SHARED_AREA - SHARED_SIZE,
-        -1 + SHARED_AREA,
-        -1 - SHARED_SIZE,
-        -1 + SHARED_AREA - SHARED_SIZE,
-        1 + SHARED_AREA,
-        1 - SHARED_SIZE,
-        1 + SHARED_AREA - SHARED_SIZE,
-        1 - SHARED_AREA,
-        1 - SHARED_SIZE,
-        1 - SHARED_AREA - SHARED_SIZE,
-        1 - SHARED_AREA,
-        1 + SHARED_SIZE,
-        1 - SHARED_AREA + SHARED_SIZE,
-        1 + SHARED_AREA,
-        1 + SHARED_SIZE,
-        1 + SHARED_AREA + SHARED_SIZE,
-        1 + SHARED_SIZE,
-         +SHARED_AREA + SHARED_SIZE,
-        1 + SHARED_AREA + SHARED_SIZE,
-        1 + SHARED_SIZE,
-         -SHARED_AREA + SHARED_SIZE,
-        1 - SHARED_AREA + SHARED_SIZE,
-        -1 + SHARED_SIZE,
-         -SHARED_AREA + SHARED_SIZE,
-        -1 - SHARED_AREA + SHARED_SIZE,
-        -1 + SHARED_SIZE,
-         +SHARED_AREA + SHARED_SIZE,
-        -1 + SHARED_AREA + SHARED_SIZE,
-        -1 + SHARED_AREA,
-         +SHARED_AREA + SHARED_SIZE,
-        -1 + SHARED_AREA + SHARED_SIZE,
-        -1 + SHARED_AREA,
-         +SHARED_AREA - SHARED_SIZE,
-        -1 + SHARED_AREA - SHARED_SIZE,
-        1 + SHARED_AREA,
-         +SHARED_AREA - SHARED_SIZE,
-        1 + SHARED_AREA - SHARED_SIZE,
-        1 + SHARED_AREA,
-         +SHARED_AREA + SHARED_SIZE,
-        1 + SHARED_AREA + SHARED_SIZE,
-    };
 
     static DebugTimer t("Meshing");
     t.begin();
+
+    for (size_t i = 0; i < 26; ++i) 
+        updateNeighboringBlocks(i);
 
     thread_local std::vector<Vertex> vertices(MAX_VERTICES);
     thread_local std::vector<bool> visited(SHARED_VOLUME * 6);
@@ -170,70 +83,35 @@ void Chunk::generateMesh()
                 Block block = blocks[i];
                 if (block == Block::AIR)
                     continue;
-
-                static constexpr int16_t axis[6] = { -SHARED_AREA, -SHARED_SIZE, -1, 1, SHARED_SIZE, SHARED_AREA };
-                static constexpr int16_t greedy_axis[6] = { 1, 1, SHARED_SIZE, SHARED_SIZE, 1, 1 };
+            
+                static constexpr int32_t axis[6] = { -SHARED_AREA, -SHARED_SIZE, -1, 1, SHARED_SIZE, SHARED_AREA };
+                static constexpr int32_t greedy_axis[6] = { 1, 1, SHARED_SIZE, SHARED_SIZE, 1, 1 };
                 size_t idx = y * AREA + z * SIZE + x;
                 for (size_t face = 0; face < 6; ++face)
                 {
                     if (BLOCK_SOLID[ecast(blocks[i + axis[face]])] || visited[i * 6 + face])
                         continue;
-                    size_t face12 = face * 12;
-                    Vertex ao0 = getAO(BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 0]])],
-                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 1]])],
-                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 2]])]);
-                    Vertex ao1 = getAO(BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 3]])],
-                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 4]])],
-                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 5]])]);
-                    Vertex ao2 = getAO(BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 6]])],
-                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 7]])],
-                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 8]])]);
-                    Vertex ao3 = getAO(BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 9]])],
-                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 10]])],
-                                       BLOCK_SOLID[ecast(blocks[i + ao_table[face12 + 11]])]);
-                    Vertex run = 1;
-                    for (; run < SIZE - x; ++run)
+                    Vertex run_x = 1; 
+                    for (; run_x < SIZE - x; ++run_x)
                     {
-                        size_t ni = i + run * greedy_axis[face];
+                        if (BLOCK_SOLID[ecast(blocks[i + run_x * greedy_axis[face] + axis[face]])])
+                            break;
+                        size_t ni = i + run_x * greedy_axis[face];
                         Block neighbor = blocks[ni];
                         if (neighbor != block)
                             break;
-                        Vertex nao0 = getAO(BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 0]])],
-                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 1]])],
-                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 2]])]);
-                        Vertex nao1 = getAO(BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 3]])],
-                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 4]])],
-                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 5]])]);
-                        Vertex nao2 = getAO(BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 6]])],
-                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 7]])],
-                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 8]])]);
-                        Vertex nao3 = getAO(BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 9]])],
-                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 10]])],
-                                            BLOCK_SOLID[ecast(blocks[ni + ao_table[face12 + 11]])]);
-                        if (!(ao0 == nao0 && ao1 == nao1 && ao2 == nao2 && ao3 == nao3))
-                            break;
                         visited[ni * 6 + face] = true;
                     }
+            
+                    Vertex face_data = (face << 2) | (idx << 5) | (Vertex(BLOCK_TEXTURE_INDICES[size_t(block) * 6 + face]) << 23) | ((run_x - Vertex(1)) << 34);
 
-                    Vertex face_data = (face << 2) | (idx << 5) | (Vertex(BLOCK_TEXTURE_INDICES[size_t(block) * 6 + face]) << 23) | ((run - Vertex(1)) << 34);
-                    if (ao1 + ao3 > ao0 + ao2)
-                    {
-                        vertices[vertex_count++] = 2 | face_data | (ao2 << 32);
-                        vertices[vertex_count++] = 1 | face_data | (ao1 << 32);
-                        vertices[vertex_count++] = 3 | face_data | (ao3 << 32);
-                        vertices[vertex_count++] = 3 | face_data | (ao3 << 32);
-                        vertices[vertex_count++] = 1 | face_data | (ao1 << 32);
-                        vertices[vertex_count++] = 0 | face_data | (ao0 << 32);
-                    }
-                    else
-                    {
-                        vertices[vertex_count++] = 2 | face_data | (ao2 << 32);
-                        vertices[vertex_count++] = 1 | face_data | (ao1 << 32);
-                        vertices[vertex_count++] = 0 | face_data | (ao0 << 32);
-                        vertices[vertex_count++] = 0 | face_data | (ao0 << 32);
-                        vertices[vertex_count++] = 3 | face_data | (ao3 << 32);
-                        vertices[vertex_count++] = 2 | face_data | (ao2 << 32);
-                    }
+                    vertices[vertex_count++] = 2 | face_data;
+                    vertices[vertex_count++] = 1 | face_data;
+                    vertices[vertex_count++] = 3 | face_data;
+                    vertices[vertex_count++] = 3 | face_data;
+                    vertices[vertex_count++] = 1 | face_data;
+                    vertices[vertex_count++] = 0 | face_data;
+
                 }
             }
         }
@@ -261,14 +139,14 @@ void Chunk::render() const
 {
     if (!vertex_buffer)
         return;
-    RenderContext::getCommandBuffer().pushConstants(Shader::Stage::VERTEX, 0, sizeof(position), &position);
+    RenderContext::getCommandBuffer().pushConstants(ShaderStage::VERTEX, 0, sizeof(position), &position);
     vertex_buffer->bindVertex();
     RenderContext::getCommandBuffer().draw(vertex_count);
 }
 
 void Chunk::updateNeighboringBlocks(size_t index)
 {
-    if (blocks.empty() || !isNeighborValid(index))
+    if (blocks.empty() || !neighbors[index])
         return;   
 
     switch (index)

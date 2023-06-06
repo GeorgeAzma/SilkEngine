@@ -1,11 +1,9 @@
 #include "instance_images.h"
 #include "silk_engine/gfx/images/image.h"
-#include "silk_engine/gfx/debug_renderer.h"
+#include "silk_engine/gfx/debug/debug_renderer.h"
 
 InstanceImages::InstanceImages(uint32_t max_images)
-{
-	this->max_images = max_images ? max_images : DebugRenderer::MAX_IMAGE_SLOTS;
-}
+	: max_images(max_images ? max_images : DebugRenderer::MAX_IMAGE_SLOTS) {}
 
 uint32_t InstanceImages::add(const std::vector<shared<Image>>& new_images)
 {

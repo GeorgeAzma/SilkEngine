@@ -1,5 +1,5 @@
 #include "queue.h"
-#include "silk_engine/gfx/fence.h"
+#include "silk_engine/gfx/sync/fence.h"
 
 Queue::Queue(VkQueue queue, float priority) 
 	: queue(queue), priority(priority)

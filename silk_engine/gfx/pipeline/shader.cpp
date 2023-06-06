@@ -1,7 +1,6 @@
 #include "shader.h"
 #include "silk_engine/io/file.h"
 #include "silk_engine/gfx/devices/logical_device.h"
-#include "silk_engine/gfx/debug_renderer.h"
 #include "silk_engine/utils/debug_timer.h"
 #include "silk_engine/gfx/instance.h"
 #include "silk_engine/gfx/render_context.h"
@@ -37,8 +36,7 @@ class Includer : public shaderc::CompileOptions::IncluderInterface
 Shader::Stage::Stage(const fs::path& file)
 	: file(file)
 {
-	using enum Type;
-
+	using enum ShaderStage;
 	fs::path file_extension = file.extension();
 	if (file_extension == ".vert") type = VERTEX;
 	else if (file_extension == ".frag") type = FRAGMENT;
@@ -88,7 +86,7 @@ bool Shader::Stage::compile(const Defines& defines)
 
 	std::string source = File::read(file, std::ios::binary);
 	shaderc_shader_kind shaderc_type = (shaderc_shader_kind)0;
-	using enum Type;
+	using enum ShaderStage;
 	switch (type)
 	{
 	case VERTEX: shaderc_type = shaderc_vertex_shader; break;
@@ -240,7 +238,7 @@ void Shader::reflect()
 					auto& existing_push_constant = reflection_data.push_constants[i];
 					if (existing_push_constant.offset + existing_push_constant.size >= active_range.offset && existing_push_constant.offset < active_range.offset + active_range.range)
 					{
-						existing_push_constant.stageFlags |= (VkShaderStageFlags)type;
+						existing_push_constant.stageFlags |= ecast(type);
 						existing_push_constant.offset = std::min(size_t(existing_push_constant.offset), active_range.offset);
 						existing_push_constant.size = std::max(size_t(existing_push_constant.offset + existing_push_constant.size), active_range.offset + active_range.range) - existing_push_constant.offset;
 						found_push_constant = true;
@@ -252,13 +250,13 @@ void Shader::reflect()
 					VkPushConstantRange push_constant_range{};
 					push_constant_range.offset = active_range.offset;
 					push_constant_range.size = active_range.range;
-					push_constant_range.stageFlags = (VkShaderStageFlags)type;
+					push_constant_range.stageFlags = ecast(type);
 					reflection_data.push_constants.emplace_back(push_constant_range);
 				}
 			}
 		}
 
-		if (type & Stage::VERTEX)
+		if (bool(type & ShaderStage::VERTEX))
 		{
 			struct VertexAttribute
 			{
@@ -375,7 +373,7 @@ void Shader::reflect()
 			}
 		}
 
-		if (type & Stage::FRAGMENT)
+		if (bool(type & ShaderStage::FRAGMENT))
 			for (const spirv_cross::Resource& output : shader_resources.stage_outputs)
 				reflection_data.render_targets[compiler.get_decoration(output.id, spv::DecorationLocation)] = output.name;
 
@@ -383,7 +381,7 @@ void Shader::reflect()
 		for (auto& constant : constants)
 		{
 			auto& shader_constant = reflection_data.constants[compiler.get_name(constant.id)];
-			shader_constant = { constant.constant_id, shader_constant.stage | (VkShaderStageFlags)type };
+			shader_constant = { constant.constant_id, shader_constant.stage | ecast(type) };
 		}
 
 		//Local size reflection
@@ -403,7 +401,7 @@ void Shader::reflect()
 		descriptor_set_layout_binding.descriptorCount = resource.count;
 		descriptor_set_layout_binding.descriptorType = resource.type;
 		descriptor_set_layout_binding.pImmutableSamplers = nullptr;
-		descriptor_set_layout_binding.stageFlags = (VkShaderStageFlags) resource.stage;
+		descriptor_set_layout_binding.stageFlags = ecast(resource.stage);
 		descriptor_set_layout_bindings[resource.set].emplace_back(std::move(descriptor_set_layout_binding));
 		reflection_data.resource_locations.emplace(resource.name, ResourceLocation{ resource.set, resource.binding });
 	}
@@ -419,7 +417,7 @@ Shader::ResourceLocation Shader::getLocation(std::string_view resource_name) con
 	return ResourceLocation{};
 }
 
-void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, Stage::Type stage, VkDescriptorType type)
+void Shader::loadResource(const spirv_cross::Resource& spirv_resource, const spirv_cross::Compiler& compiler, const spirv_cross::ShaderResources& resources, ShaderStage stage, VkDescriptorType type)
 {
 	for (Resource& resource : reflection_data.resources)
 	{
