@@ -5,7 +5,7 @@
 #include "buffer.h"
 
 VertexArray::VertexArray(const RawMesh& raw_mesh)
-	: buffer(makeShared<Buffer>(raw_mesh.getData().size(), Buffer::VERTEX | Buffer::INDEX | Buffer::TRANSFER_DST)),
+	: buffer(makeShared<Buffer>(raw_mesh.getData().size(), BufferUsage::VERTEX | BufferUsage::INDEX | BufferUsage::TRANSFER_DST)),
 	index_type(raw_mesh.getIndexTypeSize() == sizeof(uint32_t) ? IndexType::UINT32 : (raw_mesh.getIndexTypeSize() == sizeof(uint16_t) ? IndexType::UINT16 : IndexType::NONE)),
 	vertices_size(raw_mesh.getVerticesSize()),
 	indices_size(raw_mesh.getIndicesSize()),

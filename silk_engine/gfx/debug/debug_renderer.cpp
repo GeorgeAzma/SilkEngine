@@ -41,7 +41,7 @@ void DebugRenderer::InstancedRendererBase::InstanceGroup::bind()
 
 void DebugRenderer::InstancedRendererBase::init()
 {
-	indirect_buffer = makeShared<Buffer>(256 * sizeof(VkDrawIndexedIndirectCommand), Buffer::INDIRECT, Allocation::Props{ Allocation::MAPPED | Allocation::RANDOM_ACCESS });
+	indirect_buffer = makeShared<Buffer>(256 * sizeof(VkDrawIndexedIndirectCommand), BufferUsage::INDIRECT, Allocation::Props{ Allocation::MAPPED | Allocation::RANDOM_ACCESS });
 }
 
 void DebugRenderer::InstancedRendererBase::update()
@@ -110,7 +110,7 @@ DebugRenderer::Renderable DebugRenderer::InstancedRendererBase::createInstance(c
 		new_batch.data_size = instance_data_size;
 		new_batch.addData(instance_data);
 		new_batch.material = makeShared<Material>(pipeline);
-		new_batch.instance_buffer = makeShared<Buffer>(65536, Buffer::VERTEX, Allocation::Props{ Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
+		new_batch.instance_buffer = makeShared<Buffer>(65536, BufferUsage::VERTEX, Allocation::Props{ Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
 		new_batch.instance_images.add({ white_image });
 		new_batch.hash = hash;
 	}
@@ -178,7 +178,7 @@ void DebugRenderer::init()
 {
 	render_context.init();
 	immediate_render_context.init();
-	global_uniform_buffer = makeShared<Buffer>(sizeof(GlobalUniformData), Buffer::UNIFORM | Buffer::TRANSFER_DST, Allocation::Props{ Allocation::MAPPED | Allocation::SEQUENTIAL_WRITE });
+	global_uniform_buffer = makeShared<Buffer>(sizeof(GlobalUniformData), BufferUsage::UNIFORM | BufferUsage::TRANSFER_DST, Allocation::Props{ Allocation::MAPPED | Allocation::SEQUENTIAL_WRITE });
 
 	VkRenderPass render_pass = RenderContext::getRenderGraph().getPass("Geometry").getRenderPass();
 

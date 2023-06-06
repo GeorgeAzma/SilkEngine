@@ -147,9 +147,9 @@ size_t RenderPass::addAttachment(const AttachmentProps& attachment_props)
     return attachment_descriptions.size() - 1;
 }
 
-void RenderPass::addSubpassDependency(const VkSubpassDependency& dependency)
+void RenderPass::addSubpassDependency(uint32_t source, uint32_t destination, PipelineStage source_stage, PipelineStage destination_stage, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkDependencyFlags dependency_flags)
 {
-    subpass_dependencies.emplace_back(dependency);
+    subpass_dependencies.emplace_back(source, destination, VkPipelineStageFlags(source_stage), VkPipelineStageFlags(destination_stage), source_access_mask, destination_access_mask, dependency_flags);
 }
 
 void RenderPass::build()

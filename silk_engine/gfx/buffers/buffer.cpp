@@ -3,8 +3,8 @@
 #include "silk_engine/gfx/render_context.h"
 #include "command_buffer.h"
 
-Buffer::Buffer(VkDeviceSize size, Usage usage, const Allocation::Props& allocation_props) :
-	ci(VkBufferCreateInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, .size = size, .usage = (VkBufferUsageFlags)usage, .sharingMode = VK_SHARING_MODE_EXCLUSIVE }),
+Buffer::Buffer(VkDeviceSize size, BufferUsage usage, const Allocation::Props& allocation_props) :
+	ci(VkBufferCreateInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, .size = size, .usage = ecast(usage), .sharingMode = VK_SHARING_MODE_EXCLUSIVE }),
 	alloc_ci(VmaAllocationCreateInfo{ .flags = allocation_props.flags, .usage = (VmaMemoryUsage)allocation_props.preferred_device, .priority = allocation_props.priority }),
 	allocation(RenderContext::getAllocator().allocateBuffer(ci, alloc_ci, buffer))
 {
@@ -71,7 +71,7 @@ bool Buffer::setData(const void* data, VkDeviceSize size, VkDeviceSize offset)
 		return true;
 	}
 
-	Buffer sb(max_size, Buffer::TRANSFER_SRC, { Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
+	Buffer sb(max_size, BufferUsage::TRANSFER_SRC, { Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
 	sb.setData(data, max_size);
 	sb.copy(buffer, max_size, offset);
 	RenderContext::executeTransfer();
@@ -93,19 +93,19 @@ void Buffer::getDataRanges(const std::vector<Range>& ranges) const
 		VkDeviceSize max_size = 0;
 		for (const auto& range : ranges)
 			max_size = max(max_size, range.size ? range.size + range.offset : ci.size);
-		Buffer sb(max_size, Buffer::TRANSFER_DST, { Allocation::RANDOM_ACCESS | Allocation::MAPPED });
+		Buffer sb(max_size, BufferUsage::TRANSFER_DST, { Allocation::RANDOM_ACCESS | Allocation::MAPPED });
 		copy(sb, max_size);
 		RenderContext::executeTransfer();
 		sb.getDataRanges(ranges);
 	}
 }
 
-void Buffer::insertMemoryBarrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, PipelineStage source_stage, PipelineStage destination_stage, VkDeviceSize offset, VkDeviceSize size) const
+void Buffer::barrier(VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, PipelineStage source_stage, PipelineStage destination_stage, VkDeviceSize offset, VkDeviceSize size) const
 {
-	insertMemoryBarrier(buffer, source_access_mask, destination_access_mask, source_stage, destination_stage, offset, size ? size : ci.size);
+	barrier(buffer, source_access_mask, destination_access_mask, source_stage, destination_stage, offset, size ? size : ci.size);
 }
 
-void Buffer::insertMemoryBarrier(const VkBuffer& buffer, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, PipelineStage source_stage, PipelineStage destination_stage, VkDeviceSize offset, VkDeviceSize size)
+void Buffer::barrier(const VkBuffer& buffer, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, PipelineStage source_stage, PipelineStage destination_stage, VkDeviceSize offset, VkDeviceSize size)
 {
 	VkBufferMemoryBarrier barrier = {};
 	barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;

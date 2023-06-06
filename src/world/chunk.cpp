@@ -30,7 +30,7 @@ Chunk::~Chunk()
 void Chunk::generateStart()
 {
     fill = Block::ANY;
-    block_buffer = makeShared<Buffer>(SHARED_VOLUME * sizeof(Block) + sizeof(fill), Buffer::STORAGE, Allocation::Props{ Allocation::RANDOM_ACCESS | Allocation::MAPPED });
+    block_buffer = makeShared<Buffer>(SHARED_VOLUME * sizeof(Block) + sizeof(fill), BufferUsage::STORAGE, Allocation::Props{ Allocation::RANDOM_ACCESS | Allocation::MAPPED });
     block_buffer->setData(&fill, sizeof(fill));
     gen_material->set("Blocks", *block_buffer);
     gen_material->bind();
@@ -121,7 +121,7 @@ void Chunk::generateMesh()
     {
         size_t vertices_size = vertex_count * sizeof(Vertex);
         if (!vertex_buffer || vertices_size != vertex_buffer->getSize())
-            vertex_buffer = makeShared<Buffer>(vertices_size, Buffer::VERTEX | Buffer::TRANSFER_DST);
+            vertex_buffer = makeShared<Buffer>(vertices_size, BufferUsage::VERTEX | BufferUsage::TRANSFER_DST);
         static std::mutex mux;
         std::scoped_lock lock(mux);
         vertex_buffer->setData(vertices.data());

@@ -73,16 +73,11 @@ void RenderGraph::build(const char* backbuffer)
 		{
 			for (Resource* input : pass->getInputs())
 			{
-				VkSubpassDependency dep{};
-				dep.srcSubpass = input->getPass().getSubpass();
-				dep.dstSubpass = output->getPass().getSubpass();
-				dep.srcStageMask = ecast(isColorFormat(input->attachment.format) ? PipelineStage::COLOR_ATTACHMENT_OUTPUT : PipelineStage::EARLY_FRAGMENT_TESTS);
-				dep.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-				dep.srcAccessMask = isColorFormat(input->attachment.format) ? VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT : VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-				dep.dstAccessMask = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
-				dep.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-				render_pass->addSubpassDependency(dep);
 				render_pass->addInputAttachment(input->attachment.index);
+				render_pass->addSubpassDependency(input->getPass().getSubpass(), output->getPass().getSubpass(), 
+					isColorFormat(input->attachment.format) ? PipelineStage::COLOR_ATTACHMENT_OUTPUT : PipelineStage::EARLY_FRAGMENT_TESTS, PipelineStage::FRAGMENT, 
+					isColorFormat(input->attachment.format) ? VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT : VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, 
+					VK_ACCESS_INPUT_ATTACHMENT_READ_BIT, VK_DEPENDENCY_BY_REGION_BIT);
 			}
 			
 			AttachmentProps props{};

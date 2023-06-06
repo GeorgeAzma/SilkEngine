@@ -15,7 +15,7 @@ unique<ThreadPool> ParticleSystem::thread_pool = nullptr;
 
 void ParticleSystem::init(VkRenderPass render_pass)
 {
-	instance_vbo = makeShared<Buffer>(sizeof(ParticleData) * MAX_PARTICLES, Buffer::VERTEX, Allocation::Props{ Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED, Allocation::Device::CPU });
+	instance_vbo = makeShared<Buffer>(sizeof(ParticleData) * MAX_PARTICLES, BufferUsage::VERTEX, Allocation::Props{ Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED, Allocation::Device::CPU });
     instance_images = makeShared<InstanceImages>();
     thread_pool = makeUnique<ThreadPool>();
 

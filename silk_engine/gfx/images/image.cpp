@@ -153,7 +153,7 @@ void Image::setData(const void* data, uint32_t base_layer, uint32_t layers)
 	}
 	else
 	{
-		Buffer sb(getSize(), Buffer::TRANSFER_SRC, { Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
+		Buffer sb(getSize(), BufferUsage::TRANSFER_SRC, { Allocation::SEQUENTIAL_WRITE | Allocation::MAPPED });
 		sb.setData(data);
 		copyFromBuffer(sb, base_layer, layers);
 		RenderContext::execute();
@@ -170,7 +170,7 @@ void Image::getData(void* data, uint32_t base_layer, uint32_t layers)
 	}
 	else
 	{
-		Buffer sb(layer_size * layers, Buffer::TRANSFER_DST, { Allocation::RANDOM_ACCESS | Allocation::MAPPED });
+		Buffer sb(layer_size * layers, BufferUsage::TRANSFER_DST, { Allocation::RANDOM_ACCESS | Allocation::MAPPED });
 		copyToBuffer(sb, base_layer, layers);
 		RenderContext::execute();
 		sb.getData(data);

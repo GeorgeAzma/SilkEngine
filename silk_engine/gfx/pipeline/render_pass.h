@@ -36,8 +36,7 @@ public:
 	size_t addSubpass();
 	void addInputAttachment(uint32_t index);
 	size_t addAttachment(const AttachmentProps& attachment_props);
-
-	void addSubpassDependency(const VkSubpassDependency& dependency);
+	void addSubpassDependency(uint32_t source, uint32_t destination, PipelineStage source_stage, PipelineStage destination_stage, VkAccessFlags source_access_mask, VkAccessFlags destination_access_mask, VkDependencyFlags dependency_flags = VkDependencyFlags(0));
 
 	void build();
 
