@@ -10,11 +10,6 @@
 #include "silk_engine/gfx/descriptors/descriptor_set.h"
 #include "world.h"
 
-Chunk::Chunk(const Coord& position)
-    : position(position), gen_material(makeShared<Material>(ComputePipeline::get("Chunk Gen")))
-{
-}
-
 Chunk::~Chunk()
 {
     for (Chunk* neighbor : neighbors)
@@ -32,6 +27,7 @@ void Chunk::generateStart()
     fill = Block::ANY;
     block_buffer = makeShared<Buffer>(SHARED_VOLUME * sizeof(Block) + sizeof(fill), BufferUsage::STORAGE, Allocation::Props{ Allocation::RANDOM_ACCESS | Allocation::MAPPED });
     block_buffer->setData(&fill, sizeof(fill));
+    auto gen_material = makeShared<Material>(ComputePipeline::get("Chunk Gen"));
     gen_material->set("Blocks", *block_buffer);
     gen_material->bind();
     RenderContext::getCommandBuffer().pushConstants(ShaderStage::COMPUTE, 0, sizeof(position), &position);
@@ -63,9 +59,6 @@ void Chunk::generateMesh()
     vertex_count = 0;
     if (blocks.size() != SHARED_VOLUME)
         return;
-
-    static DebugTimer t("Meshing");
-    t.begin();
 
     for (size_t i = 0; i < 26; ++i) 
         updateNeighboringBlocks(i);
@@ -111,7 +104,6 @@ void Chunk::generateMesh()
                     vertices[vertex_count++] = 3 | face_data;
                     vertices[vertex_count++] = 1 | face_data;
                     vertices[vertex_count++] = 0 | face_data;
-
                 }
             }
         }
@@ -127,12 +119,6 @@ void Chunk::generateMesh()
         vertex_buffer->setData(vertices.data());
     }
     else vertex_buffer = nullptr;
-    t.end();
-    if (t.getSamples() >= 64)
-    {
-        t.print(t.getAverage());
-        t.reset();
-    }
 }
 
 void Chunk::render() const

@@ -187,7 +187,7 @@ const std::vector<shared<CommandQueue>>& RenderContext::getCommandQueues()
 {
 	auto it = command_queues.emplace(std::this_thread::get_id(), std::vector<shared<CommandQueue>>{});
 	if (it.second)
-		for (size_t i = 0; i < 3; ++i)
+		for (size_t i = 0; i < MAX_FRAMES; ++i)
 			it.first->second.emplace_back(makeShared<CommandQueue>(physical_device->getGraphicsQueue(), VK_QUEUE_GRAPHICS_BIT));
 	return it.first->second;
 }
@@ -198,7 +198,7 @@ const std::vector<shared<CommandQueue>>& RenderContext::getComputeCommandQueues(
 	if (it.second)
 	{
 		if (physical_device->getComputeQueue() != physical_device->getGraphicsQueue())
-			for (size_t i = 0; i < 3; ++i)
+			for (size_t i = 0; i < MAX_FRAMES; ++i)
 				it.first->second.emplace_back(makeShared<CommandQueue>(physical_device->getComputeQueue(), VK_QUEUE_COMPUTE_BIT));
 		else it.first->second = getCommandQueues();
 	}
@@ -211,7 +211,7 @@ const std::vector<shared<CommandQueue>>& RenderContext::getTransferCommandQueues
 	if (it.second)
 	{
 		if (physical_device->getTransferQueue() != physical_device->getGraphicsQueue())
-			for (size_t i = 0; i < 3; ++i)
+			for (size_t i = 0; i < MAX_FRAMES; ++i)
 				it.first->second.emplace_back(makeShared<CommandQueue>(physical_device->getTransferQueue(), VK_QUEUE_TRANSFER_BIT));
 		else it.first->second = getCommandQueues();
 	}

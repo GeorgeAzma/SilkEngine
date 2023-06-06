@@ -13,6 +13,7 @@ class DescriptorPool;
 class DescriptorSet;
 class Application;
 class RenderGraph;
+class DescriptorAllocator;
 
 class RenderContext
 {
@@ -88,6 +89,7 @@ public:
 	static const Allocator& getAllocator() { return *allocator; }
 	static const PipelineCache& getPipelineCache() { return *pipeline_cache; }
 	static const RenderGraph& getRenderGraph() { return *render_graph; }
+	static DescriptorAllocator& getDescriptorAllocator() { return *descriptor_allocators[std::this_thread::get_id()][frame]; }
 
 private:
 	static const std::vector<shared<CommandQueue>>& getCommandQueues();
@@ -103,6 +105,7 @@ private:
 	static inline std::unordered_map<std::thread::id, std::vector<shared<CommandQueue>>> command_queues{};
 	static inline std::unordered_map<std::thread::id, std::vector<shared<CommandQueue>>> compute_command_queues{};
 	static inline std::unordered_map<std::thread::id, std::vector<shared<CommandQueue>>> transfer_command_queues{};
+	static inline std::unordered_map<std::thread::id, std::vector<shared<DescriptorAllocator>>> descriptor_allocators{};
 	static inline PipelineCache* pipeline_cache = nullptr;
 	static inline size_t frame = 0;
 	static inline shared<RenderGraph> render_graph = nullptr;

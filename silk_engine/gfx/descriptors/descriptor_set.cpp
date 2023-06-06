@@ -4,9 +4,10 @@
 #include "silk_engine/gfx/devices/logical_device.h"
 #include "silk_engine/gfx/descriptors/descriptor_pool.h"
 #include "silk_engine/gfx/buffers/command_buffer.h"
+#include "silk_engine/gfx/render_context.h"
 
 DescriptorSet::DescriptorSet(const DescriptorSetLayout& layout) 
-	: layout(layout), pool(DescriptorAllocator::allocate(descriptor_set, layout))
+	: layout(layout), pool(RenderContext::getDescriptorAllocator().allocate(descriptor_set, layout))
 {
 	for (auto&& [binding, binding_info] : layout.getBindings())
 	{

@@ -3,7 +3,6 @@
 #include "block.h"
 
 class Buffer;
-class Material;
 
 class Chunk : NoCopy
 {
@@ -67,7 +66,8 @@ public:
 	};
 
 public:
-	Chunk(const Coord& position);
+	Chunk(const Coord& position)
+		: position(position) {}
 	~Chunk();
 
 	void generateStart();
@@ -142,7 +142,6 @@ private:
 	uint32_t vertex_count = 0;
 	shared<Buffer> vertex_buffer = nullptr;
 	shared<Buffer> block_buffer = nullptr;
-	shared<Material> gen_material = nullptr;
 	std::array<Chunk*, 26> neighbors = {};
 	bool dirty = true;
 	Block fill = Block::ANY;

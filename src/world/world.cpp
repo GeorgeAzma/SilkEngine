@@ -78,15 +78,18 @@ World::World()
 	ComputePipeline::add("Chunk Gen", makeShared<ComputePipeline>(makeShared<Shader>("chunk_gen", chunk_defines)));
 }
 
-#define MULTITHREAD 1
+#define MULTITHREAD 0
 
 void World::update()
 {
+	static DebugTimer t1("World::update()");
+	t1.begin();
 	const vec3& origin = camera->position;
 	const Chunk::Coord& chunk_origin = Chunk::toChunkCoord((Chunk::Coord)round(origin));
 
 	// Delete far chunks
-	constexpr float max_chunk_distance = 64;
+	RenderContext::getLogicalDevice().wait();
+	constexpr float max_chunk_distance = 16;
 	constexpr float max_chunk_distance2 = max_chunk_distance * max_chunk_distance;
 	for (int32_t i = 0; i < chunks.size(); ++i)
 	{
@@ -99,9 +102,9 @@ void World::update()
 		}
 	}
 
+	static DebugTimer t2("  mesh");
+	t2.begin();
 	// Build chunks and regenerate chunks with new neighbors
-	static DebugTimer t("Total Meshing");
-	t.begin();
 #if MULTITHREAD
 	pool.forEach(chunks.size(), [&](size_t i) {
 		chunks[i]->visible = isChunkVisible(chunks[i]->getPosition());
@@ -119,15 +122,17 @@ void World::update()
 		chunks[i]->generateMesh();
 	}
 #endif
-	t.end();
+	t2.end();
+	if (t2.getSamples() >= 64)
+	{
+		t2.print(t2.getAverage());
+		t2.reset();
+	}
 
-	static DebugTimer t1("Total Generating");
-	static DebugTimer t2("Total Queueing");
 	constexpr size_t max_chunks = 4096;
 	if (chunks.size() < max_chunks)
 	{
 		// Queue up to be generated chunks
-		t2.begin();
 		std::ranges::sort(chunks, [&](const shared<Chunk>& lhs, const shared<Chunk>& rhs) {
 			return ((10.0f + distance2(vec3(chunk_origin), vec3(lhs->getPosition()))) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f)) <
 				   ((10.0f + distance2(vec3(chunk_origin), vec3(rhs->getPosition()))) * ((lhs->getFill() != Block::NONE) * 256.0f + 1.0f));
@@ -153,9 +158,9 @@ void World::update()
 			if (queued_chunks.size() >= max_queued_chunks)
 				break;
 		}
-		t2.end();
 
-		t1.begin();
+		static DebugTimer t3("  generate");
+		t3.begin();
 		for (const auto& chunk : queued_chunks)
 		{
 			chunks.emplace_back(makeShared<Chunk>(chunk));
@@ -169,17 +174,20 @@ void World::update()
 			for (size_t i = 0; i < 26; ++i)
 				chunk->addNeighbor(i, findChunk(chunk->getPosition() + Chunk::NEIGHBORS[i]));
 		}
-		t1.end();
+		t3.end();
+		if (t3.getSamples() >= 64)
+		{
+			t3.print(t3.getAverage());
+			t3.reset();
+		}
 	}
-	else if (!t.isStopped())
+	t1.end();
+	if (t1.getSamples() >= 64)
 	{
-		t.stop();
-		t.print(t.getElapsed());
-		t1.stop();
-		t1.print(t1.getElapsed());
-		t2.stop();
-		t2.print(t2.getElapsed());
+		t1.print(t1.getAverage());
+		t1.reset();
 	}
+
 	float w = float(Window::get().getWidth()) * 0.5f;
 	float h = float(Window::get().getHeight()) * 0.5f;
 	float s = 24.0f;
@@ -200,7 +208,6 @@ void World::render()
 {
 	static DebugTimer t("Rendering");
 	t.begin();
-
 	line_material->set("GlobalUniform", *DebugRenderer::getGlobalUniformBuffer());
 	line_material->set("texture_atlas", *texture_atlas);
 	line_material->bind();
@@ -211,7 +218,7 @@ void World::render()
 			continue;
 		chunk->render();
 	}
-	
+
 	material->set("GlobalUniform", *DebugRenderer::getGlobalUniformBuffer());
 	material->set("texture_atlas", *texture_atlas);
 	material->bind();
@@ -221,7 +228,6 @@ void World::render()
 			continue;
 		chunk->render();
 	}
-
 	t.end();
 	if (t.getSamples() >= 64)
 	{

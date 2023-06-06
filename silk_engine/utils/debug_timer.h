@@ -43,6 +43,13 @@ public:
             SK_TRACE("{:.3g}", std::Seconds(elapsed));
     }
 
+    void print()
+    {
+        if (elapsed <= 0.0)
+            end();
+        print(elapsed);
+    }
+
     double getElapsed() const { return elapsed; }
     size_t getSamples() const { return samples; }
     double getAverage() const { return elapsed / samples; }
@@ -59,7 +66,8 @@ private:
     void end() {}
     void reset() {}
     void stop() {}
-    void print(double elapsed) {}
+    void print(double elapsed) const {}
+    void print() {}
     double getElapsed() const { return 0.0; }
     size_t getSamples() const { return 0; }
     double getAverage() const { return 0.0; }
