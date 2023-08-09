@@ -1,5 +1,107 @@
 #pragma once
 
+namespace std
+{
+    struct Bytes
+    {
+        size_t value;
+        operator const size_t& () const { return value; }
+    };
+
+    struct Seconds
+    {
+        double value;
+        operator double& () { return value; }
+        operator const double& () const { return value; }
+    };
+
+    template <typename CharT>
+    struct formatter<Bytes, CharT> : formatter<double, CharT>
+    {
+        template <typename FormatContext>
+        auto format(Bytes b, FormatContext& ctx) const
+        {
+            constexpr char8_t UNITS[] = { 0, 'K', 'M', 'G', 'T', 'P', 'E', 'Z' };
+            constexpr size_t BASE = 1024;
+
+            size_t unit = 0;
+            size_t base = BASE;
+            for (; b >= base && unit < sizeof(UNITS); ++unit, base *= BASE);
+            base /= BASE;
+
+            auto&& out = ctx.out();
+            format_to(out, "{:.3g} ", double(b) / base);
+            if (unit)
+                *out++ = UNITS[unit];
+            *out++ = 'B';
+            return out;
+        }
+    };
+
+    template <typename CharT>
+    struct formatter<Seconds, CharT> : formatter<double, CharT>
+    {
+        template <typename FormatContext>
+        auto format(Seconds t, FormatContext& ctx) const
+        {
+            if (t < Seconds(1.0) && t > Seconds(0.0))
+            {
+                Seconds t2{ Seconds(1.0) / t };
+                constexpr size_t BASE = 1000;
+                constexpr char8_t UNITS[] = { 'm', 'u', 'n' };
+
+                size_t unit = 0;
+                size_t base = BASE;
+                for (; t2 >= base && unit < sizeof(UNITS); ++unit, base *= BASE);
+
+                auto out = formatter<double>::format(t * base, ctx);
+
+                *out++ = UNITS[unit];
+                *out++ = 's';
+                return out;
+            }
+            else if (t >= Seconds(1.0))
+            {
+                auto out = formatter<double>::format(t, ctx);
+                *out++ = 's';
+                return out;
+            }
+            else
+            {
+                auto out = formatter<double>::format(0.0, ctx);
+                *out++ = 's';
+                return out;
+            }
+        }
+    };
+
+
+    template <length_t L, typename T, qualifier Q, typename CharT>
+    struct formatter<vec<L, T, Q>, CharT> : formatter<T, CharT>
+    {
+        template <typename FormatContext>
+        auto format(const vec<L, T, Q>& vec, FormatContext& ctx) const
+        {
+            auto&& out = ctx.out();
+            format_to(out, "{{ {}", vec[0]);
+            for (length_t l = 1; l < L; ++l)
+                format_to(out, ", {}", vec[l]);
+            format_to(out, " }}");
+            return out;
+        }
+    };
+
+    template <typename CharT>
+    struct formatter<fs::path, CharT> : formatter<string, CharT>
+    {
+        template <typename FormatContext>
+        auto format(const fs::path& p, FormatContext& ctx) const
+        {
+            return formatter<string>::format(p.string(), ctx);
+        }
+    };
+}
+
 #ifdef SK_ENABLE_DEBUG_OUTPUT
     #define SPDLOG_USE_STD_FORMAT
     #define SPDLOG_ACTIVE_LEVEL 0

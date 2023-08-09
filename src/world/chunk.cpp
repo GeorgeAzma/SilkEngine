@@ -66,6 +66,8 @@ void Chunk::generateMesh()
     thread_local std::vector<Vertex> vertices(MAX_VERTICES);
     thread_local std::vector<bool> visited(SHARED_VOLUME * 6);
     visited.assign(visited.size(), 0);
+    constexpr int32_t axis[6] = { -SHARED_AREA, -SHARED_SIZE, -1, 1, SHARED_SIZE, SHARED_AREA };
+    constexpr int32_t greedy_axis[6] = { 1, 1, SHARED_SIZE, SHARED_SIZE, 1, 1 };
     for (size_t y = 0; y < SIZE; ++y)
     {
         for (size_t z = 0; z < SIZE; ++z)
@@ -73,13 +75,9 @@ void Chunk::generateMesh()
             for (size_t x = 0; x < SIZE; ++x)
             {
                 size_t i = (y + 1) * SHARED_AREA + (z + 1) * SHARED_SIZE + (x + 1);
-                Block block = blocks[i];
-                if (block == Block::AIR)
+                if (blocks[i] == Block::AIR)
                     continue;
             
-                static constexpr int32_t axis[6] = { -SHARED_AREA, -SHARED_SIZE, -1, 1, SHARED_SIZE, SHARED_AREA };
-                static constexpr int32_t greedy_axis[6] = { 1, 1, SHARED_SIZE, SHARED_SIZE, 1, 1 };
-                size_t idx = y * AREA + z * SIZE + x;
                 for (size_t face = 0; face < 6; ++face)
                 {
                     if (BLOCK_SOLID[ecast(blocks[i + axis[face]])] || visited[i * 6 + face])
@@ -91,12 +89,12 @@ void Chunk::generateMesh()
                             break;
                         size_t ni = i + run_x * greedy_axis[face];
                         Block neighbor = blocks[ni];
-                        if (neighbor != block)
+                        if (neighbor != blocks[i])
                             break;
                         visited[ni * 6 + face] = true;
                     }
             
-                    Vertex face_data = (face << 2) | (idx << 5) | (Vertex(BLOCK_TEXTURE_INDICES[size_t(block) * 6 + face]) << 23) | ((run_x - Vertex(1)) << 34);
+                    Vertex face_data = (face << 2) | (Vertex(y * AREA + z * SIZE + x) << 5) | (Vertex(BLOCK_TEXTURE_INDICES[size_t(blocks[i]) * 6 + face]) << 23) | ((run_x - Vertex(1)) << 34);
 
                     vertices[vertex_count++] = 2 | face_data;
                     vertices[vertex_count++] = 1 | face_data;
